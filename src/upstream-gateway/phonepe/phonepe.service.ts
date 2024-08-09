@@ -76,10 +76,29 @@ export class PhonepeService {
         .digest('hex') +
       '###' +
       process.env.SALT_INDEX;
+    // Status API
 
-    console.log(
-      `${process.env.PHONEPE_STATUS_END_POINT}/${process.env.MERCHANT_ID}/${transactionId}${process.env.SAMPLE_SALT_KEY}`,
-    );
+    const options = {
+      method: 'get',
+      url: `https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/status/PGTESTPAYUAT86/${transactionId}`,
+      headers: {
+        accept: 'application/json',
+        'Content-Type': 'application/json',
+        'X-VERIFY': statusXverify,
+        'X-MERCHANT-ID': 'PGTESTPAYUAT86',
+      },
+    };
+
+    axios
+      .request(options)
+      .then(function (response) {
+        console.log(response.data);
+        return response.data;
+      })
+      .catch(function (error) {
+        console.error(error);
+      });
+
     return statusXverify;
   }
 }
