@@ -1,104 +1,85 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable, Redirect } from '@nestjs/common';
-import { createHash } from 'node:crypto';
-import axios from 'axios';
 import { v4 as uuid } from 'uuid';
+import { generateSHA256 } from '../payment-system/payment-system.utils';
 @Injectable()
 export class PhonepeService {
   constructor(private readonly httpService: HttpService) {}
   merchantTransactionId = uuid();
 
-  //   Playload
-  payload = {
-    merchantId: process.env.MERCHANT_ID,
-    merchantTransactionId: this.merchantTransactionId,
-    merchantUserId: 'MUID123',
-    amount: 10000,
-    redirectUrl: `${process.env.BASE_URL}/phonepe/${this.merchantTransactionId}`,
-    redirectMode: 'REDIRECT',
-    mobileNumber: '9999999999',
-    callBackUrl: `${process.env.BASE_URL}/phonepe/${this.merchantTransactionId}`,
-    paymentInstrument: {
-      type: 'PAY_PAGE',
-    },
-  };
-
-  //   Base 64
-  bufferObj: Buffer = Buffer.from(JSON.stringify(this.payload), 'utf8');
-  base64encodedPayload: string = this.bufferObj.toString('base64');
-
-  //   X-VERIFY
-  xVerify =
-    createHash('sha256')
-      .update(
-        this.base64encodedPayload +
-          process.env.PHONEPE_API_END_POINT +
-          process.env.SAMPLE_SALT_KEY,
-      )
-      .digest('hex') +
-    '###' +
-    process.env.SALT_INDEX;
-
-  // Option for request
-  options = {
-    method: 'post',
-    url: `${process.env.PHONEPE_BASE_URL}`,
-    headers: {
-      accept: 'application/json',
-      'Content-Type': 'application/json',
-      'X-VERIFY': this.xVerify,
-    },
-    data: {
-      request: this.base64encodedPayload,
-    },
-  };
-
   // Payment function
   async phonepePayement() {
-    return axios
-      .request(this.options)
-      .then(function (response) {
-        return response.data.data;
-      })
-      .catch(function (error) {
-        console.error(error);
-      });
+    const baseUrl = process.env.BASE_URL;
+    const merchantTransactionId = this.merchantTransactionId;
+    const merchantId = process.env.MERCHANT_ID;
+    const merchantUserId = process.env.MERCHANT_USER_ID;
+    const phonePayApiEndPoint = process.env.PHONEPE_API_END_POINT;
+    const sampleSaltKey = process.env.SAMPLE_SALT_KEY;
+    const saltIndex = process.env.SALT_INDEX;
+    const phonepeBaseUrl = process.env.PHONEPE_BASE_URL;
+
+    const payload = {
+      merchantId: merchantId,
+      merchantTransactionId: merchantTransactionId,
+      merchantUserId: merchantUserId,
+      amount: 10000,
+      redirectUrl: `${baseUrl}/phonepe/${merchantTransactionId}`,
+      redirectMode: 'REDIRECT',
+      mobileNumber: '9999999999',
+      callBackUrl: `${baseUrl}/phonepe/${merchantTransactionId}`,
+      paymentInstrument: {
+        type: 'PAY_PAGE',
+      },
+    };
+
+    const bufferObj: Buffer = Buffer.from(JSON.stringify(payload), 'utf8');
+    const base64encodedPayload: string = bufferObj.toString('base64');
+
+    const stringForHash = `${base64encodedPayload}${phonePayApiEndPoint}${sampleSaltKey}`;
+
+    const xVerify = generateSHA256(stringForHash) + '###' + saltIndex;
+
+    const options = {
+      method: 'post',
+      url: phonepeBaseUrl,
+      headers: {
+        accept: 'application/json',
+        'Content-Type': 'application/json',
+        'X-VERIFY': xVerify,
+      },
+      data: {
+        request: base64encodedPayload,
+      },
+    };
+
+    const val = await this.httpService.axiosRef.request(options);
+
+    return val.data.data;
   }
 
   // check status
-
   async checkStatus(transactionId: string) {
-    const statusXverify =
-      createHash('sha256')
-        .update(
-          `${process.env.PHONEPE_STATUS_END_POINT}/${process.env.MERCHANT_ID}/${transactionId}${process.env.SAMPLE_SALT_KEY}`,
-        )
-        .digest('hex') +
-      '###' +
-      process.env.SALT_INDEX;
-    // Status API
+    const phonepeStatusEndPoint = process.env.PHONEPE_STATUS_END_POINT;
+    const sampleSaltKey = process.env.SAMPLE_SALT_KEY;
+    const merchantId = process.env.MERCHANT_ID;
+    const saltIndex = process.env.SALT_INDEX;
+    const stringForHash = `${phonepeStatusEndPoint}/${merchantId}/${transactionId}${sampleSaltKey}`;
+    const checkStatusUrl = `https://api-preprod.phonepe.com/apis/pg-sandbox${phonepeStatusEndPoint}/${merchantId}/${transactionId}`;
+    const statusXverify = `${generateSHA256(stringForHash)}###${saltIndex}`;
 
+    // options
     const options = {
       method: 'get',
-      url: `https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/status/PGTESTPAYUAT86/${transactionId}`,
       headers: {
         accept: 'application/json',
         'Content-Type': 'application/json',
         'X-VERIFY': statusXverify,
-        'X-MERCHANT-ID': 'PGTESTPAYUAT86',
+        'X-MERCHANT-ID': merchantId,
       },
     };
 
-    axios
-      .request(options)
-      .then(function (response) {
-        console.log(response.data);
-        return response.data;
-      })
-      .catch(function (error) {
-        console.error(error);
-      });
+    const val = await this.httpService.axiosRef.get(checkStatusUrl, options);
 
-    return statusXverify;
+    return val.data;
   }
 }
