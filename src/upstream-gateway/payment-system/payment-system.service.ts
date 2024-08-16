@@ -9,7 +9,11 @@ export class PaymentSystemService {
     private phonepeService: PhonepeService,
   ) {}
 
-  returnVal(a: string) {
-    return this.razorpayService.razorpayPaymentStatus(a);
+  getPhonepePayments() {
+    return this.phonepeService.phonepePayement();
+  }
+
+  getRazorpayPayments() {
+    return this.razorpayService.razorpayPayment();
   }
 }

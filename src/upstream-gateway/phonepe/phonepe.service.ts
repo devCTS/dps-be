@@ -53,7 +53,6 @@ export class PhonepeService {
     };
 
     const val = await this.httpService.axiosRef.request(options);
-
     return val.data.data;
   }
 

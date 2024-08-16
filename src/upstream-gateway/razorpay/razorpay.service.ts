@@ -12,7 +12,7 @@ export class RazorpayService {
   ) {}
 
   //   razorpay payment
-  async razorpayPayment(requestPayment: RequestPaymentDto) {
+  async razorpayPayment(requestPayment?: RequestPaymentDto) {
     const options = {
       // TODO: Will use user defined values later
       amount: '10000',
