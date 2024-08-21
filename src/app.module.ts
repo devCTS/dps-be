@@ -1,4 +1,10 @@
-import { ClassSerializerInterceptor, Module } from '@nestjs/common';
+import {
+  ClassSerializerInterceptor,
+  INestApplication,
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+} from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
@@ -6,6 +12,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { UserModule } from './user/user.module';
 import { RazorpayModule } from 'nestjs-razorpay';
 import { PaymentSystemModule } from './upstream-gateway/payment-system/payment-system.module';
+import { EncryptionInterceptor } from './app.interceptor';
 
 @Module({
   imports: [
