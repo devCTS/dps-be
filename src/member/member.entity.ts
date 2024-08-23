@@ -11,7 +11,7 @@ import {
 @Entity()
 export class Member {
   @PrimaryGeneratedColumn()
-  member_id: string;
+  id: string;
 
   @Column({ nullable: false })
   @IsNotEmpty()

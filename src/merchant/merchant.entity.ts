@@ -11,7 +11,7 @@ import {
 @Entity()
 export class Merchant {
   @PrimaryGeneratedColumn()
-  merchant_id: string;
+  id: string;
 
   @Column({ nullable: false })
   @IsNotEmpty()
