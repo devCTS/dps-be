@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { encryptPassword, generateJwtToken } from 'src/utils/utils';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -18,12 +18,13 @@ export class MerchantService {
     const { email, password, phone, first_name, last_name } =
       registrationDetails;
 
-    const isUserExists = await this.merchantRepository.findOneBy({ email });
+    const isUserExists = await this.identityService.getIdentityByEmail(email);
+
     if (isUserExists) {
-      return {
-        status: HttpStatus.CONFLICT,
-        message: 'User already exists. Please Sign in.',
-      };
+      throw new HttpException(
+        'User already exists. Please Sign in.',
+        HttpStatus.CONFLICT,
+      );
     }
 
     // generate password hash with salts and generate jwt token

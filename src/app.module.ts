@@ -1,10 +1,4 @@
-import {
-  ClassSerializerInterceptor,
-  INestApplication,
-  MiddlewareConsumer,
-  Module,
-  NestModule,
-} from '@nestjs/common';
+import { ClassSerializerInterceptor, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -12,13 +6,13 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { UserModule } from './user/user.module';
 import { RazorpayModule } from 'nestjs-razorpay';
 import { PaymentSystemModule } from './upstream-gateway/payment-system/payment-system.module';
-import { EncryptionInterceptor } from './app.interceptor';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MerchantModule } from './merchant/merchant.module';
 import { MemberModule } from './member/member.module';
-import { Identity } from './identity/identity.entity';
-import { identity } from 'rxjs';
 import { IdentityModule } from './identity/identity.module';
+import { AuthController } from './auth/auth.controller';
+import { AuthService } from './auth/auth.service';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -50,14 +44,16 @@ import { IdentityModule } from './identity/identity.module';
     MerchantModule,
     MemberModule,
     IdentityModule,
+    AuthModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, AuthController],
   providers: [
     AppService,
     {
       provide: APP_INTERCEPTOR,
       useClass: ClassSerializerInterceptor,
     },
+    AuthService,
   ],
 })
 export class AppModule {}
