@@ -13,6 +13,8 @@ import { IdentityModule } from './identity/identity.module';
 import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
 import { AuthModule } from './auth/auth.module';
+import { ChannelsModule } from './channels/channels.module';
+import { GatewaysModule } from './gateways/gateways.module';
 
 @Module({
   imports: [
@@ -45,6 +47,8 @@ import { AuthModule } from './auth/auth.module';
     MemberModule,
     IdentityModule,
     AuthModule,
+    ChannelsModule,
+    GatewaysModule,
   ],
   controllers: [AppController, AuthController],
   providers: [
