@@ -1,4 +1,3 @@
-import { IsBoolean, IsEmpty, IsNotEmpty, IsString } from 'class-validator';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
@@ -9,7 +8,7 @@ export class Channels {
   @Column({ nullable: false })
   name: string;
 
-  @Column({ nullable: false })
+  @Column({ nullable: false, unique: true })
   tag: string;
 
   @Column({ type: Boolean, default: true })

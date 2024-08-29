@@ -5,7 +5,7 @@ import { EncryptionInterceptor } from './app.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
-  // app.useGlobalInterceptors(new EncryptionInterceptor());
+  app.useGlobalInterceptors(new EncryptionInterceptor());
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
