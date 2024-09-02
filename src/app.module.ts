@@ -15,6 +15,8 @@ import { AuthService } from './auth/auth.service';
 import { AuthModule } from './auth/auth.module';
 import { ChannelsModule } from './channels/channels.module';
 import { GatewaysModule } from './gateways/gateways.module';
+import { AdminController } from './admin/admin.controller';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -49,6 +51,7 @@ import { GatewaysModule } from './gateways/gateways.module';
     AuthModule,
     ChannelsModule,
     GatewaysModule,
+    AdminModule,
   ],
   controllers: [AppController, AuthController],
   providers: [
