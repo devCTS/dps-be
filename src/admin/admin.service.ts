@@ -89,7 +89,11 @@ export class AdminService {
     }
 
     const hashedPassword = await encryptPassword(password);
-    await this.adminRepository.save({ ...superAdminData, password, user_name });
+    await this.adminRepository.save({
+      ...superAdminData,
+      password: hashedPassword,
+      user_name,
+    });
     return { message: 'super admin created' };
   }
 }
