@@ -43,7 +43,7 @@ export class Merchant {
   payin_channels: string;
 
   @Column()
-  payout_channels: Channels[];
+  payout_channels: string;
 
   @Column()
   allow_member_channel_payin: boolean;
