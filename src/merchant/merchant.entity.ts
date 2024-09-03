@@ -39,12 +39,10 @@ export class Merchant {
   @Column({ default: 0 })
   balance: string;
 
-  @JoinTable()
-  @OneToMany(() => Channels, (channel) => channel)
-  payin_channels: Channels[];
+  @Column()
+  payin_channels: string;
 
-  @JoinTable()
-  @OneToMany(() => Channels, (channel) => channel)
+  @Column()
   payout_channels: Channels[];
 
   @Column()
@@ -68,9 +66,8 @@ export class Merchant {
   @Column()
   allow_payout_timeout_fallback: boolean;
 
-  @JoinTable()
-  @OneToMany(() => Channels, (channel) => channel)
-  withdrawal_channels: Channels[];
+  @Column()
+  withdrawal_channels: string;
 
   @Column()
   withdrawal_service_rate: string;

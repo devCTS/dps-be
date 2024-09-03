@@ -123,5 +123,5 @@ export class MerchantRegistrationDto {
   channel_mode: string;
 
   // TODO
-  sub_accounts: string;
+  // sub_accounts: string;
 }
