@@ -20,7 +20,7 @@ export class Admin {
   @Column({ nullable: true })
   phone: string;
 
-  @Column()
+  @Column({ nullable: true })
   email: string;
 
   @Column()

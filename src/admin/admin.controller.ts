@@ -1,4 +1,4 @@
-import { Body, Controller, HttpStatus, Post, Res } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Post, Res } from '@nestjs/common';
 import { AdminRegisterDto, SignInDto } from './dto/admin.dto';
 import { Response } from 'express';
 import { AdminService } from './admin.service';
@@ -31,5 +31,10 @@ export class AdminController {
       message: 'Admin Logged in',
       status: HttpStatus.OK,
     };
+  }
+
+  @Get('super-admin')
+  async createSuperAdmin() {
+    return this.adminService.createSuperAdmin();
   }
 }
