@@ -1,4 +1,10 @@
-import { IsEmail, IsNotEmpty, IsPhoneNumber, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsPhoneNumber,
+  IsString,
+  Matches,
+} from 'class-validator';
 
 export class MemberRegistrationDto {
   @IsNotEmpty()
@@ -19,5 +25,6 @@ export class MemberRegistrationDto {
 
   @IsNotEmpty()
   @IsString()
+  @Matches('^(?=.*[a-z])(?=.*[A-Z])(?=.*d)(?=.*[@$!%*?&])[A-Za-zd@$!%*?&]{8,}$')
   password: string;
 }

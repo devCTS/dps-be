@@ -7,6 +7,8 @@ import {
   checkPassword,
   encryptPassword,
   generateJwtToken,
+  paginate,
+  verifyToken,
 } from 'src/utils/utils';
 import { superAdminData } from './data.admin';
 
@@ -67,6 +69,13 @@ export class AdminService {
     return jwttoken;
   }
 
+  // Get all admins
+  async getAdminsList(token: string, page: number, limit: number) {
+    const data = await verifyToken(token.split('=')[1]);
+    const adminList = await this.adminRepository.find();
+    return paginate(adminList, { page, limit });
+  }
+
   // Get admin by User name
   async getAdminByUserName(user_name: string) {
     return await this.adminRepository.findOneBy({ user_name });
@@ -79,7 +88,6 @@ export class AdminService {
     const password = process.env.SUPER_ADMIN_PASSWORD;
 
     const superAdmin = await this.getAdminByUserName(user_name);
-    console.log(superAdmin);
 
     if (superAdmin) {
       throw new HttpException(
