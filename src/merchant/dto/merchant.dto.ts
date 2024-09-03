@@ -53,14 +53,18 @@ export class MerchantRegistrationDto {
   @IsNotEmpty()
   @MinLength(8)
   @MaxLength(16)
-  @Matches('^(?=.*[a-z])(?=.*[A-Z])(?=.*d)(?=.*[@$!%*?&])[A-Za-zd@$!%*?&]{8,}$')
+  @Matches(
+    '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,16}$',
+  )
   login_password: string;
 
   @IsString()
   @IsNotEmpty()
   @MinLength(8)
   @MaxLength(16)
-  @Matches('^(?=.*[a-z])(?=.*[A-Z])(?=.*d)(?=.*[@$!%*?&])[A-Za-zd@$!%*?&]{8,}$')
+  @Matches(
+    '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,16}$',
+  )
   withdrawal_password: string;
 
   @IsNumber()
