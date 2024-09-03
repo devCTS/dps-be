@@ -44,7 +44,7 @@ export class AdminRegisterDto {
   @IsNotEmpty()
   email: string;
 
-  @IsEnum(['super', 'sub'])
+  @IsEnum(['super', 'sub', 'admin'])
   @IsNotEmpty()
   type: string;
 
