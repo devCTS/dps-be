@@ -1,4 +1,10 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Merchant } from './merchant.entity';
 import { Repository } from 'typeorm';
@@ -27,10 +33,7 @@ export class MerchantService {
       await this.identityService.getIdentityByUserName(user_name);
 
     if (merchantIdentity) {
-      throw new HttpException(
-        'Identity already exists. Please Login',
-        HttpStatus.CONFLICT,
-      );
+      throw new ConflictException('Identity already exists. Please Login');
     }
 
     const hashedPassword = await encryptPassword(password);
@@ -62,10 +65,7 @@ export class MerchantService {
       await this.identityService.getIdentityByUserName(user_name);
 
     if (!merchantIdentity) {
-      throw new HttpException(
-        'User name or pawword is incorrect',
-        HttpStatus.FORBIDDEN,
-      );
+      throw new UnauthorizedException('User name or pawword is incorrect');
     }
 
     const hashedPassword = merchantIdentity.password;
@@ -76,10 +76,7 @@ export class MerchantService {
     );
 
     if (!isPasswordMatched) {
-      throw new HttpException(
-        'User name or pawword is incorrect',
-        HttpStatus.FORBIDDEN,
-      );
+      throw new UnauthorizedException('User name or pawword is incorrect');
     }
 
     return generateJwtToken({ user_name, hashedPassword });
