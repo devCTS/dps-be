@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { MerchantService } from './merchant.service';
 import { MerchantRegisterDto, MerchantUpdateDto } from './dto/merchant.dt';
 
@@ -32,5 +40,11 @@ export class MerchantController {
   @Get()
   async getAllMerchants() {
     return this.merchantService.getAllMerchants();
+  }
+
+  // DELETE Requets
+  @Delete()
+  async deleteAllMerchants() {
+    this.merchantService.deleteAllMerchants();
   }
 }

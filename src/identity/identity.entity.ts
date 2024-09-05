@@ -21,6 +21,6 @@ export class Identity extends BaseEntity {
   @Column()
   password: string;
 
-  @OneToOne(() => Merchant, (merchant) => merchant.identity, { cascade: true })
+  @OneToOne(() => Merchant, (merchant) => merchant.identity)
   merchant: Merchant;
 }

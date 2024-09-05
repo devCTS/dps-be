@@ -111,4 +111,9 @@ export class MerchantService {
       },
     });
   }
+
+  // Delete all merchants
+  async deleteAllMerchants() {
+    await this.merchantRepository.clear();
+  }
 }

@@ -22,7 +22,10 @@ export class Merchant extends BaseEntity {
   @Column()
   phone: string;
 
-  @OneToOne(() => Identity, (identity) => identity.merchant)
+  @OneToOne(() => Identity, (identity) => identity.merchant, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'identity_id' })
   identity: Identity;
 }
