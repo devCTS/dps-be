@@ -12,3 +12,13 @@ export class IdentityRegisterDto {
   @IsNotEmpty()
   password: string;
 }
+
+export class IdentitySigninDto {
+  @IsString()
+  @IsNotEmpty()
+  user_name: string;
+
+  @IsString()
+  @IsNotEmpty()
+  password: string;
+}

@@ -1,20 +1,15 @@
 import {
   ConflictException,
-  HttpException,
   HttpStatus,
   Injectable,
-  UnauthorizedException,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Merchant } from './merchant.entity';
 import { Repository } from 'typeorm';
 import { IdentityService } from 'src/identity/identity.service';
-import { MerchantRegisterDto, MerchantSigninDto } from './dto/merchant.dt';
-import {
-  checkPassword,
-  encryptPassword,
-  generateJwtToken,
-} from 'src/utils/utils';
+import { MerchantRegisterDto, MerchantUpdateDto } from './dto/merchant.dt';
+import { encryptPassword } from 'src/utils/utils';
 
 @Injectable()
 export class MerchantService {
@@ -23,6 +18,11 @@ export class MerchantService {
     private merchantRepository: Repository<Merchant>,
     private identityService: IdentityService,
   ) {}
+
+  // Get merchant by Identity id
+  async getMerchantByIdentityId(identity_id: string) {
+    return await this.merchantRepository.findOneBy({});
+  }
 
   // Register merchant
   async registerMerchant(merchatRegisterData: MerchantRegisterDto) {
@@ -58,27 +58,27 @@ export class MerchantService {
     };
   }
 
-  // Sign in merchant
-  async signInMerchant(merchantSigninData: MerchantSigninDto) {
-    const { user_name, password } = merchantSigninData;
+  // Update merchant details
+  async updateMerchantDetails(
+    merchantUpdateData: MerchantUpdateDto,
+    user_name: string,
+  ) {
     const merchantIdentity =
       await this.identityService.getIdentityByUserName(user_name);
-
     if (!merchantIdentity) {
-      throw new UnauthorizedException('User name or pawword is incorrect');
+      throw new NotFoundException('Merchant account not found.');
     }
+    const merchantdata = await this.merchantRepository.findOne({
+      where: { identity: { id: merchantIdentity.id } },
+      relations: {
+        identity: true,
+      },
+    });
+    await this.merchantRepository.update(merchantdata.id, {
+      ...merchantdata,
+      ...merchantUpdateData,
+    });
 
-    const hashedPassword = merchantIdentity.password;
-
-    const isPasswordMatched = checkPassword(
-      password,
-      merchantIdentity.password,
-    );
-
-    if (!isPasswordMatched) {
-      throw new UnauthorizedException('User name or pawword is incorrect');
-    }
-
-    return generateJwtToken({ user_name, hashedPassword });
+    return { message: 'Merchant data updated.', merchantUpdateData };
   }
 }

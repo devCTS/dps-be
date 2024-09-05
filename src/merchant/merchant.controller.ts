@@ -1,6 +1,10 @@
-import { Body, Controller, Post, Res } from '@nestjs/common';
+import { Body, Controller, Param, Patch, Post, Res } from '@nestjs/common';
 import { MerchantService } from './merchant.service';
-import { MerchantRegisterDto, MerchantSigninDto } from './dto/merchant.dt';
+import {
+  MerchantRegisterDto,
+  MerchantSigninDto,
+  MerchantUpdateDto,
+} from './dto/merchant.dt';
 import { Response } from 'express';
 
 @Controller('merchant')
@@ -12,13 +16,14 @@ export class MerchantController {
     return this.merchantService.registerMerchant(merchantRegisterData);
   }
 
-  @Post('sign-in')
-  async signInMerchant(
-    @Body() merchantSigninData: MerchantSigninDto,
-    @Res({ passthrough: true }) response: Response,
+  @Patch('/:user_name')
+  async updateMerchant(
+    @Param('user_name') user_name: string,
+    @Body() merchantUpdateData: MerchantUpdateDto,
   ) {
-    const jwt = await this.merchantService.signInMerchant(merchantSigninData);
-    response.cookie('merchant_token', `Bearer_${jwt}`);
-    return { message: 'Sign in successful.', merchantSigninData };
+    return await this.merchantService.updateMerchantDetails(
+      merchantUpdateData,
+      user_name,
+    );
   }
 }
