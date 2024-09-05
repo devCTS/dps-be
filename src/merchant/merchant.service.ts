@@ -23,9 +23,6 @@ export class MerchantService {
   async getMerchantByIdentityId(identity_id: number) {
     return await this.merchantRepository.findOne({
       where: { identity: { id: identity_id } },
-      relations: {
-        identity: true,
-      },
     });
   }
 
@@ -105,15 +102,11 @@ export class MerchantService {
 
   // Get all merchant
   async getAllMerchants() {
-    return await this.merchantRepository.find({
-      relations: {
-        identity: true,
-      },
-    });
+    return await this.merchantRepository.find();
   }
 
   // Delete all merchants
   async deleteAllMerchants() {
-    await this.merchantRepository.clear();
+    await this.merchantRepository.delete({});
   }
 }

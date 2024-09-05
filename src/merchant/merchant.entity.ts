@@ -25,6 +25,7 @@ export class Merchant extends BaseEntity {
   @OneToOne(() => Identity, (identity) => identity.merchant, {
     cascade: true,
     onDelete: 'CASCADE',
+    eager: true,
   })
   @JoinColumn({ name: 'identity_id' })
   identity: Identity;

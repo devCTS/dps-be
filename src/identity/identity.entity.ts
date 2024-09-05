@@ -1,3 +1,4 @@
+import { Member } from 'src/member/member.entity';
 import { Merchant } from 'src/merchant/merchant.entity';
 import {
   BaseEntity,
@@ -23,4 +24,7 @@ export class Identity extends BaseEntity {
 
   @OneToOne(() => Merchant, (merchant) => merchant.identity)
   merchant: Merchant;
+
+  @OneToOne(() => Member, (member) => member.identity)
+  member: Merchant;
 }

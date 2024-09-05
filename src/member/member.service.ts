@@ -23,9 +23,6 @@ export class MemberService {
   async getMemberByIdentityId(identity_id: number) {
     return await this.memberRepository.findOne({
       where: { identity: { id: identity_id } },
-      relations: {
-        identity: true,
-      },
     });
   }
 
@@ -78,11 +75,7 @@ export class MemberService {
 
   // Get all members
   async getAllMembers() {
-    return await this.memberRepository.find({
-      relations: {
-        identity: true,
-      },
-    });
+    return await this.memberRepository.find();
   }
 
   // Update member details
