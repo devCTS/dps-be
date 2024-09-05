@@ -1,16 +1,12 @@
-import { Body, Controller, Param, Patch, Post, Res } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { MerchantService } from './merchant.service';
-import {
-  MerchantRegisterDto,
-  MerchantSigninDto,
-  MerchantUpdateDto,
-} from './dto/merchant.dt';
-import { Response } from 'express';
+import { MerchantRegisterDto, MerchantUpdateDto } from './dto/merchant.dt';
 
 @Controller('merchant')
 export class MerchantController {
   constructor(private merchantService: MerchantService) {}
 
+  // POST requests
   @Post('register')
   async registerMerchant(@Body() merchantRegisterData: MerchantRegisterDto) {
     return this.merchantService.registerMerchant(merchantRegisterData);
@@ -25,5 +21,11 @@ export class MerchantController {
       merchantUpdateData,
       user_name,
     );
+  }
+
+  // GET Reuqests
+  @Get('/:user_name')
+  async getUserByUserName(@Param('user_name') user_name: string) {
+    return this.merchantService.getMerchantByUserName(user_name);
   }
 }

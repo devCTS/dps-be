@@ -20,8 +20,13 @@ export class MerchantService {
   ) {}
 
   // Get merchant by Identity id
-  async getMerchantByIdentityId(identity_id: string) {
-    return await this.merchantRepository.findOneBy({});
+  async getMerchantByIdentityId(identity_id: number) {
+    return await this.merchantRepository.findOne({
+      where: { identity: { id: identity_id } },
+      relations: {
+        identity: true,
+      },
+    });
   }
 
   // Register merchant
@@ -68,17 +73,33 @@ export class MerchantService {
     if (!merchantIdentity) {
       throw new NotFoundException('Merchant account not found.');
     }
-    const merchantdata = await this.merchantRepository.findOne({
-      where: { identity: { id: merchantIdentity.id } },
-      relations: {
-        identity: true,
-      },
-    });
+
+    const merchantdata = await this.getMerchantByIdentityId(
+      merchantIdentity.id,
+    );
+
     await this.merchantRepository.update(merchantdata.id, {
       ...merchantdata,
       ...merchantUpdateData,
     });
 
     return { message: 'Merchant data updated.', merchantUpdateData };
+  }
+
+  // Get merchant details by user name
+  async getMerchantByUserName(user_name: string) {
+    const merchantIdentity =
+      await this.identityService.getIdentityByUserName(user_name);
+
+    if (!merchantIdentity) {
+      throw new NotFoundException('Merchant not found.');
+    }
+
+    const merchantData = await this.getMerchantByIdentityId(
+      merchantIdentity.id,
+    );
+    delete merchantData.identity;
+    delete merchantIdentity.password;
+    return { ...merchantIdentity, ...merchantData };
   }
 }
