@@ -28,4 +28,9 @@ export class MerchantController {
   async getUserByUserName(@Param('user_name') user_name: string) {
     return this.merchantService.getMerchantByUserName(user_name);
   }
+
+  @Get()
+  async getAllMerchants() {
+    return this.merchantService.getAllMerchants();
+  }
 }

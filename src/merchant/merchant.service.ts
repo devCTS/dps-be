@@ -102,4 +102,13 @@ export class MerchantService {
     delete merchantIdentity.password;
     return { ...merchantIdentity, ...merchantData };
   }
+
+  // Get all merchant
+  async getAllMerchants() {
+    return await this.merchantRepository.find({
+      relations: {
+        identity: true,
+      },
+    });
+  }
 }
