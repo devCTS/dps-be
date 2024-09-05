@@ -1,9 +1,22 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Identity } from './identity.entity';
 import { Repository } from 'typeorm';
-import { IdentityRegisterDto, IdentitySigninDto } from './dto/identity.dto';
-import { checkPassword, generateJwtToken } from 'src/utils/utils';
+import {
+  IdentityRegisterDto,
+  IdentitySigninDto,
+  UpdatePasswordDto,
+} from './dto/identity.dto';
+import {
+  checkPassword,
+  encryptPassword,
+  generateJwtToken,
+} from 'src/utils/utils';
 
 @Injectable()
 export class IdentityService {
@@ -40,5 +53,30 @@ export class IdentityService {
     }
 
     return generateJwtToken({ user_name, hashedPassword });
+  }
+
+  // Reset password
+  async resetPassword(updatePasswordData: UpdatePasswordDto) {
+    const { user_name, oldPassword, newPassword } = updatePasswordData;
+
+    const identity = await this.getIdentityByUserName(user_name);
+    if (!identity) {
+      throw new NotFoundException('User does not exists.');
+    }
+
+    const oldHashedPassword = await encryptPassword(oldPassword);
+    const isPasswordMatched = checkPassword(oldPassword, oldHashedPassword);
+
+    if (!isPasswordMatched) {
+      throw new ForbiddenException('Invalid credentials.');
+    }
+
+    const newHashedPassword = await encryptPassword(newPassword);
+    await this.identityRepository.update(identity.id, {
+      ...identity,
+      password: newHashedPassword,
+    });
+
+    return { message: 'Password changed' };
   }
 }

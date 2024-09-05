@@ -1,4 +1,4 @@
-import { IsEmail, isNotEmpty, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
 export class IdentityRegisterDto {
   @IsString()
@@ -21,4 +21,18 @@ export class IdentitySigninDto {
   @IsString()
   @IsNotEmpty()
   password: string;
+}
+
+export class UpdatePasswordDto {
+  @IsString()
+  @IsNotEmpty()
+  user_name: string;
+
+  @IsString()
+  @IsNotEmpty()
+  oldPassword: string;
+
+  @IsString()
+  @IsNotEmpty()
+  newPassword: string;
 }
