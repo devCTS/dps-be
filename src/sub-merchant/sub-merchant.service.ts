@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   HttpStatus,
   Injectable,
   NotFoundException,
@@ -132,5 +133,19 @@ export class SubMerchantService {
       await transactionalEntityManager.clear(SubMerchant);
       return { message: 'All Sub-merchants deleted' };
     });
+  }
+
+  async deleteOneSubMerchant(user_name: string) {
+    const subMerchant = await this.getSubMerchantByUserName(user_name);
+
+    if (!subMerchant) {
+      throw new NotFoundException('User does not exists.');
+    }
+    if (subMerchant.user_type === 'super-admin') {
+      throw new ForbiddenException('Deleting this user is not permitted');
+    }
+    await this.identityService.deleteUserById(subMerchant.id);
+
+    return { message: 'User deleted.' };
   }
 }

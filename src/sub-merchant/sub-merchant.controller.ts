@@ -52,4 +52,8 @@ export class SubMerchantController {
   async deleteAllSubMerchants() {
     return await this.subMerchantService.deleteAllSubMerchants();
   }
+  @Delete('/:user_name')
+  async deleteSubMerchant(@Param('user_name') user_name: string) {
+    return await this.subMerchantService.deleteOneSubMerchant(user_name);
+  }
 }

@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   HttpStatus,
   Injectable,
   NotFoundException,
@@ -100,6 +101,21 @@ export class AdminService {
   // Get all Admin
   async getAllAdmins() {
     return await this.adminRepository.find();
+  }
+
+  // Delete one admin
+  async deleteOneAdmin(user_name: string) {
+    const admin = await this.getAdminByUserName(user_name);
+
+    if (!admin) {
+      throw new NotFoundException('User does not exists.');
+    }
+    if (admin.user_type === 'super-admin') {
+      throw new ForbiddenException('Deleting this user is not permitted');
+    }
+    await this.identityService.deleteUserById(admin.id);
+
+    return { message: 'User deleted.' };
   }
 
   // Delete all Admins

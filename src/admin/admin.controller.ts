@@ -47,4 +47,9 @@ export class AdminController {
   async deleteAllAdmin() {
     return await this.adminService.deleteAllAdmins();
   }
+
+  @Delete('/:user_name')
+  async deleteAdmin(@Param('user_name') user_name: string) {
+    return await this.adminService.deleteOneAdmin(user_name);
+  }
 }

@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   HttpStatus,
   Injectable,
   NotFoundException,
@@ -98,5 +99,20 @@ export class MemberService {
     });
 
     return { message: 'Member data updated.', memberUpdateData };
+  }
+
+  // delete one member
+  async deleteOneMember(user_name: string) {
+    const member = await this.getMemberByUserName(user_name);
+
+    if (!member) {
+      throw new NotFoundException('User does not exists.');
+    }
+    if (member.user_type === 'super-admin') {
+      throw new ForbiddenException('Deleting this user is not permitted');
+    }
+    await this.identityService.deleteUserById(member.id);
+
+    return { message: 'User deleted.' };
   }
 }

@@ -47,4 +47,9 @@ export class MerchantController {
   async deleteAllMerchants() {
     return await this.merchantService.deleteAllMerchants();
   }
+
+  @Delete('/:user_name')
+  async deleteMerchant(@Param('user_name') user_name: string) {
+    return await this.merchantService.deleteOneMerchant(user_name);
+  }
 }
