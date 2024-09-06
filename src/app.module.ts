@@ -7,6 +7,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MerchantModule } from './merchant/merchant.module';
 import { IdentityModule } from './identity/identity.module';
 import { MemberModule } from './member/member.module';
+import { SubMerchantModule } from './sub-merchant/sub-merchant.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -33,6 +35,9 @@ import { MemberModule } from './member/member.module';
     MerchantModule,
     IdentityModule,
     MemberModule,
+    MemberModule,
+    SubMerchantModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [

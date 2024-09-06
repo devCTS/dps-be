@@ -1,5 +1,7 @@
+import { Admin } from 'src/admin/entities/admin.entity';
 import { Member } from 'src/member/entities/member.entity';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
+import { SubMerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
 import {
   BaseEntity,
   Column,
@@ -27,4 +29,10 @@ export class Identity extends BaseEntity {
 
   @OneToOne(() => Member, (member) => member.identity)
   member: Member;
+
+  @OneToOne(() => Admin, (admin) => admin.identity)
+  admin: Admin;
+
+  @OneToOne(() => SubMerchant, (subMerchant) => subMerchant.identity)
+  subMerchant: SubMerchant;
 }

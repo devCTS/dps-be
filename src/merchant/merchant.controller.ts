@@ -8,7 +8,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { MerchantService } from './merchant.service';
-import { MerchantRegisterDto, MerchantUpdateDto } from './dto/merchant.dt';
+import { MerchantRegisterDto, MerchantUpdateDto } from './dto/merchant.dto';
 
 @Controller('merchant')
 export class MerchantController {

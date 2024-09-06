@@ -69,7 +69,7 @@ export class MemberService {
     return {
       memberRegisterData,
       status: HttpStatus.CREATED,
-      message: 'Merchant created.',
+      message: 'Member created.',
     };
   }
 
@@ -86,16 +86,16 @@ export class MemberService {
     const memberIdentity =
       await this.identityService.getIdentityByUserName(user_name);
     if (!memberIdentity) {
-      throw new NotFoundException('Merchant account not found.');
+      throw new NotFoundException('Member account not found.');
     }
 
-    const merchantdata = await this.getMemberByIdentityId(memberIdentity.id);
+    const memberData = await this.getMemberByIdentityId(memberIdentity.id);
 
-    await this.memberRepository.update(merchantdata.id, {
-      ...merchantdata,
+    await this.memberRepository.update(memberData.id, {
+      ...memberData,
       ...memberUpdateData,
     });
 
-    return { message: 'Merchant data updated.', memberUpdateData };
+    return { message: 'Member data updated.', memberUpdateData };
   }
 }

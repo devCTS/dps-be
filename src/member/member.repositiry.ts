@@ -1,4 +1,4 @@
-import { Identity } from 'src/identity/entities/identity.entity';
 import { Repository } from 'typeorm';
+import { Member } from './entities/member.entity';
 
-export class IdentityRepository extends Repository<Identity> {}
+export class MemberRepository extends Repository<Member> {}

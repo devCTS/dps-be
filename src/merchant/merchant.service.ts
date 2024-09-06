@@ -8,7 +8,7 @@ import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { Merchant } from './entities/merchant.entity';
 import { EntityManager, Repository } from 'typeorm';
 import { IdentityService } from 'src/identity/identity.service';
-import { MerchantRegisterDto, MerchantUpdateDto } from './dto/merchant.dt';
+import { MerchantRegisterDto, MerchantUpdateDto } from './dto/merchant.dto';
 import { encryptPassword } from 'src/utils/utils';
 import { Identity } from 'src/identity/entities/identity.entity';
 
