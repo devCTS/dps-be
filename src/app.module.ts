@@ -9,6 +9,8 @@ import { IdentityModule } from './identity/identity.module';
 import { MemberModule } from './member/member.module';
 import { SubMerchantModule } from './sub-merchant/sub-merchant.module';
 import { AdminModule } from './admin/admin.module';
+import { ChannelModule } from './channel/channel.module';
+import { GatewayModule } from './gateway/gateway.module';
 
 @Module({
   imports: [
@@ -38,6 +40,8 @@ import { AdminModule } from './admin/admin.module';
     MemberModule,
     SubMerchantModule,
     AdminModule,
+    ChannelModule,
+    GatewayModule,
   ],
   controllers: [AppController],
   providers: [

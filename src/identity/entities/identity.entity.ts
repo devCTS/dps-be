@@ -1,4 +1,5 @@
 import { Admin } from 'src/admin/entities/admin.entity';
+import { ChannelDetails } from 'src/channel/entities/channelDetails.entity';
 import { Member } from 'src/member/entities/member.entity';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { SubMerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
@@ -7,6 +8,7 @@ import {
   Column,
   Entity,
   OneToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -38,4 +40,7 @@ export class Identity extends BaseEntity {
 
   @OneToOne(() => SubMerchant, (subMerchant) => subMerchant.identity)
   subMerchant: SubMerchant;
+
+  @OneToMany(() => ChannelDetails, (channelDetails) => channelDetails.channel)
+  channelDetails: ChannelDetails[];
 }
