@@ -1,5 +1,5 @@
-import { Member } from 'src/member/member.entity';
-import { Merchant } from 'src/merchant/merchant.entity';
+import { Member } from 'src/member/entities/member.entity';
+import { Merchant } from 'src/merchant/entities/merchant.entity';
 import {
   BaseEntity,
   Column,

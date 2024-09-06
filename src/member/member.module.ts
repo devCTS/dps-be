@@ -4,7 +4,7 @@ import { MemberController } from './member.controller';
 import { IdentityModule } from 'src/identity/identity.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MerchantRepository } from 'src/merchant/merchant.repository';
-import { Member } from './member.entity';
+import { Member } from './entities/member.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Member]), IdentityModule],

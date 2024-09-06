@@ -7,7 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { IdentityService } from 'src/identity/identity.service';
 import { Repository } from 'typeorm';
-import { Member } from './member.entity';
+import { Member } from './entities/member.entity';
 import { MemberRegisterDto, MemberUpdateDto } from './dto/member.dto';
 import { encryptPassword } from 'src/utils/utils';
 

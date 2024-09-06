@@ -5,12 +5,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
-import { Merchant } from './merchant.entity';
+import { Merchant } from './entities/merchant.entity';
 import { EntityManager, Repository } from 'typeorm';
 import { IdentityService } from 'src/identity/identity.service';
 import { MerchantRegisterDto, MerchantUpdateDto } from './dto/merchant.dt';
 import { encryptPassword } from 'src/utils/utils';
-import { Identity } from 'src/identity/identity.entity';
+import { Identity } from 'src/identity/entities/identity.entity';
 
 @Injectable()
 export class MerchantService {

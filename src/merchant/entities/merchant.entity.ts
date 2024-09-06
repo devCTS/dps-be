@@ -1,4 +1,4 @@
-import { Identity } from 'src/identity/identity.entity';
+import { Identity } from 'src/identity/entities/identity.entity';
 import {
   BaseEntity,
   Column,
@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 
 @Entity()
-export class Member extends BaseEntity {
+export class Merchant extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
