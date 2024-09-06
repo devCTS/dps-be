@@ -4,12 +4,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { Merchant } from './merchant.entity';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { IdentityService } from 'src/identity/identity.service';
 import { MerchantRegisterDto, MerchantUpdateDto } from './dto/merchant.dt';
 import { encryptPassword } from 'src/utils/utils';
+import { Identity } from 'src/identity/identity.entity';
 
 @Injectable()
 export class MerchantService {
@@ -17,6 +18,8 @@ export class MerchantService {
     @InjectRepository(Merchant)
     private merchantRepository: Repository<Merchant>,
     private identityService: IdentityService,
+    @InjectEntityManager()
+    private readonly entityManager: EntityManager,
   ) {}
 
   // Get merchant by Identity id
@@ -107,6 +110,20 @@ export class MerchantService {
 
   // Delete all merchants
   async deleteAllMerchants() {
-    await this.merchantRepository.delete({});
+    await this.entityManager.transaction(async (transactionalEntityManager) => {
+      // Fetch all merchants with their identities
+      const merchants = await transactionalEntityManager.find(Merchant, {
+        relations: ['identity'],
+      });
+      // Remove all identities first to avoid foreign key issues
+      for (const merchant of merchants) {
+        if (merchant.identity) {
+          await transactionalEntityManager.remove(Identity, merchant.identity);
+        }
+      }
+      // Remove all merchants
+      await transactionalEntityManager.clear(Merchant);
+      return { message: 'All merchants deleted' };
+    });
   }
 }

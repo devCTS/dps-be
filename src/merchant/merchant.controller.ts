@@ -45,6 +45,6 @@ export class MerchantController {
   // DELETE Requets
   @Delete()
   async deleteAllMerchants() {
-    await this.merchantService.deleteAllMerchants();
+    return await this.merchantService.deleteAllMerchants();
   }
 }

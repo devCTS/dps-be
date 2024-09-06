@@ -26,5 +26,5 @@ export class Identity extends BaseEntity {
   merchant: Merchant;
 
   @OneToOne(() => Member, (member) => member.identity)
-  member: Merchant;
+  member: Member;
 }
