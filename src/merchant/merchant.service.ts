@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Merchant } from './merchant.entity';
+import { Merchant } from './entities/merchant.entity';
 import { Repository } from 'typeorm';
 import { IdentityService } from 'src/identity/identity.service';
 import { MerchantRegisterDto, MerchantSigninDto } from './dto/merchant.dt';

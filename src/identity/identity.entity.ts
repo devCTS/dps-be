@@ -1,10 +1,12 @@
-import { Merchant } from 'src/merchant/merchant.entity';
+import { ChannelDetails } from 'src/channel/entities/channelDetails.entity';
+import { Merchant } from 'src/merchant/entities/merchant.entity';
 import {
   BaseEntity,
   Column,
   Entity,
   OneToOne,
   PrimaryGeneratedColumn,
+  OneToMany,
 } from 'typeorm';
 
 @Entity()
@@ -21,6 +23,9 @@ export class Identity extends BaseEntity {
   @Column()
   password: string;
 
-  @OneToOne(() => Merchant, (merchant) => merchant.identity, { cascade: true })
+  @OneToOne(() => Merchant, (merchant) => merchant.identity)
   merchant: Merchant;
+
+  @OneToMany(() => ChannelDetails, (channelDetails) => channelDetails.channel)
+  channelDetails: ChannelDetails[];
 }

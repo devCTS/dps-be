@@ -7,6 +7,8 @@ import { UserModule } from './user/user.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MerchantModule } from './merchant/merchant.module';
 import { IdentityModule } from './identity/identity.module';
+import { ChannelModule } from './channel/channel.module';
+import { GatewayModule } from './gateway/gateway.module';
 
 @Module({
   imports: [
@@ -33,6 +35,8 @@ import { IdentityModule } from './identity/identity.module';
     UserModule,
     MerchantModule,
     IdentityModule,
+    ChannelModule,
+    GatewayModule,
   ],
   controllers: [AppController],
   providers: [
