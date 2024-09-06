@@ -1,4 +1,4 @@
-import { Identity } from 'src/identity/identity.entity';
+import { Identity } from 'src/identity/entities/identity.entity';
 import {
   BaseEntity,
   Column,
@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 
 @Entity()
-export class Merchant extends BaseEntity {
+export class Admin extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -22,7 +22,11 @@ export class Merchant extends BaseEntity {
   @Column()
   phone: string;
 
-  @OneToOne(() => Identity, (identity) => identity.merchant)
+  @OneToOne(() => Identity, (identity) => identity.admin, {
+    cascade: true,
+    onDelete: 'CASCADE',
+    eager: true,
+  })
   @JoinColumn({ name: 'identity_id' })
   identity: Identity;
 }

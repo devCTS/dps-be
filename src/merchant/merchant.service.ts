@@ -1,20 +1,17 @@
 import {
   ConflictException,
-  HttpException,
+  ForbiddenException,
   HttpStatus,
   Injectable,
-  UnauthorizedException,
+  NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Merchant } from './merchant.entity';
-import { Repository } from 'typeorm';
+import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
+import { Merchant } from './entities/merchant.entity';
+import { EntityManager, Repository } from 'typeorm';
 import { IdentityService } from 'src/identity/identity.service';
-import { MerchantRegisterDto, MerchantSigninDto } from './dto/merchant.dt';
-import {
-  checkPassword,
-  encryptPassword,
-  generateJwtToken,
-} from 'src/utils/utils';
+import { MerchantRegisterDto, MerchantUpdateDto } from './dto/merchant.dto';
+import { encryptPassword } from 'src/utils/utils';
+import { Identity } from 'src/identity/entities/identity.entity';
 
 @Injectable()
 export class MerchantService {
@@ -22,7 +19,16 @@ export class MerchantService {
     @InjectRepository(Merchant)
     private merchantRepository: Repository<Merchant>,
     private identityService: IdentityService,
+    @InjectEntityManager()
+    private readonly entityManager: EntityManager,
   ) {}
+
+  // Get merchant by Identity id
+  async getMerchantByIdentityId(identity_id: number) {
+    return await this.merchantRepository.findOne({
+      where: { identity: { id: identity_id } },
+    });
+  }
 
   // Register merchant
   async registerMerchant(merchatRegisterData: MerchantRegisterDto) {
@@ -42,6 +48,7 @@ export class MerchantService {
       email,
       password: hashedPassword,
       user_name,
+      user_type: 'merchant',
     });
 
     await this.merchantRepository.save({
@@ -58,27 +65,81 @@ export class MerchantService {
     };
   }
 
-  // Sign in merchant
-  async signInMerchant(merchantSigninData: MerchantSigninDto) {
-    const { user_name, password } = merchantSigninData;
+  // Update merchant details
+  async updateMerchantDetails(
+    merchantUpdateData: MerchantUpdateDto,
+    user_name: string,
+  ) {
+    const merchantIdentity =
+      await this.identityService.getIdentityByUserName(user_name);
+    if (!merchantIdentity) {
+      throw new NotFoundException('Merchant account not found.');
+    }
+
+    const merchantdata = await this.getMerchantByIdentityId(
+      merchantIdentity.id,
+    );
+
+    await this.merchantRepository.update(merchantdata.id, {
+      ...merchantdata,
+      ...merchantUpdateData,
+    });
+
+    return { message: 'Merchant data updated.', merchantUpdateData };
+  }
+
+  // Get merchant details by user name
+  async getMerchantByUserName(user_name: string) {
     const merchantIdentity =
       await this.identityService.getIdentityByUserName(user_name);
 
     if (!merchantIdentity) {
-      throw new UnauthorizedException('User name or pawword is incorrect');
+      throw new NotFoundException('Merchant not found.');
     }
 
-    const hashedPassword = merchantIdentity.password;
-
-    const isPasswordMatched = checkPassword(
-      password,
-      merchantIdentity.password,
+    const merchantData = await this.getMerchantByIdentityId(
+      merchantIdentity.id,
     );
+    delete merchantData.identity;
+    delete merchantIdentity.password;
+    return { ...merchantIdentity, ...merchantData };
+  }
 
-    if (!isPasswordMatched) {
-      throw new UnauthorizedException('User name or pawword is incorrect');
+  // Get all merchant
+  async getAllMerchants() {
+    return await this.merchantRepository.find();
+  }
+
+  // Delete all merchants
+  async deleteAllMerchants() {
+    await this.entityManager.transaction(async (transactionalEntityManager) => {
+      // Fetch all merchants with their identities
+      const merchants = await transactionalEntityManager.find(Merchant, {
+        relations: ['identity'],
+      });
+      // Remove all identities first to avoid foreign key issues
+      for (const merchant of merchants) {
+        if (merchant.identity) {
+          await transactionalEntityManager.remove(Identity, merchant.identity);
+        }
+      }
+      // Remove all merchants
+      await transactionalEntityManager.clear(Merchant);
+      return { message: 'All merchants deleted' };
+    });
+  }
+
+  async deleteOneMerchant(user_name: string) {
+    const merchant = await this.getMerchantByUserName(user_name);
+
+    if (!merchant) {
+      throw new NotFoundException('User does not exists.');
     }
+    if (merchant.user_type === 'super-admin') {
+      throw new ForbiddenException('Deleting this user is not permitted');
+    }
+    await this.identityService.deleteUserById(merchant.id);
 
-    return generateJwtToken({ user_name, hashedPassword });
+    return { message: 'User deleted.' };
   }
 }

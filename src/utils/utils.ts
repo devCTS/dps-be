@@ -19,7 +19,8 @@ export const checkPassword = async (
 // Generate web token and check web token
 export const generateJwtToken = (payload: any) => {
   const secretKey = process.env.JWT_SECRET;
-  return jwt.sign(payload, secretKey, { expiresIn: '2h' });
+  const token = jwt.sign(payload, secretKey, { expiresIn: '2h' });
+  return token;
 };
 
 export const verifyToken = async (token: string) => {
