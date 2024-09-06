@@ -47,6 +47,7 @@ export class MerchantService {
       email,
       password: hashedPassword,
       user_name,
+      user_type: 'merchant',
     });
 
     await this.merchantRepository.save({

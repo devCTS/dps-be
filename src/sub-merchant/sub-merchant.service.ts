@@ -50,6 +50,7 @@ export class SubMerchantService {
       email,
       password: hashedPassword,
       user_name,
+      user_type: 'merchant',
     });
 
     await this.subMerchantRepository.save({

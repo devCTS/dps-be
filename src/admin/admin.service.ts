@@ -47,6 +47,7 @@ export class AdminService {
       email,
       password: hashedPassword,
       user_name,
+      user_type: 'admin',
     });
 
     await this.adminRepository.save({

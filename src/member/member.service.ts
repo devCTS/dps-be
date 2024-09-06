@@ -57,6 +57,7 @@ export class MemberService {
       email,
       password: hashedPassword,
       user_name,
+      user_type: 'member',
     });
 
     await this.memberRepository.save({

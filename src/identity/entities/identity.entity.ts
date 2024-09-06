@@ -24,6 +24,9 @@ export class Identity extends BaseEntity {
   @Column()
   password: string;
 
+  @Column()
+  user_type: string;
+
   @OneToOne(() => Merchant, (merchant) => merchant.identity)
   merchant: Merchant;
 

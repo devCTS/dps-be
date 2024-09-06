@@ -40,6 +40,7 @@ export class IdentityService {
     const { user_name, password } = signinData;
 
     const identity = await this.getIdentityByUserName(user_name);
+    console.log(identity);
     if (!identity) {
       throw new UnauthorizedException('User name or pawword is incorrect');
     }
