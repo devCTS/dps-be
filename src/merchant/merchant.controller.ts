@@ -1,24 +1,55 @@
-import { Body, Controller, Post, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { MerchantService } from './merchant.service';
-import { MerchantRegisterDto, MerchantSigninDto } from './dto/merchant.dt';
-import { Response } from 'express';
+import { MerchantRegisterDto, MerchantUpdateDto } from './dto/merchant.dto';
 
 @Controller('merchant')
 export class MerchantController {
   constructor(private merchantService: MerchantService) {}
 
+  // POST requests
   @Post('register')
   async registerMerchant(@Body() merchantRegisterData: MerchantRegisterDto) {
     return this.merchantService.registerMerchant(merchantRegisterData);
   }
 
-  @Post('sign-in')
-  async signInMerchant(
-    @Body() merchantSigninData: MerchantSigninDto,
-    @Res({ passthrough: true }) response: Response,
+  @Patch('/:user_name')
+  async updateMerchant(
+    @Param('user_name') user_name: string,
+    @Body() merchantUpdateData: MerchantUpdateDto,
   ) {
-    const jwt = await this.merchantService.signInMerchant(merchantSigninData);
-    response.cookie('merchant_token', `Bearer_${jwt}`);
-    return { message: 'Sign in successful.', merchantSigninData };
+    return await this.merchantService.updateMerchantDetails(
+      merchantUpdateData,
+      user_name,
+    );
+  }
+
+  // GET Reuqests
+  @Get('/:user_name')
+  async getUserByUserName(@Param('user_name') user_name: string) {
+    return this.merchantService.getMerchantByUserName(user_name);
+  }
+
+  @Get()
+  async getAllMerchants() {
+    return this.merchantService.getAllMerchants();
+  }
+
+  // DELETE Requets
+  @Delete()
+  async deleteAllMerchants() {
+    return await this.merchantService.deleteAllMerchants();
+  }
+
+  @Delete('/:user_name')
+  async deleteMerchant(@Param('user_name') user_name: string) {
+    return await this.merchantService.deleteOneMerchant(user_name);
   }
 }

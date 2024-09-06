@@ -1,4 +1,11 @@
-import { IsEmail, IsNotEmpty, IsPhoneNumber, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsPhoneNumber,
+  IsString,
+  MinLength,
+} from 'class-validator';
 
 export class MerchantRegisterDto {
   @IsEmail()
@@ -33,4 +40,20 @@ export class MerchantSigninDto {
   @IsString()
   @IsNotEmpty()
   password: string;
+}
+
+export class MerchantUpdateDto {
+  @IsString()
+  @IsOptional()
+  @MinLength(3)
+  first_name?: string;
+
+  @IsString()
+  @IsOptional()
+  @MinLength(3)
+  last_name?: string;
+
+  @IsPhoneNumber()
+  @IsOptional()
+  phone?: string;
 }

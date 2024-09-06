@@ -5,13 +5,11 @@ import {
   Entity,
   JoinColumn,
   OneToOne,
-  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { MerchantToChannel } from './merchantToChannel.entity';
 
 @Entity()
-export class Merchant extends BaseEntity {
+export class SubMerchant extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -31,10 +29,4 @@ export class Merchant extends BaseEntity {
   })
   @JoinColumn({ name: 'identity_id' })
   identity: Identity;
-
-  @OneToMany(
-    () => MerchantToChannel,
-    (merchantToChannel) => merchantToChannel.merchant,
-  )
-  merchantToChannel: MerchantToChannel[];
 }

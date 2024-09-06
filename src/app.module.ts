@@ -3,10 +3,12 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { UserModule } from './user/user.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MerchantModule } from './merchant/merchant.module';
 import { IdentityModule } from './identity/identity.module';
+import { MemberModule } from './member/member.module';
+import { SubMerchantModule } from './sub-merchant/sub-merchant.module';
+import { AdminModule } from './admin/admin.module';
 import { ChannelModule } from './channel/channel.module';
 import { GatewayModule } from './gateway/gateway.module';
 
@@ -32,9 +34,12 @@ import { GatewayModule } from './gateway/gateway.module';
       inject: [ConfigService],
     }),
 
-    UserModule,
     MerchantModule,
     IdentityModule,
+    MemberModule,
+    MemberModule,
+    SubMerchantModule,
+    AdminModule,
     ChannelModule,
     GatewayModule,
   ],

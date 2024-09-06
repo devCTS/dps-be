@@ -6,7 +6,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Channel } from './channel.entity';
-import { Identity } from 'src/identity/identity.entity';
+import { Identity } from 'src/identity/entities/identity.entity';
 
 @Entity()
 export class ChannelDetails {
