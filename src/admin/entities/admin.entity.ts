@@ -1,17 +1,23 @@
 import { Identity } from 'src/identity/entities/identity.entity';
 import {
-  BaseEntity,
-  Column,
   Entity,
-  JoinColumn,
-  OneToOne,
+  Column,
   PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToOne,
 } from 'typeorm';
 
 @Entity()
-export class Admin extends BaseEntity {
+export class Admin {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @OneToOne(() => Identity, (identity) => identity.admins)
+  @JoinColumn({ name: 'identity_id' })
+  identity: Identity;
 
   @Column()
   first_name: string;
@@ -19,14 +25,33 @@ export class Admin extends BaseEntity {
   @Column()
   last_name: string;
 
-  @Column()
+  @Column({ nullable: true })
   phone: string;
 
-  @OneToOne(() => Identity, (identity) => identity.admin, {
-    cascade: true,
-    onDelete: 'CASCADE',
-    eager: true,
-  })
-  @JoinColumn({ name: 'identity_id' })
-  identity: Identity;
+  @Column({ default: true })
+  enabled: boolean;
+
+  @Column({ enum: ['SUPER_ADMIN', 'SUB_ADMIN'] })
+  role: 'SUPER_ADMIN' | 'SUB_ADMIN';
+
+  @Column({ default: false })
+  permission_admins: boolean;
+
+  @Column({ default: false })
+  permission_users: boolean;
+
+  @Column({ default: false })
+  permission_adjust_balance: boolean;
+
+  @Column({ default: false })
+  permission_verify_orders: boolean;
+
+  @Column({ default: false })
+  permission_handle_withdrawals: boolean;
+
+  @CreateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
+  created_at: Date;
+
+  @UpdateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
+  updated_at: Date;
 }

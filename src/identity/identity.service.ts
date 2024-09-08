@@ -1,92 +1,258 @@
 import {
-  ForbiddenException,
+  ConflictException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { JwtService } from 'src/services/jwt/jwt.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Identity } from './entities/identity.entity';
 import { Repository } from 'typeorm';
-import {
-  IdentityRegisterDto,
-  IdentitySigninDto,
-  UpdatePasswordDto,
-} from './dto/identity.dto';
-import {
-  checkPassword,
-  encryptPassword,
-  generateJwtToken,
-} from 'src/utils/utils';
+import { SignInDto } from './dto/signin.dto';
+import { generateRandomOTP } from 'src/utils/utils';
+import { SignUpDto } from './dto/singup.dto';
+import { VerifyOtpDto } from './dto/verifyotp.dto';
+import { ForgotPasswordDto } from './dto/forgotPassword.dto';
+import { ChangePasswordDto } from './dto/changePassword.dto';
 
+type MemberContext = {
+  firstName: string;
+  lastName: string;
+  isVerified: boolean;
+  otp: number;
+};
+
+type MemberContextMap = {
+  [key: string]: MemberContext;
+};
+
+type ForogotPasswordContext = {
+  password: string;
+  isVerified: boolean;
+  otp: number;
+};
+
+type ForogotPasswordContextMap = {
+  [key: string]: ForogotPasswordContext;
+};
 @Injectable()
 export class IdentityService {
+  membersContexts: MemberContextMap;
+  forgotPasswordContexts: ForogotPasswordContextMap;
+
   constructor(
     @InjectRepository(Identity)
     private identityRepository: Repository<Identity>,
-  ) {}
-
-  // Get identity by user name
-  async getIdentityByUserName(user_name: string) {
-    return await this.identityRepository.findOneBy({ user_name });
+    private readonly jwtService: JwtService,
+  ) {
+    this.membersContexts = {};
+    this.forgotPasswordContexts = {};
   }
 
-  // Register identity
-  async registerIdentity(registerIdentityData: IdentityRegisterDto) {
-    return this.identityRepository.save(registerIdentityData);
+  makeAndSendOtp(email) {
+    return 282907;
   }
 
-  // Sign in
-  async signIn(signinData: IdentitySigninDto) {
-    const { user_name, password } = signinData;
-
-    const identity = await this.getIdentityByUserName(user_name);
-    if (!identity) {
-      throw new UnauthorizedException('User name or pawword is incorrect');
-    }
-
-    const hashedPassword = signinData.password;
-
-    const isPasswordMatched = checkPassword(password, hashedPassword);
-
-    if (!isPasswordMatched) {
-      throw new UnauthorizedException('User name or pawword is incorrect');
-    }
-
-    return generateJwtToken({ user_name, hashedPassword });
-  }
-
-  // Reset password
-  async resetPassword(updatePasswordData: UpdatePasswordDto) {
-    const { user_name, oldPassword, newPassword } = updatePasswordData;
-
-    const identity = await this.getIdentityByUserName(user_name);
-    if (!identity) {
-      throw new NotFoundException('User does not exists.');
-    }
-
-    const oldHashedPassword = await encryptPassword(oldPassword);
-    const isPasswordMatched = checkPassword(oldPassword, oldHashedPassword);
-
-    if (!isPasswordMatched) {
-      throw new ForbiddenException('Invalid credentials.');
-    }
-
-    const newHashedPassword = await encryptPassword(newPassword);
-    await this.identityRepository.update(identity.id, {
-      ...identity,
-      password: newHashedPassword,
+  async create(
+    email,
+    password,
+    userType:
+      | 'MERCHANT'
+      | 'SUB_MERCHANT'
+      | 'MEMBER'
+      | 'SUPER_ADMIN'
+      | 'SUB_ADMIN',
+  ) {
+    // Check if an Identity with the given email already exists
+    const existingIdentity = await this.identityRepository.findOne({
+      where: { email },
     });
 
-    return { message: 'Password changed' };
+    if (existingIdentity) {
+      throw new ConflictException('A user with this email already exists.');
+    }
+
+    // Hash the password before saving
+    const hashedPassword = this.jwtService.getHashPassword(password);
+
+    // Create and save the Identity
+    const identity = this.identityRepository.create({
+      email,
+      password: hashedPassword,
+      userType: userType,
+    });
+
+    await this.identityRepository.save(identity);
+
+    return identity;
   }
 
-  // delete user by user_name
-  async deleteUserById(id: number) {
-    try {
-      const data = await this.identityRepository.delete(id);
-      return data;
-    } catch (error) {
-      return error;
+  async signin(signinDto: SignInDto) {
+    const identity = await this.identityRepository.findOne({
+      where: { email: signinDto.email },
+    });
+    if (!identity) {
+      throw new UnauthorizedException('User name or pawword is incorrect');
     }
+
+    const password = signinDto.password;
+
+    if (
+      !this.jwtService.isHashedPasswordVerified(password, identity.password)
+    ) {
+      throw new UnauthorizedException('User name or pawword is incorrect');
+    }
+
+    return this.jwtService.createToken({
+      userId: identity.email,
+      userType: identity.userType,
+    });
+  }
+
+  async signupMember(signupDto: SignUpDto): Promise<any> {
+    // Check if an Identity with the given email already exists
+
+    const existingIdentity = await this.identityRepository.findOne({
+      where: { email: signupDto.email },
+    });
+
+    if (existingIdentity) {
+      throw new ConflictException('A user with this email already exists.');
+    }
+
+    this.membersContexts[signupDto.email] = {
+      firstName: signupDto.firstName,
+      lastName: signupDto.lastName,
+      isVerified: false,
+      otp: this.makeAndSendOtp(signupDto.email),
+    };
+
+    return {
+      email: signupDto.email,
+    };
+  }
+
+  async verifyOtp(verifyOtpDto: VerifyOtpDto): Promise<any> {
+    const email = verifyOtpDto.email;
+    const requiredMember = this.membersContexts[email];
+    if (!requiredMember)
+      throw new NotFoundException('Invalid Request: Request Context not found');
+
+    if (requiredMember.otp === verifyOtpDto.otp) {
+      this.membersContexts[email].isVerified = true;
+
+      return {
+        email,
+        firstName: requiredMember.firstName,
+        lastName: requiredMember.lastName,
+      };
+    } else return 'Provided OTP is incorrect.';
+  }
+
+  async isMemberVerifedForRegister(email) {
+    const requiredMember = this.membersContexts[email];
+    if (!requiredMember || !requiredMember.isVerified)
+      throw new NotFoundException('Invalid Request: Request Context not found');
+
+    return requiredMember;
+  }
+
+  async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
+    const existingIdentity = await this.identityRepository.findOne({
+      where: { email: forgotPasswordDto.email },
+    });
+
+    if (!existingIdentity) {
+      throw new ConflictException('User with this email does not exist');
+    }
+
+    this.forgotPasswordContexts[forgotPasswordDto.email] = {
+      password: forgotPasswordDto.password,
+      isVerified: false,
+      otp: this.makeAndSendOtp(forgotPasswordDto.email),
+    };
+
+    return {
+      email: forgotPasswordDto.email,
+    };
+  }
+
+  async verifyOtpForForgotPassword(verifyOtpDto: VerifyOtpDto) {
+    const email = verifyOtpDto.email;
+    const requiredContext = this.forgotPasswordContexts[email];
+    if (!requiredContext)
+      throw new NotFoundException('Invalid Request: Request Context not found');
+
+    if (requiredContext.otp === verifyOtpDto.otp) {
+      this.forgotPasswordContexts[email].isVerified = true;
+      const hashedPassword = this.jwtService.getHashPassword(
+        requiredContext.password,
+      );
+      const identity = await this.identityRepository.findOne({
+        where: { email: verifyOtpDto.email },
+      });
+
+      this.identityRepository.update(
+        { email: verifyOtpDto.email },
+        { password: hashedPassword },
+      );
+
+      return this.jwtService.createToken({
+        userId: identity.email,
+        userType: identity.userType,
+      });
+    } else return 'Provided OTP is incorrect.';
+  }
+
+  async changePassword(changePasswordDto: ChangePasswordDto) {
+    const existingIdentity = await this.identityRepository.findOne({
+      where: { email: changePasswordDto.email },
+    });
+
+    if (!existingIdentity) {
+      throw new ConflictException('User with this email does not exist');
+    }
+
+    if (
+      !this.jwtService.isHashedPasswordVerified(
+        changePasswordDto.oldPassword,
+        existingIdentity.password,
+      )
+    ) {
+      throw new UnauthorizedException('User name or pawword is incorrect');
+    }
+
+    const hashedPassword = this.jwtService.getHashPassword(
+      changePasswordDto.newPassword,
+    );
+    const identity = await this.identityRepository.findOne({
+      where: { email: changePasswordDto.email },
+    });
+
+    this.identityRepository.update(
+      { email: changePasswordDto.email },
+      { password: hashedPassword },
+    );
+
+    return this.jwtService.createToken({
+      userId: identity.email,
+      userType: identity.userType,
+    });
+  }
+
+  findAll() {
+    return `This action returns all identity`;
+  }
+
+  findOne(id: number) {
+    return `This action returns a #${id} identity`;
+  }
+
+  update(id: number, updateIdentityDto: any) {
+    return `This action updates a #${id} identity`;
+  }
+
+  async remove(id: number) {
+    await this.identityRepository.delete(id);
   }
 }

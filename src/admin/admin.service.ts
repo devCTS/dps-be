@@ -1,139 +1,157 @@
 import {
   ConflictException,
-  ForbiddenException,
   HttpStatus,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
+import { CreateAdminDto } from './dto/create-admin.dto';
+import { UpdateAdminDto } from './dto/update-admin.dto';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Admin } from './entities/admin.entity';
-import { EntityManager, Repository } from 'typeorm';
-import { IdentityService } from 'src/identity/identity.service';
-import { AdminRegisterDto, AdminUpdateDto } from './dto/admin.dto';
-import { encryptPassword } from 'src/utils/utils';
 import { Identity } from 'src/identity/entities/identity.entity';
+import { Repository } from 'typeorm';
+import {
+  instanceToPlain,
+  plainToClass,
+  plainToInstance,
+} from 'class-transformer';
+import { AdminResponseDto } from './dto/admin-response.dto';
+import { IdentityService } from 'src/identity/identity.service';
+import {
+  PaginateRequestDto,
+  parseEndDate,
+  parseStartDate,
+} from 'src/utils/dtos/paginate.dto';
 
 @Injectable()
 export class AdminService {
   constructor(
     @InjectRepository(Admin)
     private adminRepository: Repository<Admin>,
-    private identityService: IdentityService,
-    @InjectEntityManager()
-    private readonly entityManager: EntityManager,
+    private readonly identityService: IdentityService,
   ) {}
 
-  // Get Admin by Identity id
-  async getAdminByIdentityId(identity_id: number) {
-    return await this.adminRepository.findOne({
-      where: { identity: { id: identity_id } },
-    });
-  }
-
-  // Register Admin
-  async registerAdmin(adminRegisterData: AdminRegisterDto) {
-    const { email, password, user_name, phone, first_name, last_name } =
-      adminRegisterData;
-
-    const adminIdentity =
-      await this.identityService.getIdentityByUserName(user_name);
-
-    if (adminIdentity) {
-      throw new ConflictException('Identity already exists. Please Login');
-    }
-
-    const hashedPassword = await encryptPassword(password);
-
-    const data = await this.identityService.registerIdentity({
+  async create(createAdminDto: CreateAdminDto): Promise<any> {
+    const {
       email,
-      password: hashedPassword,
-      user_name,
-      user_type: 'admin',
-    });
-
-    await this.adminRepository.save({
+      password,
+      firstName,
+      lastName,
       phone,
-      first_name,
-      last_name,
-      identity: data,
+      role,
+      enabled,
+      permissionAdjustBalance,
+      permissionAdmins,
+      permissionHandleWithdrawals,
+      permissionUsers,
+      permissionVerifyOrders,
+    } = createAdminDto;
+
+    const identity = await this.identityService.create(email, password, role);
+
+    // Create and save the Admin
+    const admin = this.adminRepository.create({
+      identity,
+      first_name: firstName,
+      last_name: lastName,
+      phone,
+      role,
+      enabled,
+      permission_adjust_balance: permissionAdjustBalance,
+      permission_admins: permissionAdmins,
+      permission_handle_withdrawals: permissionHandleWithdrawals,
+      permission_users: permissionUsers,
+      permission_verify_orders: permissionVerifyOrders,
     });
 
-    return {
-      adminRegisterData,
-      status: HttpStatus.CREATED,
-      message: 'Admin created.',
-    };
+    const created = await this.adminRepository.save(admin);
+
+    return plainToInstance(AdminResponseDto, created);
   }
 
-  // Update Admin details
-  async updateAdminDetails(adminUpdateData: AdminUpdateDto, user_name: string) {
-    const adminIdentity =
-      await this.identityService.getIdentityByUserName(user_name);
-    if (!adminIdentity) {
-      throw new NotFoundException('Admin account not found.');
-    }
-
-    const Admindata = await this.getAdminByIdentityId(adminIdentity.id);
-
-    await this.adminRepository.update(Admindata.id, {
-      ...Admindata,
-      ...adminUpdateData,
+  async findAll(): Promise<AdminResponseDto[]> {
+    const results = await this.adminRepository.find({
+      relations: ['identity'],
     });
 
-    return { message: 'Admin data updated.', adminUpdateData };
+    return plainToInstance(AdminResponseDto, results);
   }
 
-  // Get Admin details by user name
-  async getAdminByUserName(user_name: string) {
-    const adminIdentity =
-      await this.identityService.getIdentityByUserName(user_name);
+  async findOne(id: number): Promise<AdminResponseDto> {
+    const results = await this.adminRepository.findOne({
+      where: { id: id },
+      relations: ['identity'],
+    });
 
-    if (!adminIdentity) {
-      throw new NotFoundException('Admin not found.');
+    return plainToInstance(AdminResponseDto, results);
+  }
+
+  async update(id: number, updateAdminDto: any): Promise<HttpStatus> {
+    const result = await this.adminRepository.update(
+      { id: id },
+      updateAdminDto,
+    );
+    return HttpStatus.OK;
+  }
+
+  async remove(id: number) {
+    const admin = await this.adminRepository.findOne({
+      where: { id: id },
+      relations: ['identity'], // Ensure you load the identity relation
+    });
+
+    if (!admin) throw new NotFoundException();
+
+    this.adminRepository.delete(id);
+    this.identityService.remove(admin.identity?.id);
+
+    return HttpStatus.OK;
+  }
+
+  async paginate(paginateDto: PaginateRequestDto) {
+    const query = this.adminRepository.createQueryBuilder('admin');
+
+    const search = paginateDto.search;
+    const pageSize = paginateDto.pageSize;
+    const pageNumber = paginateDto.pageNumber;
+    // Handle search by first_name + " " + last_name
+    if (search) {
+      query.andWhere(
+        `CONCAT(admin.first_name, ' ', admin.last_name) ILIKE :search`,
+        { search: `%${search}%` },
+      );
     }
 
-    const adminData = await this.getAdminByIdentityId(adminIdentity.id);
-    delete adminData.identity;
-    delete adminIdentity.password;
-    return { ...adminIdentity, ...adminData };
-  }
+    // Handle filtering by created_at between startDate and endDate
+    if (paginateDto.startDate && paginateDto.endDate) {
+      const startDate = parseStartDate(paginateDto.startDate);
+      const endDate = parseEndDate(paginateDto.endDate);
 
-  // Get all Admin
-  async getAllAdmins() {
-    return await this.adminRepository.find();
-  }
-
-  // Delete one admin
-  async deleteOneAdmin(user_name: string) {
-    const admin = await this.getAdminByUserName(user_name);
-
-    if (!admin) {
-      throw new NotFoundException('User does not exists.');
-    }
-    if (admin.user_type === 'super-admin') {
-      throw new ForbiddenException('Deleting this user is not permitted');
-    }
-    await this.identityService.deleteUserById(admin.id);
-
-    return { message: 'User deleted.' };
-  }
-
-  // Delete all Admins
-  async deleteAllAdmins() {
-    await this.entityManager.transaction(async (transactionalEntityManager) => {
-      // Fetch all Admins with their identities
-      const admins = await transactionalEntityManager.find(Admin, {
-        relations: ['identity'],
+      query.andWhere('admin.created_at BETWEEN :startDate AND :endDate', {
+        startDate,
+        endDate,
       });
-      // Remove all identities first to avoid foreign key issues
-      for (const admin of admins) {
-        if (admin.identity) {
-          await transactionalEntityManager.remove(Identity, admin.identity);
-        }
-      }
-      // Remove all Admins
-      await transactionalEntityManager.clear(Admin);
-      return { message: 'All Admins deleted' };
-    });
+    }
+
+    // Handle pagination
+    const skip = (pageNumber - 1) * pageSize;
+    query.skip(skip).take(pageSize);
+
+    // Execute query
+    const [admins, total] = await query.getManyAndCount();
+
+    const startRecord = skip + 1;
+    const endRecord = Math.min(skip + pageSize, total);
+
+    // Return paginated result
+    return {
+      data: admins,
+      total,
+      page: pageNumber,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+      startRecord,
+      endRecord,
+    };
   }
 }

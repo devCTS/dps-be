@@ -1,18 +1,22 @@
 import { Module } from '@nestjs/common';
+import { MerchantService } from './merchant.service';
+import { MerchantController } from './merchant.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Merchant } from './entities/merchant.entity';
-import { MerchantRepository } from './merchant.repository';
-import { MerchantController } from './merchant.controller';
-import { MerchantService } from './merchant.service';
-import { IdentityModule } from 'src/identity/identity.module';
-import { MerchantToChannel } from './entities/merchantToChannel.entity';
+import { PayinMode } from './entities/payinMode.entity';
+import { ProportionalPayinMode } from './entities/proportionalPayinMode.entity';
+import { AmountRangePayinMode } from './entities/amountRangePayinMode.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Merchant, MerchantToChannel]),
-    IdentityModule,
+    TypeOrmModule.forFeature([
+      Merchant,
+      PayinMode,
+      ProportionalPayinMode,
+      AmountRangePayinMode,
+    ]),
   ],
-  providers: [MerchantRepository, MerchantService],
   controllers: [MerchantController],
+  providers: [MerchantService],
 })
 export class MerchantModule {}

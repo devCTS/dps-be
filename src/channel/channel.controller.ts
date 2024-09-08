@@ -10,13 +10,16 @@ import {
 import { ChannelService } from './channel.service';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { UpdateChannelDto } from './dto/update-channel.dto';
+import { ChannelResponseDto } from './dto/channel-response.dto';
 
 @Controller('channel')
 export class ChannelController {
   constructor(private readonly channelService: ChannelService) {}
 
   @Post()
-  create(@Body() createChannelDto: CreateChannelDto) {
+  create(
+    @Body() createChannelDto: CreateChannelDto,
+  ): Promise<ChannelResponseDto> {
     return this.channelService.create(createChannelDto);
   }
 
@@ -31,17 +34,7 @@ export class ChannelController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateChannelDto: UpdateChannelDto) {
+  update(@Param('id') id: string, @Body() updateChannelDto: any) {
     return this.channelService.update(+id, updateChannelDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.channelService.remove(+id);
-  }
-
-  @Delete()
-  removeAll() {
-    return this.channelService.removeAll();
   }
 }

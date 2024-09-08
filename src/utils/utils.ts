@@ -32,3 +32,14 @@ export const verifyToken = async (token: string) => {
     return { status: HttpStatus.FORBIDDEN, message: 'invalid token' };
   }
 };
+
+export const generateRandomOTP = () => {
+  let sixDigitRandomNumber;
+
+  do {
+    const randomDecimal = Math.random();
+    sixDigitRandomNumber = Math.floor(randomDecimal * 900000) + 100000;
+  } while (String(sixDigitRandomNumber).startsWith('0'));
+
+  return sixDigitRandomNumber;
+};

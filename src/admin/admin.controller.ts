@@ -1,55 +1,53 @@
 import {
-  Body,
   Controller,
-  Delete,
   Get,
-  Param,
-  Patch,
   Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseInterceptors,
+  ClassSerializerInterceptor,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { AdminRegisterDto, AdminUpdateDto } from './dto/admin.dto';
+import { CreateAdminDto } from './dto/create-admin.dto';
+import { UpdateAdminDto } from './dto/update-admin.dto';
+import { AdminResponseDto } from './dto/admin-response.dto';
+import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
 
 @Controller('admin')
 export class AdminController {
-  constructor(private adminService: AdminService) {}
+  constructor(private readonly adminService: AdminService) {}
 
-  // POST requests
-  @Post('register')
-  async registerAdmin(@Body() adminRegisterData: AdminRegisterDto) {
-    return this.adminService.registerAdmin(adminRegisterData);
-  }
-
-  @Patch('/:user_name')
-  async updateAdmin(
-    @Param('user_name') user_name: string,
-    @Body() adminUpdateData: AdminUpdateDto,
-  ) {
-    return await this.adminService.updateAdminDetails(
-      adminUpdateData,
-      user_name,
-    );
-  }
-
-  // GET Reuqests
-  @Get('/:user_name')
-  async getUserByUserName(@Param('user_name') user_name: string) {
-    return this.adminService.getAdminByUserName(user_name);
+  @Post()
+  create(@Body() createAdminDto: CreateAdminDto): Promise<AdminResponseDto> {
+    return this.adminService.create(createAdminDto);
   }
 
   @Get()
-  async getAllAdmin() {
-    return this.adminService.getAllAdmins();
+  findAll() {
+    return this.adminService.findAll();
   }
 
-  // DELETE Requets
-  @Delete()
-  async deleteAllAdmin() {
-    return await this.adminService.deleteAllAdmins();
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.adminService.findOne(+id);
   }
 
-  @Delete('/:user_name')
-  async deleteAdmin(@Param('user_name') user_name: string) {
-    return await this.adminService.deleteOneAdmin(user_name);
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateAdminDto: any) {
+    return this.adminService.update(+id, updateAdminDto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.adminService.remove(+id);
+  }
+
+  @Post('paginate')
+  paginate(@Body() paginateRequestDto: PaginateRequestDto) {
+    return this.adminService.paginate(paginateRequestDto);
   }
 }
