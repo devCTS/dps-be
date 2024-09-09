@@ -92,7 +92,7 @@ export class SubMerchantService {
   async remove(id: number): Promise<HttpStatus> {
     const subMerchant = await this.subMerchantRepository.findOne({
       where: { id },
-      relations: ['identity'],
+      relations: ['identity', 'merchant'],
     });
 
     if (!subMerchant) throw new NotFoundException();
