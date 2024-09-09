@@ -18,5 +18,6 @@ import { AmountRangePayinMode } from './entities/amountRangePayinMode.entity';
   ],
   controllers: [MerchantController],
   providers: [MerchantService],
+  exports: [MerchantService],
 })
 export class MerchantModule {}
