@@ -12,6 +12,7 @@ import { ChannelModule } from './channel/channel.module';
 import { LoadModule } from './load/load.module';
 import { SubMerchantModule } from './sub-merchant/sub-merchant.module';
 import { ServicesModule } from './services/services.module';
+import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { ServicesModule } from './services/services.module';
         database: configService.get('PG_DATABASE'),
         autoLoadEntities: true,
         synchronize: true,
+        namingStrategy: new SnakeNamingStrategy(),
       }),
       inject: [ConfigService],
     }),

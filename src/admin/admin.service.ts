@@ -52,16 +52,16 @@ export class AdminService {
     // Create and save the Admin
     const admin = this.adminRepository.create({
       identity,
-      first_name: firstName,
-      last_name: lastName,
+      firstName,
+      lastName,
       phone,
       role,
       enabled,
-      permission_adjust_balance: permissionAdjustBalance,
-      permission_admins: permissionAdmins,
-      permission_handle_withdrawals: permissionHandleWithdrawals,
-      permission_users: permissionUsers,
-      permission_verify_orders: permissionVerifyOrders,
+      permissionAdjustBalance,
+      permissionAdmins,
+      permissionHandleWithdrawals,
+      permissionUsers,
+      permissionVerifyOrders,
     });
 
     const created = await this.adminRepository.save(admin);
@@ -86,7 +86,10 @@ export class AdminService {
     return plainToInstance(AdminResponseDto, results);
   }
 
-  async update(id: number, updateAdminDto: any): Promise<HttpStatus> {
+  async update(
+    id: number,
+    updateAdminDto: UpdateAdminDto,
+  ): Promise<HttpStatus> {
     const result = await this.adminRepository.update(
       { id: id },
       updateAdminDto,

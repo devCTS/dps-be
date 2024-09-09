@@ -5,9 +5,23 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Identity } from './entities/identity.entity';
 import { IP } from './entities/ip.entity';
 import { JwtModule } from 'src/services/jwt/jwt.module';
+import { Merchant } from 'src/merchant/entities/merchant.entity';
+import { Admin } from 'src/admin/entities/admin.entity';
+import { Member } from 'src/member/entities/member.entity';
+import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Identity, IP]), JwtModule],
+  imports: [
+    TypeOrmModule.forFeature([
+      Identity,
+      IP,
+      Merchant,
+      Admin,
+      Member,
+      Submerchant,
+    ]),
+    JwtModule,
+  ],
   controllers: [IdentityController],
   providers: [IdentityService],
   exports: [IdentityService],

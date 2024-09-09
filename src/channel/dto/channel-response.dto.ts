@@ -15,23 +15,19 @@ export class ChannelResponseDto {
   tag: string;
 
   @Expose()
-  @Rename('incoming_status')
   incomingStatus: boolean;
 
   @Expose()
-  @Rename('outgoing_status')
   outgoingStatus: boolean;
 
   @Expose()
   logo: string;
 
   @Expose()
-  @Rename('created_at')
   @DateFormat()
   createdAt: Date;
 
   @Expose()
-  @Rename('updated_at')
   @DateFormat()
   updatedAt: Date;
 

@@ -15,11 +15,9 @@ export class AdminResponseDto {
   identity: Identity;
 
   @Expose()
-  @Rename('first_name')
   firstName: string;
 
   @Expose()
-  @Rename('last_name')
   lastName: string;
 
   @Expose()
@@ -35,32 +33,25 @@ export class AdminResponseDto {
   enabled: boolean;
 
   @Expose()
-  @Rename('permission_admins')
   permissionAdmins: boolean;
 
   @Expose()
-  @Rename('permission_users')
   permissionUsers: boolean;
 
   @Expose()
-  @Rename('permission_adjust_balance')
   permissionAdjustBalance: boolean;
 
   @Expose()
-  @Rename('permission_verify_orders')
   permissionVerifyOrders: boolean;
 
   @Expose()
-  @Rename('permission_handle_withdrawals')
   permissionHandleWithdrawals: boolean;
 
   @Expose()
-  @Rename('created_at')
   @DateFormat()
   createdAt: Date;
 
   @Expose()
-  @Rename('updated_at')
   @DateFormat()
   updatedAt: Date;
 }

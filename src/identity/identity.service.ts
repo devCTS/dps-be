@@ -14,6 +14,10 @@ import { SignUpDto } from './dto/singup.dto';
 import { VerifyOtpDto } from './dto/verifyotp.dto';
 import { ForgotPasswordDto } from './dto/forgotPassword.dto';
 import { ChangePasswordDto } from './dto/changePassword.dto';
+import { Merchant } from 'src/merchant/entities/merchant.entity';
+import { Member } from 'src/member/entities/member.entity';
+import { Admin } from 'src/admin/entities/admin.entity';
+import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
 
 type MemberContext = {
   firstName: string;
@@ -43,6 +47,14 @@ export class IdentityService {
   constructor(
     @InjectRepository(Identity)
     private identityRepository: Repository<Identity>,
+    @InjectRepository(Merchant)
+    private merchantRepository: Repository<Merchant>,
+    @InjectRepository(Member)
+    private memberRepository: Repository<Member>,
+    @InjectRepository(Admin)
+    private adminRepository: Repository<Admin>,
+    @InjectRepository(Submerchant)
+    private subMerchantRepository: Repository<Submerchant>,
     private readonly jwtService: JwtService,
   ) {
     this.membersContexts = {};
@@ -51,6 +63,31 @@ export class IdentityService {
 
   makeAndSendOtp(email) {
     return 282907;
+  }
+
+  async getUserID(
+    identityId: number,
+    role: 'MERCHANT' | 'SUB_MERCHANT' | 'MEMBER' | 'SUPER_ADMIN' | 'SUB_ADMIN',
+  ) {
+    const query = { where: { identity: { id: identityId } } };
+    switch (role) {
+      case 'SUB_ADMIN':
+      case 'SUPER_ADMIN':
+        const admin = await this.adminRepository.findOne(query);
+        return admin.id;
+
+      case 'MEMBER':
+        const member = await this.memberRepository.findOne(query);
+        return member.id;
+
+      case 'MERCHANT':
+        const merchant = await this.merchantRepository.findOne(query);
+        return merchant.id;
+
+      case 'SUB_MERCHANT':
+        const submerchant = await this.subMerchantRepository.findOne(query);
+        return submerchant.id;
+    }
   }
 
   async create(
@@ -104,8 +141,9 @@ export class IdentityService {
     }
 
     return this.jwtService.createToken({
-      userId: identity.email,
-      userType: identity.userType,
+      id: await this.getUserID(identity.id, identity.userType),
+      email: identity.email,
+      type: identity.userType,
     });
   }
 

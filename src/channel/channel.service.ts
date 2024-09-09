@@ -67,7 +67,7 @@ export class ChannelService {
     return plainToInstance(ChannelResponseDto, results);
   }
 
-  async update(id: number, updateDto: any): Promise<HttpStatus> {
+  async update(id: number, updateDto: UpdateChannelDto): Promise<HttpStatus> {
     const result = await this.channelRepository.update({ id: id }, updateDto);
     return HttpStatus.OK;
   }

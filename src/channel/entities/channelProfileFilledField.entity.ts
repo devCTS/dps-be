@@ -22,5 +22,5 @@ export class ChannelProfileFilledField {
   identity: Identity;
 
   @Column()
-  field_value: string;
+  fieldValue: string;
 }

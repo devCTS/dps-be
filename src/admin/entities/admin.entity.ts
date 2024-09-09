@@ -20,10 +20,10 @@ export class Admin {
   identity: Identity;
 
   @Column()
-  first_name: string;
+  firstName: string;
 
   @Column()
-  last_name: string;
+  lastName: string;
 
   @Column({ nullable: true })
   phone: string;
@@ -35,23 +35,23 @@ export class Admin {
   role: 'SUPER_ADMIN' | 'SUB_ADMIN';
 
   @Column({ default: false })
-  permission_admins: boolean;
+  permissionAdmins: boolean;
 
   @Column({ default: false })
-  permission_users: boolean;
+  permissionUsers: boolean;
 
   @Column({ default: false })
-  permission_adjust_balance: boolean;
+  permissionAdjustBalance: boolean;
 
   @Column({ default: false })
-  permission_verify_orders: boolean;
+  permissionVerifyOrders: boolean;
 
   @Column({ default: false })
-  permission_handle_withdrawals: boolean;
+  permissionHandleWithdrawals: boolean;
 
   @CreateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
-  updated_at: Date;
+  updatedAt: Date;
 }

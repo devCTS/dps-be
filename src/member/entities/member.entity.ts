@@ -19,41 +19,41 @@ export class Member {
   identity: Identity;
 
   @Column()
-  first_name: string;
+  firstName: string;
 
   @Column()
-  last_name: string;
+  lastName: string;
 
   @Column({ nullable: true })
   phone: string;
 
   @Column({ nullable: true })
-  referral_code: string;
+  referralCode: string;
 
   @Column({ default: true })
   enabled: boolean;
 
   @Column({ type: 'integer' })
-  payin_commission_rate: number;
+  payinCommissionRate: number;
 
   @Column({ type: 'integer' })
-  payout_commission_rate: number;
+  payoutCommissionRate: number;
 
   @Column({ type: 'integer' })
-  topup_commission_rate: number;
+  topupCommissionRate: number;
 
   @Column({ type: 'integer' })
-  single_payout_upper_limit: number;
+  singlePayoutUpperLimit: number;
 
   @Column({ type: 'integer' })
-  single_payout_lower_limit: number;
+  singlePayoutLowerLimit: number;
 
   @Column({ type: 'integer' })
-  daily_total_payout_limit: number;
+  dailyTotalPayoutLimit: number;
 
   @CreateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
-  updated_at: Date;
+  updatedAt: Date;
 }

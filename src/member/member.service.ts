@@ -23,7 +23,21 @@ export class MemberService {
   ) {}
 
   async create(createMemberDto: CreateMemberDto) {
-    const { email, password } = createMemberDto;
+    const {
+      email,
+      password,
+      dailyTotalPayoutLimit,
+      enabled,
+      firstName,
+      lastName,
+      payinCommissionRate,
+      payoutCommissionRate,
+      singlePayoutLowerLimit,
+      singlePayoutUpperLimit,
+      topupCommissionRate,
+      phone,
+      referralCode,
+    } = createMemberDto;
     const identity = await this.identityService.create(
       email,
       password,
@@ -33,17 +47,17 @@ export class MemberService {
     // Create and save the Admin
     const member = this.memberRepository.create({
       identity,
-      first_name: createMemberDto.firstName,
-      last_name: createMemberDto.lastName,
-      referral_code: createMemberDto.referralCode,
-      phone: createMemberDto.phone,
-      enabled: createMemberDto.enabled,
-      daily_total_payout_limit: createMemberDto.dailyTotalPayoutLimit,
-      payin_commission_rate: createMemberDto.payinCommissionRate,
-      payout_commission_rate: createMemberDto.payoutCommissionRate,
-      single_payout_lower_limit: createMemberDto.singlePayoutLowerLimit,
-      single_payout_upper_limit: createMemberDto.singlePayoutUpperLimit,
-      topup_commission_rate: createMemberDto.topupCommissionRate,
+      firstName,
+      lastName,
+      referralCode,
+      phone,
+      enabled,
+      dailyTotalPayoutLimit,
+      payinCommissionRate,
+      payoutCommissionRate,
+      singlePayoutLowerLimit,
+      singlePayoutUpperLimit,
+      topupCommissionRate,
     });
 
     const createdMember = await this.memberRepository.save(member);
@@ -64,17 +78,17 @@ export class MemberService {
 
       const member = this.memberRepository.create({
         identity,
-        first_name: verifiedContext.firstName,
-        last_name: verifiedContext.lastName,
-        referral_code: registerDto.referralCode,
+        firstName: verifiedContext.firstName,
+        lastName: verifiedContext.lastName,
+        referralCode: registerDto.referralCode,
         phone: '',
         enabled: true,
-        daily_total_payout_limit: 10000000,
-        payin_commission_rate: 3,
-        payout_commission_rate: 1,
-        single_payout_lower_limit: 10,
-        single_payout_upper_limit: 1000000,
-        topup_commission_rate: 4,
+        dailyTotalPayoutLimit: 10000000,
+        payinCommissionRate: 3,
+        payoutCommissionRate: 1,
+        singlePayoutLowerLimit: 10,
+        singlePayoutUpperLimit: 1000000,
+        topupCommissionRate: 4,
       });
       const createdMember = await this.memberRepository.save(member);
 
@@ -105,7 +119,7 @@ export class MemberService {
     return plainToInstance(MemberResponseDto, results);
   }
 
-  async update(id: number, updateDto: any): Promise<HttpStatus> {
+  async update(id: number, updateDto: UpdateMemberDto): Promise<HttpStatus> {
     const result = await this.memberRepository.update({ id: id }, updateDto);
 
     return HttpStatus.OK;

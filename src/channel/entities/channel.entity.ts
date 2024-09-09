@@ -21,19 +21,19 @@ export class Channel {
   tag: string;
 
   @Column({ default: true })
-  incoming_status: boolean;
+  incomingStatus: boolean;
 
   @Column({ default: true })
-  outgoing_status: boolean;
+  outgoingStatus: boolean;
 
   @Column({ nullable: true })
   logo: string;
 
   @CreateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
-  updated_at: Date;
+  updatedAt: Date;
 
   @OneToMany(() => ChannelProfileField, (field) => field.channel, {
     eager: true,

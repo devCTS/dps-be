@@ -22,76 +22,76 @@ export class Merchant {
   identity: Identity;
 
   @Column()
-  first_name: string;
+  firstName: string;
 
   @Column()
-  last_name: string;
+  lastName: string;
 
   @Column({ nullable: true })
   phone: string;
 
   @Column({ nullable: true })
-  business_name: string;
+  businessName: string;
 
   @Column({ nullable: true })
-  referral_code: string;
+  referralCode: string;
 
   @Column({ default: true })
   enabled: boolean;
 
   @Column()
-  withdrawal_password: string;
+  withdrawalPassword: string;
 
   @Column()
-  integration_id: string;
+  integrationId: string;
 
   @Column()
-  business_url: string;
+  businessUrl: string;
 
   @Column({ default: false })
-  allow_member_channels_payin: boolean;
+  allowMemberChannelsPayin: boolean;
 
   @Column({ default: false })
-  allow_pg_backup_for_payin: boolean;
+  allowPgBackupForPayin: boolean;
 
   @Column({ default: false })
-  allow_member_channels_payout: boolean;
+  allowMemberChannelsPayout: boolean;
 
   @Column({ default: false })
-  allow_pg_backup_for_payout: boolean;
+  allowPgBackupForPayout: boolean;
 
   @Column()
-  payin_service_rate: number;
+  payinServiceRate: number;
 
   @Column()
-  payout_service_rate: number;
+  payoutServiceRate: number;
 
   @Column()
-  withdrawal_service_rate: number;
+  withdrawalServiceRate: number;
 
   @Column()
-  min_payout: number;
+  minPayout: number;
 
   @Column()
-  max_payout: number;
+  maxPayout: number;
 
   @Column()
-  min_withdrawal: number;
+  minWithdrawal: number;
 
   @Column()
-  max_withdrawal: number;
+  maxWithdrawal: number;
 
   @Column({
     enum: ['DEFAULT', 'PROPORTIONAL', 'AMOUNT_RANGE'],
     default: 'DEFAULT',
   })
-  payin_mode: 'DEFAULT' | 'PROPORTIONAL' | 'AMOUNT_RANGE';
+  payinMode: 'DEFAULT' | 'PROPORTIONAL' | 'AMOUNT_RANGE';
 
   @CreateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
-  updated_at: Date;
+  updatedAt: Date;
 
   @OneToMany(() => PayinMode, (payinMode) => payinMode.merchant)
   payinModes: PayinMode[];

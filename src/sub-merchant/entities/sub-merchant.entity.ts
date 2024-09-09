@@ -24,10 +24,10 @@ export class Submerchant {
   identity: Identity;
 
   @Column()
-  first_name: string;
+  firstName: string;
 
   @Column()
-  last_name: string;
+  lastName: string;
 
   @Column({ nullable: true })
   phone: string;
@@ -36,17 +36,17 @@ export class Submerchant {
   enabled: boolean;
 
   @Column({ default: true })
-  permission_submit_payouts: boolean;
+  permissionSubmitPayouts: boolean;
 
   @Column({ default: true })
-  permission_submit_withdrawals: boolean;
+  permissionSubmitWithdrawals: boolean;
 
   @Column({ default: true })
-  permission_update_withdrawal_profiles: boolean;
+  permissionUpdateWithdrawalProfiles: boolean;
 
   @CreateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
-  updated_at: Date;
+  updatedAt: Date;
 }
