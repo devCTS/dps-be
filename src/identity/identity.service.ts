@@ -91,8 +91,8 @@ export class IdentityService {
   }
 
   async create(
-    email,
-    password,
+    email: string,
+    password: string,
     userType:
       | 'MERCHANT'
       | 'SUB_MERCHANT'
