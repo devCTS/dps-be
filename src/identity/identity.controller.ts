@@ -25,12 +25,17 @@ export class IdentityController {
     @Body() signinDto: SignInDto,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const jwt = await this.identityService.signin(signinDto);
-    response.cookie('dps_token', `Bearer_${jwt}`, {
-      httpOnly: true,
-      maxAge: 2 * 60 * 60 * 1000,
-    });
-    return { message: 'signin sucessful.' };
+    try {
+      const { jwt, type } = await this.identityService.signin(signinDto);
+      response.cookie('dps_token', `Bearer_${jwt}`, {
+        httpOnly: true,
+        maxAge: 2 * 60 * 60 * 1000,
+      });
+      return { message: 'signin sucessful.', type };
+    } catch (error) {
+      console.error(error);
+      return { message: 'Signin failed.', error: error.message };
+    }
   }
 
   @Post('sign-up')
@@ -58,12 +63,18 @@ export class IdentityController {
     @Body() changePasswordDto: ChangePasswordDto,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const jwt = await this.identityService.changePassword(changePasswordDto);
-    response.cookie('dps_token', `Bearer_${jwt}`, {
-      httpOnly: true,
-      maxAge: 2 * 60 * 60 * 1000,
-    });
-    return { message: 'Password Changed.' };
+    try {
+      const { jwt, type } =
+        await this.identityService.changePassword(changePasswordDto);
+      response.cookie('dps_token', `Bearer_${jwt}`, {
+        httpOnly: true,
+        maxAge: 2 * 60 * 60 * 1000,
+      });
+      return { message: 'Password Changed.', type };
+    } catch (error) {
+      console.error(error);
+      return { message: 'Failed.', error: error.message };
+    }
   }
 
   @Get()

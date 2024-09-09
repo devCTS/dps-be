@@ -140,11 +140,13 @@ export class IdentityService {
       throw new UnauthorizedException('User name or pawword is incorrect');
     }
 
-    return this.jwtService.createToken({
+    const jwt = this.jwtService.createToken({
       id: await this.getUserID(identity.id, identity.userType),
       email: identity.email,
       type: identity.userType,
     });
+
+    return { jwt, type: identity.userType };
   }
 
   async signupMember(signupDto: SignUpDto): Promise<any> {
@@ -272,10 +274,12 @@ export class IdentityService {
       { password: hashedPassword },
     );
 
-    return this.jwtService.createToken({
+    const jwt = this.jwtService.createToken({
       userId: identity.email,
       userType: identity.userType,
     });
+
+    return { jwt, type: identity.userType };
   }
 
   findAll() {
