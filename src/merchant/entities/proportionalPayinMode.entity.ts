@@ -18,7 +18,7 @@ export class ProportionalPayinMode {
   @Column({ type: 'enum', enum: ['member', 'phonepe', 'razorpay'] })
   gateway: string;
 
-  @ManyToOne(() => PayinMode, (payinMode) => payinMode.proportionalPayinModes)
+  @ManyToOne(() => PayinMode, (payinMode) => payinMode.proportionalRange)
   @JoinColumn({ name: 'payin_mode' })
   payinMode: PayinMode;
 }

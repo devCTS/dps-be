@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import {
   IsString,
   IsOptional,
@@ -8,9 +9,12 @@ import {
   IsNotEmpty,
   IsNumber,
   IsEmail,
+  IsArray,
+  ValidateNested,
 } from 'class-validator';
 import { IsValidPassword } from 'src/utils/decorators/validPassword.decorator';
 import { IsValidPhoneNumber } from 'src/utils/decorators/validPhoneNumber';
+import { ChannelProfileDto } from 'src/utils/dtos/channel-profile.dto';
 
 export class CreateMemberDto {
   @IsString()
@@ -67,4 +71,9 @@ export class CreateMemberDto {
   @IsNumber()
   @Min(0)
   dailyTotalPayoutLimit: number;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ChannelProfileDto)
+  channelProfile: ChannelProfileDto[];
 }

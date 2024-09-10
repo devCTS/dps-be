@@ -1,7 +1,10 @@
 import { Exclude, Expose } from 'class-transformer';
 import { DateFormat } from 'src/utils/decorators/dateformat.decorator';
 import { Rename } from 'src/utils/decorators/rename.decorator';
-import { ChannelProfileFieldDto } from './channelProfileField.dto';
+import {
+  ChannelProfileFieldDto,
+  ChannelProfileFieldResponseDto,
+} from './channelProfileField.dto';
 
 @Exclude()
 export class ChannelResponseDto {
@@ -32,5 +35,5 @@ export class ChannelResponseDto {
   updatedAt: Date;
 
   @Expose()
-  profileFields: ChannelProfileFieldDto[];
+  profileFields: ChannelProfileFieldResponseDto[];
 }

@@ -21,12 +21,6 @@ export class PayinPayoutChannel {
   @JoinColumn({ name: 'identity_id' })
   identity: Identity;
 
-  @Column()
-  type: string;
-
-  @Column()
-  name: string;
-
-  @Column({ default: true })
-  enabled: boolean;
+  @Column({ enum: ['Payout', 'Payin'] })
+  type: 'Payout' | 'Payin';
 }

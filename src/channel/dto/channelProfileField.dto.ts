@@ -1,4 +1,4 @@
-import { Exclude } from 'class-transformer';
+import { Exclude, Expose } from 'class-transformer';
 import { IsBoolean, IsNotEmpty, IsString } from 'class-validator';
 
 export class ChannelProfileFieldDto {
@@ -18,5 +18,25 @@ export class ChannelProfileFieldDto {
   optional: boolean;
 
   @Exclude()
+  filledFields: any[];
+}
+
+export class ChannelProfileFieldResponseDto {
+  @Expose()
+  id: number;
+
+  @Expose()
+  label: string;
+
+  @Expose()
+  regex: string;
+
+  @Expose()
+  errorMessage: string;
+
+  @Expose()
+  optional: boolean;
+
+  @Expose()
   filledFields: any[];
 }

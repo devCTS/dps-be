@@ -18,5 +18,6 @@ import { PayinPayoutChannel } from './entities/payinPayoutChannel.entity';
   ],
   controllers: [ChannelController],
   providers: [ChannelService],
+  exports: [ChannelService],
 })
 export class ChannelModule {}

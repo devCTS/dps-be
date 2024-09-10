@@ -33,10 +33,10 @@ export class Member {
   @Column({ default: true })
   enabled: boolean;
 
-  @Column({ type: 'integer' })
+  @Column({ type: 'float' })
   payinCommissionRate: number;
 
-  @Column({ type: 'integer' })
+  @Column({ type: 'float' })
   payoutCommissionRate: number;
 
   @Column({ type: 'integer' })

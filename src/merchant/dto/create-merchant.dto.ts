@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import {
   IsString,
   IsOptional,
@@ -7,9 +8,39 @@ import {
   Min,
   IsNotEmpty,
   IsEmail,
+  IsArray,
+  ArrayNotEmpty,
+  ValidateNested,
+  IsIP,
+  IsInt,
+  IsIn,
 } from 'class-validator';
 import { IsValidPassword } from 'src/utils/decorators/validPassword.decorator';
+import { ChannelProfileDto } from 'src/utils/dtos/channel-profile.dto';
 
+export class RangeDto {
+  @IsInt()
+  @IsNotEmpty()
+  lower: number;
+
+  @IsInt()
+  @IsNotEmpty()
+  upper: number;
+
+  @IsIn(['member', 'phonepe', 'razorpay'])
+  @IsNotEmpty()
+  gateway: string;
+}
+
+export class RatioDto {
+  @IsInt()
+  @IsNotEmpty()
+  ratio: number;
+
+  @IsIn(['member', 'phonepe', 'razorpay'])
+  @IsNotEmpty()
+  gateway: string;
+}
 export class CreateMerchantDto {
   @IsString()
   @IsNotEmpty()
@@ -50,9 +81,9 @@ export class CreateMerchantDto {
   @IsValidPassword()
   withdrawalPassword: string;
 
-  @IsString()
-  @IsNotEmpty()
-  integrationId: string;
+  // @IsString()
+  // @IsNotEmpty()
+  // integrationId: string;
 
   @IsString()
   @IsNotEmpty()
@@ -102,7 +133,47 @@ export class CreateMerchantDto {
   @Min(0)
   maxWithdrawal: number;
 
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsNumber({}, { each: true })
+  payinChannels: number[];
+
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsNumber({}, { each: true })
+  payoutChannels: number[];
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ChannelProfileDto)
+  channelProfile: ChannelProfileDto[];
+
+  @IsOptional()
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsIP(undefined, { each: true })
+  ipAddresses: string[];
+
   @IsEnum(['DEFAULT', 'PROPORTIONAL', 'AMOUNT_RANGE'])
   @IsNotEmpty()
   payinMode: 'DEFAULT' | 'PROPORTIONAL' | 'AMOUNT_RANGE' = 'DEFAULT'; // Default value
+
+  @IsOptional()
+  @IsNumber()
+  @IsNotEmpty()
+  numberOfRangesOrRatio?: number;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => RangeDto)
+  amountRanges: RangeDto[];
+
+  @IsOptional()
+  @IsArray()
+  @ArrayNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => RatioDto)
+  ratios: RatioDto[];
 }

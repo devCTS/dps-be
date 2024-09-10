@@ -33,7 +33,6 @@ export class ChannelProfileField {
   @OneToMany(
     () => ChannelProfileFilledField,
     (filledField) => filledField.field,
-    { eager: true },
-  ) // Eager loading of filled fields
+  )
   filledFields: ChannelProfileFilledField[];
 }

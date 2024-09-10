@@ -21,7 +21,7 @@ export class AmountRangePayinMode {
   @Column({ type: 'enum', enum: ['member', 'phonepe', 'razorpay'] })
   gateway: string;
 
-  @ManyToOne(() => PayinMode, (payinMode) => payinMode.amountRangePayinModes)
+  @ManyToOne(() => PayinMode, (payinMode) => payinMode.amountRangeRange)
   @JoinColumn({ name: 'payin_mode' })
   payinMode: PayinMode;
 }

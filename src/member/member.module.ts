@@ -4,9 +4,10 @@ import { MemberController } from './member.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Member } from './entities/member.entity';
 import { IdentityModule } from 'src/identity/identity.module';
+import { ChannelModule } from 'src/channel/channel.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Member]), IdentityModule],
+  imports: [TypeOrmModule.forFeature([Member]), IdentityModule, ChannelModule],
   controllers: [MemberController],
   providers: [MemberService],
 })

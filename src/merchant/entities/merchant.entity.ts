@@ -7,6 +7,7 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToOne,
 } from 'typeorm';
 import { PayinMode } from './payinMode.entity';
 import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
@@ -60,13 +61,13 @@ export class Merchant {
   @Column({ default: false })
   allowPgBackupForPayout: boolean;
 
-  @Column()
+  @Column('float')
   payinServiceRate: number;
 
-  @Column()
+  @Column('float')
   payoutServiceRate: number;
 
-  @Column()
+  @Column('float')
   withdrawalServiceRate: number;
 
   @Column()
@@ -93,8 +94,8 @@ export class Merchant {
   @UpdateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
   updatedAt: Date;
 
-  @OneToMany(() => PayinMode, (payinMode) => payinMode.merchant)
-  payinModes: PayinMode[];
+  @OneToOne(() => PayinMode, (payinMode) => payinMode.merchant)
+  payinModeDetails: PayinMode[];
 
   @OneToMany(() => Submerchant, (submerchant) => submerchant.merchant)
   submerchants: Submerchant[];

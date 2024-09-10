@@ -18,6 +18,7 @@ import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { Member } from 'src/member/entities/member.entity';
 import { Admin } from 'src/admin/entities/admin.entity';
 import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
+import { IP } from './entities/ip.entity';
 
 type MemberContext = {
   firstName: string;
@@ -55,6 +56,9 @@ export class IdentityService {
     private adminRepository: Repository<Admin>,
     @InjectRepository(Submerchant)
     private subMerchantRepository: Repository<Submerchant>,
+
+    @InjectRepository(IP)
+    private ipRepository: Repository<IP>,
     private readonly jwtService: JwtService,
   ) {
     this.membersContexts = {};
@@ -292,5 +296,28 @@ export class IdentityService {
 
   async remove(id: number) {
     await this.identityRepository.delete(id);
+  }
+
+  async updateIps(ips: string[], identity: Identity): Promise<IP[]> {
+    // Step 1: Delete existing IPs for the given identity
+    await this.ipRepository.delete({ identity });
+
+    // Step 2: Create and save new IP entities
+    const ipEntities: IP[] = [];
+
+    for (const ipValue of ips) {
+      const ip = new IP();
+      ip.value = ipValue;
+      ip.identity = identity;
+
+      ipEntities.push(ip);
+    }
+
+    // Step 3: Save all new IP entities in bulk
+    return this.ipRepository.save(ipEntities);
+  }
+
+  async deleteIps(identity: Identity) {
+    await this.ipRepository.delete({ identity });
   }
 }

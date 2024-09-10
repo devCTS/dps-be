@@ -13,6 +13,10 @@ import {
   parseEndDate,
   parseStartDate,
 } from 'src/utils/dtos/paginate.dto';
+import { ChannelProfileFilledField } from 'src/channel/entities/channelProfileFilledField.entity';
+import { ChannelProfileField } from 'src/channel/entities/channelProfileField.entity';
+import { Channel } from 'src/channel/entities/channel.entity';
+import { ChannelService } from 'src/channel/channel.service';
 
 @Injectable()
 export class MemberService {
@@ -20,6 +24,7 @@ export class MemberService {
     @InjectRepository(Member)
     private readonly memberRepository: Repository<Member>,
     private readonly identityService: IdentityService,
+    private readonly channelService: ChannelService,
   ) {}
 
   async create(createMemberDto: CreateMemberDto) {
@@ -37,6 +42,7 @@ export class MemberService {
       topupCommissionRate,
       phone,
       referralCode,
+      channelProfile,
     } = createMemberDto;
     const identity = await this.identityService.create(
       email,
@@ -62,7 +68,13 @@ export class MemberService {
 
     const createdMember = await this.memberRepository.save(member);
 
-    return plainToInstance(MemberResponseDto, createdMember);
+    // Process the channels and their profile fields
+    await this.channelService.processChannelFilledFields(
+      createMemberDto.channelProfile,
+      createdMember.identity,
+    );
+
+    return HttpStatus.OK;
   }
 
   async registerViaSignup(registerDto: RegisterDto) {
@@ -104,23 +116,47 @@ export class MemberService {
 
   async findAll(): Promise<MemberResponseDto[]> {
     const results = await this.memberRepository.find({
-      relations: ['identity'],
+      relations: [
+        'identity',
+        'identity.channelProfileFilledFields',
+        'identity.channelProfileFilledFields.field',
+        'identity.channelProfileFilledFields.field.channel',
+      ],
     });
 
     return plainToInstance(MemberResponseDto, results);
   }
 
-  async findOne(id: number): Promise<MemberResponseDto> {
+  async findOne(id: number): Promise<any> {
     const results = await this.memberRepository.findOne({
-      where: { id: id },
-      relations: ['identity'],
+      where: { id },
+      relations: [
+        'identity',
+        'identity.channelProfileFilledFields',
+        'identity.channelProfileFilledFields.field',
+        'identity.channelProfileFilledFields.field.channel',
+      ],
     });
 
     return plainToInstance(MemberResponseDto, results);
   }
 
   async update(id: number, updateDto: UpdateMemberDto): Promise<HttpStatus> {
+    const channelProfile = updateDto.channelProfile;
+    delete updateDto.channelProfile;
+    delete updateDto.email;
+    delete updateDto.password;
     const result = await this.memberRepository.update({ id: id }, updateDto);
+
+    const member = await this.memberRepository.findOne({
+      where: { id: id },
+      relations: ['identity'],
+    });
+
+    await this.channelService.processChannelFilledFields(
+      channelProfile,
+      member.identity,
+    );
 
     return HttpStatus.OK;
   }
@@ -133,6 +169,7 @@ export class MemberService {
 
     if (!admin) throw new NotFoundException();
 
+    this.channelService.deleteChannelProfileOfUser(admin.identity);
     this.memberRepository.delete(id);
     this.identityService.remove(admin.identity?.id);
 

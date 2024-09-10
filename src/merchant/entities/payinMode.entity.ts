@@ -5,6 +5,7 @@ import {
   ManyToOne,
   OneToMany,
   JoinColumn,
+  OneToOne,
 } from 'typeorm';
 import { Merchant } from './merchant.entity';
 import { ProportionalPayinMode } from './proportionalPayinMode.entity';
@@ -15,19 +16,19 @@ export class PayinMode {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  type: string;
+  @Column({ enum: ['PROPORTIONAL', 'AMOUNT_RANGE'] })
+  type: 'PROPORTIONAL' | 'AMOUNT_RANGE';
 
-  @ManyToOne(() => Merchant, (merchant) => merchant.payinModes)
+  @OneToOne(() => Merchant, (merchant) => merchant.payinModeDetails)
   @JoinColumn({ name: 'merchant' })
   merchant: Merchant;
 
-  @Column({ type: 'integer' })
+  @Column()
   number: number;
 
   @OneToMany(() => ProportionalPayinMode, (mode) => mode.payinMode)
-  proportionalPayinModes: ProportionalPayinMode[];
+  proportionalRange: ProportionalPayinMode[];
 
   @OneToMany(() => AmountRangePayinMode, (mode) => mode.payinMode)
-  amountRangePayinModes: AmountRangePayinMode[];
+  amountRangeRange: AmountRangePayinMode[];
 }
