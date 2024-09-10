@@ -10,5 +10,6 @@ import { IdentityModule } from 'src/identity/identity.module';
   imports: [TypeOrmModule.forFeature([Admin, Identity]), IdentityModule],
   controllers: [AdminController],
   providers: [AdminService],
+  exports: [AdminService],
 })
 export class AdminModule {}

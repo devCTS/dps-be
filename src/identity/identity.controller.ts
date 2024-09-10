@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Res,
 } from '@nestjs/common';
 import { IdentityService } from './identity.service';
 import { SignInDto } from './dto/signin.dto';
@@ -13,14 +14,28 @@ import { SignUpDto } from './dto/singup.dto';
 import { VerifyOtpDto } from './dto/verifyotp.dto';
 import { ForgotPasswordDto } from './dto/forgotPassword.dto';
 import { ChangePasswordDto } from './dto/changePassword.dto';
+import { Response } from 'express';
 
 @Controller('identity')
 export class IdentityController {
   constructor(private readonly identityService: IdentityService) {}
 
   @Post('sign-in')
-  signIn(@Body() signinDto: SignInDto) {
-    return this.identityService.signin(signinDto);
+  async signIn(
+    @Body() signinDto: SignInDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    try {
+      const { jwt, type } = await this.identityService.signin(signinDto);
+      response.cookie('dps_token', `Bearer_${jwt}`, {
+        httpOnly: true,
+        maxAge: 2 * 60 * 60 * 1000,
+      });
+      return { message: 'signin sucessful.', type };
+    } catch (error) {
+      console.error(error);
+      return { message: 'Signin failed.', error: error.message };
+    }
   }
 
   @Post('sign-up')
@@ -44,8 +59,22 @@ export class IdentityController {
   }
 
   @Post('change-password')
-  changePassword(@Body() changePasswordDto: ChangePasswordDto) {
-    return this.identityService.changePassword(changePasswordDto);
+  async changePassword(
+    @Body() changePasswordDto: ChangePasswordDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    try {
+      const { jwt, type } =
+        await this.identityService.changePassword(changePasswordDto);
+      response.cookie('dps_token', `Bearer_${jwt}`, {
+        httpOnly: true,
+        maxAge: 2 * 60 * 60 * 1000,
+      });
+      return { message: 'Password Changed.', type };
+    } catch (error) {
+      console.error(error);
+      return { message: 'Failed.', error: error.message };
+    }
   }
 
   @Get()

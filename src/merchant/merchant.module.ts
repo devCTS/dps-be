@@ -26,5 +26,6 @@ import { IP } from 'src/identity/entities/ip.entity';
   ],
   controllers: [MerchantController],
   providers: [MerchantService],
+  exports: [MerchantService],
 })
 export class MerchantModule {}

@@ -8,13 +8,8 @@ import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Admin } from './entities/admin.entity';
-import { Identity } from 'src/identity/entities/identity.entity';
 import { Repository } from 'typeorm';
-import {
-  instanceToPlain,
-  plainToClass,
-  plainToInstance,
-} from 'class-transformer';
+import { plainToInstance } from 'class-transformer';
 import { AdminResponseDto } from './dto/admin-response.dto';
 import { IdentityService } from 'src/identity/identity.service';
 import {
@@ -22,6 +17,7 @@ import {
   parseEndDate,
   parseStartDate,
 } from 'src/utils/dtos/paginate.dto';
+import { getSuperAdminData } from './data/admin.data';
 
 @Injectable()
 export class AdminService {
@@ -156,5 +152,9 @@ export class AdminService {
       startRecord,
       endRecord,
     };
+  }
+
+  async loadSuperAdmin() {
+    await this.create(getSuperAdminData());
   }
 }
