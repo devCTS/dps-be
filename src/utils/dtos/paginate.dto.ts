@@ -5,6 +5,7 @@ import {
   Min,
   IsDateString,
   Matches,
+  IsBoolean,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { BadRequestException } from '@nestjs/common';
@@ -40,6 +41,10 @@ export class PaginateRequestDto {
   @Min(1)
   pageSize?: number = 10;
 
+  @IsBoolean()
+  @IsOptional()
+  all: boolean;
+
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -50,6 +55,20 @@ export class PaginateRequestDto {
   @IsString()
   search?: string;
 
+  @IsOptional()
+  @Matches(/^\d{2}\/\d{2}\/\d{4}$/, {
+    message: 'startDate must be in the format DD/MM/YYYY',
+  })
+  startDate?: string;
+
+  @IsOptional()
+  @Matches(/^\d{2}\/\d{2}\/\d{4}$/, {
+    message: 'endDate must be in the format DD/MM/YYYY',
+  })
+  endDate?: string;
+}
+
+export class ExportDto {
   @IsOptional()
   @Matches(/^\d{2}\/\d{2}\/\d{4}$/, {
     message: 'startDate must be in the format DD/MM/YYYY',

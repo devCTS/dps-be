@@ -13,11 +13,13 @@ import { plainToInstance } from 'class-transformer';
 import { AdminResponseDto } from './dto/admin-response.dto';
 import { IdentityService } from 'src/identity/identity.service';
 import {
+  ExportDto,
   PaginateRequestDto,
   parseEndDate,
   parseStartDate,
 } from 'src/utils/dtos/paginate.dto';
 import { getSuperAdminData } from './data/admin.data';
+import { jsonToExcel } from 'src/utils/utils';
 
 @Injectable()
 export class AdminService {
@@ -134,7 +136,9 @@ export class AdminService {
 
     // Handle pagination
     const skip = (pageNumber - 1) * pageSize;
-    query.skip(skip).take(pageSize);
+    if (!paginateDto.all) {
+      query.skip(skip).take(pageSize);
+    }
 
     // Execute query
     const [admins, total] = await query.getManyAndCount();
@@ -156,5 +160,20 @@ export class AdminService {
 
   async loadSuperAdmin() {
     await this.create(getSuperAdminData());
+  }
+
+  async exportExcelData(exportDto: ExportDto) {
+    const query = this.adminRepository.createQueryBuilder('admin');
+    const startDate = parseStartDate(exportDto.startDate);
+    const endDate = parseEndDate(exportDto.endDate);
+
+    query.andWhere('admin.created_at BETWEEN :startDate AND :endDate', {
+      startDate,
+      endDate,
+    });
+
+    const [data, total] = await query.getManyAndCount();
+
+    return data;
   }
 }
