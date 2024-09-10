@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
 import { MemberService } from './member.service';
 import { MemberController } from './member.controller';
-import { IdentityModule } from 'src/identity/identity.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MerchantRepository } from 'src/merchant/merchant.repository';
 import { Member } from './entities/member.entity';
+import { IdentityModule } from 'src/identity/identity.module';
+import { ChannelModule } from 'src/channel/channel.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Member]), IdentityModule],
-  providers: [MerchantRepository, MemberService],
+  imports: [TypeOrmModule.forFeature([Member]), IdentityModule, ChannelModule],
   controllers: [MemberController],
+  providers: [MemberService],
 })
 export class MemberModule {}

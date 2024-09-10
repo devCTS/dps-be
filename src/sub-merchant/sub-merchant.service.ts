@@ -1,151 +1,109 @@
 import {
-  ConflictException,
-  ForbiddenException,
   HttpStatus,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
-import { SubMerchant } from './entities/sub-merchant.entity';
-import { EntityManager, Repository } from 'typeorm';
+import { CreateSubMerchantDto } from './dto/create-sub-merchant.dto';
+import { UpdateSubMerchantDto } from './dto/update-sub-merchant.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Submerchant } from './entities/sub-merchant.entity';
+import { Repository } from 'typeorm';
 import { IdentityService } from 'src/identity/identity.service';
-import {
-  SubMerchantRegisterDto,
-  SubMerchantUpdateDto,
-} from './dto/sub-merchant.dto';
-import { encryptPassword } from 'src/utils/utils';
-import { Identity } from 'src/identity/entities/identity.entity';
+import { plainToInstance } from 'class-transformer';
+import { SubMerchantResponseDto } from './dto/sub-merchant-response.dto';
+import { MerchantService } from 'src/merchant/merchant.service';
 
 @Injectable()
 export class SubMerchantService {
   constructor(
-    @InjectRepository(SubMerchant)
-    private subMerchantRepository: Repository<SubMerchant>,
-    private identityService: IdentityService,
-    @InjectEntityManager()
-    private readonly entityManager: EntityManager,
+    @InjectRepository(Submerchant)
+    private subMerchantRepository: Repository<Submerchant>,
+    private readonly identityService: IdentityService,
+    private readonly merchantService: MerchantService,
   ) {}
 
-  // Get merchant by Identity id
-  async getSubMerchantByIdentityId(identity_id: number) {
-    return await this.subMerchantRepository.findOne({
-      where: { identity: { id: identity_id } },
-    });
-  }
+  async create(
+    merchantId: number,
+    createSubMerchantDto: CreateSubMerchantDto,
+  ): Promise<any> {
+    const { email, password } = createSubMerchantDto;
 
-  // Register merchant
-  async registerSubMerchant(subMerchatRegisterData: SubMerchantRegisterDto) {
-    const { email, password, user_name, phone, first_name, last_name } =
-      subMerchatRegisterData;
-
-    const subMerchantIdentity =
-      await this.identityService.getIdentityByUserName(user_name);
-
-    if (subMerchantIdentity) {
-      throw new ConflictException('Identity already exists. Please Login');
-    }
-
-    const hashedPassword = await encryptPassword(password);
-
-    const data = await this.identityService.registerIdentity({
+    const identity = await this.identityService.create(
       email,
-      password: hashedPassword,
-      user_name,
-      user_type: 'merchant',
-    });
-
-    await this.subMerchantRepository.save({
-      phone,
-      first_name,
-      last_name,
-      identity: data,
-    });
-
-    return {
-      subMerchatRegisterData,
-      status: HttpStatus.CREATED,
-      message: 'Sub-Merchant created.',
-    };
-  }
-
-  // Update merchant details
-  async updateSubMerchantDetails(
-    subMerchantUpdateData: SubMerchantUpdateDto,
-    user_name: string,
-  ) {
-    const subMerchantIdentity =
-      await this.identityService.getIdentityByUserName(user_name);
-    if (!subMerchantIdentity) {
-      throw new NotFoundException('Sub-Merchant account not found.');
-    }
-
-    const subMerchantdata = await this.getSubMerchantByIdentityId(
-      subMerchantIdentity.id,
+      password,
+      'SUB_MERCHANT',
     );
 
-    await this.subMerchantRepository.update(subMerchantdata.id, {
-      ...subMerchantdata,
-      ...subMerchantUpdateData,
+    const merchant = await this.merchantService.findOne(merchantId);
+
+    const subMerchant = this.subMerchantRepository.create({
+      identity,
+      // merchant,
+      ...createSubMerchantDto,
     });
 
-    return { message: 'Sub-Merchant data updated.', subMerchantUpdateData };
+    const createSubMerchant =
+      await this.subMerchantRepository.save(subMerchant);
+
+    return plainToInstance(SubMerchantResponseDto, createSubMerchant);
   }
 
-  // Get merchant details by user name
-  async getSubMerchantByUserName(user_name: string) {
-    const subMerchantIdentity =
-      await this.identityService.getIdentityByUserName(user_name);
+  async findAll(): Promise<SubMerchantResponseDto[]> {
+    const results = await this.subMerchantRepository.find({
+      relations: ['identity', 'merchant'],
+    });
 
-    if (!subMerchantIdentity) {
-      throw new NotFoundException('Sub-Merchant not found.');
-    }
+    return plainToInstance(SubMerchantResponseDto, results);
+  }
 
-    const subMerchantData = await this.getSubMerchantByIdentityId(
-      subMerchantIdentity.id,
+  async findOne(id: number): Promise<SubMerchantResponseDto> {
+    const result = await this.subMerchantRepository.findOne({
+      where: { id },
+      relations: ['identity', 'merchant'],
+    });
+
+    if (!result) throw new NotFoundException();
+
+    return plainToInstance(SubMerchantResponseDto, result);
+  }
+
+  async update(
+    id: number,
+    updateSubMerchantDto: UpdateSubMerchantDto,
+  ): Promise<HttpStatus> {
+    const subMerchant = await this.subMerchantRepository.findOne({
+      where: { id },
+      relations: ['identity', 'merchant'],
+    });
+
+    if (!subMerchant) throw new NotFoundException();
+
+    const updateSubMerchant = await this.subMerchantRepository.update(
+      id,
+      updateSubMerchantDto,
     );
-    delete subMerchantData.identity;
-    delete subMerchantIdentity.password;
-    return { ...subMerchantIdentity, ...subMerchantData };
+
+    if (!updateSubMerchant) throw new InternalServerErrorException();
+
+    return HttpStatus.OK;
   }
 
-  // Get all merchant
-  async getAllSubMerchants() {
-    return await this.subMerchantRepository.find();
-  }
-
-  // Delete all merchants
-  async deleteAllSubMerchants() {
-    await this.entityManager.transaction(async (transactionalEntityManager) => {
-      // Fetch all merchants with their identities
-      const subMerchants = await transactionalEntityManager.find(SubMerchant, {
-        relations: ['identity'],
-      });
-      // Remove all identities first to avoid foreign key issues
-      for (const subMerchant of subMerchants) {
-        if (subMerchant.identity) {
-          await transactionalEntityManager.remove(
-            Identity,
-            subMerchant.identity,
-          );
-        }
-      }
-      // Remove all merchants
-      await transactionalEntityManager.clear(SubMerchant);
-      return { message: 'All Sub-merchants deleted' };
+  async remove(id: number): Promise<HttpStatus> {
+    const subMerchant = await this.subMerchantRepository.findOne({
+      where: { id },
+      relations: ['identity', 'merchant'],
     });
-  }
 
-  async deleteOneSubMerchant(user_name: string) {
-    const subMerchant = await this.getSubMerchantByUserName(user_name);
+    if (!subMerchant) throw new NotFoundException();
 
-    if (!subMerchant) {
-      throw new NotFoundException('User does not exists.');
-    }
-    if (subMerchant.user_type === 'super-admin') {
-      throw new ForbiddenException('Deleting this user is not permitted');
-    }
-    await this.identityService.deleteUserById(subMerchant.id);
+    const deleteSubMerchant =
+      await this.subMerchantRepository.remove(subMerchant);
 
-    return { message: 'User deleted.' };
+    await this.identityService.remove(subMerchant.identity?.id);
+
+    if (!deleteSubMerchant) throw new InternalServerErrorException();
+
+    return HttpStatus.OK;
   }
 }

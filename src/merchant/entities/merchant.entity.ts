@@ -1,40 +1,102 @@
-import { Identity } from 'src/identity/entities/identity.entity';
 import {
-  BaseEntity,
-  Column,
   Entity,
-  JoinColumn,
-  OneToOne,
-  OneToMany,
+  Column,
   PrimaryGeneratedColumn,
+  ManyToOne,
+  OneToMany,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToOne,
 } from 'typeorm';
-import { MerchantToChannel } from './merchantToChannel.entity';
+import { PayinMode } from './payinMode.entity';
+import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
+import { Identity } from 'src/identity/entities/identity.entity';
 
 @Entity()
-export class Merchant extends BaseEntity {
+export class Merchant {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  first_name: string;
-
-  @Column()
-  last_name: string;
-
-  @Column()
-  phone: string;
-
-  @OneToOne(() => Identity, (identity) => identity.merchant, {
-    cascade: true,
-    onDelete: 'CASCADE',
-    eager: true,
-  })
-  @JoinColumn({ name: 'identity_id' })
+  @ManyToOne(() => Identity, (identity) => identity.merchants)
+  @JoinColumn({ name: 'identity' })
   identity: Identity;
 
-  @OneToMany(
-    () => MerchantToChannel,
-    (merchantToChannel) => merchantToChannel.merchant,
-  )
-  merchantToChannel: MerchantToChannel[];
+  @Column()
+  firstName: string;
+
+  @Column()
+  lastName: string;
+
+  @Column({ nullable: true })
+  phone: string;
+
+  @Column({ nullable: true })
+  businessName: string;
+
+  @Column({ nullable: true })
+  referralCode: string;
+
+  @Column({ default: true })
+  enabled: boolean;
+
+  @Column()
+  withdrawalPassword: string;
+
+  @Column()
+  integrationId: string;
+
+  @Column()
+  businessUrl: string;
+
+  @Column({ default: false })
+  allowMemberChannelsPayin: boolean;
+
+  @Column({ default: false })
+  allowPgBackupForPayin: boolean;
+
+  @Column({ default: false })
+  allowMemberChannelsPayout: boolean;
+
+  @Column({ default: false })
+  allowPgBackupForPayout: boolean;
+
+  @Column('float')
+  payinServiceRate: number;
+
+  @Column('float')
+  payoutServiceRate: number;
+
+  @Column('float')
+  withdrawalServiceRate: number;
+
+  @Column()
+  minPayout: number;
+
+  @Column()
+  maxPayout: number;
+
+  @Column()
+  minWithdrawal: number;
+
+  @Column()
+  maxWithdrawal: number;
+
+  @Column({
+    enum: ['DEFAULT', 'PROPORTIONAL', 'AMOUNT_RANGE'],
+    default: 'DEFAULT',
+  })
+  payinMode: 'DEFAULT' | 'PROPORTIONAL' | 'AMOUNT_RANGE';
+
+  @CreateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
+  createdAt: Date;
+
+  @UpdateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
+  updatedAt: Date;
+
+  @OneToOne(() => PayinMode, (payinMode) => payinMode.merchant)
+  payinModeDetails: PayinMode[];
+
+  @OneToMany(() => Submerchant, (submerchant) => submerchant.merchant)
+  submerchants: Submerchant[];
 }

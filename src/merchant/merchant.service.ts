@@ -1,145 +1,345 @@
+import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import {
-  ConflictException,
-  ForbiddenException,
-  HttpStatus,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
+  CreateMerchantDto,
+  RangeDto,
+  RatioDto,
+} from './dto/create-merchant.dto';
+import { UpdateMerchantDto } from './dto/update-merchant.dto';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Merchant } from './entities/merchant.entity';
-import { EntityManager, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { IdentityService } from 'src/identity/identity.service';
-import { MerchantRegisterDto, MerchantUpdateDto } from './dto/merchant.dto';
-import { encryptPassword } from 'src/utils/utils';
-import { Identity } from 'src/identity/entities/identity.entity';
+import { ChannelService } from 'src/channel/channel.service';
+import { JwtService } from 'src/services/jwt/jwt.service';
+import { plainToInstance } from 'class-transformer';
+import { MerchantResponseDto } from './dto/merchant-response.dto';
+import { IP } from 'src/identity/entities/ip.entity';
+import { PayinMode } from './entities/payinMode.entity';
+import { AmountRangePayinMode } from './entities/amountRangePayinMode.entity';
+import { ProportionalPayinMode } from './entities/proportionalPayinMode.entity';
+import { identity } from 'rxjs';
 
 @Injectable()
 export class MerchantService {
   constructor(
     @InjectRepository(Merchant)
-    private merchantRepository: Repository<Merchant>,
-    private identityService: IdentityService,
-    @InjectEntityManager()
-    private readonly entityManager: EntityManager,
+    private readonly merchantRepository: Repository<Merchant>,
+
+    @InjectRepository(IP)
+    private readonly IpRepository: Repository<IP>,
+
+    @InjectRepository(PayinMode)
+    private readonly payinModeRepository: Repository<PayinMode>,
+
+    @InjectRepository(AmountRangePayinMode)
+    private readonly amountRangeRepository: Repository<AmountRangePayinMode>,
+
+    @InjectRepository(ProportionalPayinMode)
+    private readonly proportionalRepository: Repository<ProportionalPayinMode>,
+
+    private readonly identityService: IdentityService,
+    private readonly channelService: ChannelService,
+    private readonly jwtService: JwtService,
   ) {}
 
-  // Get merchant by Identity id
-  async getMerchantByIdentityId(identity_id: number) {
-    return await this.merchantRepository.findOne({
-      where: { identity: { id: identity_id } },
-    });
-  }
-
-  // Register merchant
-  async registerMerchant(merchatRegisterData: MerchantRegisterDto) {
-    const { email, password, user_name, phone, first_name, last_name } =
-      merchatRegisterData;
-
-    const merchantIdentity =
-      await this.identityService.getIdentityByUserName(user_name);
-
-    if (merchantIdentity) {
-      throw new ConflictException('Identity already exists. Please Login');
-    }
-
-    const hashedPassword = await encryptPassword(password);
-
-    const data = await this.identityService.registerIdentity({
+  async create(createMerchantDto: CreateMerchantDto) {
+    const {
       email,
-      password: hashedPassword,
-      user_name,
-      user_type: 'merchant',
-    });
-
-    await this.merchantRepository.save({
+      password,
+      enabled,
+      firstName,
+      lastName,
+      businessUrl,
+      businessName,
+      allowMemberChannelsPayin,
+      allowMemberChannelsPayout,
+      allowPgBackupForPayin,
+      allowPgBackupForPayout,
+      ipAddresses,
+      maxPayout,
+      minPayout,
+      maxWithdrawal,
+      minWithdrawal,
+      payinChannels,
+      payoutChannels,
+      payinServiceRate,
+      payoutServiceRate,
+      withdrawalServiceRate,
+      withdrawalPassword,
       phone,
-      first_name,
-      last_name,
-      identity: data,
+      referralCode,
+      channelProfile,
+      payinMode,
+      numberOfRangesOrRatio,
+      amountRanges,
+      ratios,
+    } = createMerchantDto;
+    const identity = await this.identityService.create(
+      email,
+      password,
+      'MEMBER',
+    );
+
+    // Create and save the Admin
+    const merchant = this.merchantRepository.create({
+      identity,
+      enabled,
+      firstName,
+      lastName,
+      businessUrl,
+      businessName,
+      allowMemberChannelsPayin,
+      allowMemberChannelsPayout,
+      allowPgBackupForPayin,
+      allowPgBackupForPayout,
+      maxPayout,
+      minPayout,
+      maxWithdrawal,
+      minWithdrawal,
+      payinServiceRate,
+      payoutServiceRate,
+      withdrawalServiceRate,
+      phone,
+      referralCode,
+      payinMode,
+      integrationId: '11',
+      withdrawalPassword: this.jwtService.getHashPassword(password),
     });
 
-    return {
-      merchatRegisterData,
-      status: HttpStatus.CREATED,
-      message: 'Merchant created.',
-    };
+    const createdMerchant = await this.merchantRepository.save(merchant);
+
+    // add ips
+    await this.identityService.updateIps(ipAddresses, identity);
+
+    // add payin and payout channels
+
+    await this.channelService.updatePayinPayoutChannels(
+      identity,
+      payinChannels,
+      'Payin',
+    );
+
+    await this.channelService.updatePayinPayoutChannels(
+      identity,
+      payoutChannels,
+      'Payout',
+    );
+
+    // add payin mode
+    await this.updatePayinModeDetails(
+      createdMerchant.id,
+      payinMode,
+      numberOfRangesOrRatio,
+      amountRanges,
+      ratios,
+    );
+
+    // Process the channels and their profile fields
+    await this.channelService.processChannelFilledFields(
+      channelProfile,
+      createdMerchant.identity,
+    );
+
+    return HttpStatus.OK;
   }
 
-  // Update merchant details
-  async updateMerchantDetails(
-    merchantUpdateData: MerchantUpdateDto,
-    user_name: string,
+  async findAll() {
+    const results = await this.merchantRepository.find({
+      relations: [
+        'identity',
+        'identity.channelProfileFilledFields',
+        'identity.channelProfileFilledFields.field',
+        'identity.channelProfileFilledFields.field.channel',
+        'identity.ips',
+        'identity.payinPayoutChannels',
+        'identity.payinPayoutChannels.channel',
+        'payinModeDetails',
+        'payinModeDetails.proportionalRange',
+        'payinModeDetails.amountRangeRange',
+      ],
+    });
+
+    return plainToInstance(MerchantResponseDto, results);
+  }
+
+  async findOne(id: number) {
+    const results = await this.merchantRepository.findOne({
+      where: { id },
+      relations: [
+        'identity',
+        'identity.channelProfileFilledFields',
+        'identity.channelProfileFilledFields.field',
+        'identity.channelProfileFilledFields.field.channel',
+        'identity.ips',
+        'identity.payinPayoutChannels',
+        'identity.payinPayoutChannels.channel',
+        'payinModeDetails',
+        'payinModeDetails.proportionalRange',
+        'payinModeDetails.amountRangeRange',
+      ],
+    });
+
+    return plainToInstance(MerchantResponseDto, results);
+  }
+
+  async update(id: number, updateDto: UpdateMerchantDto) {
+    const channelProfile = updateDto.channelProfile;
+    const payinChannels = updateDto.payinChannels;
+    const payoutChannels = updateDto.payoutChannels;
+    const ipAddresses = updateDto.ipAddresses;
+    const numberOfRangesOrRatio = updateDto.numberOfRangesOrRatio;
+    const amountRanges = updateDto.amountRanges;
+    const ratios = updateDto.ratios;
+
+    delete updateDto.channelProfile;
+    delete updateDto.email;
+    delete updateDto.password;
+    delete updateDto.payinChannels;
+    delete updateDto.payoutChannels;
+    delete updateDto.ipAddresses;
+    delete updateDto.numberOfRangesOrRatio,
+      delete updateDto.amountRanges,
+      delete updateDto.ratios;
+
+    const result = await this.merchantRepository.update({ id: id }, updateDto);
+
+    const merchant = await this.merchantRepository.findOne({
+      where: { id: id },
+      relations: ['identity'],
+    });
+
+    // update ips
+    await this.identityService.updateIps(ipAddresses, merchant.identity);
+    // update payin and payout channels
+    await this.channelService.updatePayinPayoutChannels(
+      merchant.identity,
+      payinChannels,
+      'Payin',
+    );
+
+    await this.channelService.updatePayinPayoutChannels(
+      merchant.identity,
+      payoutChannels,
+      'Payout',
+    );
+
+    // update payin mode
+    await this.updatePayinModeDetails(
+      id,
+      updateDto.payinMode,
+      numberOfRangesOrRatio,
+      amountRanges,
+      ratios,
+    );
+
+    await this.channelService.processChannelFilledFields(
+      channelProfile,
+      merchant.identity,
+    );
+
+    return HttpStatus.OK;
+  }
+
+  async remove(id: number) {
+    const admin = await this.merchantRepository.findOne({
+      where: { id: id },
+      relations: ['identity'], // Ensure you load the identity relation
+    });
+
+    if (!admin) throw new NotFoundException();
+
+    // delete ips
+    await this.identityService.deleteIps(admin.identity);
+    // delete payin and payout channels
+    await this.channelService.deletePayinPayoutChannels(admin.identity);
+    // delete payin mode
+    await this.deletePayinMode(id);
+
+    this.channelService.deleteChannelProfileOfUser(admin.identity);
+    this.merchantRepository.delete(id);
+    this.identityService.remove(admin.identity?.id);
+
+    return HttpStatus.OK;
+  }
+
+  async updatePayinModeDetails(
+    merchantId: number,
+    modeType: 'DEFAULT' | 'PROPORTIONAL' | 'AMOUNT_RANGE',
+    numberOfRangesOrRatio?: number,
+    rangeDtos?: RangeDto[],
+    ratioDtos?: RatioDto[],
   ) {
-    const merchantIdentity =
-      await this.identityService.getIdentityByUserName(user_name);
-    if (!merchantIdentity) {
-      throw new NotFoundException('Merchant account not found.');
-    }
-
-    const merchantdata = await this.getMerchantByIdentityId(
-      merchantIdentity.id,
-    );
-
-    await this.merchantRepository.update(merchantdata.id, {
-      ...merchantdata,
-      ...merchantUpdateData,
+    const merchant = await this.merchantRepository.findOne({
+      where: { id: merchantId },
     });
 
-    return { message: 'Merchant data updated.', merchantUpdateData };
-  }
+    // Step 1: Delete existing associated with the merchant
+    await this.deletePayinMode(merchantId);
 
-  // Get merchant details by user name
-  async getMerchantByUserName(user_name: string) {
-    const merchantIdentity =
-      await this.identityService.getIdentityByUserName(user_name);
-
-    if (!merchantIdentity) {
-      throw new NotFoundException('Merchant not found.');
-    }
-
-    const merchantData = await this.getMerchantByIdentityId(
-      merchantIdentity.id,
-    );
-    delete merchantData.identity;
-    delete merchantIdentity.password;
-    return { ...merchantIdentity, ...merchantData };
-  }
-
-  // Get all merchant
-  async getAllMerchants() {
-    return await this.merchantRepository.find();
-  }
-
-  // Delete all merchants
-  async deleteAllMerchants() {
-    await this.entityManager.transaction(async (transactionalEntityManager) => {
-      // Fetch all merchants with their identities
-      const merchants = await transactionalEntityManager.find(Merchant, {
-        relations: ['identity'],
+    // Step 2: Create new payinmode entity
+    if (modeType !== 'DEFAULT') {
+      const payinMode = await this.payinModeRepository.create({
+        number: numberOfRangesOrRatio,
+        type: modeType,
+        merchant: merchant,
       });
-      // Remove all identities first to avoid foreign key issues
-      for (const merchant of merchants) {
-        if (merchant.identity) {
-          await transactionalEntityManager.remove(Identity, merchant.identity);
+      const createdPayinMode = await this.payinModeRepository.save(payinMode);
+
+      if (modeType === 'PROPORTIONAL') {
+        const proportions: ProportionalPayinMode[] = [];
+
+        for (const data of ratioDtos) {
+          const proportion = new ProportionalPayinMode();
+          proportion.gateway = data.gateway;
+          proportion.payinMode = createdPayinMode;
+          proportion.ratio = data.ratio;
+
+          proportions.push(proportion);
         }
+
+        return this.proportionalRepository.save(proportions);
+      } else if (modeType === 'AMOUNT_RANGE') {
+        const ranges: AmountRangePayinMode[] = [];
+
+        for (const data of rangeDtos) {
+          const range = new AmountRangePayinMode();
+          range.gateway = data.gateway;
+          range.payinMode = createdPayinMode;
+          range.lower = data.lower;
+          range.upper = data.upper;
+
+          ranges.push(range);
+        }
+        console.log('DONE');
+        return this.amountRangeRepository.save(ranges);
       }
-      // Remove all merchants
-      await transactionalEntityManager.clear(Merchant);
-      return { message: 'All merchants deleted' };
-    });
+    }
   }
 
-  async deleteOneMerchant(user_name: string) {
-    const merchant = await this.getMerchantByUserName(user_name);
+  async deletePayinMode(merchantId: number): Promise<void> {
+    // Find the PayinMode entity
+    const payinMode = await this.payinModeRepository.findOne({
+      where: { merchant: { id: merchantId } },
+      relations: ['proportionalRange', 'amountRangeRange'],
+    });
 
-    if (!merchant) {
-      throw new NotFoundException('User does not exists.');
-    }
-    if (merchant.user_type === 'super-admin') {
-      throw new ForbiddenException('Deleting this user is not permitted');
-    }
-    await this.identityService.deleteUserById(merchant.id);
+    if (payinMode) {
+      // Delete related ProportionalPayinMode entities
+      if (payinMode.proportionalRange.length > 0) {
+        await this.proportionalRepository.delete(
+          payinMode.proportionalRange.map((mode) => mode.id),
+        );
+      }
 
-    return { message: 'User deleted.' };
+      // Delete related AmountRangePayinMode entities
+      if (payinMode.amountRangeRange.length > 0) {
+        await this.amountRangeRepository.delete(
+          payinMode.amountRangeRange.map((range) => range.id),
+        );
+      }
+
+      // Finally, delete the PayinMode entity
+      await this.payinModeRepository.delete({ merchant: { id: merchantId } });
+    }
   }
 }

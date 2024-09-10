@@ -4,13 +4,15 @@ import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MerchantModule } from './merchant/merchant.module';
 import { IdentityModule } from './identity/identity.module';
-import { MemberModule } from './member/member.module';
-import { SubMerchantModule } from './sub-merchant/sub-merchant.module';
 import { AdminModule } from './admin/admin.module';
+import { MerchantModule } from './merchant/merchant.module';
+import { MemberModule } from './member/member.module';
 import { ChannelModule } from './channel/channel.module';
-import { GatewayModule } from './gateway/gateway.module';
+import { LoadModule } from './load/load.module';
+import { SubMerchantModule } from './sub-merchant/sub-merchant.module';
+import { ServicesModule } from './services/services.module';
+import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
 @Module({
   imports: [
@@ -30,18 +32,18 @@ import { GatewayModule } from './gateway/gateway.module';
         database: configService.get('PG_DATABASE'),
         autoLoadEntities: true,
         synchronize: true,
+        namingStrategy: new SnakeNamingStrategy(),
       }),
       inject: [ConfigService],
     }),
-
-    MerchantModule,
     IdentityModule,
-    MemberModule,
-    MemberModule,
-    SubMerchantModule,
     AdminModule,
+    MerchantModule,
+    MemberModule,
     ChannelModule,
-    GatewayModule,
+    LoadModule,
+    SubMerchantModule,
+    ServicesModule,
   ],
   controllers: [AppController],
   providers: [

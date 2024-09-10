@@ -1,46 +1,64 @@
+import { ChannelProfileFilledField } from 'src/channel/entities/channelProfileFilledField.entity';
+import { PayinPayoutChannel } from 'src/channel/entities/payinPayoutChannel.entity';
+import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  OneToMany,
+  Unique,
+  OneToOne,
+} from 'typeorm';
+import { IP } from './ip.entity';
 import { Admin } from 'src/admin/entities/admin.entity';
-import { ChannelDetails } from 'src/channel/entities/channelDetails.entity';
 import { Member } from 'src/member/entities/member.entity';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
-import { SubMerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
-import {
-  BaseEntity,
-  Column,
-  Entity,
-  OneToOne,
-  OneToMany,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
 
 @Entity()
-export class Identity extends BaseEntity {
+export class Identity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ unique: true })
   email: string;
-
-  @Column()
-  user_name: string;
 
   @Column()
   password: string;
 
-  @Column()
-  user_type: string;
+  @Column({
+    enum: ['MERCHANT', 'SUB_MERCHANT', 'MEMBER', 'SUPER_ADMIN', 'SUB_ADMIN'],
+  })
+  userType:
+    | 'MERCHANT'
+    | 'SUB_MERCHANT'
+    | 'MEMBER'
+    | 'SUPER_ADMIN'
+    | 'SUB_ADMIN';
 
-  @OneToOne(() => Merchant, (merchant) => merchant.identity)
-  merchant: Merchant;
+  @OneToMany(() => Merchant, (merchant) => merchant.identity, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
+  merchants: Merchant[];
 
-  @OneToOne(() => Member, (member) => member.identity)
-  member: Member;
+  @OneToMany(() => Member, (member) => member.identity, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
+  members: Member[];
 
   @OneToOne(() => Admin, (admin) => admin.identity)
-  admin: Admin;
+  admins: Admin[];
 
-  @OneToOne(() => SubMerchant, (subMerchant) => subMerchant.identity)
-  subMerchant: SubMerchant;
+  @OneToMany(() => Submerchant, (submerchant) => submerchant.identity)
+  submerchants: Submerchant[];
 
-  @OneToMany(() => ChannelDetails, (channelDetails) => channelDetails.channel)
-  channelDetails: ChannelDetails[];
+  @OneToMany(() => IP, (ip) => ip.identity)
+  ips: IP[];
+
+  @OneToMany(() => ChannelProfileFilledField, (field) => field.identity)
+  channelProfileFilledFields: ChannelProfileFilledField[];
+
+  @OneToMany(() => PayinPayoutChannel, (channel) => channel.identity)
+  payinPayoutChannels: PayinPayoutChannel[];
 }

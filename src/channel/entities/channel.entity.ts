@@ -1,7 +1,13 @@
-import { GatewayToChannel } from 'src/gateway/entities/gatewayToChannel.entity';
-import { MerchantToChannel } from 'src/merchant/entities/merchantToChannel.entity';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { ChannelDetails } from './channelDetails.entity';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { ChannelProfileField } from './channelProfileField.entity';
+import { PayinPayoutChannel } from './payinPayoutChannel.entity';
 
 @Entity()
 export class Channel {
@@ -11,27 +17,33 @@ export class Channel {
   @Column()
   name: string;
 
-  @Column()
+  @Column({ unique: true })
   tag: string;
 
   @Column({ default: true })
-  incoming_status: boolean;
+  incomingStatus: boolean;
 
   @Column({ default: true })
-  outgoing_status: boolean;
+  outgoingStatus: boolean;
+
+  @Column({ nullable: true })
+  logo: string;
+
+  @CreateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
+  createdAt: Date;
+
+  @UpdateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
+  updatedAt: Date;
+
+  @OneToMany(() => ChannelProfileField, (field) => field.channel, {
+    eager: true,
+  }) // Eager load the related fields
+  profileFields: ChannelProfileField[];
 
   @OneToMany(
-    () => MerchantToChannel,
-    (merchantToChannel) => merchantToChannel.channel,
-  )
-  merchantToChannel: MerchantToChannel[];
-
-  @OneToMany(
-    () => GatewayToChannel,
-    (gatewayToChannel) => gatewayToChannel.channel,
-  )
-  gatewayToChannel: GatewayToChannel[];
-
-  @OneToMany(() => ChannelDetails, (channelDetails) => channelDetails.channel)
-  channelDetails: ChannelDetails[];
+    () => PayinPayoutChannel,
+    (payinPayoutChannel) => payinPayoutChannel.channel,
+    { eager: true },
+  ) // Eager load the payin/payout channels
+  payinPayoutChannels: PayinPayoutChannel[];
 }

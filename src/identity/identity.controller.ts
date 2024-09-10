@@ -1,24 +1,94 @@
-import { Body, Controller, Patch, Post, Res } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Res,
+} from '@nestjs/common';
 import { IdentityService } from './identity.service';
-import { IdentitySigninDto, UpdatePasswordDto } from './dto/identity.dto';
+import { SignInDto } from './dto/signin.dto';
+import { SignUpDto } from './dto/singup.dto';
+import { VerifyOtpDto } from './dto/verifyotp.dto';
+import { ForgotPasswordDto } from './dto/forgotPassword.dto';
+import { ChangePasswordDto } from './dto/changePassword.dto';
 import { Response } from 'express';
 
 @Controller('identity')
 export class IdentityController {
-  constructor(private identityService: IdentityService) {}
+  constructor(private readonly identityService: IdentityService) {}
 
   @Post('sign-in')
   async signIn(
+    @Body() signinDto: SignInDto,
     @Res({ passthrough: true }) response: Response,
-    @Body() signinData: IdentitySigninDto,
   ) {
-    const jwt = await this.identityService.signIn(signinData);
-    response.cookie('token', `Bearer_${jwt}`);
-    return { message: 'Sign in successful.' };
+    try {
+      const { jwt, type } = await this.identityService.signin(signinDto);
+      response.cookie('dps_token', `Bearer_${jwt}`, {
+        httpOnly: true,
+        maxAge: 2 * 60 * 60 * 1000,
+      });
+      return { message: 'signin sucessful.', type };
+    } catch (error) {
+      console.error(error);
+      return { message: 'Signin failed.', error: error.message };
+    }
   }
 
-  @Patch('reset-password')
-  async resetPassword(@Body() updatePasswordData: UpdatePasswordDto) {
-    return this.identityService.resetPassword(updatePasswordData);
+  @Post('sign-up')
+  signUp(@Body() signupDto: SignUpDto): Promise<any> {
+    return this.identityService.signupMember(signupDto);
+  }
+
+  @Post('verify-otp')
+  verifyOtp(@Body() verifyOtpDto: VerifyOtpDto): Promise<any> {
+    return this.identityService.verifyOtp(verifyOtpDto);
+  }
+
+  @Post('forgot-password')
+  forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    return this.identityService.forgotPassword(forgotPasswordDto);
+  }
+
+  @Post('verify-otp-forgot-password')
+  verifyOtpForgotPassword(@Body() verifyOtpDto: VerifyOtpDto) {
+    return this.identityService.verifyOtpForForgotPassword(verifyOtpDto);
+  }
+
+  @Post('change-password')
+  async changePassword(
+    @Body() changePasswordDto: ChangePasswordDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    try {
+      const { jwt, type } =
+        await this.identityService.changePassword(changePasswordDto);
+      response.cookie('dps_token', `Bearer_${jwt}`, {
+        httpOnly: true,
+        maxAge: 2 * 60 * 60 * 1000,
+      });
+      return { message: 'Password Changed.', type };
+    } catch (error) {
+      console.error(error);
+      return { message: 'Failed.', error: error.message };
+    }
+  }
+
+  @Get()
+  findAll() {
+    return this.identityService.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.identityService.findOne(+id);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateIdentityDto: any) {
+    return this.identityService.update(+id, updateIdentityDto);
   }
 }

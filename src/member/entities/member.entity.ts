@@ -1,32 +1,59 @@
 import { Identity } from 'src/identity/entities/identity.entity';
 import {
-  BaseEntity,
-  Column,
   Entity,
-  JoinColumn,
-  OneToOne,
+  Column,
   PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
-export class Member extends BaseEntity {
+export class Member {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  first_name: string;
+  @ManyToOne(() => Identity, (identity) => identity.members)
+  @JoinColumn({ name: 'identity' })
+  identity: Identity;
 
   @Column()
-  last_name: string;
+  firstName: string;
 
   @Column()
+  lastName: string;
+
+  @Column({ nullable: true })
   phone: string;
 
-  @OneToOne(() => Identity, (identity) => identity.merchant, {
-    cascade: true,
-    onDelete: 'CASCADE',
-    eager: true,
-  })
-  @JoinColumn({ name: 'identity_id' })
-  identity: Identity;
+  @Column({ nullable: true })
+  referralCode: string;
+
+  @Column({ default: true })
+  enabled: boolean;
+
+  @Column({ type: 'float' })
+  payinCommissionRate: number;
+
+  @Column({ type: 'float' })
+  payoutCommissionRate: number;
+
+  @Column({ type: 'integer' })
+  topupCommissionRate: number;
+
+  @Column({ type: 'integer' })
+  singlePayoutUpperLimit: number;
+
+  @Column({ type: 'integer' })
+  singlePayoutLowerLimit: number;
+
+  @Column({ type: 'integer' })
+  dailyTotalPayoutLimit: number;
+
+  @CreateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
+  createdAt: Date;
+
+  @UpdateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
+  updatedAt: Date;
 }

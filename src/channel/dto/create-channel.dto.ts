@@ -1,19 +1,41 @@
-import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsArray,
+  IsBoolean,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Matches,
+  ValidateNested,
+} from 'class-validator';
+import { ChannelProfileFieldDto } from './channelProfileField.dto';
 
 export class CreateChannelDto {
-  @IsNotEmpty()
   @IsString()
-  name: string;
+  @IsNotEmpty()
+  name?: string;
 
-  @IsNotEmpty()
   @IsString()
+  @IsNotEmpty()
+  @Matches(/^[a-z0-9-]+$/, {
+    message: 'Tag must only contain lowercase letters, numbers, or hyphens.',
+  })
   tag: string;
 
-  @IsOptional()
   @IsBoolean()
-  incoming_status: boolean;
+  @IsNotEmpty()
+  incomingStatus: boolean;
 
-  @IsOptional()
   @IsBoolean()
-  outgoing_status: boolean;
+  @IsNotEmpty()
+  outgoingStatus: boolean;
+
+  @IsString()
+  @IsOptional()
+  logo?: string;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ChannelProfileFieldDto) // Transform array items to ChannelProfileFieldDto
+  profileFields: ChannelProfileFieldDto[];
 }

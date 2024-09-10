@@ -1,55 +1,34 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { MerchantService } from './merchant.service';
-import { MerchantRegisterDto, MerchantUpdateDto } from './dto/merchant.dto';
+import { CreateMerchantDto } from './dto/create-merchant.dto';
+import { UpdateMerchantDto } from './dto/update-merchant.dto';
 
 @Controller('merchant')
 export class MerchantController {
-  constructor(private merchantService: MerchantService) {}
+  constructor(private readonly merchantService: MerchantService) {}
 
-  // POST requests
-  @Post('register')
-  async registerMerchant(@Body() merchantRegisterData: MerchantRegisterDto) {
-    return this.merchantService.registerMerchant(merchantRegisterData);
-  }
-
-  @Patch('/:user_name')
-  async updateMerchant(
-    @Param('user_name') user_name: string,
-    @Body() merchantUpdateData: MerchantUpdateDto,
-  ) {
-    return await this.merchantService.updateMerchantDetails(
-      merchantUpdateData,
-      user_name,
-    );
-  }
-
-  // GET Reuqests
-  @Get('/:user_name')
-  async getUserByUserName(@Param('user_name') user_name: string) {
-    return this.merchantService.getMerchantByUserName(user_name);
+  @Post()
+  create(@Body() createMerchantDto: CreateMerchantDto) {
+    return this.merchantService.create(createMerchantDto);
   }
 
   @Get()
-  async getAllMerchants() {
-    return this.merchantService.getAllMerchants();
+  findAll() {
+    return this.merchantService.findAll();
   }
 
-  // DELETE Requets
-  @Delete()
-  async deleteAllMerchants() {
-    return await this.merchantService.deleteAllMerchants();
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.merchantService.findOne(+id);
   }
 
-  @Delete('/:user_name')
-  async deleteMerchant(@Param('user_name') user_name: string) {
-    return await this.merchantService.deleteOneMerchant(user_name);
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateMerchantDto: UpdateMerchantDto) {
+    return this.merchantService.update(+id, updateMerchantDto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.merchantService.remove(+id);
   }
 }

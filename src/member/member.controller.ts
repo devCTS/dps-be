@@ -1,49 +1,54 @@
 import {
-  Body,
   Controller,
-  Delete,
   Get,
-  Param,
-  Patch,
   Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
 } from '@nestjs/common';
 import { MemberService } from './member.service';
-import { MemberRegisterDto, MemberUpdateDto } from './dto/member.dto';
+import { CreateMemberDto } from './dto/create-member.dto';
+import { UpdateMemberDto } from './dto/update-member.dto';
+import { RegisterDto } from './dto/register.dto';
+import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
 
 @Controller('member')
 export class MemberController {
-  constructor(private memberService: MemberService) {}
+  constructor(private readonly memberService: MemberService) {}
 
-  // POST Requests
-  @Post('register')
-  async registerMember(@Body() memberRegisterData: MemberRegisterDto) {
-    return this.memberService.registerMember(memberRegisterData);
+  @Post()
+  create(@Body() createMemberDto: CreateMemberDto) {
+    return this.memberService.create(createMemberDto);
   }
 
-  // GET Reuqests
-  @Get('/:user_name')
-  async getUserByUserName(@Param('user_name') user_name: string) {
-    return this.memberService.getMemberByUserName(user_name);
+  @Post('register')
+  register(@Body() registerDto: RegisterDto) {
+    return this.memberService.registerViaSignup(registerDto);
   }
 
   @Get()
-  async getAllMerchants() {
-    return this.memberService.getAllMembers();
+  findAll() {
+    return this.memberService.findAll();
   }
 
-  @Patch('/:user_name')
-  async updateMerchant(
-    @Param('user_name') user_name: string,
-    @Body() memberUpdateData: MemberUpdateDto,
-  ) {
-    return await this.memberService.updateMemberDetails(
-      memberUpdateData,
-      user_name,
-    );
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.memberService.findOne(+id);
   }
 
-  @Delete('/:user_name')
-  async deleteMember(@Param('user_name') user_name: string) {
-    return await this.memberService.deleteOneMember(user_name);
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateMemberDto: UpdateMemberDto) {
+    return this.memberService.update(+id, updateMemberDto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.memberService.remove(+id);
+  }
+
+  @Post('paginate')
+  paginate(@Body() paginateRequestDto: PaginateRequestDto) {
+    return this.memberService.paginate(paginateRequestDto);
   }
 }

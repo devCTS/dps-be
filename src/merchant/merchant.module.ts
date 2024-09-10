@@ -1,18 +1,31 @@
 import { Module } from '@nestjs/common';
+import { MerchantService } from './merchant.service';
+import { MerchantController } from './merchant.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Merchant } from './entities/merchant.entity';
-import { MerchantRepository } from './merchant.repository';
-import { MerchantController } from './merchant.controller';
-import { MerchantService } from './merchant.service';
+import { PayinMode } from './entities/payinMode.entity';
+import { ProportionalPayinMode } from './entities/proportionalPayinMode.entity';
+import { AmountRangePayinMode } from './entities/amountRangePayinMode.entity';
+import { JwtModule } from 'src/services/jwt/jwt.module';
 import { IdentityModule } from 'src/identity/identity.module';
-import { MerchantToChannel } from './entities/merchantToChannel.entity';
+import { ChannelModule } from 'src/channel/channel.module';
+import { IP } from 'src/identity/entities/ip.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Merchant, MerchantToChannel]),
+    TypeOrmModule.forFeature([
+      Merchant,
+      PayinMode,
+      ProportionalPayinMode,
+      AmountRangePayinMode,
+      IP,
+    ]),
+    JwtModule,
     IdentityModule,
+    ChannelModule,
   ],
-  providers: [MerchantRepository, MerchantService],
   controllers: [MerchantController],
+  providers: [MerchantService],
+  exports: [MerchantService],
 })
 export class MerchantModule {}
