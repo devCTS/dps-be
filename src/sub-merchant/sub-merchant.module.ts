@@ -14,5 +14,6 @@ import { MerchantModule } from 'src/merchant/merchant.module';
   ],
   controllers: [SubMerchantController],
   providers: [SubMerchantService],
+  exports: [SubMerchantService],
 })
 export class SubMerchantModule {}

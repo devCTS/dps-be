@@ -11,6 +11,7 @@ import { ChannelProfileFilledField } from './entities/channelProfileFilledField.
 import { Identity } from 'src/identity/entities/identity.entity';
 import { ChannelProfileDto } from 'src/utils/dtos/channel-profile.dto';
 import { PayinPayoutChannel } from './entities/payinPayoutChannel.entity';
+import { parseStartDate, parseEndDate } from 'src/utils/dtos/paginate.dto';
 @Injectable()
 export class ChannelService {
   constructor(
@@ -147,5 +148,27 @@ export class ChannelService {
 
   async deletePayinPayoutChannels(identity: Identity) {
     await this.payinPayoutChannelRepository.delete({ identity });
+  }
+
+  async exportRecords(startDate: string, endDate: string) {
+    const query = this.channelRepository.createQueryBuilder('channel');
+
+    query.leftJoinAndSelect('channel.profileFields', 'profileFields');
+
+    startDate = parseStartDate(startDate);
+    endDate = parseEndDate(endDate);
+
+    query.andWhere('channel.created_at BETWEEN :startDate AND :endDate', {
+      startDate,
+      endDate,
+    });
+
+    const [rows, total] = await query.getManyAndCount();
+    const dtos = plainToInstance(ChannelResponseDto, rows);
+
+    return {
+      data: dtos,
+      total,
+    };
   }
 }

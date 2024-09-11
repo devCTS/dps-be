@@ -13,9 +13,6 @@ import {
   parseEndDate,
   parseStartDate,
 } from 'src/utils/dtos/paginate.dto';
-import { ChannelProfileFilledField } from 'src/channel/entities/channelProfileFilledField.entity';
-import { ChannelProfileField } from 'src/channel/entities/channelProfileField.entity';
-import { Channel } from 'src/channel/entities/channel.entity';
 import { ChannelService } from 'src/channel/channel.service';
 
 @Injectable()
@@ -220,6 +217,28 @@ export class MemberService {
       totalPages: Math.ceil(total / pageSize),
       startRecord,
       endRecord,
+    };
+  }
+
+  async exportRecords(startDate: string, endDate: string) {
+    const query = this.memberRepository.createQueryBuilder('member');
+
+    query.leftJoinAndSelect('member.identity', 'identity');
+
+    startDate = parseStartDate(startDate);
+    endDate = parseEndDate(endDate);
+
+    query.andWhere('member.created_at BETWEEN :startDate AND :endDate', {
+      startDate,
+      endDate,
+    });
+
+    const [rows, total] = await query.getManyAndCount();
+    const dtos = plainToInstance(MemberResponseDto, rows);
+
+    return {
+      data: dtos,
+      total,
     };
   }
 }
