@@ -18,6 +18,7 @@ import { PayinMode } from './entities/payinMode.entity';
 import { AmountRangePayinMode } from './entities/amountRangePayinMode.entity';
 import { ProportionalPayinMode } from './entities/proportionalPayinMode.entity';
 import { identity } from 'rxjs';
+import { parseStartDate, parseEndDate } from 'src/utils/dtos/paginate.dto';
 
 @Injectable()
 export class MerchantService {

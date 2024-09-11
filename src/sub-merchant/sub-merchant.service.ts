@@ -14,6 +14,7 @@ import { plainToInstance } from 'class-transformer';
 import { SubMerchantResponseDto } from './dto/sub-merchant-response.dto';
 import { MerchantService } from 'src/merchant/merchant.service';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
+import { parseStartDate, parseEndDate } from 'src/utils/dtos/paginate.dto';
 
 @Injectable()
 export class SubMerchantService {

@@ -11,6 +11,7 @@ import { ChannelProfileFilledField } from './entities/channelProfileFilledField.
 import { Identity } from 'src/identity/entities/identity.entity';
 import { ChannelProfileDto } from 'src/utils/dtos/channel-profile.dto';
 import { PayinPayoutChannel } from './entities/payinPayoutChannel.entity';
+import { parseEndDate, parseStartDate } from 'src/utils/dtos/paginate.dto';
 @Injectable()
 export class ChannelService {
   constructor(
