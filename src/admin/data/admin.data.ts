@@ -14,5 +14,7 @@ export const getSuperAdminData = (): CreateAdminDto => {
     permissionAdjustBalance: true,
     permissionVerifyOrders: true,
     permissionHandleWithdrawals: true,
+    permissionSystemConfig: true,
+    permissionChannelsAndGateways: true,
   };
 };

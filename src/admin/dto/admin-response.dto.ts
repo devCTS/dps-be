@@ -48,6 +48,12 @@ export class AdminResponseDto {
   permissionHandleWithdrawals: boolean;
 
   @Expose()
+  permissionSystemConfig: boolean;
+
+  @Expose()
+  permissionChannelsAndGateways: boolean;
+
+  @Expose()
   @DateFormat()
   createdAt: Date;
 

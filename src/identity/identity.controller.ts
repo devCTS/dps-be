@@ -21,21 +21,8 @@ export class IdentityController {
   constructor(private readonly identityService: IdentityService) {}
 
   @Post('sign-in')
-  async signIn(
-    @Body() signinDto: SignInDto,
-    @Res({ passthrough: true }) response: Response,
-  ) {
-    try {
-      const { jwt, type } = await this.identityService.signin(signinDto);
-      response.cookie('dps_token', `Bearer_${jwt}`, {
-        httpOnly: true,
-        maxAge: 2 * 60 * 60 * 1000,
-      });
-      return { message: 'signin sucessful.', type };
-    } catch (error) {
-      console.error(error);
-      return { message: 'Signin failed.', error: error.message };
-    }
+  async signIn(@Body() signinDto: SignInDto) {
+    return await this.identityService.signin(signinDto);
   }
 
   @Post('sign-up')
@@ -85,10 +72,5 @@ export class IdentityController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.identityService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateIdentityDto: any) {
-    return this.identityService.update(+id, updateIdentityDto);
   }
 }

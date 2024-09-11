@@ -86,10 +86,32 @@ export class AdminService {
     id: number,
     updateAdminDto: UpdateAdminDto,
   ): Promise<HttpStatus> {
+    const email = updateAdminDto.email;
+    const password = updateAdminDto.password;
+    const updateLoginCredentials = updateAdminDto.updateLoginCredentials;
+
+    delete updateAdminDto.email;
+    delete updateAdminDto.password;
+    delete updateAdminDto.updateLoginCredentials;
+
     const result = await this.adminRepository.update(
       { id: id },
       updateAdminDto,
     );
+
+    if (updateLoginCredentials) {
+      const updatedAdmin = await this.adminRepository.findOne({
+        where: { id },
+        relations: ['identity'], // Explicitly specify the relations
+      });
+
+      await this.identityService.updateLogin(
+        updatedAdmin.identity.id,
+        email,
+        password,
+      );
+    }
+
     return HttpStatus.OK;
   }
 
@@ -109,6 +131,11 @@ export class AdminService {
 
   async paginate(paginateDto: PaginateRequestDto) {
     const query = this.adminRepository.createQueryBuilder('admin');
+    // query.orderBy('admin.created_at', 'DESC');
+    // Add relation to the identity entity
+    query.leftJoinAndSelect('admin.identity', 'identity'); // Join with identity
+    // .leftJoinAndSelect('identity.profile', 'profile'); // Join with profile through identity
+    // Sort records by created_at from latest to oldest
 
     const search = paginateDto.search;
     const pageSize = paginateDto.pageSize;
@@ -137,14 +164,15 @@ export class AdminService {
     query.skip(skip).take(pageSize);
 
     // Execute query
-    const [admins, total] = await query.getManyAndCount();
+    const [rows, total] = await query.getManyAndCount();
+    const dtos = plainToInstance(AdminResponseDto, rows);
 
     const startRecord = skip + 1;
     const endRecord = Math.min(skip + pageSize, total);
 
     // Return paginated result
     return {
-      data: admins,
+      data: dtos,
       total,
       page: pageNumber,
       pageSize,

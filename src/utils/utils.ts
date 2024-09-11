@@ -1,7 +1,6 @@
 import { HttpStatus } from '@nestjs/common';
 import * as bycrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
-import * as xlsx from 'xlsx';
 
 // Encrypt password or match password
 export const encryptPassword = async (password: string): Promise<string> => {
@@ -43,11 +42,4 @@ export const generateRandomOTP = () => {
   } while (String(sixDigitRandomNumber).startsWith('0'));
 
   return sixDigitRandomNumber;
-};
-
-export const jsonToExcel = async (jsonData: any) => {
-  const workSheet = xlsx.utils.json_to_sheet(jsonData);
-  const workBook = xlsx.utils.book_new();
-  xlsx.utils.book_append_sheet(workBook, workSheet, 'jsonFile');
-  return xlsx.write(workBook, { bookType: 'xlsx', type: 'buffer' });
 };

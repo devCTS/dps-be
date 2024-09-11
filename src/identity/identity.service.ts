@@ -144,13 +144,13 @@ export class IdentityService {
       throw new UnauthorizedException('User name or pawword is incorrect');
     }
 
-    const jwt = this.jwtService.createToken({
+    const token = this.jwtService.createToken({
       id: await this.getUserID(identity.id, identity.userType),
       email: identity.email,
       type: identity.userType,
     });
 
-    return { jwt, type: identity.userType };
+    return token;
   }
 
   async signupMember(signupDto: SignUpDto): Promise<any> {
@@ -190,7 +190,7 @@ export class IdentityService {
         firstName: requiredMember.firstName,
         lastName: requiredMember.lastName,
       };
-    } else return 'Provided OTP is incorrect.';
+    } else throw new UnauthorizedException('Provided OTP is incorrect.');
   }
 
   async isMemberVerifedForRegister(email) {
@@ -241,11 +241,14 @@ export class IdentityService {
         { password: hashedPassword },
       );
 
-      return this.jwtService.createToken({
-        userId: identity.email,
-        userType: identity.userType,
+      const token = this.jwtService.createToken({
+        id: await this.getUserID(identity.id, identity.userType),
+        email: identity.email,
+        type: identity.userType,
       });
-    } else return 'Provided OTP is incorrect.';
+
+      return token;
+    } else throw new UnauthorizedException('Provided OTP is incorrect.');
   }
 
   async changePassword(changePasswordDto: ChangePasswordDto) {
@@ -294,8 +297,13 @@ export class IdentityService {
     return `This action returns a #${id} identity`;
   }
 
-  update(id: number, updateIdentityDto: any) {
-    return `This action updates a #${id} identity`;
+  async updateLogin(id: number, newEmail: string, newPassword: string) {
+    const hashedPassword = this.jwtService.getHashPassword(newPassword);
+
+    await this.identityRepository.update(
+      { id: id },
+      { email: newEmail, password: hashedPassword },
+    );
   }
 
   async remove(id: number) {

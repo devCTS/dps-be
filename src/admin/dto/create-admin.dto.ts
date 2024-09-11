@@ -60,4 +60,12 @@ export class CreateAdminDto {
   @IsBoolean()
   @IsNotEmpty()
   permissionHandleWithdrawals: boolean;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  permissionSystemConfig: boolean;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  permissionChannelsAndGateways: boolean;
 }

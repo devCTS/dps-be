@@ -49,6 +49,12 @@ export class Admin {
   @Column({ default: false })
   permissionHandleWithdrawals: boolean;
 
+  @Column({ default: false })
+  permissionSystemConfig: boolean;
+
+  @Column({ default: false })
+  permissionChannelsAndGateways: boolean;
+
   @CreateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
   createdAt: Date;
 
