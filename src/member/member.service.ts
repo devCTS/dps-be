@@ -13,9 +13,6 @@ import {
   parseEndDate,
   parseStartDate,
 } from 'src/utils/dtos/paginate.dto';
-import { ChannelProfileFilledField } from 'src/channel/entities/channelProfileFilledField.entity';
-import { ChannelProfileField } from 'src/channel/entities/channelProfileField.entity';
-import { Channel } from 'src/channel/entities/channel.entity';
 import { ChannelService } from 'src/channel/channel.service';
 
 @Injectable()

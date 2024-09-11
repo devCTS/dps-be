@@ -15,5 +15,6 @@ import { Merchant } from 'src/merchant/entities/merchant.entity';
   ],
   controllers: [SubMerchantController],
   providers: [SubMerchantService],
+  exports: [SubMerchantService],
 })
 export class SubMerchantModule {}
