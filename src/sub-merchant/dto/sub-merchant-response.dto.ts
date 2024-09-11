@@ -3,6 +3,7 @@ import { Exclude, Expose, Transform } from 'class-transformer';
 import { Identity } from 'src/identity/entities/identity.entity';
 import { Rename } from 'src/utils/decorators/rename.decorator';
 import { DateFormat } from 'src/utils/decorators/dateformat.decorator';
+import { IsBoolean } from 'class-validator';
 
 @Exclude()
 export class SubMerchantResponseDto {
@@ -26,6 +27,7 @@ export class SubMerchantResponseDto {
   id: number;
 
   @Expose()
+  @IsBoolean()
   enabled: boolean;
 
   @Expose()
@@ -35,4 +37,16 @@ export class SubMerchantResponseDto {
   @Expose()
   @DateFormat()
   updatedAt: Date;
+
+  @Expose()
+  @IsBoolean()
+  permissionSubmitPayouts: boolean;
+
+  @Expose()
+  @IsBoolean()
+  permissionSubmitWithdrawals: boolean;
+
+  @Expose()
+  @IsBoolean()
+  permissionUpdateWithdrawalProfiles: boolean;
 }

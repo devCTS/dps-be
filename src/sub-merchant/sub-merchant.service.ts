@@ -13,6 +13,11 @@ import { IdentityService } from 'src/identity/identity.service';
 import { plainToInstance } from 'class-transformer';
 import { SubMerchantResponseDto } from './dto/sub-merchant-response.dto';
 import { MerchantService } from 'src/merchant/merchant.service';
+import {
+  PaginateRequestDto,
+  parseEndDate,
+  parseStartDate,
+} from 'src/utils/dtos/paginate.dto';
 
 @Injectable()
 export class SubMerchantService {
@@ -105,5 +110,58 @@ export class SubMerchantService {
     if (!deleteSubMerchant) throw new InternalServerErrorException();
 
     return HttpStatus.OK;
+  }
+
+  async paginate(paginateDto: PaginateRequestDto) {
+    const query = this.subMerchantRepository.createQueryBuilder('admin');
+    // query.orderBy('admin.created_at', 'DESC');
+    // Add relation to the identity entity
+    query.leftJoinAndSelect('admin.identity', 'identity'); // Join with identity
+    // .leftJoinAndSelect('identity.profile', 'profile'); // Join with profile through identity
+    // Sort records by created_at from latest to oldest
+
+    const search = paginateDto.search;
+    const pageSize = paginateDto.pageSize;
+    const pageNumber = paginateDto.pageNumber;
+    // Handle search by first_name + " " + last_name
+    if (search) {
+      query.andWhere(
+        `CONCAT(submerchant.first_name, ' ', submerchant.last_name) ILIKE :search`,
+        { search: `%${search}%` },
+      );
+    }
+
+    // Handle filtering by created_at between startDate and endDate
+    if (paginateDto.startDate && paginateDto.endDate) {
+      const startDate = parseStartDate(paginateDto.startDate);
+      const endDate = parseEndDate(paginateDto.endDate);
+
+      query.andWhere('submerchant.created_at BETWEEN :startDate AND :endDate', {
+        startDate,
+        endDate,
+      });
+    }
+
+    // Handle pagination
+    const skip = (pageNumber - 1) * pageSize;
+    query.skip(skip).take(pageSize);
+
+    // Execute query
+    const [rows, total] = await query.getManyAndCount();
+    const dtos = plainToInstance(SubMerchantResponseDto, rows);
+
+    const startRecord = skip + 1;
+    const endRecord = Math.min(skip + pageSize, total);
+
+    // Return paginated result
+    return {
+      data: dtos,
+      total,
+      page: pageNumber,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+      startRecord,
+      endRecord,
+    };
   }
 }

@@ -37,4 +37,9 @@ export class ChannelController {
   update(@Param('id') id: string, @Body() updateChannelDto: UpdateChannelDto) {
     return this.channelService.update(+id, updateChannelDto);
   }
+
+  @Post('paginate')
+  paginate() {
+    return this.channelService.findAll();
+  }
 }

@@ -10,18 +10,11 @@ import {
 import { SubMerchantService } from './sub-merchant.service';
 import { CreateSubMerchantDto } from './dto/create-sub-merchant.dto';
 import { UpdateSubMerchantDto } from './dto/update-sub-merchant.dto';
+import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
 
 @Controller('sub-merchant')
 export class SubMerchantController {
   constructor(private readonly subMerchantService: SubMerchantService) {}
-
-  @Post(':merchantId')
-  create(
-    @Param() id: number,
-    @Body() createSubMerchantDto: CreateSubMerchantDto,
-  ) {
-    return this.subMerchantService.create(id, createSubMerchantDto);
-  }
 
   @Get()
   findAll() {
@@ -44,5 +37,18 @@ export class SubMerchantController {
   @Delete(':id')
   remove(@Param('id') id: number) {
     return this.subMerchantService.remove(+id);
+  }
+
+  @Post('paginate')
+  paginate(@Body() paginateRequestDto: PaginateRequestDto) {
+    return this.subMerchantService.paginate(paginateRequestDto);
+  }
+
+  @Post(':merchantId')
+  create(
+    @Param() id: number,
+    @Body() createSubMerchantDto: CreateSubMerchantDto,
+  ) {
+    return this.subMerchantService.create(id, createSubMerchantDto);
   }
 }
