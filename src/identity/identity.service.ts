@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -69,7 +70,7 @@ export class IdentityService {
     return 282907;
   }
 
-  async getUserID(
+  async getUser(
     identityId: number,
     role: 'MERCHANT' | 'SUB_MERCHANT' | 'MEMBER' | 'SUPER_ADMIN' | 'SUB_ADMIN',
   ) {
@@ -78,19 +79,19 @@ export class IdentityService {
       case 'SUB_ADMIN':
       case 'SUPER_ADMIN':
         const admin = await this.adminRepository.findOne(query);
-        return admin.id;
+        return admin;
 
       case 'MEMBER':
         const member = await this.memberRepository.findOne(query);
-        return member.id;
+        return member;
 
       case 'MERCHANT':
         const merchant = await this.merchantRepository.findOne(query);
-        return merchant.id;
+        return merchant;
 
       case 'SUB_MERCHANT':
         const submerchant = await this.subMerchantRepository.findOne(query);
-        return submerchant.id;
+        return submerchant;
     }
   }
 
@@ -144,8 +145,13 @@ export class IdentityService {
       throw new UnauthorizedException('User name or pawword is incorrect');
     }
 
+    const user = await this.getUser(identity.id, identity.userType);
+    if (!user.enabled) {
+      throw new ForbiddenException('This user is currently disabled');
+    }
+
     const token = this.jwtService.createToken({
-      id: await this.getUserID(identity.id, identity.userType),
+      id: user.id,
       email: identity.email,
       type: identity.userType,
     });
@@ -241,8 +247,13 @@ export class IdentityService {
         { password: hashedPassword },
       );
 
+      const user = await this.getUser(identity.id, identity.userType);
+      if (!user.enabled) {
+        throw new ForbiddenException('This user is currently disabled');
+      }
+
       const token = this.jwtService.createToken({
-        id: await this.getUserID(identity.id, identity.userType),
+        id: user.id,
         email: identity.email,
         type: identity.userType,
       });
