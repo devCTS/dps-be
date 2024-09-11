@@ -10,5 +10,6 @@ import { ChannelModule } from 'src/channel/channel.module';
   imports: [TypeOrmModule.forFeature([Member]), IdentityModule, ChannelModule],
   controllers: [MemberController],
   providers: [MemberService],
+  exports: [MemberService],
 })
 export class MemberModule {}

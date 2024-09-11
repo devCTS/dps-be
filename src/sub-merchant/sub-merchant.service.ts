@@ -13,6 +13,7 @@ import { IdentityService } from 'src/identity/identity.service';
 import { plainToInstance } from 'class-transformer';
 import { SubMerchantResponseDto } from './dto/sub-merchant-response.dto';
 import { MerchantService } from 'src/merchant/merchant.service';
+import { parseEndDate, parseStartDate } from 'src/utils/dtos/paginate.dto';
 
 @Injectable()
 export class SubMerchantService {
@@ -105,5 +106,28 @@ export class SubMerchantService {
     if (!deleteSubMerchant) throw new InternalServerErrorException();
 
     return HttpStatus.OK;
+  }
+
+  async exportRecords(startDate: string, endDate: string) {
+    const query = this.subMerchantRepository.createQueryBuilder('subMerchant');
+
+    query.leftJoinAndSelect('subMerchant.identity', 'identity');
+    query.leftJoinAndSelect('subMerchant.merchant', 'merchant');
+
+    startDate = parseStartDate(startDate);
+    endDate = parseEndDate(endDate);
+
+    query.andWhere('subMerchant.created_at BETWEEN :startDate AND :endDate', {
+      startDate,
+      endDate,
+    });
+
+    const [rows, total] = await query.getManyAndCount();
+    const dtos = plainToInstance(SubMerchantResponseDto, rows);
+
+    return {
+      data: dtos,
+      total,
+    };
   }
 }

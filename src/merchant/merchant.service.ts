@@ -18,6 +18,7 @@ import { PayinMode } from './entities/payinMode.entity';
 import { AmountRangePayinMode } from './entities/amountRangePayinMode.entity';
 import { ProportionalPayinMode } from './entities/proportionalPayinMode.entity';
 import { identity } from 'rxjs';
+import { parseEndDate, parseStartDate } from 'src/utils/dtos/paginate.dto';
 
 @Injectable()
 export class MerchantService {
@@ -341,5 +342,28 @@ export class MerchantService {
       // Finally, delete the PayinMode entity
       await this.payinModeRepository.delete({ merchant: { id: merchantId } });
     }
+  }
+
+  async exportRecords(startDate: string, endDate: string) {
+    const query = this.merchantRepository.createQueryBuilder('merchant');
+
+    query.leftJoinAndSelect('merchant.identity', 'identity');
+    query.leftJoinAndSelect('merchant.payinModeDetails', 'payinModeDetails');
+
+    startDate = parseStartDate(startDate);
+    endDate = parseEndDate(endDate);
+
+    query.andWhere('merchant.created_at BETWEEN :startDate AND :endDate', {
+      startDate,
+      endDate,
+    });
+
+    const [rows, total] = await query.getManyAndCount();
+    const dtos = plainToInstance(MerchantResponseDto, rows);
+
+    return {
+      data: dtos,
+      total,
+    };
   }
 }

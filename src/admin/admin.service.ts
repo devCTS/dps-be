@@ -185,4 +185,26 @@ export class AdminService {
   async loadSuperAdmin() {
     await this.create(getSuperAdminData());
   }
+
+  async exportRecords(startDate, endDate) {
+    const query = this.adminRepository.createQueryBuilder('admin');
+
+    query.leftJoinAndSelect('admin.identity', 'identity');
+
+    startDate = parseStartDate(startDate);
+    endDate = parseEndDate(endDate);
+
+    query.andWhere('admin.created_at BETWEEN :startDate AND :endDate', {
+      startDate,
+      endDate,
+    });
+
+    const [rows, total] = await query.getManyAndCount();
+    const dtos = plainToInstance(AdminResponseDto, rows);
+
+    return {
+      data: dtos,
+      total,
+    };
+  }
 }
