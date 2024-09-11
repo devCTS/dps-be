@@ -8,7 +8,7 @@ import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Admin } from './entities/admin.entity';
-import { Repository } from 'typeorm';
+import { Repository, Between } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import { AdminResponseDto } from './dto/admin-response.dto';
 import { IdentityService } from 'src/identity/identity.service';
@@ -184,5 +184,27 @@ export class AdminService {
 
   async loadSuperAdmin() {
     await this.create(getSuperAdminData());
+  }
+
+  async exportRecords(startDate: string, endDate: string) {
+    startDate = parseStartDate(startDate);
+    endDate = parseEndDate(endDate);
+
+    const parsedStartDate = new Date(startDate);
+    const parsedEndDate = new Date(endDate);
+
+    const [rows, total] = await this.adminRepository.findAndCount({
+      relations: ['identity'],
+      where: {
+        createdAt: Between(parsedStartDate, parsedEndDate),
+      },
+    });
+
+    const dtos = plainToInstance(AdminResponseDto, rows);
+
+    return {
+      data: dtos,
+      total,
+    };
   }
 }

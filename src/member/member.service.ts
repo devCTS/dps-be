@@ -5,7 +5,7 @@ import { RegisterDto } from './dto/register.dto';
 import { IdentityService } from 'src/identity/identity.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Member } from './entities/member.entity';
-import { Repository } from 'typeorm';
+import { Repository, Between } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import { MemberResponseDto } from './dto/member-response.dto';
 import {
@@ -220,6 +220,33 @@ export class MemberService {
       totalPages: Math.ceil(total / pageSize),
       startRecord,
       endRecord,
+    };
+  }
+
+  async exportRecords(startDate: string, endDate: string) {
+    startDate = parseStartDate(startDate);
+    endDate = parseEndDate(endDate);
+
+    const parsedStartDate = new Date(startDate);
+    const parsedEndDate = new Date(endDate);
+
+    const [rows, total] = await this.memberRepository.findAndCount({
+      relations: [
+        'identity',
+        'identity.channelProfileFilledFields',
+        'identity.channelProfileFilledFields.field',
+        'identity.channelProfileFilledFields.field.channel',
+      ],
+      where: {
+        createdAt: Between(parsedStartDate, parsedEndDate),
+      },
+    });
+
+    const dtos = plainToInstance(MemberResponseDto, rows);
+
+    return {
+      data: dtos,
+      total,
     };
   }
 }

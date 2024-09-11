@@ -3,7 +3,7 @@ import { CreateChannelDto } from './dto/create-channel.dto';
 import { UpdateChannelDto } from './dto/update-channel.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Channel } from './entities/channel.entity';
-import { Repository } from 'typeorm';
+import { Repository, Between } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import { ChannelResponseDto } from './dto/channel-response.dto';
 import { ChannelProfileField } from './entities/channelProfileField.entity';
@@ -147,5 +147,27 @@ export class ChannelService {
 
   async deletePayinPayoutChannels(identity: Identity) {
     await this.payinPayoutChannelRepository.delete({ identity });
+  }
+
+  async exportRecords(startDate: string, endDate: string) {
+    startDate = parseStartDate(startDate);
+    endDate = parseEndDate(endDate);
+
+    const parsedStartDate = new Date(startDate);
+    const parsedEndDate = new Date(endDate);
+
+    const [rows, total] = await this.channelRepository.findAndCount({
+      relations: ['profileFields'],
+      where: {
+        createdAt: Between(parsedStartDate, parsedEndDate),
+      },
+    });
+
+    const dtos = plainToInstance(ChannelResponseDto, rows);
+
+    return {
+      data: dtos,
+      total,
+    };
   }
 }
