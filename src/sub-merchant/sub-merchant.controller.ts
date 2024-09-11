@@ -46,7 +46,7 @@ export class SubMerchantController {
 
   @Post(':merchantId')
   create(
-    @Param() id: number,
+    @Param('merchantId') id: number,
     @Body() createSubMerchantDto: CreateSubMerchantDto,
   ) {
     return this.subMerchantService.create(id, createSubMerchantDto);

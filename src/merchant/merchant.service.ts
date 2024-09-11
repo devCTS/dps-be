@@ -7,7 +7,7 @@ import {
 import { UpdateMerchantDto } from './dto/update-merchant.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Merchant } from './entities/merchant.entity';
-import { Repository } from 'typeorm';
+import { Repository, Between } from 'typeorm';
 import { IdentityService } from 'src/identity/identity.service';
 import { ChannelService } from 'src/channel/channel.service';
 import { JwtService } from 'src/services/jwt/jwt.service';
@@ -18,6 +18,7 @@ import { PayinMode } from './entities/payinMode.entity';
 import { AmountRangePayinMode } from './entities/amountRangePayinMode.entity';
 import { ProportionalPayinMode } from './entities/proportionalPayinMode.entity';
 import { identity } from 'rxjs';
+import { parseStartDate, parseEndDate } from 'src/utils/dtos/paginate.dto';
 
 @Injectable()
 export class MerchantService {
@@ -341,5 +342,38 @@ export class MerchantService {
       // Finally, delete the PayinMode entity
       await this.payinModeRepository.delete({ merchant: { id: merchantId } });
     }
+  }
+
+  async exportRecords(startDate: string, endDate: string) {
+    startDate = parseStartDate(startDate);
+    endDate = parseEndDate(endDate);
+
+    const parsedStartDate = new Date(startDate);
+    const parsedEndDate = new Date(endDate);
+
+    const [rows, total] = await this.merchantRepository.findAndCount({
+      relations: [
+        'identity',
+        'identity.channelProfileFilledFields',
+        'identity.channelProfileFilledFields.field',
+        'identity.channelProfileFilledFields.field.channel',
+        'identity.ips',
+        'identity.payinPayoutChannels',
+        'identity.payinPayoutChannels.channel',
+        'payinModeDetails',
+        'payinModeDetails.proportionalRange',
+        'payinModeDetails.amountRangeRange',
+      ],
+      where: {
+        createdAt: Between(parsedStartDate, parsedEndDate),
+      },
+    });
+
+    const dtos = plainToInstance(MerchantResponseDto, rows);
+
+    return {
+      data: dtos,
+      total,
+    };
   }
 }

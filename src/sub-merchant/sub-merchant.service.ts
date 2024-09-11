@@ -8,7 +8,7 @@ import { CreateSubMerchantDto } from './dto/create-sub-merchant.dto';
 import { UpdateSubMerchantDto } from './dto/update-sub-merchant.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Submerchant } from './entities/sub-merchant.entity';
-import { Repository } from 'typeorm';
+import { Repository, Between } from 'typeorm';
 import { IdentityService } from 'src/identity/identity.service';
 import { plainToInstance } from 'class-transformer';
 import { SubMerchantResponseDto } from './dto/sub-merchant-response.dto';
@@ -18,14 +18,16 @@ import {
   parseEndDate,
   parseStartDate,
 } from 'src/utils/dtos/paginate.dto';
+import { Merchant } from 'src/merchant/entities/merchant.entity';
 
 @Injectable()
 export class SubMerchantService {
   constructor(
     @InjectRepository(Submerchant)
     private subMerchantRepository: Repository<Submerchant>,
+    @InjectRepository(Merchant)
+    private merchantRepository: Repository<Merchant>,
     private readonly identityService: IdentityService,
-    private readonly merchantService: MerchantService,
   ) {}
 
   async create(
@@ -40,11 +42,13 @@ export class SubMerchantService {
       'SUB_MERCHANT',
     );
 
-    const merchant = await this.merchantService.findOne(merchantId);
+    const merchant = await this.merchantRepository.findOne({
+      where: { id: merchantId },
+    });
 
     const subMerchant = this.subMerchantRepository.create({
       identity,
-      // merchant,
+      merchant,
       ...createSubMerchantDto,
     });
 
@@ -162,6 +166,28 @@ export class SubMerchantService {
       totalPages: Math.ceil(total / pageSize),
       startRecord,
       endRecord,
+    };
+  }
+
+  async exportRecords(startDate: string, endDate: string) {
+    startDate = parseStartDate(startDate);
+    endDate = parseEndDate(endDate);
+
+    const parsedStartDate = new Date(startDate);
+    const parsedEndDate = new Date(endDate);
+
+    const [rows, total] = await this.subMerchantRepository.findAndCount({
+      relations: ['identity', 'merchant'],
+      where: {
+        createdAt: Between(parsedStartDate, parsedEndDate),
+      },
+    });
+
+    const dtos = plainToInstance(SubMerchantResponseDto, rows);
+
+    return {
+      data: dtos,
+      total,
     };
   }
 }
