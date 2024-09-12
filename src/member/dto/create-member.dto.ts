@@ -35,9 +35,9 @@ export class CreateMemberDto {
   @IsNotEmpty()
   lastName: string;
 
-  @IsString()
   @IsOptional()
-  @IsValidPhoneNumber()
+  @IsString()
+  // @IsValidPhoneNumber()
   phone?: string;
 
   @IsString()

@@ -18,7 +18,11 @@ import { PayinMode } from './entities/payinMode.entity';
 import { AmountRangePayinMode } from './entities/amountRangePayinMode.entity';
 import { ProportionalPayinMode } from './entities/proportionalPayinMode.entity';
 import { identity } from 'rxjs';
-import { parseStartDate, parseEndDate } from 'src/utils/dtos/paginate.dto';
+import {
+  parseStartDate,
+  parseEndDate,
+  PaginateRequestDto,
+} from 'src/utils/dtos/paginate.dto';
 
 @Injectable()
 export class MerchantService {
@@ -191,6 +195,13 @@ export class MerchantService {
     const numberOfRangesOrRatio = updateDto.numberOfRangesOrRatio;
     const amountRanges = updateDto.amountRanges;
     const ratios = updateDto.ratios;
+    const email = updateDto.email;
+    const password = updateDto.password;
+    const updateLoginCredentials = updateDto.updateLoginCredentials;
+    const updateWithdrawalCredentials = updateDto.updateWithdrawalCredentials;
+
+    delete updateDto.updateLoginCredentials;
+    delete updateDto.updateWithdrawalCredentials;
 
     delete updateDto.channelProfile;
     delete updateDto.email;
@@ -202,12 +213,40 @@ export class MerchantService {
       delete updateDto.amountRanges,
       delete updateDto.ratios;
 
-    const result = await this.merchantRepository.update({ id: id }, updateDto);
+    let result = null;
+
+    if (updateWithdrawalCredentials)
+      result = await this.merchantRepository.update(
+        { id: id },
+        {
+          ...updateDto,
+          withdrawalPassword: this.jwtService.getHashPassword(
+            updateDto.withdrawalPassword,
+          ),
+        },
+      );
+    else {
+      delete updateDto.withdrawalPassword;
+      result = await this.merchantRepository.update({ id: id }, updateDto);
+    }
 
     const merchant = await this.merchantRepository.findOne({
       where: { id: id },
       relations: ['identity'],
     });
+
+    if (updateLoginCredentials) {
+      const updatedAdmin = await this.merchantRepository.findOne({
+        where: { id },
+        relations: ['identity'], // Explicitly specify the relations
+      });
+
+      await this.identityService.updateLogin(
+        updatedAdmin.identity.id,
+        email,
+        password,
+      );
+    }
 
     // update ips
     await this.identityService.updateIps(ipAddresses, merchant.identity);
@@ -374,6 +413,59 @@ export class MerchantService {
     return {
       data: dtos,
       total,
+    };
+  }
+
+  async paginate(paginateDto: PaginateRequestDto) {
+    const query = this.merchantRepository.createQueryBuilder('merchant');
+    // query.orderBy('admin.created_at', 'DESC');
+    // Add relation to the identity entity
+    query.leftJoinAndSelect('merchant.identity', 'identity'); // Join with identity
+    // .leftJoinAndSelect('identity.profile', 'profile'); // Join with profile through identity
+    // Sort records by created_at from latest to oldest
+
+    const search = paginateDto.search;
+    const pageSize = paginateDto.pageSize;
+    const pageNumber = paginateDto.pageNumber;
+    // Handle search by first_name + " " + last_name
+    if (search) {
+      query.andWhere(
+        `CONCAT(merchant.first_name, ' ', merchant.last_name) ILIKE :search`,
+        { search: `%${search}%` },
+      );
+    }
+
+    // Handle filtering by created_at between startDate and endDate
+    if (paginateDto.startDate && paginateDto.endDate) {
+      const startDate = parseStartDate(paginateDto.startDate);
+      const endDate = parseEndDate(paginateDto.endDate);
+
+      query.andWhere('merchant.created_at BETWEEN :startDate AND :endDate', {
+        startDate,
+        endDate,
+      });
+    }
+
+    // Handle pagination
+    const skip = (pageNumber - 1) * pageSize;
+    query.skip(skip).take(pageSize);
+
+    // Execute query
+    const [rows, total] = await query.getManyAndCount();
+    const dtos = plainToInstance(MerchantResponseDto, rows);
+
+    const startRecord = skip + 1;
+    const endRecord = Math.min(skip + pageSize, total);
+
+    // Return paginated result
+    return {
+      data: dtos,
+      total,
+      page: pageNumber,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+      startRecord,
+      endRecord,
     };
   }
 }

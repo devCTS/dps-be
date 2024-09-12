@@ -16,6 +16,9 @@ export class MemberResponseDto {
   firstName: string;
 
   @Expose()
+  referralCode: string;
+
+  @Expose()
   lastName: string;
 
   @Expose()
@@ -56,10 +59,12 @@ export class MemberResponseDto {
 
   @Expose()
   @TransformChannelProfileFields()
-  channelProfile: {
-    channelName: string;
-    fields: { label: string; value: string }[];
-  }[];
+  channelProfile: any;
+
+  // {
+  //   channelName: string;
+  //   fields: { label: string; value: string }[];
+  // }[];
 
   @Exclude()
   identity: Identity;

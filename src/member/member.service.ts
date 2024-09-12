@@ -140,6 +140,11 @@ export class MemberService {
 
   async update(id: number, updateDto: UpdateMemberDto): Promise<HttpStatus> {
     const channelProfile = updateDto.channelProfile;
+    const email = updateDto.email;
+    const password = updateDto.password;
+    const updateLoginCredentials = updateDto.updateLoginCredentials;
+
+    delete updateDto.updateLoginCredentials;
     delete updateDto.channelProfile;
     delete updateDto.email;
     delete updateDto.password;
@@ -149,6 +154,19 @@ export class MemberService {
       where: { id: id },
       relations: ['identity'],
     });
+
+    if (updateLoginCredentials) {
+      const updatedAdmin = await this.memberRepository.findOne({
+        where: { id },
+        relations: ['identity'], // Explicitly specify the relations
+      });
+
+      await this.identityService.updateLogin(
+        updatedAdmin.identity.id,
+        email,
+        password,
+      );
+    }
 
     await this.channelService.processChannelFilledFields(
       channelProfile,
@@ -175,6 +193,11 @@ export class MemberService {
 
   async paginate(paginateDto: PaginateRequestDto) {
     const query = this.memberRepository.createQueryBuilder('member');
+    // query.orderBy('admin.created_at', 'DESC');
+    // Add relation to the identity entity
+    query.leftJoinAndSelect('member.identity', 'identity'); // Join with identity
+    // .leftJoinAndSelect('identity.profile', 'profile'); // Join with profile through identity
+    // Sort records by created_at from latest to oldest
 
     const search = paginateDto.search;
     const pageSize = paginateDto.pageSize;
@@ -203,14 +226,15 @@ export class MemberService {
     query.skip(skip).take(pageSize);
 
     // Execute query
-    const [admins, total] = await query.getManyAndCount();
+    const [rows, total] = await query.getManyAndCount();
+    const dtos = plainToInstance(MemberResponseDto, rows);
 
     const startRecord = skip + 1;
     const endRecord = Math.min(skip + pageSize, total);
 
     // Return paginated result
     return {
-      data: admins,
+      data: dtos,
       total,
       page: pageNumber,
       pageSize,

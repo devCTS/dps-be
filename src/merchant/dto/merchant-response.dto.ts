@@ -109,4 +109,7 @@ export class MerchantResponseDto {
   @Expose()
   @TransformChannelList('Payout')
   payoutChannels: any[];
+
+  @Expose()
+  numberOfRangesOrRatio?: number;
 }

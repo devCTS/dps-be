@@ -60,7 +60,7 @@ export class SubMerchantService {
 
   async findAll(): Promise<SubMerchantResponseDto[]> {
     const results = await this.subMerchantRepository.find({
-      relations: ['identity', 'merchant'],
+      relations: ['identity'],
     });
 
     return plainToInstance(SubMerchantResponseDto, results);
@@ -69,7 +69,7 @@ export class SubMerchantService {
   async findOne(id: number): Promise<SubMerchantResponseDto> {
     const result = await this.subMerchantRepository.findOne({
       where: { id },
-      relations: ['identity', 'merchant'],
+      relations: ['identity'],
     });
 
     if (!result) throw new NotFoundException();
@@ -81,19 +81,31 @@ export class SubMerchantService {
     id: number,
     updateSubMerchantDto: UpdateSubMerchantDto,
   ): Promise<HttpStatus> {
-    const subMerchant = await this.subMerchantRepository.findOne({
-      where: { id },
-      relations: ['identity', 'merchant'],
-    });
+    const email = updateSubMerchantDto.email;
+    const password = updateSubMerchantDto.password;
+    const updateLoginCredentials = updateSubMerchantDto.updateLoginCredentials;
 
-    if (!subMerchant) throw new NotFoundException();
+    delete updateSubMerchantDto.email;
+    delete updateSubMerchantDto.password;
+    delete updateSubMerchantDto.updateLoginCredentials;
 
-    const updateSubMerchant = await this.subMerchantRepository.update(
-      id,
+    const result = await this.subMerchantRepository.update(
+      { id: id },
       updateSubMerchantDto,
     );
 
-    if (!updateSubMerchant) throw new InternalServerErrorException();
+    if (updateLoginCredentials) {
+      const updatedAdmin = await this.subMerchantRepository.findOne({
+        where: { id },
+        relations: ['identity'], // Explicitly specify the relations
+      });
+
+      await this.identityService.updateLogin(
+        updatedAdmin.identity.id,
+        email,
+        password,
+      );
+    }
 
     return HttpStatus.OK;
   }
@@ -117,10 +129,10 @@ export class SubMerchantService {
   }
 
   async paginate(paginateDto: PaginateRequestDto) {
-    const query = this.subMerchantRepository.createQueryBuilder('admin');
+    const query = this.subMerchantRepository.createQueryBuilder('submerchant');
     // query.orderBy('admin.created_at', 'DESC');
     // Add relation to the identity entity
-    query.leftJoinAndSelect('admin.identity', 'identity'); // Join with identity
+    query.leftJoinAndSelect('submerchant.identity', 'identity'); // Join with identity
     // .leftJoinAndSelect('identity.profile', 'profile'); // Join with profile through identity
     // Sort records by created_at from latest to oldest
 

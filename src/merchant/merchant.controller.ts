@@ -1,7 +1,16 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { MerchantService } from './merchant.service';
 import { CreateMerchantDto } from './dto/create-merchant.dto';
 import { UpdateMerchantDto } from './dto/update-merchant.dto';
+import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
 
 @Controller('merchant')
 export class MerchantController {
@@ -23,12 +32,20 @@ export class MerchantController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateMerchantDto: UpdateMerchantDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateMerchantDto: UpdateMerchantDto,
+  ) {
     return this.merchantService.update(+id, updateMerchantDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.merchantService.remove(+id);
+  }
+
+  @Post('paginate')
+  paginate(@Body() paginateRequestDto: PaginateRequestDto) {
+    return this.merchantService.paginate(paginateRequestDto);
   }
 }
