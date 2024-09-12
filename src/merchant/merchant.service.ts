@@ -82,7 +82,7 @@ export class MerchantService {
     const identity = await this.identityService.create(
       email,
       password,
-      'MEMBER',
+      'MERCHANT',
     );
 
     // Create and save the Admin

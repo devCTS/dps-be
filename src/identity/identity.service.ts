@@ -146,7 +146,7 @@ export class IdentityService {
     }
 
     const user = await this.getUser(identity.id, identity.userType);
-    if (!user.enabled) {
+    if (!user?.enabled) {
       throw new ForbiddenException('This user is currently disabled');
     }
 
@@ -248,7 +248,7 @@ export class IdentityService {
       );
 
       const user = await this.getUser(identity.id, identity.userType);
-      if (!user.enabled) {
+      if (!user?.enabled) {
         throw new ForbiddenException('This user is currently disabled');
       }
 

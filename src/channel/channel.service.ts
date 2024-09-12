@@ -34,10 +34,23 @@ export class ChannelService {
   async create(
     createChannelDto: CreateChannelDto,
   ): Promise<ChannelResponseDto> {
-    const existingChannel = await this.findByTag(createChannelDto.tag);
+    let existingChannel = await this.channelRepository.findOne({
+      where: { tag: createChannelDto.tag },
+    });
+
     if (existingChannel) {
       throw new ConflictException(
         'A channel with the same tag already exists.',
+      );
+    }
+
+    existingChannel = await this.channelRepository.findOne({
+      where: { name: createChannelDto.name },
+    });
+
+    if (existingChannel) {
+      throw new ConflictException(
+        'A channel with the same name already exists.',
       );
     }
 

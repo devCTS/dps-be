@@ -39,9 +39,12 @@ export class SubMerchantController {
     return this.subMerchantService.remove(+id);
   }
 
-  @Post('paginate')
-  paginate(@Body() paginateRequestDto: PaginateRequestDto) {
-    return this.subMerchantService.paginate(paginateRequestDto);
+  @Post(':merchantId/paginate')
+  paginate(
+    @Param('merchantId') id: number,
+    @Body() paginateRequestDto: PaginateRequestDto,
+  ) {
+    return this.subMerchantService.paginate(id, paginateRequestDto);
   }
 
   @Post(':merchantId')

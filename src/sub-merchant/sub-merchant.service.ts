@@ -128,7 +128,7 @@ export class SubMerchantService {
     return HttpStatus.OK;
   }
 
-  async paginate(paginateDto: PaginateRequestDto) {
+  async paginate(merchantId, paginateDto: PaginateRequestDto) {
     const query = this.subMerchantRepository.createQueryBuilder('submerchant');
     // query.orderBy('admin.created_at', 'DESC');
     // Add relation to the identity entity
@@ -146,6 +146,8 @@ export class SubMerchantService {
         { search: `%${search}%` },
       );
     }
+
+    query.andWhere(`submerchant.merchant_id = ${merchantId}`);
 
     // Handle filtering by created_at between startDate and endDate
     if (paginateDto.startDate && paginateDto.endDate) {

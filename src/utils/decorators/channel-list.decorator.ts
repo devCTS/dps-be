@@ -5,7 +5,7 @@ export function TransformChannelList(type: 'Payin' | 'Payout') {
     ({ obj }) => {
       const data = [];
 
-      for (const iterator of obj.identity.payinPayoutChannels) {
+      for (const iterator of obj?.identity?.payinPayoutChannels || []) {
         if (iterator.type === type) {
           data.push({
             channelId: iterator.channel.id,
