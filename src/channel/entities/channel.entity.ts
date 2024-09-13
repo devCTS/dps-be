@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { ChannelProfileField } from './channelProfileField.entity';
 import { PayinPayoutChannel } from './payinPayoutChannel.entity';
+import { GatewayToChannel } from 'src/gateway/entities/gatewayToChannel.entity';
 
 @Entity()
 export class Channel {
@@ -43,7 +44,12 @@ export class Channel {
   @OneToMany(
     () => PayinPayoutChannel,
     (payinPayoutChannel) => payinPayoutChannel.channel,
-    { eager: true },
   ) // Eager load the payin/payout channels
   payinPayoutChannels: PayinPayoutChannel[];
+
+  @OneToMany(
+    () => GatewayToChannel,
+    (gatewayToChannel) => gatewayToChannel.channel,
+  )
+  gatewayToChannel: GatewayToChannel[];
 }

@@ -1,10 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotAcceptableException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateExportDto } from './dto/create-export.dto';
 import { ChannelService } from 'src/channel/channel.service';
 import { AdminService } from 'src/admin/admin.service';
 import { MemberService } from 'src/member/member.service';
 import { MerchantService } from 'src/merchant/merchant.service';
 import { SubMerchantService } from 'src/sub-merchant/sub-merchant.service';
+import { GatewayService } from 'src/gateway/gateway.service';
 
 @Injectable()
 export class ExportService {
@@ -14,6 +19,7 @@ export class ExportService {
     private readonly merchantService: MerchantService,
     private readonly subMerchantService: SubMerchantService,
     private readonly channelService: ChannelService,
+    private readonly gatewayService: GatewayService,
   ) {}
 
   async create(createExportDto: CreateExportDto) {
@@ -30,9 +36,11 @@ export class ExportService {
         return await this.subMerchantService.exportRecords(startDate, endDate);
       case 'channel':
         return await this.channelService.exportRecords(startDate, endDate);
+      case 'gateway':
+        return await this.gatewayService.exportRecords(startDate, endDate);
 
       default:
-        throw new NotFoundException();
+        throw new NotAcceptableException('Invalid table name!');
     }
   }
 }
