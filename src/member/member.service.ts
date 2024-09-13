@@ -1,4 +1,9 @@
-import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -269,5 +274,14 @@ export class MemberService {
       data: dtos,
       total,
     };
+  }
+
+  async getProfile(id: number) {
+    const profile = await this.findOne(id);
+    if (!profile.enabled) {
+      throw new UnauthorizedException('Unauthorized.');
+    }
+
+    return profile;
   }
 }

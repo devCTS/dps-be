@@ -3,6 +3,7 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { CreateSubMerchantDto } from './dto/create-sub-merchant.dto';
 import { UpdateSubMerchantDto } from './dto/update-sub-merchant.dto';
@@ -203,5 +204,14 @@ export class SubMerchantService {
       data: dtos,
       total,
     };
+  }
+
+  async getProfile(id: number) {
+    const profile = await this.findOne(id);
+    if (!profile.enabled) {
+      throw new UnauthorizedException('Unauthorized.');
+    }
+
+    return profile;
   }
 }

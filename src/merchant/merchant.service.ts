@@ -1,4 +1,9 @@
-import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import {
   CreateMerchantDto,
   RangeDto,
@@ -467,5 +472,14 @@ export class MerchantService {
       startRecord,
       endRecord,
     };
+  }
+
+  async getProfile(id: number) {
+    const profile = await this.findOne(id);
+    if (!profile.enabled) {
+      throw new UnauthorizedException('Unauthorized.');
+    }
+
+    return profile;
   }
 }

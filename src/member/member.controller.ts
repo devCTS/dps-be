@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { MemberService } from './member.service';
 import { CreateMemberDto } from './dto/create-member.dto';
@@ -37,6 +38,11 @@ export class MemberController {
   @Get()
   findAll() {
     return this.memberService.findAll();
+  }
+
+  @Get('profile/:id')
+  getProfile(@Param('id', ParseIntPipe) id: number) {
+    return this.memberService.getProfile(id);
   }
 
   @Get(':id')

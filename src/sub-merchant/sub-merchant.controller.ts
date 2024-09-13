@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { SubMerchantService } from './sub-merchant.service';
 import { CreateSubMerchantDto } from './dto/create-sub-merchant.dto';
@@ -19,6 +20,11 @@ export class SubMerchantController {
   @Get()
   findAll() {
     return this.subMerchantService.findAll();
+  }
+
+  @Get('profile/:id')
+  getProfile(@Param('id', ParseIntPipe) id: number) {
+    return this.subMerchantService.getProfile(id);
   }
 
   @Get(':id')

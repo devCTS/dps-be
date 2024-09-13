@@ -17,9 +17,6 @@ import { VerifyOtpDto } from './dto/verifyotp.dto';
 import { ForgotPasswordDto } from './dto/forgotPassword.dto';
 import { ChangePasswordDto } from './dto/changePassword.dto';
 import { Request, Response } from 'express';
-import { Roles } from 'src/roles/roles.decorator';
-import { Role } from 'src/roles/roles.enum';
-import { JwtGuard } from 'src/services/jwt/jwt.guard';
 
 @Controller('identity')
 export class IdentityController {
@@ -72,13 +69,6 @@ export class IdentityController {
   @Get()
   findAll() {
     return this.identityService.findAll();
-  }
-
-  @Roles(Role.MEMBER, Role.ADMIN)
-  @Get('profile')
-  getProfile(@Req() request: Request) {
-    const token = request?.headers?.authorization;
-    return token;
   }
 
   @Get('/:id')

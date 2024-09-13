@@ -10,6 +10,7 @@ import {
   ClassSerializerInterceptor,
   UsePipes,
   ValidationPipe,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { CreateAdminDto } from './dto/create-admin.dto';
@@ -29,6 +30,11 @@ export class AdminController {
   @Get()
   findAll() {
     return this.adminService.findAll();
+  }
+
+  @Get('profile/:id')
+  getProfile(@Param('id', ParseIntPipe) id: number) {
+    return this.adminService.getProfile(id);
   }
 
   @Get(':id')

@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { MerchantService } from './merchant.service';
 import { CreateMerchantDto } from './dto/create-merchant.dto';
@@ -24,6 +25,11 @@ export class MerchantController {
   @Get()
   findAll() {
     return this.merchantService.findAll();
+  }
+
+  @Get('profile/:id')
+  getProfile(@Param('id', ParseIntPipe) id: number) {
+    return this.merchantService.getProfile(id);
   }
 
   @Get(':id')
