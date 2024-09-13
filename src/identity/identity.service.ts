@@ -262,15 +262,13 @@ export class IdentityService {
     } else throw new UnauthorizedException('Provided OTP is incorrect.');
   }
 
-  async changePassword(changePasswordDto: ChangePasswordDto) {
+  async changePassword(changePasswordDto: ChangePasswordDto, id: number) {
     const existingIdentity = await this.identityRepository.findOne({
-      where: { email: changePasswordDto.email },
+      where: { id: id },
     });
-
     if (!existingIdentity) {
       throw new ConflictException('User with this email does not exist');
     }
-
     if (
       !this.jwtService.isHashedPasswordVerified(
         changePasswordDto.oldPassword,
@@ -279,24 +277,17 @@ export class IdentityService {
     ) {
       throw new UnauthorizedException('User name or pawword is incorrect');
     }
-
     const hashedPassword = this.jwtService.getHashPassword(
       changePasswordDto.newPassword,
     );
     const identity = await this.identityRepository.findOne({
-      where: { email: changePasswordDto.email },
+      where: { id },
     });
-
-    this.identityRepository.update(
-      { email: changePasswordDto.email },
-      { password: hashedPassword },
-    );
-
+    this.identityRepository.update({ id }, { password: hashedPassword });
     const jwt = this.jwtService.createToken({
       userId: identity.email,
       userType: identity.userType,
     });
-
     return { jwt, type: identity.userType };
   }
 

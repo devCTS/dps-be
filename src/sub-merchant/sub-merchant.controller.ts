@@ -12,10 +12,15 @@ import { SubMerchantService } from './sub-merchant.service';
 import { CreateSubMerchantDto } from './dto/create-sub-merchant.dto';
 import { UpdateSubMerchantDto } from './dto/update-sub-merchant.dto';
 import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
+import { IdentityService } from 'src/identity/identity.service';
+import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 
 @Controller('sub-merchant')
 export class SubMerchantController {
-  constructor(private readonly subMerchantService: SubMerchantService) {}
+  constructor(
+    private readonly subMerchantService: SubMerchantService,
+    private identityService: IdentityService,
+  ) {}
 
   @Get()
   findAll() {
@@ -59,5 +64,13 @@ export class SubMerchantController {
     @Body() createSubMerchantDto: CreateSubMerchantDto,
   ) {
     return this.subMerchantService.create(id, createSubMerchantDto);
+  }
+
+  @Post('change-password/:id')
+  changePassword(
+    @Body() changePasswordDto: ChangePasswordDto,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.identityService.changePassword(changePasswordDto, id);
   }
 }

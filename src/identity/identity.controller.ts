@@ -15,8 +15,6 @@ import { SignInDto } from './dto/signin.dto';
 import { SignUpDto } from './dto/singup.dto';
 import { VerifyOtpDto } from './dto/verifyotp.dto';
 import { ForgotPasswordDto } from './dto/forgotPassword.dto';
-import { ChangePasswordDto } from './dto/changePassword.dto';
-import { Request, Response } from 'express';
 
 @Controller('identity')
 export class IdentityController {
@@ -45,25 +43,6 @@ export class IdentityController {
   @Post('verify-otp-forgot-password')
   verifyOtpForgotPassword(@Body() verifyOtpDto: VerifyOtpDto) {
     return this.identityService.verifyOtpForForgotPassword(verifyOtpDto);
-  }
-
-  @Post('change-password')
-  async changePassword(
-    @Body() changePasswordDto: ChangePasswordDto,
-    @Res({ passthrough: true }) response: Response,
-  ) {
-    try {
-      const { jwt, type } =
-        await this.identityService.changePassword(changePasswordDto);
-      response.cookie('dps_token', `Bearer_${jwt}`, {
-        httpOnly: true,
-        maxAge: 2 * 60 * 60 * 1000,
-      });
-      return { message: 'Password Changed.', type };
-    } catch (error) {
-      console.error(error);
-      return { message: 'Failed.', error: error.message };
-    }
   }
 
   @Get()

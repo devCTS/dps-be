@@ -17,10 +17,15 @@ import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
 import { AdminResponseDto } from './dto/admin-response.dto';
 import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
+import { IdentityService } from 'src/identity/identity.service';
+import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 
 @Controller('admin')
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private identityService: IdentityService,
+  ) {}
 
   @Post()
   create(@Body() createAdminDto: CreateAdminDto): Promise<AdminResponseDto> {
@@ -55,5 +60,13 @@ export class AdminController {
   @Post('paginate')
   paginate(@Body() paginateRequestDto: PaginateRequestDto) {
     return this.adminService.paginate(paginateRequestDto);
+  }
+
+  @Post('change-password/:id')
+  changePassword(
+    @Body() changePasswordDto: ChangePasswordDto,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.identityService.changePassword(changePasswordDto, id);
   }
 }

@@ -18,10 +18,15 @@ import { Roles } from 'src/roles/roles.decorator';
 import { Role } from 'src/roles/roles.enum';
 import { JwtGuard } from 'src/services/jwt/jwt.guard';
 import { RolesGuard } from 'src/roles/roles.guard';
+import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
+import { IdentityService } from 'src/identity/identity.service';
 
 @Controller('member')
 export class MemberController {
-  constructor(private readonly memberService: MemberService) {}
+  constructor(
+    private readonly memberService: MemberService,
+    private identityService: IdentityService,
+  ) {}
 
   @Roles(Role.MEMBER)
   @UseGuards(JwtGuard, RolesGuard)
@@ -63,5 +68,12 @@ export class MemberController {
   @Post('paginate')
   paginate(@Body() paginateRequestDto: PaginateRequestDto) {
     return this.memberService.paginate(paginateRequestDto);
+  }
+  @Post('change-password/:id')
+  changePassword(
+    @Body() changePasswordDto: ChangePasswordDto,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.identityService.changePassword(changePasswordDto, id);
   }
 }
