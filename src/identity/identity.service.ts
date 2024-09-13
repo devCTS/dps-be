@@ -10,7 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Identity } from './entities/identity.entity';
 import { Repository } from 'typeorm';
 import { SignInDto } from './dto/signin.dto';
-import { generateRandomOTP } from 'src/utils/utils';
+import { extractToken, generateRandomOTP, verifyToken } from 'src/utils/utils';
 import { SignUpDto } from './dto/singup.dto';
 import { VerifyOtpDto } from './dto/verifyotp.dto';
 import { ForgotPasswordDto } from './dto/forgotPassword.dto';

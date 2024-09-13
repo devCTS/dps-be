@@ -14,6 +14,7 @@ import { SubMerchantModule } from './sub-merchant/sub-merchant.module';
 import { ServicesModule } from './services/services.module';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { ExportModule } from './export/export.module';
+import { RolesModule } from './roles/roles.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { ExportModule } from './export/export.module';
     SubMerchantModule,
     ServicesModule,
     ExportModule,
+    RolesModule,
   ],
   controllers: [AppController],
   providers: [

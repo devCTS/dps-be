@@ -23,7 +23,9 @@ export const generateJwtToken = (payload: any) => {
   return token;
 };
 
-export const verifyToken = async (token: string) => {
+export const verifyToken = async (
+  token: string,
+): Promise<string | jwt.JwtPayload> => {
   const secretKey = process.env.JWT_SECRET;
   try {
     const details = await jwt.verify(token, secretKey);
@@ -42,4 +44,8 @@ export const generateRandomOTP = () => {
   } while (String(sixDigitRandomNumber).startsWith('0'));
 
   return sixDigitRandomNumber;
+};
+
+export const extractToken = (token: string) => {
+  return token.split(' ')[1];
 };

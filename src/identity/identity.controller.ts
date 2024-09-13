@@ -7,6 +7,8 @@ import {
   Param,
   Delete,
   Res,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { IdentityService } from './identity.service';
 import { SignInDto } from './dto/signin.dto';
@@ -14,7 +16,10 @@ import { SignUpDto } from './dto/singup.dto';
 import { VerifyOtpDto } from './dto/verifyotp.dto';
 import { ForgotPasswordDto } from './dto/forgotPassword.dto';
 import { ChangePasswordDto } from './dto/changePassword.dto';
-import { Response } from 'express';
+import { Request, Response } from 'express';
+import { Roles } from 'src/roles/roles.decorator';
+import { Role } from 'src/roles/roles.enum';
+import { JwtGuard } from 'src/services/jwt/jwt.guard';
 
 @Controller('identity')
 export class IdentityController {
@@ -69,7 +74,14 @@ export class IdentityController {
     return this.identityService.findAll();
   }
 
-  @Get(':id')
+  @Roles(Role.MEMBER, Role.ADMIN)
+  @Get('profile')
+  getProfile(@Req() request: Request) {
+    const token = request?.headers?.authorization;
+    return token;
+  }
+
+  @Get('/:id')
   findOne(@Param('id') id: string) {
     return this.identityService.findOne(+id);
   }
