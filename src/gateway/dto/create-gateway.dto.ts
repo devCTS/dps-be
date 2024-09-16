@@ -27,10 +27,17 @@ export class CreateGatewayDto {
   @IsNotEmpty()
   @IsArray()
   @IsObject({ each: true })
-  merchantKeys: {
+  uatMerchantKeys: {
     label: string;
     value: string;
-    type: 'prod' | 'uat';
+  }[];
+
+  @IsNotEmpty()
+  @IsArray()
+  @IsObject({ each: true })
+  prodMerchantKeys: {
+    label: string;
+    value: string;
   }[];
 
   @IsNotEmpty()

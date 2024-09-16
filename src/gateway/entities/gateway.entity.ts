@@ -27,19 +27,15 @@ export class Gateway {
   @Column({ default: true })
   outgoingStatus: boolean;
 
-  @OneToMany(() => MerchantKey, (key) => key.gateway, {
-    cascade: ['remove'],
-    onDelete: 'CASCADE',
-  })
-  merchantKey: MerchantKey[];
+  @OneToMany(() => MerchantKey, (key) => key.uatGateway)
+  uatMerchantKeys: MerchantKey[];
+
+  @OneToMany(() => MerchantKey, (key) => key.prodGateway)
+  prodMerchantKeys: MerchantKey[];
 
   @OneToMany(
     () => GatewayToChannel,
     (gatewayToChannel) => gatewayToChannel.gateway,
-    {
-      cascade: ['remove'],
-      onDelete: 'CASCADE',
-    },
   )
   gatewayToChannel: GatewayToChannel[];
 

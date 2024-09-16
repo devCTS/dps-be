@@ -20,12 +20,13 @@ export class MerchantKey {
   @Column()
   value: string;
 
-  @Column({ enum: ['prod', 'uat'] })
-  type: string;
+  @ManyToOne(() => Gateway, (gateway) => gateway.uatMerchantKeys)
+  @JoinColumn({ name: 'uat_gateway_id' })
+  uatGateway: Gateway;
 
-  @ManyToOne(() => Gateway, (gateway) => gateway.merchantKey)
-  @JoinColumn({ name: 'gateway_id' })
-  gateway: Gateway;
+  @ManyToOne(() => Gateway, (gateway) => gateway.prodMerchantKeys)
+  @JoinColumn({ name: 'prod_gateway_id' })
+  prodGateway: Gateway;
 
   @CreateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
   createdAt: Date;

@@ -1,9 +1,4 @@
-import {
-  HttpStatus,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { Between, ILike, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -14,7 +9,7 @@ import { Gateway } from './entities/gateway.entity';
 import { Channel } from 'src/channel/entities/channel.entity';
 import { MerchantKey } from './entities/MerchantKey.entity';
 import { GatewayToChannel } from './entities/gatewayToChannel.entity';
-import { plainToClass, plainToInstance } from 'class-transformer';
+import { plainToInstance } from 'class-transformer';
 import { GatewayResponseDto } from './dto/gateway-response.dto';
 import {
   PaginateRequestDto,
@@ -41,7 +36,8 @@ export class GatewayService {
       logo,
       incomingStatus,
       outgoingStatus,
-      merchantKeys,
+      uatMerchantKeys,
+      prodMerchantKeys,
       channels,
     } = createGatewayDto;
 
@@ -53,13 +49,22 @@ export class GatewayService {
       outgoingStatus,
     });
 
-    // Save MerchantKey
-    for (const key of merchantKeys)
+    // Save UatMerchantKey
+    for (const key of uatMerchantKeys)
       await this.merchantKeyRepository.save({
         label: key.label,
         value: key.value,
-        type: key.type,
-        gateway,
+        uatGateway: gateway,
+        prodGateway: null,
+      });
+
+    // Save ProdMerchantKey
+    for (const key of prodMerchantKeys)
+      await this.merchantKeyRepository.save({
+        label: key.label,
+        value: key.value,
+        uatGateway: null,
+        prodGateway: gateway,
       });
 
     for (const channelData of channels) {
@@ -104,7 +109,8 @@ export class GatewayService {
     const gateways = await this.gatewayRepository.find({
       relations: [
         'gatewayToChannel',
-        'merchantKey',
+        'uatMerchantKeys',
+        'prodMerchantKeys',
         'gatewayToChannel.channel',
       ],
     });
@@ -122,7 +128,8 @@ export class GatewayService {
       },
       relations: [
         'gatewayToChannel',
-        'merchantKey',
+        'uatMerchantKeys',
+        'prodMerchantKeys',
         'gatewayToChannel.channel',
       ],
     });
@@ -138,13 +145,14 @@ export class GatewayService {
       logo,
       incomingStatus,
       outgoingStatus,
-      merchantKeys,
+      uatMerchantKeys,
+      prodMerchantKeys,
       channels,
     } = updateGatewayDto;
 
     const gateway = await this.gatewayRepository.findOne({
       where: { id },
-      relations: ['gatewayToChannel', 'merchantKey'],
+      relations: ['gatewayToChannel', 'uatMerchantKeys', 'prodMerchantKeys'],
     });
 
     if (!gateway) throw new NotFoundException();
@@ -157,14 +165,29 @@ export class GatewayService {
       outgoingStatus,
     });
 
-    // Delete merchantKey entries related to current gateway and save new
-    await this.merchantKeyRepository.delete({ gateway });
-    for (const key of merchantKeys) {
+    // Delete UatMerchantKey entries related to current gateway and save new
+    await this.merchantKeyRepository.delete({
+      uatGateway: gateway,
+    });
+    for (const key of uatMerchantKeys) {
       await this.merchantKeyRepository.save({
         label: key.label,
         value: key.value,
-        type: key.type,
-        gateway,
+        uatGateway: gateway,
+        prodGateway: null,
+      });
+    }
+
+    // Delete ProdMerchantKey entries related to current gateway and save new
+    await this.merchantKeyRepository.delete({
+      prodGateway: gateway,
+    });
+    for (const key of prodMerchantKeys) {
+      await this.merchantKeyRepository.save({
+        label: key.label,
+        value: key.value,
+        prodGateway: gateway,
+        uatGateway: null,
       });
     }
 
@@ -212,12 +235,17 @@ export class GatewayService {
       where: {
         id,
       },
-      relations: ['gatewayToChannel', 'merchantKey'],
+      relations: ['gatewayToChannel', 'uatMerchantKeys', 'prodMerchantKeys'],
     });
 
     if (!gateway) throw new NotFoundException();
 
-    await this.merchantKeyRepository.delete({ gateway });
+    await this.merchantKeyRepository.delete({
+      uatGateway: gateway,
+    });
+    await this.merchantKeyRepository.delete({
+      prodGateway: gateway,
+    });
     await this.gatewayToChannelRepository.delete({ gateway });
     await this.gatewayRepository.remove(gateway);
 
@@ -243,7 +271,8 @@ export class GatewayService {
     const [rows, total] = await this.gatewayRepository.findAndCount({
       where: whereClause,
       relations: [
-        'merchantKey',
+        'uatMerchantKeys',
+        'prodMerchantKeys',
         'gatewayToChannel',
         'gatewayToChannel.channel',
       ],
@@ -277,7 +306,8 @@ export class GatewayService {
     const [rows, total] = await this.gatewayRepository.findAndCount({
       relations: [
         'gatewayToChannel',
-        'merchantKey',
+        'uatMerchantKeys',
+        'prodMerchantKeys',
         'gatewayToChannel.channel',
       ],
       where: {
