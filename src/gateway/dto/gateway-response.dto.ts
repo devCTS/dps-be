@@ -1,7 +1,7 @@
 import { Expose } from 'class-transformer';
 import { Transform } from 'class-transformer';
 
-export function TransformGatewayToChannel() {
+function TransformGatewayToChannel() {
   return Transform(
     ({ obj }) => {
       if (!obj.gatewayToChannel) {
@@ -36,6 +36,27 @@ export function TransformGatewayToChannel() {
   );
 }
 
+function TransformMerchantKeys() {
+  return Transform(
+    ({ value }) => {
+      if (!value) {
+        return [];
+      }
+
+      return value.map((key) => {
+        const {
+          createdAt: keyCreatedAt,
+          updatedAt: keyUpdatedAt,
+          ...restKey
+        } = key;
+
+        return restKey;
+      });
+    },
+    { toClassOnly: true },
+  );
+}
+
 export class GatewayResponseDto {
   @Expose()
   id: number;
@@ -57,5 +78,16 @@ export class GatewayResponseDto {
   gatewayToChannel: {}[];
 
   @Expose()
-  merchantKey: {}[];
+  @TransformMerchantKeys()
+  uatMerchantKeys: {
+    label: string;
+    value: string;
+  }[];
+
+  @Expose()
+  @TransformMerchantKeys()
+  prodMerchantKeys: {
+    label: string;
+    value: string;
+  }[];
 }
