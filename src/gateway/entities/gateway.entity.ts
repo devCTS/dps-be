@@ -3,12 +3,14 @@ import {
   CreateDateColumn,
   Entity,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 import { GatewayToChannel } from './gatewayToChannel.entity';
 import { MerchantKey } from './MerchantKey.entity';
+import { SystemConfig } from 'src/system-config/entities/system-config.entity';
 
 @Entity()
 export class Gateway {
@@ -27,6 +29,12 @@ export class Gateway {
   @Column({ default: true })
   outgoingStatus: boolean;
 
+  @CreateDateColumn({ type: 'timestamp' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ type: 'timestamp' })
+  updatedAt: Date;
+
   @OneToMany(() => MerchantKey, (key) => key.uatGateway)
   uatMerchantKeys: MerchantKey[];
 
@@ -39,9 +47,12 @@ export class Gateway {
   )
   gatewayToChannel: GatewayToChannel[];
 
-  @CreateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
-  createdAt: Date;
+  @OneToOne(() => SystemConfig, (config) => config.defaultPayinGateway)
+  defaultPayinGateway: number;
 
-  @UpdateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
-  updatedAt: Date;
+  @OneToOne(() => SystemConfig, (config) => config.defaultPayoutGateway)
+  defaultPayoutGateway: number;
+
+  @OneToOne(() => SystemConfig, (config) => config.defaultWithdrawalGateway)
+  defaultWithdrawalGateway: number;
 }

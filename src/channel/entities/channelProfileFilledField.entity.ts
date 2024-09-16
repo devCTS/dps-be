@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { ChannelProfileField } from './channelProfileField.entity';
 import { Identity } from 'src/identity/entities/identity.entity';
+import { SystemConfig } from 'src/system-config/entities/system-config.entity';
 
 @Entity()
 export class ChannelProfileFilledField {
@@ -23,4 +24,8 @@ export class ChannelProfileFilledField {
 
   @Column()
   fieldValue: string;
+
+  @ManyToOne(() => SystemConfig, (config) => config.defaultTopupChannels)
+  @JoinColumn({ name: 'default_topup_channel_id' })
+  defaultTopupChannels: SystemConfig;
 }
