@@ -16,6 +16,7 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { ExportModule } from './export/export.module';
 import { RolesModule } from './roles/roles.module';
 import { UploadModule } from './upload/upload.module';
+import { AgentModule } from './agent/agent.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { UploadModule } from './upload/upload.module';
     ExportModule,
     RolesModule,
     UploadModule,
+    AgentModule,
   ],
   controllers: [AppController],
   providers: [

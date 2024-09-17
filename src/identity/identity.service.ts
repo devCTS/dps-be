@@ -72,7 +72,13 @@ export class IdentityService {
 
   async getUser(
     identityId: number,
-    role: 'MERCHANT' | 'SUB_MERCHANT' | 'MEMBER' | 'SUPER_ADMIN' | 'SUB_ADMIN',
+    role:
+      | 'MERCHANT'
+      | 'SUB_MERCHANT'
+      | 'MEMBER'
+      | 'SUPER_ADMIN'
+      | 'SUB_ADMIN'
+      | 'AGENT',
   ) {
     const query = { where: { identity: { id: identityId } } };
     switch (role) {
@@ -103,7 +109,8 @@ export class IdentityService {
       | 'SUB_MERCHANT'
       | 'MEMBER'
       | 'SUPER_ADMIN'
-      | 'SUB_ADMIN',
+      | 'SUB_ADMIN'
+      | 'AGENT',
   ) {
     // Check if an Identity with the given email already exists
     const existingIdentity = await this.identityRepository.findOne({

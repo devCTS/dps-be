@@ -9,6 +9,7 @@ import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { Admin } from 'src/admin/entities/admin.entity';
 import { Member } from 'src/member/entities/member.entity';
 import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
+import { Agent } from 'src/agent/entities/agent.entity';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
       Admin,
       Member,
       Submerchant,
+      Agent,
     ]),
     JwtModule,
   ],

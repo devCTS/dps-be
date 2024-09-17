@@ -13,6 +13,7 @@ import { IP } from './ip.entity';
 import { Admin } from 'src/admin/entities/admin.entity';
 import { Member } from 'src/member/entities/member.entity';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
+import { Agent } from 'src/agent/entities/agent.entity';
 
 @Entity()
 export class Identity {
@@ -26,14 +27,22 @@ export class Identity {
   password: string;
 
   @Column({
-    enum: ['MERCHANT', 'SUB_MERCHANT', 'MEMBER', 'SUPER_ADMIN', 'SUB_ADMIN'],
+    enum: [
+      'MERCHANT',
+      'SUB_MERCHANT',
+      'MEMBER',
+      'SUPER_ADMIN',
+      'SUB_ADMIN',
+      'AGENT',
+    ],
   })
   userType:
     | 'MERCHANT'
     | 'SUB_MERCHANT'
     | 'MEMBER'
     | 'SUPER_ADMIN'
-    | 'SUB_ADMIN';
+    | 'SUB_ADMIN'
+    | 'AGENT';
 
   @OneToMany(() => Merchant, (merchant) => merchant.identity, {
     cascade: true,
@@ -49,6 +58,9 @@ export class Identity {
 
   @OneToOne(() => Admin, (admin) => admin.identity)
   admins: Admin[];
+
+  @OneToOne(() => Agent, (agent) => agent.identity)
+  agent: Agent[];
 
   @OneToMany(() => Submerchant, (submerchant) => submerchant.identity)
   submerchants: Submerchant[];
