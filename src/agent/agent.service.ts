@@ -8,7 +8,7 @@ import { CreateAgentDto } from './dto/create-agent.dto';
 import { IdentityService } from 'src/identity/identity.service';
 import { Agent } from './entities/agent.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Between } from 'typeorm';
 import { AgentResponseDto } from './dto/agent-response.dto';
 import { plainToInstance } from 'class-transformer';
 import { UpdateAgentDto } from './dto/update-agent.dto';
@@ -18,6 +18,7 @@ import {
   parseStartDate,
 } from 'src/utils/dtos/paginate.dto';
 import { encryptPassword } from 'src/utils/utils';
+import { JwtService } from 'src/services/jwt/jwt.service';
 
 @Injectable()
 export class AgentService {
@@ -25,6 +26,7 @@ export class AgentService {
     @InjectRepository(Agent)
     private readonly agentRepository: Repository<Agent>,
     private identityService: IdentityService,
+    private jwtService: JwtService,
   ) {}
 
   // Create Agent
@@ -88,8 +90,6 @@ export class AgentService {
     const password = updateAgentDto.password;
     const updateLoginCredentials = updateAgentDto.updateLoginCredentials;
 
-    const hashedPassword = await encryptPassword(password);
-
     delete updateAgentDto.email;
     delete updateAgentDto.password;
     delete updateAgentDto.updateLoginCredentials;
@@ -100,6 +100,8 @@ export class AgentService {
     );
 
     if (updateLoginCredentials) {
+      const hashedPassword = this.jwtService.getHashPassword(password);
+
       const updatedAgent = await this.agentRepository.findOne({
         where: { id },
         relations: ['identity'], // Explicitly specify the relations
@@ -181,6 +183,28 @@ export class AgentService {
       totalPages: Math.ceil(total / pageSize),
       startRecord,
       endRecord,
+    };
+  }
+
+  async exportRecords(startDate: string, endDate: string) {
+    startDate = parseStartDate(startDate);
+    endDate = parseEndDate(endDate);
+
+    const parsedStartDate = new Date(startDate);
+    const parsedEndDate = new Date(endDate);
+
+    const [rows, total] = await this.agentRepository.findAndCount({
+      relations: ['identity'],
+      where: {
+        createdAt: Between(parsedStartDate, parsedEndDate),
+      },
+    });
+
+    const dtos = plainToInstance(AgentResponseDto, rows);
+
+    return {
+      data: dtos,
+      total,
     };
   }
 }

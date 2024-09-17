@@ -206,8 +206,6 @@ export class MerchantService {
     const updateLoginCredentials = updateDto.updateLoginCredentials;
     const updateWithdrawalCredentials = updateDto.updateWithdrawalCredentials;
 
-    const hashedPassword = await encryptPassword(password);
-
     delete updateDto.updateLoginCredentials;
     delete updateDto.updateWithdrawalCredentials;
 
@@ -244,6 +242,7 @@ export class MerchantService {
     });
 
     if (updateLoginCredentials) {
+      const hashedPassword = this.jwtService.getHashPassword(password);
       const updatedAdmin = await this.merchantRepository.findOne({
         where: { id },
         relations: ['identity'], // Explicitly specify the relations

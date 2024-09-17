@@ -20,6 +20,7 @@ import {
 } from 'src/utils/dtos/paginate.dto';
 import { getSuperAdminData } from './data/admin.data';
 import { encryptPassword } from 'src/utils/utils';
+import { JwtService } from 'src/services/jwt/jwt.service';
 
 @Injectable()
 export class AdminService {
@@ -27,6 +28,7 @@ export class AdminService {
     @InjectRepository(Admin)
     private adminRepository: Repository<Admin>,
     private readonly identityService: IdentityService,
+    private readonly jwtService: JwtService,
   ) {}
 
   async create(createAdminDto: CreateAdminDto): Promise<any> {
@@ -92,8 +94,6 @@ export class AdminService {
     const password = updateAdminDto.password;
     const updateLoginCredentials = updateAdminDto.updateLoginCredentials;
 
-    const hashedPassword = await encryptPassword(password);
-
     delete updateAdminDto.email;
     delete updateAdminDto.password;
     delete updateAdminDto.updateLoginCredentials;
@@ -104,6 +104,7 @@ export class AdminService {
     );
 
     if (updateLoginCredentials) {
+      const hashedPassword = this.jwtService.getHashPassword(password);
       const updatedAdmin = await this.adminRepository.findOne({
         where: { id },
         relations: ['identity'], // Explicitly specify the relations

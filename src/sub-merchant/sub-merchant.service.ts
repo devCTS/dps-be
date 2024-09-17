@@ -21,6 +21,7 @@ import {
 } from 'src/utils/dtos/paginate.dto';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { encryptPassword } from 'src/utils/utils';
+import { JwtService } from 'src/services/jwt/jwt.service';
 
 @Injectable()
 export class SubMerchantService {
@@ -30,6 +31,7 @@ export class SubMerchantService {
     @InjectRepository(Merchant)
     private merchantRepository: Repository<Merchant>,
     private readonly identityService: IdentityService,
+    private readonly jwtService: JwtService,
   ) {}
 
   async create(
@@ -87,8 +89,6 @@ export class SubMerchantService {
     const password = updateSubMerchantDto.password;
     const updateLoginCredentials = updateSubMerchantDto.updateLoginCredentials;
 
-    const hashedPassword = await encryptPassword(password);
-
     delete updateSubMerchantDto.email;
     delete updateSubMerchantDto.password;
     delete updateSubMerchantDto.updateLoginCredentials;
@@ -99,6 +99,7 @@ export class SubMerchantService {
     );
 
     if (updateLoginCredentials) {
+      const hashedPassword = this.jwtService.getHashPassword(password);
       const updatedAdmin = await this.subMerchantRepository.findOne({
         where: { id },
         relations: ['identity'], // Explicitly specify the relations

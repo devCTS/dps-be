@@ -20,6 +20,7 @@ import {
 } from 'src/utils/dtos/paginate.dto';
 import { ChannelService } from 'src/channel/channel.service';
 import { encryptPassword } from 'src/utils/utils';
+import { JwtService } from 'src/services/jwt/jwt.service';
 
 @Injectable()
 export class MemberService {
@@ -28,6 +29,7 @@ export class MemberService {
     private readonly memberRepository: Repository<Member>,
     private readonly identityService: IdentityService,
     private readonly channelService: ChannelService,
+    private readonly jwtService: JwtService,
   ) {}
 
   async create(createMemberDto: CreateMemberDto) {
@@ -150,8 +152,6 @@ export class MemberService {
     const password = updateDto.password;
     const updateLoginCredentials = updateDto.updateLoginCredentials;
 
-    const hashedPassword = await encryptPassword(password);
-
     delete updateDto.updateLoginCredentials;
     delete updateDto.channelProfile;
     delete updateDto.email;
@@ -164,6 +164,7 @@ export class MemberService {
     });
 
     if (updateLoginCredentials) {
+      const hashedPassword = this.jwtService.getHashPassword(password);
       const updatedAdmin = await this.memberRepository.findOne({
         where: { id },
         relations: ['identity'], // Explicitly specify the relations
