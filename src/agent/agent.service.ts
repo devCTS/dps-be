@@ -132,7 +132,7 @@ export class AgentService {
 
   // Paginate
   async paginate(paginateDto: PaginateRequestDto) {
-    const query = this.agentRepository.createQueryBuilder('admin');
+    const query = this.agentRepository.createQueryBuilder('agent');
     // query.orderBy('agent.created_at', 'DESC');
     // Add relation to the identity entity
     query.leftJoinAndSelect('agent.identity', 'identity'); // Join with identity
