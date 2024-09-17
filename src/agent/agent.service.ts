@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { CreateAgentDto } from './dto/create-agent.dto';
 import { IdentityService } from 'src/identity/identity.service';
 import { Agent } from './entities/agent.entity';
@@ -38,6 +38,16 @@ export class AgentService {
     return plainToInstance(AgentResponseDto, created);
   }
 
+  // Find one by id
+  async findOne(id: number): Promise<AgentResponseDto> {
+    const results = await this.agentRepository.findOne({
+      where: { id: id },
+      relations: ['identity'],
+    });
+
+    return plainToInstance(AgentResponseDto, results);
+  }
+
   // Find all agents
   async findAll(): Promise<AgentResponseDto[]> {
     const results = await this.agentRepository.find({
@@ -45,5 +55,12 @@ export class AgentService {
     });
 
     return plainToInstance(AgentResponseDto, results);
+  }
+
+  // Get profile by id
+  async getProfile(id: number) {
+    const profile = await this.findOne(id);
+
+    return profile;
   }
 }
