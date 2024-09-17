@@ -60,6 +60,9 @@ export class AgentService {
   // Get profile by id
   async getProfile(id: number) {
     const profile = await this.findOne(id);
+    if (!profile.enabled) {
+      throw new UnauthorizedException('Unauthorized.');
+    }
 
     return profile;
   }

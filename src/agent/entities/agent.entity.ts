@@ -28,6 +28,9 @@ export class Agent {
   @Column({ nullable: true })
   referralCode: string;
 
+  @Column({ default: true })
+  enable: boolean;
+
   @Column({ nullable: true })
   phone: string;
 

@@ -38,14 +38,17 @@ export class AgentController {
   //   update(@Param('id') id: string, @Body() updateAdminDto: UpdateAdminDto) {
   //     return this.adminService.update(+id, updateAdminDto);
   //   }
+
   //   @Delete(':id')
   //   remove(@Param('id') id: string) {
   //     return this.adminService.remove(+id);
   //   }
+
   //   @Post('paginate')
   //   paginate(@Body() paginateRequestDto: PaginateRequestDto) {
   //     return this.adminService.paginate(paginateRequestDto);
   //   }
+
   //   @Post('change-password/:id')
   //   changePassword(
   //     @Body() changePasswordDto: ChangePasswordDto,

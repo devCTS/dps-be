@@ -1,4 +1,10 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { IsValidPassword } from 'src/utils/decorators/validPassword.decorator';
 import { IsValidPhoneNumber } from 'src/utils/decorators/validPhoneNumber';
 
@@ -25,6 +31,10 @@ export class CreateAgentDto {
   @IsOptional()
   @IsValidPhoneNumber()
   phone: string;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  enabled: boolean;
 
   @IsString()
   @IsOptional()

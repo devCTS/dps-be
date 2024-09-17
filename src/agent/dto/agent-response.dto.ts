@@ -25,6 +25,9 @@ export class AgentResponseDto {
   referralCode: string;
 
   @Expose()
+  enabled: boolean;
+
+  @Expose()
   @DateFormat()
   createdAt: Date;
 
