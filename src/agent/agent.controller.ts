@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { AgentResponseDto } from './dto/agent-response.dto';
 import { CreateAgentDto } from './dto/create-agent.dto';
 import { AgentService } from './agent.service';
@@ -11,14 +11,12 @@ export class AgentController {
   create(@Body() createAgentDto: CreateAgentDto): Promise<AgentResponseDto> {
     return this.agentService.create(createAgentDto);
   }
-  //     @Post()
-  //   create(@Body() createAdminDto: CreateAdminDto): Promise<AdminResponseDto> {
-  //     return this.adminService.create(createAdminDto);
-  //   }
-  //   @Get()
-  //   findAll() {
-  //     return this.adminService.findAll();
-  //   }
+
+  @Get()
+  findAll() {
+    return this.agentService.findAll();
+  }
+
   //   @Get('profile/:id')
   //   getProfile(@Param('id', ParseIntPipe) id: number) {
   //     return this.adminService.getProfile(id);

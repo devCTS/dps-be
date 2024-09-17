@@ -14,6 +14,8 @@ export class AgentService {
     private readonly agentRepository: Repository<Agent>,
     private identityService: IdentityService,
   ) {}
+
+  // Create Agent
   async create(createAgentDto: CreateAgentDto) {
     const { email, password, firstName, lastName, phone } = createAgentDto;
 
@@ -34,5 +36,14 @@ export class AgentService {
     const created = await this.agentRepository.save(agent);
 
     return plainToInstance(AgentResponseDto, created);
+  }
+
+  // Find all agents
+  async findAll(): Promise<AgentResponseDto[]> {
+    const results = await this.agentRepository.find({
+      relations: ['identity'],
+    });
+
+    return plainToInstance(AgentResponseDto, results);
   }
 }
