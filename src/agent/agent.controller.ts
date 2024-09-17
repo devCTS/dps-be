@@ -13,10 +13,16 @@ import { AgentResponseDto } from './dto/agent-response.dto';
 import { CreateAgentDto } from './dto/create-agent.dto';
 import { AgentService } from './agent.service';
 import { UpdateAgentDto } from './dto/update-agent.dto';
+import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
+import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
+import { IdentityService } from 'src/identity/identity.service';
 
 @Controller('agent')
 export class AgentController {
-  constructor(private agentService: AgentService) {}
+  constructor(
+    private identityService: IdentityService,
+    private agentService: AgentService,
+  ) {}
 
   @Post()
   create(@Body() createAgentDto: CreateAgentDto): Promise<AgentResponseDto> {
@@ -48,16 +54,16 @@ export class AgentController {
     return this.agentService.remove(+id);
   }
 
-  //   @Post('paginate')
-  //   paginate(@Body() paginateRequestDto: PaginateRequestDto) {
-  //     return this.adminService.paginate(paginateRequestDto);
-  //   }
+  @Post('paginate')
+  paginate(@Body() paginateRequestDto: PaginateRequestDto) {
+    return this.agentService.paginate(paginateRequestDto);
+  }
 
-  //   @Post('change-password/:id')
-  //   changePassword(
-  //     @Body() changePasswordDto: ChangePasswordDto,
-  //     @Param('id', ParseIntPipe) id: number,
-  //   ) {
-  //     return this.identityService.changePassword(changePasswordDto, id);
-  //   }
+  @Post('change-password/:id')
+  changePassword(
+    @Body() changePasswordDto: ChangePasswordDto,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.identityService.changePassword(changePasswordDto, id);
+  }
 }

@@ -12,6 +12,11 @@ import { Repository } from 'typeorm';
 import { AgentResponseDto } from './dto/agent-response.dto';
 import { plainToInstance } from 'class-transformer';
 import { UpdateAgentDto } from './dto/update-agent.dto';
+import {
+  PaginateRequestDto,
+  parseEndDate,
+  parseStartDate,
+} from 'src/utils/dtos/paginate.dto';
 
 @Injectable()
 export class AgentService {
@@ -120,5 +125,59 @@ export class AgentService {
     this.identityService.remove(agent.identity?.id);
 
     return HttpStatus.OK;
+  }
+
+  // Paginate
+  async paginate(paginateDto: PaginateRequestDto) {
+    const query = this.agentRepository.createQueryBuilder('admin');
+    // query.orderBy('agent.created_at', 'DESC');
+    // Add relation to the identity entity
+    query.leftJoinAndSelect('agent.identity', 'identity'); // Join with identity
+    // .leftJoinAndSelect('identity.profile', 'profile'); // Join with profile through identity
+    // Sort records by created_at from latest to oldest
+
+    const search = paginateDto.search;
+    const pageSize = paginateDto.pageSize;
+    const pageNumber = paginateDto.pageNumber;
+    // Handle search by first_name + " " + last_name
+    if (search) {
+      query.andWhere(
+        `CONCAT(agent.first_name, ' ', agent.last_name) ILIKE :search`,
+        { search: `%${search}%` },
+      );
+    }
+
+    // Handle filtering by created_at between startDate and endDate
+    if (paginateDto.startDate && paginateDto.endDate) {
+      const startDate = parseStartDate(paginateDto.startDate);
+      const endDate = parseEndDate(paginateDto.endDate);
+
+      query.andWhere('agent.created_at BETWEEN :startDate AND :endDate', {
+        startDate,
+        endDate,
+      });
+    }
+
+    // Handle pagination
+    const skip = (pageNumber - 1) * pageSize;
+    query.skip(skip).take(pageSize);
+
+    // Execute query
+    const [rows, total] = await query.getManyAndCount();
+    const dtos = plainToInstance(AgentResponseDto, rows);
+
+    const startRecord = skip + 1;
+    const endRecord = Math.min(skip + pageSize, total);
+
+    // Return paginated result
+    return {
+      data: dtos,
+      total,
+      page: pageNumber,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+      startRecord,
+      endRecord,
+    };
   }
 }
