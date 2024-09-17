@@ -1,14 +1,18 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpStatus,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
 } from '@nestjs/common';
 import { AgentResponseDto } from './dto/agent-response.dto';
 import { CreateAgentDto } from './dto/create-agent.dto';
 import { AgentService } from './agent.service';
+import { UpdateAgentDto } from './dto/update-agent.dto';
 
 @Controller('agent')
 export class AgentController {
@@ -34,15 +38,15 @@ export class AgentController {
     return this.agentService.findOne(+id);
   }
 
-  //   @Patch(':id')
-  //   update(@Param('id') id: string, @Body() updateAdminDto: UpdateAdminDto) {
-  //     return this.adminService.update(+id, updateAdminDto);
-  //   }
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateAgentDto: UpdateAgentDto) {
+    return this.agentService.update(+id, updateAgentDto);
+  }
 
-  //   @Delete(':id')
-  //   remove(@Param('id') id: string) {
-  //     return this.adminService.remove(+id);
-  //   }
+  @Delete(':id')
+  remove(@Param('id') id: string): Promise<HttpStatus> {
+    return this.agentService.remove(+id);
+  }
 
   //   @Post('paginate')
   //   paginate(@Body() paginateRequestDto: PaginateRequestDto) {
