@@ -19,6 +19,7 @@ import {
   parseStartDate,
 } from 'src/utils/dtos/paginate.dto';
 import { ChannelService } from 'src/channel/channel.service';
+import { encryptPassword } from 'src/utils/utils';
 
 @Injectable()
 export class MemberService {
@@ -149,6 +150,8 @@ export class MemberService {
     const password = updateDto.password;
     const updateLoginCredentials = updateDto.updateLoginCredentials;
 
+    const hashedPassword = await encryptPassword(password);
+
     delete updateDto.updateLoginCredentials;
     delete updateDto.channelProfile;
     delete updateDto.email;
@@ -169,7 +172,7 @@ export class MemberService {
       await this.identityService.updateLogin(
         updatedAdmin.identity.id,
         email,
-        password,
+        hashedPassword,
       );
     }
 

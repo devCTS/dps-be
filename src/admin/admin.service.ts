@@ -19,6 +19,7 @@ import {
   parseStartDate,
 } from 'src/utils/dtos/paginate.dto';
 import { getSuperAdminData } from './data/admin.data';
+import { encryptPassword } from 'src/utils/utils';
 
 @Injectable()
 export class AdminService {
@@ -91,6 +92,8 @@ export class AdminService {
     const password = updateAdminDto.password;
     const updateLoginCredentials = updateAdminDto.updateLoginCredentials;
 
+    const hashedPassword = await encryptPassword(password);
+
     delete updateAdminDto.email;
     delete updateAdminDto.password;
     delete updateAdminDto.updateLoginCredentials;
@@ -109,7 +112,7 @@ export class AdminService {
       await this.identityService.updateLogin(
         updatedAdmin.identity.id,
         email,
-        password,
+        hashedPassword,
       );
     }
 

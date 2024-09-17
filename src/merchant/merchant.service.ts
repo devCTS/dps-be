@@ -28,6 +28,7 @@ import {
   parseEndDate,
   PaginateRequestDto,
 } from 'src/utils/dtos/paginate.dto';
+import { encryptPassword } from 'src/utils/utils';
 
 @Injectable()
 export class MerchantService {
@@ -205,6 +206,8 @@ export class MerchantService {
     const updateLoginCredentials = updateDto.updateLoginCredentials;
     const updateWithdrawalCredentials = updateDto.updateWithdrawalCredentials;
 
+    const hashedPassword = await encryptPassword(password);
+
     delete updateDto.updateLoginCredentials;
     delete updateDto.updateWithdrawalCredentials;
 
@@ -249,7 +252,7 @@ export class MerchantService {
       await this.identityService.updateLogin(
         updatedAdmin.identity.id,
         email,
-        password,
+        hashedPassword,
       );
     }
 

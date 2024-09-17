@@ -17,6 +17,7 @@ import {
   parseEndDate,
   parseStartDate,
 } from 'src/utils/dtos/paginate.dto';
+import { encryptPassword } from 'src/utils/utils';
 
 @Injectable()
 export class AgentService {
@@ -87,6 +88,8 @@ export class AgentService {
     const password = updateAgentDto.password;
     const updateLoginCredentials = updateAgentDto.updateLoginCredentials;
 
+    const hashedPassword = await encryptPassword(password);
+
     delete updateAgentDto.email;
     delete updateAgentDto.password;
     delete updateAgentDto.updateLoginCredentials;
@@ -105,7 +108,7 @@ export class AgentService {
       await this.identityService.updateLogin(
         updatedAgent.identity.id,
         email,
-        password,
+        hashedPassword,
       );
     }
 

@@ -20,6 +20,7 @@ import {
   parseStartDate,
 } from 'src/utils/dtos/paginate.dto';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
+import { encryptPassword } from 'src/utils/utils';
 
 @Injectable()
 export class SubMerchantService {
@@ -86,6 +87,8 @@ export class SubMerchantService {
     const password = updateSubMerchantDto.password;
     const updateLoginCredentials = updateSubMerchantDto.updateLoginCredentials;
 
+    const hashedPassword = await encryptPassword(password);
+
     delete updateSubMerchantDto.email;
     delete updateSubMerchantDto.password;
     delete updateSubMerchantDto.updateLoginCredentials;
@@ -104,7 +107,7 @@ export class SubMerchantService {
       await this.identityService.updateLogin(
         updatedAdmin.identity.id,
         email,
-        password,
+        hashedPassword,
       );
     }
 
