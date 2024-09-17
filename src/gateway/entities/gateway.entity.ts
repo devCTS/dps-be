@@ -2,6 +2,8 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -47,12 +49,12 @@ export class Gateway {
   )
   gatewayToChannel: GatewayToChannel[];
 
-  @OneToOne(() => SystemConfig, (config) => config.defaultPayinGateway)
-  defaultPayinGateway: number;
+  @OneToMany(() => SystemConfig, (config) => config.defaultPayinGateway)
+  defaultPayinGateway: SystemConfig[];
 
-  @OneToOne(() => SystemConfig, (config) => config.defaultPayoutGateway)
-  defaultPayoutGateway: number;
+  @OneToMany(() => SystemConfig, (config) => config.defaultPayoutGateway)
+  defaultPayoutGateway: SystemConfig[];
 
-  @OneToOne(() => SystemConfig, (config) => config.defaultWithdrawalGateway)
-  defaultWithdrawalGateway: number;
+  @OneToMany(() => SystemConfig, (config) => config.defaultWithdrawalGateway)
+  defaultWithdrawalGateway: SystemConfig[];
 }

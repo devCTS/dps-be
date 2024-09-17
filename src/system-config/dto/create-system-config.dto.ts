@@ -10,15 +10,12 @@ import { ChannelProfileDto } from 'src/utils/dtos/channel-profile.dto';
 
 export class CreateSystemConfigDto {
   // Gateways and Timeouts
-  @IsOptional()
   @IsNumber()
   defaultPayinGateway: number;
 
-  @IsOptional()
   @IsNumber()
   defaultPayoutGateway: number;
 
-  @IsOptional()
   @IsNumber()
   defaultWithdrawalGateway: number;
 

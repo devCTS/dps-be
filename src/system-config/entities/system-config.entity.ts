@@ -3,6 +3,7 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  ManyToOne,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -17,17 +18,17 @@ export class SystemConfig {
   id: number;
 
   // Gateways and Timeouts
-  @OneToOne(() => Gateway, (gateway) => gateway.defaultPayinGateway)
+  @ManyToOne(() => Gateway, (gateway) => gateway.defaultPayinGateway)
   @JoinColumn({ name: 'default_payin_gateway_id' })
-  defaultPayinGateway: number;
+  defaultPayinGateway: Gateway;
 
-  @OneToOne(() => Gateway, (gateway) => gateway.defaultPayoutGateway)
+  @ManyToOne(() => Gateway, (gateway) => gateway.defaultPayoutGateway)
   @JoinColumn({ name: 'default_payout_gateway_id' })
-  defaultPayoutGateway: number;
+  defaultPayoutGateway: Gateway;
 
-  @OneToOne(() => Gateway, (gateway) => gateway.defaultWithdrawalGateway)
+  @ManyToOne(() => Gateway, (gateway) => gateway.defaultWithdrawalGateway)
   @JoinColumn({ name: 'default_withdrawal_gateway_id' })
-  defaultWithdrawalGateway: number;
+  defaultWithdrawalGateway: Gateway;
 
   @Column()
   payinTimeout: number;
