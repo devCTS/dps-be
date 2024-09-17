@@ -15,7 +15,7 @@ import { ServicesModule } from './services/services.module';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { ExportModule } from './export/export.module';
 import { RolesModule } from './roles/roles.module';
-import { UploadModule } from './profile/upload.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
