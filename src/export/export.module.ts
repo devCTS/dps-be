@@ -6,6 +6,7 @@ import { AdminModule } from 'src/admin/admin.module';
 import { MemberModule } from 'src/member/member.module';
 import { MerchantModule } from 'src/merchant/merchant.module';
 import { SubMerchantModule } from 'src/sub-merchant/sub-merchant.module';
+import { GatewayModule } from 'src/gateway/gateway.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { SubMerchantModule } from 'src/sub-merchant/sub-merchant.module';
     MemberModule,
     MerchantModule,
     SubMerchantModule,
+    GatewayModule,
   ],
   controllers: [ExportController],
   providers: [ExportService],

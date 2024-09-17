@@ -12,6 +12,7 @@ import { Identity } from 'src/identity/entities/identity.entity';
 import { ChannelProfileDto } from 'src/utils/dtos/channel-profile.dto';
 import { PayinPayoutChannel } from './entities/payinPayoutChannel.entity';
 import { parseEndDate, parseStartDate } from 'src/utils/dtos/paginate.dto';
+import { SystemConfig } from 'src/system-config/entities/system-config.entity';
 @Injectable()
 export class ChannelService {
   constructor(
@@ -99,6 +100,7 @@ export class ChannelService {
   async processChannelFilledFields(
     channelProfile: ChannelProfileDto[],
     identity: Identity,
+    systemConfig: SystemConfig = null,
   ) {
     // Delete previous
     await this.filledFieldRepository.delete({ identity: { id: identity.id } });
@@ -121,6 +123,7 @@ export class ChannelService {
         filledField.field = profileField;
         filledField.fieldValue = field.value;
         filledField.identity = identity;
+        filledField.defaultTopupChannels = systemConfig;
         await this.filledFieldRepository.save(filledField);
       }
     }
