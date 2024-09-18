@@ -1,4 +1,9 @@
-import { ConflictException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { UpdateChannelDto } from './dto/update-channel.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -93,7 +98,9 @@ export class ChannelService {
   }
 
   async update(id: number, updateDto: UpdateChannelDto): Promise<HttpStatus> {
-    const result = await this.channelRepository.update({ id: id }, updateDto);
+    delete updateDto.profileFields;
+    await this.channelRepository.findOneBy({ id });
+
     return HttpStatus.OK;
   }
 

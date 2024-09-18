@@ -134,7 +134,7 @@ export class IdentityService {
       where: { email: signinDto.email },
     });
     if (!identity) {
-      throw new UnauthorizedException('User name or pawword is incorrect');
+      throw new UnauthorizedException('User name or password is incorrect');
     }
 
     const password = signinDto.password;
@@ -142,7 +142,7 @@ export class IdentityService {
     if (
       !this.jwtService.isHashedPasswordVerified(password, identity.password)
     ) {
-      throw new UnauthorizedException('User name or pawword is incorrect');
+      throw new UnauthorizedException('User name or password is incorrect');
     }
 
     const user = await this.getUser(identity.id, identity.userType);
@@ -277,7 +277,7 @@ export class IdentityService {
         existingIdentity.password,
       )
     ) {
-      throw new UnauthorizedException('User name or pawword is incorrect');
+      throw new UnauthorizedException('User name or password is incorrect');
     }
 
     const hashedPassword = this.jwtService.getHashPassword(
