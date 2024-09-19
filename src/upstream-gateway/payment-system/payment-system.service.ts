@@ -16,4 +16,8 @@ export class PaymentSystemService {
   getRazorpayPayments() {
     return this.razorpayService.razorpayPayment();
   }
+
+  getRazorpayPayouts() {
+    return this.razorpayService.razorpayPayout();
+  }
 }

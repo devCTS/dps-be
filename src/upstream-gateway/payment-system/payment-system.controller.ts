@@ -9,9 +9,18 @@ export class PaymentSystemController {
   // Available Options - PAY_PAGE, NET_BANKING, CARD, UPI_INTENT, UPI_QR, UPI_VPA
   paymentMethod = 'PAY_PAGE';
 
-  // TODO: Currently uset get request and dummy data for testing on browser. Will be changed after
-  @Get()
-  payment() {
+  @Get('/phonepay')
+  paymentPhonePay() {
     return this.paymentSystemService.getPhonepePayments(this.paymentMethod);
+  }
+
+  @Get('/razorpay')
+  paymentRazorPay() {
+    return this.paymentSystemService.getRazorpayPayments();
+  }
+
+  @Get('/razorpay/payout')
+  payoutsRazorPay() {
+    return this.paymentSystemService.getRazorpayPayouts();
   }
 }
