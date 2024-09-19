@@ -1,23 +1,17 @@
-import { Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { PaymentSystemService } from './payment-system.service';
 
 @Controller('payment-system')
 export class PaymentSystemController {
   count: number;
 
-  constructor(private paymentSystemService: PaymentSystemService) {
-    this.count = 1;
-  }
+  constructor(private paymentSystemService: PaymentSystemService) {}
+  // Available Options - PAY_PAGE, NET_BANKING, CARD, UPI_INTENT, UPI_QR, UPI_VPA
+  paymentMethod = 'PAY_PAGE';
 
   // TODO: Currently uset get request and dummy data for testing on browser. Will be changed after
   @Get()
   payment() {
-    if (this.count % 2 === 0) {
-      this.count++;
-      return this.paymentSystemService.getPhonepePayments();
-    } else {
-      this.count++;
-      return this.paymentSystemService.getRazorpayPayments();
-    }
+    return this.paymentSystemService.getPhonepePayments(this.paymentMethod);
   }
 }

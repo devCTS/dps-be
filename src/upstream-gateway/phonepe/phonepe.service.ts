@@ -1,14 +1,15 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable, Redirect } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { v4 as uuid } from 'uuid';
 import { generateSHA256 } from '../payment-system/payment-system.utils';
+import { paymentInstruments } from './payment-instruments';
 @Injectable()
 export class PhonepeService {
   constructor(private readonly httpService: HttpService) {}
   merchantTransactionId = uuid();
 
   // Payment function
-  async phonepePayement() {
+  async phonepePayement(paymentMethod) {
     const baseUrl = process.env.BASE_URL;
     const merchantTransactionId = this.merchantTransactionId;
     const merchantId = process.env.MERCHANT_ID;
@@ -27,9 +28,7 @@ export class PhonepeService {
       redirectMode: 'REDIRECT',
       mobileNumber: '9999999999',
       callBackUrl: `${baseUrl}/phonepe/${merchantTransactionId}`,
-      paymentInstrument: {
-        type: 'PAY_PAGE',
-      },
+      paymentInstrument: paymentInstruments(paymentMethod),
     };
 
     const bufferObj: Buffer = Buffer.from(JSON.stringify(payload), 'utf8');

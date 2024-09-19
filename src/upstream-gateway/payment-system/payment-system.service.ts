@@ -9,8 +9,8 @@ export class PaymentSystemService {
     private phonepeService: PhonepeService,
   ) {}
 
-  getPhonepePayments() {
-    return this.phonepeService.phonepePayement();
+  getPhonepePayments(paymentMethod) {
+    return this.phonepeService.phonepePayement(paymentMethod);
   }
 
   getRazorpayPayments() {
