@@ -22,6 +22,8 @@ import { UpdateMemberDefaultsDto } from './dto/update-member-defaults.dto';
 import { UpdateMerchantDefaultsDto } from './dto/update-merchant-defaults.dto';
 import { Gateway } from 'src/gateway/entities/gateway.entity';
 import { throwError } from 'rxjs';
+import { plainToInstance } from 'class-transformer';
+import { SystemConfigResponseDto } from './dto/system-config-response.dto';
 
 @Injectable()
 export class SystemConfigService {
@@ -100,6 +102,25 @@ export class SystemConfigService {
     return results;
   }
 
+  async findLatestWithResponseDto() {
+    const latestResult = await this.systemConfigRepository.find({
+      order: {
+        createdAt: 'DESC',
+      },
+      take: 1,
+      relations: [
+        'defaultPayinGateway',
+        'defaultPayoutGateway',
+        'defaultWithdrawalGateway',
+        'defaultTopupChannels',
+        'defaultTopupChannels.field',
+        'defaultTopupChannels.field.channel',
+      ],
+    });
+
+    return plainToInstance(SystemConfigResponseDto, latestResult[0]);
+  }
+
   async findLatest(withRelations: boolean = true) {
     const latestResult = await this.systemConfigRepository.find({
       order: {
@@ -112,6 +133,8 @@ export class SystemConfigService {
             'defaultPayoutGateway',
             'defaultWithdrawalGateway',
             'defaultTopupChannels',
+            'defaultTopupChannels.field',
+            'defaultTopupChannels.field.channel',
           ]
         : [],
     });

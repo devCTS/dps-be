@@ -18,7 +18,7 @@ export class SystemConfigController {
 
   @Get('/latest')
   findOne() {
-    return this.systemConfigService.findLatest();
+    return this.systemConfigService.findLatestWithResponseDto();
   }
 
   @Get()
