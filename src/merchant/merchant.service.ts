@@ -114,10 +114,10 @@ export class MerchantService {
     const createdMerchant = await this.merchantRepository.save(merchant);
 
     // add ips
-    await this.identityService.updateIps(ipAddresses, identity);
+    if (ipAddresses)
+      await this.identityService.updateIps(ipAddresses, identity);
 
     // add payin and payout channels
-
     await this.channelService.updatePayinPayoutChannels(
       identity,
       payinChannels,
@@ -281,30 +281,30 @@ export class MerchantService {
   }
 
   async remove(id: number) {
-    const admin = await this.merchantRepository.findOne({
+    const merchant = await this.merchantRepository.findOne({
       where: { id: id },
       relations: ['identity'], // Ensure you load the identity relation
     });
 
-    if (!admin) throw new NotFoundException();
+    if (!merchant) throw new NotFoundException();
 
     // delete ips
-    await this.identityService.deleteIps(admin.identity);
+    await this.identityService.deleteIps(merchant.identity);
     // delete payin and payout channels
-    await this.channelService.deletePayinPayoutChannels(admin.identity);
+    await this.channelService.deletePayinPayoutChannels(merchant.identity);
     // delete payin mode
     await this.deletePayinMode(id);
 
-    this.channelService.deleteChannelProfileOfUser(admin.identity);
-    this.merchantRepository.delete(id);
-    this.identityService.remove(admin.identity?.id);
+    await this.channelService.deleteChannelProfileOfUser(merchant.identity);
+    await this.merchantRepository.delete(id);
+    await this.identityService.remove(merchant.identity?.id);
 
     return HttpStatus.OK;
   }
 
   async updatePayinModeDetails(
     merchantId: number,
-    modeType: 'DEFAULT' | 'PROPORTIONAL' | 'AMOUNT_RANGE',
+    modeType: 'DEFAULT' | 'PROPORTIONAL' | 'AMOUNT RANGE',
     numberOfRangesOrRatio?: number,
     rangeDtos?: RangeDto[],
     ratioDtos?: RatioDto[],
@@ -338,7 +338,7 @@ export class MerchantService {
         }
 
         return this.proportionalRepository.save(proportions);
-      } else if (modeType === 'AMOUNT_RANGE') {
+      } else if (modeType === 'AMOUNT RANGE') {
         const ranges: AmountRangePayinMode[] = [];
 
         for (const data of rangeDtos) {
@@ -350,7 +350,6 @@ export class MerchantService {
 
           ranges.push(range);
         }
-        console.log('DONE');
         return this.amountRangeRepository.save(ranges);
       }
     }

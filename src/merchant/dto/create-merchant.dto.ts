@@ -154,9 +154,9 @@ export class CreateMerchantDto {
   @IsIP(undefined, { each: true })
   ipAddresses: string[];
 
-  @IsEnum(['DEFAULT', 'PROPORTIONAL', 'AMOUNT_RANGE'])
+  @IsEnum(['DEFAULT', 'PROPORTIONAL', 'AMOUNT RANGE'])
   @IsNotEmpty()
-  payinMode: 'DEFAULT' | 'PROPORTIONAL' | 'AMOUNT_RANGE' = 'DEFAULT'; // Default value
+  payinMode: 'DEFAULT' | 'PROPORTIONAL' | 'AMOUNT RANGE' = 'DEFAULT'; // Default value
 
   @IsOptional()
   @IsNumber()

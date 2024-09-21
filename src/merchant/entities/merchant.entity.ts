@@ -83,10 +83,10 @@ export class Merchant {
   maxWithdrawal: number;
 
   @Column({
-    enum: ['DEFAULT', 'PROPORTIONAL', 'AMOUNT_RANGE'],
+    enum: ['DEFAULT', 'PROPORTIONAL', 'AMOUNT RANGE'],
     default: 'DEFAULT',
   })
-  payinMode: 'DEFAULT' | 'PROPORTIONAL' | 'AMOUNT_RANGE';
+  payinMode: 'DEFAULT' | 'PROPORTIONAL' | 'AMOUNT RANGE';
 
   @CreateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
   createdAt: Date;

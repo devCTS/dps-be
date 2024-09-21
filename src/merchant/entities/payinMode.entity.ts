@@ -16,8 +16,8 @@ export class PayinMode {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ enum: ['PROPORTIONAL', 'AMOUNT_RANGE'] })
-  type: 'PROPORTIONAL' | 'AMOUNT_RANGE';
+  @Column({ enum: ['DEFAULT', 'PROPORTIONAL', 'AMOUNT RANGE'] })
+  type: 'DEFAULT' | 'PROPORTIONAL' | 'AMOUNT RANGE';
 
   @OneToOne(() => Merchant, (merchant) => merchant.payinModeDetails)
   @JoinColumn({ name: 'merchant' })

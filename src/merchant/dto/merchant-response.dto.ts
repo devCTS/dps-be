@@ -84,7 +84,7 @@ export class MerchantResponseDto {
   maxWithdrawal: number;
 
   @Expose()
-  payinMode: 'DEFAULT' | 'PROPORTIONAL' | 'AMOUNT_RANGE';
+  payinMode: 'DEFAULT' | 'PROPORTIONAL' | 'AMOUNT RANGE';
 
   @Expose()
   @Transform(({ obj }) => obj.identity?.ips?.map((ip) => ip.value), {
