@@ -1,4 +1,9 @@
-import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -14,6 +19,8 @@ import {
   parseStartDate,
 } from 'src/utils/dtos/paginate.dto';
 import { ChannelService } from 'src/channel/channel.service';
+import { encryptPassword } from 'src/utils/utils';
+import { JwtService } from 'src/services/jwt/jwt.service';
 
 @Injectable()
 export class MemberService {
@@ -22,6 +29,7 @@ export class MemberService {
     private readonly memberRepository: Repository<Member>,
     private readonly identityService: IdentityService,
     private readonly channelService: ChannelService,
+    private readonly jwtService: JwtService,
   ) {}
 
   async create(createMemberDto: CreateMemberDto) {
@@ -156,6 +164,7 @@ export class MemberService {
     });
 
     if (updateLoginCredentials) {
+      const hashedPassword = this.jwtService.getHashPassword(password);
       const updatedAdmin = await this.memberRepository.findOne({
         where: { id },
         relations: ['identity'], // Explicitly specify the relations
@@ -164,7 +173,7 @@ export class MemberService {
       await this.identityService.updateLogin(
         updatedAdmin.identity.id,
         email,
-        password,
+        hashedPassword,
       );
     }
 
@@ -269,5 +278,14 @@ export class MemberService {
       data: dtos,
       total,
     };
+  }
+
+  async getProfile(id: number) {
+    const profile = await this.findOne(id);
+    if (!profile.enabled) {
+      throw new UnauthorizedException('Unauthorized.');
+    }
+
+    return profile;
   }
 }

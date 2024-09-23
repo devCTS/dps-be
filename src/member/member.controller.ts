@@ -6,17 +6,30 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { MemberService } from './member.service';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
 import { RegisterDto } from './dto/register.dto';
 import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
+import { Roles } from 'src/roles/roles.decorator';
+import { Role } from 'src/roles/roles.enum';
+import { JwtGuard } from 'src/services/jwt/jwt.guard';
+import { RolesGuard } from 'src/roles/roles.guard';
+import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
+import { IdentityService } from 'src/identity/identity.service';
 
 @Controller('member')
 export class MemberController {
-  constructor(private readonly memberService: MemberService) {}
+  constructor(
+    private readonly memberService: MemberService,
+    private identityService: IdentityService,
+  ) {}
 
+  @Roles(Role.MEMBER)
+  @UseGuards(JwtGuard, RolesGuard)
   @Post()
   create(@Body() createMemberDto: CreateMemberDto) {
     return this.memberService.create(createMemberDto);
@@ -30,6 +43,11 @@ export class MemberController {
   @Get()
   findAll() {
     return this.memberService.findAll();
+  }
+
+  @Get('profile/:id')
+  getProfile(@Param('id', ParseIntPipe) id: number) {
+    return this.memberService.getProfile(id);
   }
 
   @Get(':id')
@@ -50,5 +68,12 @@ export class MemberController {
   @Post('paginate')
   paginate(@Body() paginateRequestDto: PaginateRequestDto) {
     return this.memberService.paginate(paginateRequestDto);
+  }
+  @Post('change-password/:id')
+  changePassword(
+    @Body() changePasswordDto: ChangePasswordDto,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.identityService.changePassword(changePasswordDto, id);
   }
 }

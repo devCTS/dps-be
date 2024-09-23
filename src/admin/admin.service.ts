@@ -3,6 +3,7 @@ import {
   HttpStatus,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
@@ -18,6 +19,8 @@ import {
   parseStartDate,
 } from 'src/utils/dtos/paginate.dto';
 import { getSuperAdminData } from './data/admin.data';
+import { encryptPassword } from 'src/utils/utils';
+import { JwtService } from 'src/services/jwt/jwt.service';
 
 @Injectable()
 export class AdminService {
@@ -25,6 +28,7 @@ export class AdminService {
     @InjectRepository(Admin)
     private adminRepository: Repository<Admin>,
     private readonly identityService: IdentityService,
+    private readonly jwtService: JwtService,
   ) {}
 
   async create(createAdminDto: CreateAdminDto): Promise<any> {
@@ -100,6 +104,7 @@ export class AdminService {
     );
 
     if (updateLoginCredentials) {
+      const hashedPassword = this.jwtService.getHashPassword(password);
       const updatedAdmin = await this.adminRepository.findOne({
         where: { id },
         relations: ['identity'], // Explicitly specify the relations
@@ -108,7 +113,7 @@ export class AdminService {
       await this.identityService.updateLogin(
         updatedAdmin.identity.id,
         email,
-        password,
+        hashedPassword,
       );
     }
 
@@ -206,5 +211,14 @@ export class AdminService {
       data: dtos,
       total,
     };
+  }
+
+  async getProfile(id: number) {
+    const profile = await this.findOne(id);
+    if (!profile.enabled) {
+      throw new UnauthorizedException('Unauthorized.');
+    }
+
+    return profile;
   }
 }

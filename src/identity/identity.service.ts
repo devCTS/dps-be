@@ -10,7 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Identity } from './entities/identity.entity';
 import { Repository } from 'typeorm';
 import { SignInDto } from './dto/signin.dto';
-import { generateRandomOTP } from 'src/utils/utils';
+import { extractToken, generateRandomOTP, verifyToken } from 'src/utils/utils';
 import { SignUpDto } from './dto/singup.dto';
 import { VerifyOtpDto } from './dto/verifyotp.dto';
 import { ForgotPasswordDto } from './dto/forgotPassword.dto';
@@ -72,7 +72,13 @@ export class IdentityService {
 
   async getUser(
     identityId: number,
-    role: 'MERCHANT' | 'SUB_MERCHANT' | 'MEMBER' | 'SUPER_ADMIN' | 'SUB_ADMIN',
+    role:
+      | 'MERCHANT'
+      | 'SUB_MERCHANT'
+      | 'MEMBER'
+      | 'SUPER_ADMIN'
+      | 'SUB_ADMIN'
+      | 'AGENT',
   ) {
     const query = { where: { identity: { id: identityId } } };
     switch (role) {
@@ -103,7 +109,8 @@ export class IdentityService {
       | 'SUB_MERCHANT'
       | 'MEMBER'
       | 'SUPER_ADMIN'
-      | 'SUB_ADMIN',
+      | 'SUB_ADMIN'
+      | 'AGENT',
   ) {
     // Check if an Identity with the given email already exists
     const existingIdentity = await this.identityRepository.findOne({
@@ -262,15 +269,13 @@ export class IdentityService {
     } else throw new UnauthorizedException('Provided OTP is incorrect.');
   }
 
-  async changePassword(changePasswordDto: ChangePasswordDto) {
+  async changePassword(changePasswordDto: ChangePasswordDto, id: number) {
     const existingIdentity = await this.identityRepository.findOne({
-      where: { email: changePasswordDto.email },
+      where: { id: id },
     });
-
     if (!existingIdentity) {
       throw new ConflictException('User with this email does not exist');
     }
-
     if (
       !this.jwtService.isHashedPasswordVerified(
         changePasswordDto.oldPassword,
@@ -279,24 +284,17 @@ export class IdentityService {
     ) {
       throw new UnauthorizedException('User name or password is incorrect');
     }
-
     const hashedPassword = this.jwtService.getHashPassword(
       changePasswordDto.newPassword,
     );
     const identity = await this.identityRepository.findOne({
-      where: { email: changePasswordDto.email },
+      where: { id },
     });
-
-    this.identityRepository.update(
-      { email: changePasswordDto.email },
-      { password: hashedPassword },
-    );
-
+    this.identityRepository.update({ id }, { password: hashedPassword });
     const jwt = this.jwtService.createToken({
       userId: identity.email,
       userType: identity.userType,
     });
-
     return { jwt, type: identity.userType };
   }
 

@@ -1,4 +1,9 @@
-import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import {
   CreateMerchantDto,
   RangeDto,
@@ -23,6 +28,7 @@ import {
   parseEndDate,
   PaginateRequestDto,
 } from 'src/utils/dtos/paginate.dto';
+import { encryptPassword } from 'src/utils/utils';
 
 @Injectable()
 export class MerchantService {
@@ -236,6 +242,7 @@ export class MerchantService {
     });
 
     if (updateLoginCredentials) {
+      const hashedPassword = this.jwtService.getHashPassword(password);
       const updatedAdmin = await this.merchantRepository.findOne({
         where: { id },
         relations: ['identity'], // Explicitly specify the relations
@@ -244,7 +251,7 @@ export class MerchantService {
       await this.identityService.updateLogin(
         updatedAdmin.identity.id,
         email,
-        password,
+        hashedPassword,
       );
     }
 
@@ -466,5 +473,14 @@ export class MerchantService {
       startRecord,
       endRecord,
     };
+  }
+
+  async getProfile(id: number) {
+    const profile = await this.findOne(id);
+    if (!profile.enabled) {
+      throw new UnauthorizedException('Unauthorized.');
+    }
+
+    return profile;
   }
 }

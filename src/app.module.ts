@@ -16,6 +16,9 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { ExportModule } from './export/export.module';
 import { GatewayModule } from './gateway/gateway.module';
 import { SystemConfigModule } from './system-config/system-config.module';
+import { RolesModule } from './roles/roles.module';
+import { UploadModule } from './upload/upload.module';
+import { AgentModule } from './agent/agent.module';
 
 @Module({
   imports: [
@@ -50,6 +53,9 @@ import { SystemConfigModule } from './system-config/system-config.module';
     ExportModule,
     GatewayModule,
     SystemConfigModule,
+    RolesModule,
+    UploadModule,
+    AgentModule,
   ],
   controllers: [AppController],
   providers: [

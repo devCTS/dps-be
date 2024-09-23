@@ -3,6 +3,7 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { CreateSubMerchantDto } from './dto/create-sub-merchant.dto';
 import { UpdateSubMerchantDto } from './dto/update-sub-merchant.dto';
@@ -19,6 +20,8 @@ import {
   parseStartDate,
 } from 'src/utils/dtos/paginate.dto';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
+import { encryptPassword } from 'src/utils/utils';
+import { JwtService } from 'src/services/jwt/jwt.service';
 
 @Injectable()
 export class SubMerchantService {
@@ -28,6 +31,7 @@ export class SubMerchantService {
     @InjectRepository(Merchant)
     private merchantRepository: Repository<Merchant>,
     private readonly identityService: IdentityService,
+    private readonly jwtService: JwtService,
   ) {}
 
   async create(
@@ -95,6 +99,7 @@ export class SubMerchantService {
     );
 
     if (updateLoginCredentials) {
+      const hashedPassword = this.jwtService.getHashPassword(password);
       const updatedAdmin = await this.subMerchantRepository.findOne({
         where: { id },
         relations: ['identity'], // Explicitly specify the relations
@@ -103,7 +108,7 @@ export class SubMerchantService {
       await this.identityService.updateLogin(
         updatedAdmin.identity.id,
         email,
-        password,
+        hashedPassword,
       );
     }
 
@@ -203,5 +208,14 @@ export class SubMerchantService {
       data: dtos,
       total,
     };
+  }
+
+  async getProfile(id: number) {
+    const profile = await this.findOne(id);
+    if (!profile.enabled) {
+      throw new UnauthorizedException('Unauthorized.');
+    }
+
+    return profile;
   }
 }
