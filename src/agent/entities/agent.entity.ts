@@ -1,3 +1,4 @@
+import { AgentReferral } from 'src/agent-referral/entities/agent-referral.entity';
 import { Identity } from 'src/identity/entities/identity.entity';
 import {
   Entity,
@@ -8,6 +9,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToOne,
+  OneToMany,
 } from 'typeorm';
 
 @Entity()
@@ -34,9 +36,17 @@ export class Agent {
   @Column({ nullable: true })
   phone: string;
 
-  @CreateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
+  @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
+  @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
+
+  // Referred any other
+  @OneToOne(() => AgentReferral, (referral) => referral.parentAgent)
+  referred: AgentReferral;
+
+  // Used referrel code of another agent
+  @OneToOne(() => AgentReferral, (referral) => referral.referredAgent)
+  agentReferral: AgentReferral;
 }

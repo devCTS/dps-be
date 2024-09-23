@@ -19,6 +19,8 @@ import { SystemConfigModule } from './system-config/system-config.module';
 import { RolesModule } from './roles/roles.module';
 import { UploadModule } from './upload/upload.module';
 import { AgentModule } from './agent/agent.module';
+import { AgentReferralModule } from './agent-referral/agent-referral.module';
+import { MemberReferralModule } from './member-referral/member-referral.module';
 
 @Module({
   imports: [
@@ -56,6 +58,8 @@ import { AgentModule } from './agent/agent.module';
     RolesModule,
     UploadModule,
     AgentModule,
+    AgentReferralModule,
+    MemberReferralModule,
   ],
   controllers: [AppController],
   providers: [

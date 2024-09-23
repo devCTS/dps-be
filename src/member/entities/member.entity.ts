@@ -1,4 +1,5 @@
 import { Identity } from 'src/identity/entities/identity.entity';
+import { MemberReferral } from 'src/member-referral/entities/member-referral.entity';
 import {
   Entity,
   Column,
@@ -7,6 +8,7 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToOne,
 } from 'typeorm';
 
 @Entity()
@@ -51,9 +53,17 @@ export class Member {
   @Column({ type: 'integer' })
   dailyTotalPayoutLimit: number;
 
-  @CreateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
+  @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
+  @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
+
+  // Referred any other member
+  @OneToOne(() => MemberReferral, (referral) => referral.parentMember)
+  referredMember: MemberReferral;
+
+  // Used referral code of anther member
+  @OneToOne(() => MemberReferral, (referral) => referral.referredMember)
+  memberReferral: MemberReferral;
 }
