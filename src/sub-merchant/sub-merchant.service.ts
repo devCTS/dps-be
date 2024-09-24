@@ -72,14 +72,19 @@ export class SubMerchantService {
   }
 
   async findOne(id: number): Promise<SubMerchantResponseDto> {
-    const result = await this.subMerchantRepository.findOne({
+    let result = await this.subMerchantRepository.findOne({
       where: { id },
-      relations: ['identity'],
+      relations: ['identity', 'merchant'],
     });
+
+    const businessName = result.merchant.businessName;
+    const merchantName = `${result.merchant.firstName} ${result.merchant.lastName}`;
+
+    const subMerchantData = { ...result, businessName, merchantName };
 
     if (!result) throw new NotFoundException();
 
-    return plainToInstance(SubMerchantResponseDto, result);
+    return plainToInstance(SubMerchantResponseDto, subMerchantData);
   }
 
   async update(
