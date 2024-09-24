@@ -76,15 +76,11 @@ export class SubMerchantService {
       where: { id },
       relations: ['identity', 'merchant'],
     });
-
     const businessName = result.merchant.businessName;
     const merchantName = `${result.merchant.firstName} ${result.merchant.lastName}`;
 
-    const subMerchantData = { ...result, businessName, merchantName };
-
-    if (!result) throw new NotFoundException();
-
-    return plainToInstance(SubMerchantResponseDto, subMerchantData);
+    const data = plainToInstance(SubMerchantResponseDto, result);
+    return { ...data, businessName, merchantName };
   }
 
   async update(
