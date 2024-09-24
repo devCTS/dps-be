@@ -8,7 +8,7 @@ import {
 } from 'src/utils/dtos/paginate.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MemberReferral } from './entities/member-referral.entity';
-import { Repository } from 'typeorm';
+import { Between, ILike, Repository } from 'typeorm';
 import { Member } from 'src/member/entities/member.entity';
 
 @Injectable()
@@ -109,39 +109,27 @@ export class MemberReferralService {
   }
 
   async paginate(paginateDto: PaginateRequestDto) {
-    const query =
-      this.memberReferralRepository.createQueryBuilder('memberReferral');
+    const { search, pageSize, pageNumber, startDate, endDate } = paginateDto;
 
-    query.leftJoinAndSelect('memberReferral.member', 'member');
-    query.leftJoinAndSelect('memberReferral.referredMember', 'referredMember');
+    const whereConditions: any = {};
 
-    const search = paginateDto.search;
-    const pageSize = paginateDto.pageSize;
-    const pageNumber = paginateDto.pageNumber;
+    if (search) whereConditions.referralCode = ILike(`%${search}%`);
 
-    if (search) {
-      query.andWhere(`CONCAT(memberReferral.referral_code) ILIKE :search`, {
-        search: `%${search}%`,
-      });
-    }
-
-    if (paginateDto.startDate && paginateDto.endDate) {
-      const startDate = parseStartDate(paginateDto.startDate);
-      const endDate = parseEndDate(paginateDto.endDate);
-
-      query.andWhere(
-        'memberReferral.created_at BETWEEN :startDate AND :endDate',
-        {
-          startDate,
-          endDate,
-        },
-      );
+    if (startDate && endDate) {
+      const parsedStartDate = parseStartDate(startDate);
+      const parsedEndDate = parseEndDate(endDate);
+      whereConditions.createdAt = Between(parsedStartDate, parsedEndDate);
     }
 
     const skip = (pageNumber - 1) * pageSize;
-    query.skip(skip).take(pageSize);
+    const take = pageSize;
 
-    const [rows, total] = await query.getManyAndCount();
+    const [rows, total] = await this.memberReferralRepository.findAndCount({
+      where: whereConditions,
+      relations: ['member', 'referredMember', 'member.identity'],
+      skip,
+      take,
+    });
 
     const startRecord = skip + 1;
     const endRecord = Math.min(skip + pageSize, total);

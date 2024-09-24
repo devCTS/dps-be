@@ -8,7 +8,7 @@ import { CreateAgentReferralDto } from './dto/create-agent-referral.dto';
 import { UpdateAgentReferralDto } from './dto/update-agent-referral.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AgentReferral } from './entities/agent-referral.entity';
-import { Repository } from 'typeorm';
+import { Between, ILike, Repository } from 'typeorm';
 import { Agent } from 'src/agent/entities/agent.entity';
 import {
   PaginateRequestDto,
@@ -109,40 +109,32 @@ export class AgentReferralService {
   }
 
   async paginate(paginateDto: PaginateRequestDto) {
-    const query =
-      this.agentReferralRepository.createQueryBuilder('agentReferral');
+    const { search, pageSize, pageNumber, startDate, endDate } = paginateDto;
 
-    query.leftJoinAndSelect('agentReferral.agent', 'agent');
-    query.leftJoinAndSelect('agentReferral.referredAgent', 'referredAgent');
-    query.leftJoinAndSelect('agentReferral.referredMerchant', 'merchant');
+    const whereConditions: any = {};
 
-    const search = paginateDto.search;
-    const pageSize = paginateDto.pageSize;
-    const pageNumber = paginateDto.pageNumber;
+    if (search) whereConditions.referralCode = ILike(`%${search}%`);
 
-    if (search) {
-      query.andWhere(`CONCAT(agentReferral.referral_code) ILIKE :search`, {
-        search: `%${search}%`,
-      });
-    }
-
-    if (paginateDto.startDate && paginateDto.endDate) {
-      const startDate = parseStartDate(paginateDto.startDate);
-      const endDate = parseEndDate(paginateDto.endDate);
-
-      query.andWhere(
-        'agentReferral.created_at BETWEEN :startDate AND :endDate',
-        {
-          startDate,
-          endDate,
-        },
-      );
+    if (startDate && endDate) {
+      const parsedStartDate = parseStartDate(startDate);
+      const parsedEndDate = parseEndDate(endDate);
+      whereConditions.createdAt = Between(parsedStartDate, parsedEndDate);
     }
 
     const skip = (pageNumber - 1) * pageSize;
-    query.skip(skip).take(pageSize);
+    const take = pageSize;
 
-    const [rows, total] = await query.getManyAndCount();
+    const [rows, total] = await this.agentReferralRepository.findAndCount({
+      where: whereConditions,
+      relations: [
+        'agent',
+        'referredAgent',
+        'referredMerchant',
+        'agent.identity',
+      ],
+      skip,
+      take,
+    });
 
     const startRecord = skip + 1;
     const endRecord = Math.min(skip + pageSize, total);
