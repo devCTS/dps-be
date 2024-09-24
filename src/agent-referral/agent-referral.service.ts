@@ -1,18 +1,20 @@
-import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  HttpStatus,
+  Injectable,
+  NotAcceptableException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateAgentReferralDto } from './dto/create-agent-referral.dto';
 import { UpdateAgentReferralDto } from './dto/update-agent-referral.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AgentReferral } from './entities/agent-referral.entity';
 import { Repository } from 'typeorm';
 import { Agent } from 'src/agent/entities/agent.entity';
-import { NotFoundError } from 'rxjs';
 import {
   PaginateRequestDto,
   parseEndDate,
   parseStartDate,
 } from 'src/utils/dtos/paginate.dto';
-import { plainToInstance } from 'class-transformer';
-import { AdminResponseDto } from 'src/admin/dto/admin-response.dto';
 
 @Injectable()
 export class AgentReferralService {
@@ -35,7 +37,13 @@ export class AgentReferralService {
     } = createAgentReferralDto;
 
     const agent = await this.agentRepository.findOneBy({ id: agentId });
-    if (!agent) throw new NotFoundException();
+    if (!agent) throw new NotFoundException('Agent not found!');
+
+    const referralCodeExists = await this.agentReferralRepository.findOneBy({
+      referralCode,
+    });
+    if (referralCodeExists)
+      throw new NotAcceptableException('This referral code already exists!');
 
     await this.agentReferralRepository.save({
       agent,
@@ -51,7 +59,9 @@ export class AgentReferralService {
   }
 
   async findAll() {
-    const results = await this.agentReferralRepository.find();
+    const results = await this.agentReferralRepository.find({
+      relations: ['agent'],
+    });
 
     return {
       status: 'success',
@@ -60,16 +70,42 @@ export class AgentReferralService {
     };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} agentReferral`;
+  async findOne(id: number) {
+    const agentReferral = await this.agentReferralRepository.findOneBy({ id });
+
+    return {
+      status: 'success',
+      data: agentReferral,
+    };
   }
 
   async update(id: number, updateAgentReferralDto: UpdateAgentReferralDto) {
-    await this.agentReferralRepository.update(id, updateAgentReferralDto);
+    const agentReferral = await this.agentReferralRepository.findOneBy({ id });
+    if (!agentReferral) throw new NotFoundException();
+
+    if (agentReferral)
+      await this.agentReferralRepository.update(id, updateAgentReferralDto);
+
+    return HttpStatus.OK;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} agentReferral`;
+  async remove(id: number) {
+    const agentReferral = await this.agentReferralRepository.findOneBy({ id });
+
+    if (agentReferral) await this.agentReferralRepository.remove(agentReferral);
+
+    return HttpStatus.OK;
+  }
+
+  async removeAll() {
+    const agentReferrals = await this.agentReferralRepository.find({
+      relations: ['agent', 'referredMerchant', 'referredAgent'],
+    });
+
+    if (agentReferrals)
+      await this.agentReferralRepository.remove(agentReferrals);
+
+    return HttpStatus.OK;
   }
 
   async paginate(paginateDto: PaginateRequestDto) {
@@ -77,6 +113,8 @@ export class AgentReferralService {
       this.agentReferralRepository.createQueryBuilder('agentReferral');
 
     query.leftJoinAndSelect('agentReferral.agent', 'agent');
+    query.leftJoinAndSelect('agentReferral.referredAgent', 'referredAgent');
+    query.leftJoinAndSelect('agentReferral.referredMerchant', 'merchant');
 
     const search = paginateDto.search;
     const pageSize = paginateDto.pageSize;
@@ -110,13 +148,13 @@ export class AgentReferralService {
     const endRecord = Math.min(skip + pageSize, total);
 
     return {
-      data: rows,
       total,
       page: pageNumber,
       pageSize,
       totalPages: Math.ceil(total / pageSize),
       startRecord,
       endRecord,
+      data: rows,
     };
   }
 }

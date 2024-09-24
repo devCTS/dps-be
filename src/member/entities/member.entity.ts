@@ -9,6 +9,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToOne,
+  OneToMany,
 } from 'typeorm';
 
 @Entity()
@@ -60,7 +61,7 @@ export class Member {
   updatedAt: Date;
 
   // Referred any other member
-  @OneToOne(() => MemberReferral, (referral) => referral.parentMember)
+  @OneToMany(() => MemberReferral, (referral) => referral.member)
   referredMember: MemberReferral;
 
   // Used referral code of anther member

@@ -1,4 +1,22 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateAgentReferralDto } from './create-agent-referral.dto';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 
-export class UpdateAgentReferralDto extends PartialType(CreateAgentReferralDto) {}
+export class UpdateAgentReferralDto {
+  @IsOptional()
+  @IsNumber()
+  payinCommission?: number;
+
+  @IsOptional()
+  @IsNumber()
+  payoutCommission?: number;
+
+  @IsOptional()
+  @IsNumber()
+  merchantPayinServiceRate?: number;
+
+  @IsOptional()
+  @IsNumber()
+  merchantPayoutServiceRate?: number;
+
+  @IsString()
+  status: string;
+}

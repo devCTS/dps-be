@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateMemberReferralDto } from './dto/create-member-referral.dto';
 import { UpdateMemberReferralDto } from './dto/update-member-referral.dto';
 import {
@@ -9,32 +9,103 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { MemberReferral } from './entities/member-referral.entity';
 import { Repository } from 'typeorm';
+import { Member } from 'src/member/entities/member.entity';
 
 @Injectable()
 export class MemberReferralService {
   constructor(
     @InjectRepository(MemberReferral)
     private readonly memberReferralRepository: Repository<MemberReferral>,
+    @InjectRepository(Member)
+    private readonly memberRepository: Repository<Member>,
   ) {}
 
-  create(createMemberReferralDto: CreateMemberReferralDto) {
-    return 'This action adds a new memberReferral';
+  async create(createMemberReferralDto: CreateMemberReferralDto) {
+    const {
+      referralCode,
+      memberId,
+      payinCommission,
+      payoutCommission,
+      topupCommission,
+      referredMemberPayinCommission,
+      referredMemberPayoutCommission,
+      referredMemberTopupCommission,
+    } = createMemberReferralDto;
+
+    const member = await this.memberRepository.findOneBy({ id: memberId });
+    if (!member) throw new NotFoundException('Member not found!');
+
+    await this.memberReferralRepository.save({
+      referralCode,
+      memberId,
+      payinCommission,
+      payoutCommission,
+      topupCommission,
+      referredMemberPayinCommission,
+      referredMemberPayoutCommission,
+      referredMemberTopupCommission,
+    });
+
+    return HttpStatus.OK;
   }
 
-  findAll() {
-    return `This action returns all memberReferral`;
+  async findAll() {
+    const results = await this.memberReferralRepository.find({
+      relations: ['member', 'referredMember'],
+    });
+
+    return {
+      status: HttpStatus.FOUND,
+      length: results.length,
+      data: results,
+    };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} memberReferral`;
+  async findOne(id: number) {
+    const memberReferral = await this.memberReferralRepository.findOne({
+      where: { id },
+      relations: ['member', 'referredMember'],
+    });
+
+    return {
+      status: HttpStatus.FOUND,
+      data: memberReferral,
+    };
   }
 
-  update(id: number, updateMemberReferralDto: UpdateMemberReferralDto) {
-    return `This action updates a #${id} memberReferral`;
+  async update(id: number, updateMemberReferralDto: UpdateMemberReferralDto) {
+    const memberReferral = await this.memberReferralRepository.findOneBy({
+      id,
+    });
+    if (!memberReferral) throw new NotFoundException();
+
+    await this.memberReferralRepository.update(id, updateMemberReferralDto);
+
+    return HttpStatus.OK;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} memberReferral`;
+  async remove(id: number) {
+    const memberReferral = await this.memberReferralRepository.findOne({
+      where: {
+        id,
+      },
+      relations: ['member', 'referredMember'],
+    });
+    if (!memberReferral) throw new NotFoundException('Entity not found!');
+
+    await this.memberReferralRepository.remove(memberReferral);
+
+    return HttpStatus.OK;
+  }
+
+  async removeAll() {
+    const memberReferrals = await this.memberReferralRepository.find({
+      relations: ['member', 'referredMember'],
+    });
+
+    await this.memberReferralRepository.remove(memberReferrals);
+
+    return HttpStatus.OK;
   }
 
   async paginate(paginateDto: PaginateRequestDto) {
@@ -42,6 +113,7 @@ export class MemberReferralService {
       this.memberReferralRepository.createQueryBuilder('memberReferral');
 
     query.leftJoinAndSelect('memberReferral.member', 'member');
+    query.leftJoinAndSelect('memberReferral.referredMember', 'referredMember');
 
     const search = paginateDto.search;
     const pageSize = paginateDto.pageSize;

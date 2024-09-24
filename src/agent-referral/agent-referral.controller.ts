@@ -10,6 +10,7 @@ import {
 import { AgentReferralService } from './agent-referral.service';
 import { CreateAgentReferralDto } from './dto/create-agent-referral.dto';
 import { UpdateAgentReferralDto } from './dto/update-agent-referral.dto';
+import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
 
 @Controller('agent-referral')
 export class AgentReferralController {
@@ -41,5 +42,15 @@ export class AgentReferralController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.agentReferralService.remove(+id);
+  }
+
+  @Delete()
+  removeAll() {
+    return this.agentReferralService.removeAll();
+  }
+
+  @Post('paginate')
+  paginate(@Body() paginateRequestDto: PaginateRequestDto) {
+    return this.agentReferralService.paginate(paginateRequestDto);
   }
 }

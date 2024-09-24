@@ -1,6 +1,16 @@
 import { Member } from 'src/member/entities/member.entity';
-import { Column, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
+@Entity()
 export class MemberReferral {
   @PrimaryGeneratedColumn()
   id: number;
@@ -8,7 +18,7 @@ export class MemberReferral {
   @Column()
   referralCode: string;
 
-  @OneToOne(() => Member, (member) => member.referredMember)
+  @ManyToOne(() => Member, (member) => member.referredMember)
   @JoinColumn({ name: 'member_id' })
   member: Member;
 
@@ -33,4 +43,16 @@ export class MemberReferral {
 
   @Column('float')
   referredMemberTopupCommission: number;
+
+  @Column({
+    enum: ['pending', 'rejected', 'approved', 'utilized'],
+    default: 'pending',
+  })
+  status: string;
+
+  @CreateDateColumn({ type: 'timestamp' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ type: 'timestamp' })
+  updatedAt: Date;
 }

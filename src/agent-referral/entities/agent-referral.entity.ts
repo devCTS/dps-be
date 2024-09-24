@@ -6,6 +6,9 @@ import {
   Column,
   JoinColumn,
   OneToOne,
+  ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
@@ -13,10 +16,10 @@ export class AgentReferral {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ unique: true })
   referralCode: string;
 
-  @OneToOne(() => Agent, (agent) => agent.referred)
+  @ManyToOne(() => Agent, (agent) => agent.referred)
   @JoinColumn({ name: 'agent_id' })
   agent: Agent;
 
@@ -50,4 +53,10 @@ export class AgentReferral {
 
   @Column('float', { nullable: true })
   merchantPayoutServiceRate: number;
+
+  @CreateDateColumn({ type: 'timestamp' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ type: 'timestamp' })
+  updatedAt: Date;
 }

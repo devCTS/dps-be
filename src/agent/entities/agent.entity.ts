@@ -43,7 +43,7 @@ export class Agent {
   updatedAt: Date;
 
   // Referred any other
-  @OneToOne(() => AgentReferral, (referral) => referral.parentAgent)
+  @OneToMany(() => AgentReferral, (referral) => referral.agent)
   referred: AgentReferral;
 
   // Used referrel code of another agent
