@@ -71,6 +71,6 @@ export class SubMerchantController {
     @Body() changePasswordDto: ChangePasswordDto,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.identityService.changePassword(changePasswordDto, id);
+    return this.subMerchantService.changePassword(changePasswordDto, id);
   }
 }

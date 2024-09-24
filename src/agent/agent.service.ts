@@ -19,6 +19,7 @@ import {
 } from 'src/utils/dtos/paginate.dto';
 import { encryptPassword } from 'src/utils/utils';
 import { JwtService } from 'src/services/jwt/jwt.service';
+import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 
 @Injectable()
 export class AgentService {
@@ -206,5 +207,19 @@ export class AgentService {
       data: dtos,
       total,
     };
+  }
+
+  async changePassword(changePasswordDto: ChangePasswordDto, id: number) {
+    const agentData = await this.agentRepository.findOne({
+      where: { id },
+      relations: ['identity'],
+    });
+
+    if (!agentData) throw new NotFoundException();
+
+    return this.identityService.changePassword(
+      changePasswordDto,
+      agentData.identity.id,
+    );
   }
 }

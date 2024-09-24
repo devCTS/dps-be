@@ -21,6 +21,7 @@ import {
 import { getSuperAdminData } from './data/admin.data';
 import { encryptPassword } from 'src/utils/utils';
 import { JwtService } from 'src/services/jwt/jwt.service';
+import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 
 @Injectable()
 export class AdminService {
@@ -220,5 +221,19 @@ export class AdminService {
     }
 
     return profile;
+  }
+
+  async changePassword(changePasswordDto: ChangePasswordDto, id: number) {
+    const adminData = await this.adminRepository.findOne({
+      where: { id },
+      relations: ['identity'],
+    });
+
+    if (!adminData) throw new NotFoundException();
+
+    return this.identityService.changePassword(
+      changePasswordDto,
+      adminData.identity.id,
+    );
   }
 }

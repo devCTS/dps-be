@@ -21,6 +21,7 @@ import {
 import { ChannelService } from 'src/channel/channel.service';
 import { encryptPassword } from 'src/utils/utils';
 import { JwtService } from 'src/services/jwt/jwt.service';
+import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 
 @Injectable()
 export class MemberService {
@@ -287,5 +288,19 @@ export class MemberService {
     }
 
     return profile;
+  }
+
+  async changePassword(changePasswordDto: ChangePasswordDto, id: number) {
+    const membaeData = await this.memberRepository.findOne({
+      where: { id },
+      relations: ['identity'],
+    });
+
+    if (!membaeData) throw new NotFoundException();
+
+    return this.identityService.changePassword(
+      changePasswordDto,
+      membaeData.identity.id,
+    );
   }
 }

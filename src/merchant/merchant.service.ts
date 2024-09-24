@@ -29,6 +29,7 @@ import {
   PaginateRequestDto,
 } from 'src/utils/dtos/paginate.dto';
 import { encryptPassword } from 'src/utils/utils';
+import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 
 @Injectable()
 export class MerchantService {
@@ -482,5 +483,19 @@ export class MerchantService {
     }
 
     return profile;
+  }
+
+  async changePassword(changePasswordDto: ChangePasswordDto, id: number) {
+    const merchantData = await this.merchantRepository.findOne({
+      where: { id },
+      relations: ['identity'],
+    });
+
+    if (!merchantData) throw new NotFoundException();
+
+    return this.identityService.changePassword(
+      changePasswordDto,
+      merchantData.identity.id,
+    );
   }
 }

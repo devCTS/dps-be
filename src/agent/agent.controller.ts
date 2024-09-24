@@ -64,6 +64,6 @@ export class AgentController {
     @Body() changePasswordDto: ChangePasswordDto,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.identityService.changePassword(changePasswordDto, id);
+    return this.agentService.changePassword(changePasswordDto, id);
   }
 }

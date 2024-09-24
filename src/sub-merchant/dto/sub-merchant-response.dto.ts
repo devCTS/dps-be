@@ -3,7 +3,7 @@ import { Exclude, Expose, Transform } from 'class-transformer';
 import { Identity } from 'src/identity/entities/identity.entity';
 import { Rename } from 'src/utils/decorators/rename.decorator';
 import { DateFormat } from 'src/utils/decorators/dateformat.decorator';
-import { IsBoolean } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsString } from 'class-validator';
 
 @Exclude()
 export class SubMerchantResponseDto {
@@ -49,4 +49,12 @@ export class SubMerchantResponseDto {
   @Expose()
   @IsBoolean()
   permissionUpdateWithdrawalProfiles: boolean;
+
+  @IsString()
+  @IsNotEmpty()
+  merchantName: string;
+
+  @IsString()
+  @IsNotEmpty()
+  businessName: string;
 }

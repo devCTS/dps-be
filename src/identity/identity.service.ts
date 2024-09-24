@@ -60,6 +60,7 @@ export class IdentityService {
     private subMerchantRepository: Repository<Submerchant>,
     @InjectRepository(Agent)
     private agentRepository: Repository<Agent>,
+
     @InjectRepository(IP)
     private ipRepository: Repository<IP>,
     private readonly jwtService: JwtService,
