@@ -20,6 +20,7 @@ import { Member } from 'src/member/entities/member.entity';
 import { Admin } from 'src/admin/entities/admin.entity';
 import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
 import { IP } from './entities/ip.entity';
+import { Agent } from 'src/agent/entities/agent.entity';
 
 type MemberContext = {
   firstName: string;
@@ -57,6 +58,8 @@ export class IdentityService {
     private adminRepository: Repository<Admin>,
     @InjectRepository(Submerchant)
     private subMerchantRepository: Repository<Submerchant>,
+    @InjectRepository(Agent)
+    private agentRepository: Repository<Agent>,
 
     @InjectRepository(IP)
     private ipRepository: Repository<IP>,
@@ -98,6 +101,10 @@ export class IdentityService {
       case 'SUB_MERCHANT':
         const submerchant = await this.subMerchantRepository.findOne(query);
         return submerchant;
+
+      case 'AGENT':
+        const agent = await this.agentRepository.findOne(query);
+        return agent;
     }
   }
 

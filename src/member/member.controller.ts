@@ -28,8 +28,6 @@ export class MemberController {
     private identityService: IdentityService,
   ) {}
 
-  @Roles(Role.MEMBER)
-  @UseGuards(JwtGuard, RolesGuard)
   @Post()
   create(@Body() createMemberDto: CreateMemberDto) {
     return this.memberService.create(createMemberDto);
@@ -74,6 +72,6 @@ export class MemberController {
     @Body() changePasswordDto: ChangePasswordDto,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.identityService.changePassword(changePasswordDto, id);
+    return this.memberService.changePassword(changePasswordDto, id);
   }
 }
