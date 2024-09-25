@@ -267,6 +267,7 @@ export class AgentReferralService {
       referralCode: agent.referralCode,
       email: agent.identity.email,
       children: children,
+      agentType: agent.integrationId ? 'merchant' : 'agent',
     };
   }
 }
