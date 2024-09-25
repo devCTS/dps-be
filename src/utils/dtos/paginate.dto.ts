@@ -5,6 +5,7 @@ import {
   Min,
   IsDateString,
   Matches,
+  IsNumber,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { BadRequestException } from '@nestjs/common';
@@ -61,4 +62,8 @@ export class PaginateRequestDto {
     message: 'endDate must be in the format DD/MM/YYYY',
   })
   endDate?: string;
+
+  @IsOptional()
+  @IsNumber()
+  userId?: number;
 }

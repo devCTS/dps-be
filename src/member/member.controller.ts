@@ -69,6 +69,7 @@ export class MemberController {
   paginate(@Body() paginateRequestDto: PaginateRequestDto) {
     return this.memberService.paginate(paginateRequestDto);
   }
+
   @Post('change-password/:id')
   changePassword(
     @Body() changePasswordDto: ChangePasswordDto,

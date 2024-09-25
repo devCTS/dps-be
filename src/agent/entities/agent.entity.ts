@@ -1,4 +1,5 @@
 import { IsNotEmpty, IsNumber } from 'class-validator';
+import { AgentReferral } from 'src/agent-referral/entities/agent-referral.entity';
 import { Identity } from 'src/identity/entities/identity.entity';
 import {
   Entity,
@@ -9,6 +10,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToOne,
+  OneToMany,
 } from 'typeorm';
 
 @Entity()
@@ -47,9 +49,17 @@ export class Agent {
   @Column({ default: 50000 })
   maxWithdrawalAmount: number;
 
-  @CreateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
+  @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
+  @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
+
+  // Referred any other
+  @OneToMany(() => AgentReferral, (referral) => referral.agent)
+  referred: AgentReferral;
+
+  // Used referrel code of another agent
+  @OneToOne(() => AgentReferral, (referral) => referral.referredAgent)
+  agentReferral: AgentReferral;
 }
