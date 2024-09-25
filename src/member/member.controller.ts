@@ -28,6 +28,8 @@ export class MemberController {
     private identityService: IdentityService,
   ) {}
 
+  // @Roles(Role.MEMBER)
+  // @UseGuards(JwtGuard, RolesGuard)
   @Post()
   create(@Body() createMemberDto: CreateMemberDto) {
     return this.memberService.create(createMemberDto);
