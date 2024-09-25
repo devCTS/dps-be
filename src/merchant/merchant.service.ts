@@ -291,7 +291,7 @@ export class MerchantService {
   async remove(id: number) {
     const merchant = await this.merchantRepository.findOne({
       where: { id: id },
-      relations: ['identity'], // Ensure you load the identity relation
+      relations: ['identity', 'submerchants'], // Ensure you load the identity relation
     });
 
     if (!merchant) throw new NotFoundException();
