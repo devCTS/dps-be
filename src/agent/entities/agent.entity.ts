@@ -1,3 +1,4 @@
+import { IsNotEmpty, IsNumber } from 'class-validator';
 import { Identity } from 'src/identity/entities/identity.entity';
 import {
   Entity,
@@ -33,6 +34,15 @@ export class Agent {
 
   @Column({ nullable: true })
   phone: string;
+
+  @Column({ default: '0.3' })
+  withdrawalServiceRate: string;
+
+  @Column({ default: 1000 })
+  minWithdrawalAmount: number;
+
+  @Column({ default: 50000 })
+  maxWithdrawalAmount: number;
 
   @CreateDateColumn({ type: 'timestamp' }) // or 'timestamp' without time zone
   createdAt: Date;
