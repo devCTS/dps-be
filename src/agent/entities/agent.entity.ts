@@ -1,3 +1,4 @@
+import { IsNotEmpty, IsNumber } from 'class-validator';
 import { AgentReferral } from 'src/agent-referral/entities/agent-referral.entity';
 import { Identity } from 'src/identity/entities/identity.entity';
 import {
@@ -35,6 +36,18 @@ export class Agent {
 
   @Column({ nullable: true })
   phone: string;
+
+  @Column()
+  withdrawalPassword: string;
+
+  @Column({ default: '0.3' })
+  withdrawalServiceRate: string;
+
+  @Column({ default: 1000 })
+  minWithdrawalAmount: number;
+
+  @Column({ default: 50000 })
+  maxWithdrawalAmount: number;
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;

@@ -22,6 +22,7 @@ import {
 import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { encryptPassword } from 'src/utils/utils';
 import { JwtService } from 'src/services/jwt/jwt.service';
+import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 
 @Injectable()
 export class SubMerchantService {
@@ -71,14 +72,15 @@ export class SubMerchantService {
   }
 
   async findOne(id: number): Promise<SubMerchantResponseDto> {
-    const result = await this.subMerchantRepository.findOne({
+    let result = await this.subMerchantRepository.findOne({
       where: { id },
-      relations: ['identity'],
+      relations: ['identity', 'merchant'],
     });
+    const businessName = result.merchant.businessName;
+    const merchantName = `${result.merchant.firstName} ${result.merchant.lastName}`;
 
-    if (!result) throw new NotFoundException();
-
-    return plainToInstance(SubMerchantResponseDto, result);
+    const data = plainToInstance(SubMerchantResponseDto, result);
+    return { ...data, businessName, merchantName };
   }
 
   async update(
@@ -217,5 +219,19 @@ export class SubMerchantService {
     }
 
     return profile;
+  }
+
+  async changePassword(changePasswordDto: ChangePasswordDto, id: number) {
+    const subMerchantData = await this.subMerchantRepository.findOne({
+      where: { id },
+      relations: ['identity'],
+    });
+
+    if (!subMerchantData) throw new NotFoundException();
+
+    return this.identityService.changePassword(
+      changePasswordDto,
+      subMerchantData.identity.id,
+    );
   }
 }

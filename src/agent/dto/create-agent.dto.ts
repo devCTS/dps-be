@@ -2,6 +2,7 @@ import {
   IsBoolean,
   IsEmail,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
 } from 'class-validator';
@@ -35,6 +36,24 @@ export class CreateAgentDto {
   @IsBoolean()
   @IsNotEmpty()
   enabled: boolean;
+
+  @IsString()
+  @IsNotEmpty()
+  @IsValidPassword()
+  withdrawalPassword: string;
+
+  // TO BE USED LATER
+  // @IsNumber()
+  // @IsNotEmpty()
+  // withdrawalServiceRate: number;
+
+  // @IsNumber()
+  // @IsNotEmpty()
+  // minWithdrawalAmount: number;
+
+  // @IsNumber()
+  // @IsNotEmpty()
+  // maxWithdrawalAmount: number;
 
   @IsString()
   @IsOptional()

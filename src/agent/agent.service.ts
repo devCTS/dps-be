@@ -19,6 +19,7 @@ import {
 } from 'src/utils/dtos/paginate.dto';
 import { encryptPassword } from 'src/utils/utils';
 import { JwtService } from 'src/services/jwt/jwt.service';
+import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 import { AgentReferralService } from 'src/agent-referral/agent-referral.service';
 
 @Injectable()
@@ -33,8 +34,15 @@ export class AgentService {
 
   // Create Agent
   async create(createAgentDto: CreateAgentDto) {
-    const { email, password, firstName, lastName, phone, referralCode } =
-      createAgentDto;
+    const {
+      email,
+      password,
+      firstName,
+      lastName,
+      phone,
+      withdrawalPassword,
+      referralCode,
+    } = createAgentDto;
 
     if (referralCode) {
       const isCodeValid = await this.agentReferralService.validateReferralCode(
@@ -56,6 +64,7 @@ export class AgentService {
       firstName,
       lastName,
       phone,
+      withdrawalPassword: this.jwtService.getHashPassword(withdrawalPassword),
     });
 
     const created = await this.agentRepository.save(agent);
@@ -224,5 +233,47 @@ export class AgentService {
       data: dtos,
       total,
     };
+  }
+
+  async changePassword(changePasswordDto: ChangePasswordDto, id: number) {
+    const agentData = await this.agentRepository.findOne({
+      where: { id },
+      relations: ['identity'],
+    });
+
+    if (!agentData) throw new NotFoundException();
+
+    return this.identityService.changePassword(
+      changePasswordDto,
+      agentData.identity.id,
+    );
+  }
+
+  async changeWithdrawalPassword(
+    changePasswordDto: ChangePasswordDto,
+    id: number,
+  ) {
+    const agentData = await this.agentRepository.findOne({
+      where: { id },
+    });
+
+    if (!agentData) throw new NotFoundException();
+
+    const isPasswordCorrect = this.jwtService.isHashedPasswordVerified(
+      changePasswordDto.oldPassword,
+      agentData.withdrawalPassword,
+    );
+
+    if (!isPasswordCorrect) throw new UnauthorizedException();
+
+    const newHashedPassword = this.jwtService.getHashPassword(
+      changePasswordDto.newPassword,
+    );
+
+    await this.agentRepository.update(id, {
+      withdrawalPassword: newHashedPassword,
+    });
+
+    return { message: 'Withdrawal password changed.' };
   }
 }

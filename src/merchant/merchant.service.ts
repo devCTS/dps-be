@@ -29,6 +29,7 @@ import {
   PaginateRequestDto,
 } from 'src/utils/dtos/paginate.dto';
 import { encryptPassword } from 'src/utils/utils';
+import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 import { AgentReferralService } from 'src/agent-referral/agent-referral.service';
 
 @Injectable()
@@ -102,6 +103,9 @@ export class MerchantService {
       'MERCHANT',
     );
 
+    const hashedWithdrawalPassword =
+      this.jwtService.getHashPassword(withdrawalPassword);
+
     // Create and save the Admin
     const merchant = this.merchantRepository.create({
       identity,
@@ -125,7 +129,7 @@ export class MerchantService {
       referralCode,
       payinMode,
       integrationId: '11',
-      withdrawalPassword: this.jwtService.getHashPassword(password),
+      withdrawalPassword: hashedWithdrawalPassword,
     });
 
     const createdMerchant = await this.merchantRepository.save(merchant);
@@ -308,7 +312,7 @@ export class MerchantService {
   async remove(id: number) {
     const merchant = await this.merchantRepository.findOne({
       where: { id: id },
-      relations: ['identity'], // Ensure you load the identity relation
+      relations: ['identity', 'submerchants'], // Ensure you load the identity relation
     });
 
     if (!merchant) throw new NotFoundException();
@@ -500,5 +504,47 @@ export class MerchantService {
     }
 
     return profile;
+  }
+
+  async changePassword(changePasswordDto: ChangePasswordDto, id: number) {
+    const merchantData = await this.merchantRepository.findOne({
+      where: { id },
+      relations: ['identity'],
+    });
+
+    if (!merchantData) throw new NotFoundException();
+
+    return this.identityService.changePassword(
+      changePasswordDto,
+      merchantData.identity.id,
+    );
+  }
+
+  async changeWithdrawalPassword(
+    changePasswordDto: ChangePasswordDto,
+    id: number,
+  ) {
+    const merchantData = await this.merchantRepository.findOne({
+      where: { id },
+    });
+
+    if (!merchantData) throw new NotFoundException();
+
+    const isPasswordCorrect = this.jwtService.isHashedPasswordVerified(
+      changePasswordDto.oldPassword,
+      merchantData.withdrawalPassword,
+    );
+
+    if (!isPasswordCorrect) throw new UnauthorizedException();
+
+    const newHashedPassword = this.jwtService.getHashPassword(
+      changePasswordDto.newPassword,
+    );
+
+    await this.merchantRepository.update(id, {
+      withdrawalPassword: newHashedPassword,
+    });
+
+    return { message: 'Withdrawal password changed.' };
   }
 }

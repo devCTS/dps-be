@@ -15,11 +15,15 @@ export class Submerchant {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Merchant, (merchant) => merchant.submerchants)
+  @ManyToOne(() => Merchant, (merchant) => merchant.submerchants, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'merchant_id' })
   merchant: Merchant;
 
-  @ManyToOne(() => Identity, (identity) => identity.submerchants)
+  @ManyToOne(() => Identity, (identity) => identity.submerchants, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'identity_id' })
   identity: Identity;
 

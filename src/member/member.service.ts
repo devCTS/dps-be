@@ -20,6 +20,7 @@ import {
 } from 'src/utils/dtos/paginate.dto';
 import { ChannelService } from 'src/channel/channel.service';
 import { JwtService } from 'src/services/jwt/jwt.service';
+import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 import { MemberReferralService } from 'src/member-referral/member-referral.service';
 
 @Injectable()
@@ -320,5 +321,19 @@ export class MemberService {
     }
 
     return profile;
+  }
+
+  async changePassword(changePasswordDto: ChangePasswordDto, id: number) {
+    const membaeData = await this.memberRepository.findOne({
+      where: { id },
+      relations: ['identity'],
+    });
+
+    if (!membaeData) throw new NotFoundException();
+
+    return this.identityService.changePassword(
+      changePasswordDto,
+      membaeData.identity.id,
+    );
   }
 }

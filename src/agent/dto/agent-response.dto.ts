@@ -37,4 +37,13 @@ export class AgentResponseDto {
 
   @Exclude()
   identity: Identity;
+
+  @Expose()
+  withdrawalServiceRate: string;
+
+  @Expose()
+  minWithdrawalAmount: number;
+
+  @Expose()
+  maxWithdrawalAmount: number;
 }
