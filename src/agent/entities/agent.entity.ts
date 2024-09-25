@@ -35,6 +35,9 @@ export class Agent {
   @Column({ nullable: true })
   phone: string;
 
+  @Column()
+  withdrawalPassword: string;
+
   @Column({ default: '0.3' })
   withdrawalServiceRate: string;
 

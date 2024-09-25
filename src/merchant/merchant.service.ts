@@ -86,11 +86,15 @@ export class MerchantService {
       amountRanges,
       ratios,
     } = createMerchantDto;
+
     const identity = await this.identityService.create(
       email,
       password,
       'MERCHANT',
     );
+
+    const hashedWithdrawalPassword =
+      this.jwtService.getHashPassword(withdrawalPassword);
 
     // Create and save the Admin
     const merchant = this.merchantRepository.create({
@@ -115,7 +119,7 @@ export class MerchantService {
       referralCode,
       payinMode,
       integrationId: '11',
-      withdrawalPassword: this.jwtService.getHashPassword(password),
+      withdrawalPassword: hashedWithdrawalPassword,
     });
 
     const createdMerchant = await this.merchantRepository.save(merchant);
@@ -497,5 +501,33 @@ export class MerchantService {
       changePasswordDto,
       merchantData.identity.id,
     );
+  }
+
+  async changeWithdrawalPassword(
+    changePasswordDto: ChangePasswordDto,
+    id: number,
+  ) {
+    const merchantData = await this.merchantRepository.findOne({
+      where: { id },
+    });
+
+    if (!merchantData) throw new NotFoundException();
+
+    const isPasswordCorrect = this.jwtService.isHashedPasswordVerified(
+      changePasswordDto.oldPassword,
+      merchantData.withdrawalPassword,
+    );
+
+    if (!isPasswordCorrect) throw new UnauthorizedException();
+
+    const newHashedPassword = this.jwtService.getHashPassword(
+      changePasswordDto.newPassword,
+    );
+
+    await this.merchantRepository.update(id, {
+      withdrawalPassword: newHashedPassword,
+    });
+
+    return { message: 'Withdrawal password changed.' };
   }
 }

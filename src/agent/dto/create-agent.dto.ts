@@ -37,6 +37,11 @@ export class CreateAgentDto {
   @IsNotEmpty()
   enabled: boolean;
 
+  @IsString()
+  @IsNotEmpty()
+  @IsValidPassword()
+  withdrawalPassword: string;
+
   // TO BE USED LATER
   // @IsNumber()
   // @IsNotEmpty()

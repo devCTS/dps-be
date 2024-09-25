@@ -67,4 +67,12 @@ export class MerchantController {
   ) {
     return this.merchantService.changePassword(changePasswordDto, id);
   }
+
+  @Post('change-withdrawal-password/:id')
+  changeWithdrawalPassword(
+    @Body() changePasswordDto: ChangePasswordDto,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.merchantService.changeWithdrawalPassword(changePasswordDto, id);
+  }
 }

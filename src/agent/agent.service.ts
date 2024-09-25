@@ -32,7 +32,8 @@ export class AgentService {
 
   // Create Agent
   async create(createAgentDto: CreateAgentDto) {
-    const { email, password, firstName, lastName, phone } = createAgentDto;
+    const { email, password, firstName, lastName, phone, withdrawalPassword } =
+      createAgentDto;
 
     const identity = await this.identityService.create(
       email,
@@ -46,6 +47,7 @@ export class AgentService {
       firstName,
       lastName,
       phone,
+      withdrawalPassword: this.jwtService.getHashPassword(withdrawalPassword),
     });
 
     const created = await this.agentRepository.save(agent);
@@ -221,5 +223,33 @@ export class AgentService {
       changePasswordDto,
       agentData.identity.id,
     );
+  }
+
+  async changeWithdrawalPassword(
+    changePasswordDto: ChangePasswordDto,
+    id: number,
+  ) {
+    const agentData = await this.agentRepository.findOne({
+      where: { id },
+    });
+
+    if (!agentData) throw new NotFoundException();
+
+    const isPasswordCorrect = this.jwtService.isHashedPasswordVerified(
+      changePasswordDto.oldPassword,
+      agentData.withdrawalPassword,
+    );
+
+    if (!isPasswordCorrect) throw new UnauthorizedException();
+
+    const newHashedPassword = this.jwtService.getHashPassword(
+      changePasswordDto.newPassword,
+    );
+
+    await this.agentRepository.update(id, {
+      withdrawalPassword: newHashedPassword,
+    });
+
+    return { message: 'Withdrawal password changed.' };
   }
 }
