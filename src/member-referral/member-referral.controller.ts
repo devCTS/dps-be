@@ -26,6 +26,11 @@ export class MemberReferralController {
     return this.memberReferralService.findAll();
   }
 
+  @Get('/tree')
+  getReferralTree() {
+    return this.memberReferralService.getReferralTree();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.memberReferralService.findOne(+id);
@@ -52,5 +57,10 @@ export class MemberReferralController {
   @Post('paginate')
   paginate(@Body() paginateRequestDto: PaginateRequestDto) {
     return this.memberReferralService.paginate(paginateRequestDto);
+  }
+
+  @Post('used-codes/paginate')
+  paginateUsedCodes(@Body() paginateRequestDto: PaginateRequestDto) {
+    return this.memberReferralService.paginate(paginateRequestDto, true);
   }
 }

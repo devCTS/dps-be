@@ -26,6 +26,11 @@ export class AgentReferralController {
     return this.agentReferralService.findAll();
   }
 
+  @Get('/tree')
+  getReferralTree() {
+    return this.agentReferralService.getReferralTree();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.agentReferralService.findOne(+id);
@@ -52,5 +57,10 @@ export class AgentReferralController {
   @Post('paginate')
   paginate(@Body() paginateRequestDto: PaginateRequestDto) {
     return this.agentReferralService.paginate(paginateRequestDto);
+  }
+
+  @Post('used-codes/paginate')
+  paginateUsedCodes(@Body() paginateRequestDto: PaginateRequestDto) {
+    return this.agentReferralService.paginate(paginateRequestDto, true);
   }
 }

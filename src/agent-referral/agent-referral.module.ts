@@ -9,5 +9,6 @@ import { Agent } from 'src/agent/entities/agent.entity';
   imports: [TypeOrmModule.forFeature([AgentReferral, Agent])],
   controllers: [AgentReferralController],
   providers: [AgentReferralService],
+  exports: [AgentReferralService],
 })
 export class AgentReferralModule {}

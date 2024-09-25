@@ -1,4 +1,10 @@
-import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  HttpStatus,
+  Injectable,
+  InternalServerErrorException,
+  NotAcceptableException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateMemberReferralDto } from './dto/create-member-referral.dto';
 import { UpdateMemberReferralDto } from './dto/update-member-referral.dto';
 import {
@@ -37,7 +43,7 @@ export class MemberReferralService {
 
     await this.memberReferralRepository.save({
       referralCode,
-      memberId,
+      member,
       payinCommission,
       payoutCommission,
       topupCommission,
@@ -47,6 +53,22 @@ export class MemberReferralService {
     });
 
     return HttpStatus.OK;
+  }
+
+  async validateReferralCode(referralCode) {
+    const isValidCode = await this.memberReferralRepository.findOne({
+      where: {
+        referralCode,
+        status: 'approved',
+      },
+    });
+
+    if (!isValidCode)
+      throw new NotAcceptableException(
+        'This referral code is invalid or not acceptable!',
+      );
+
+    return true;
   }
 
   async findAll() {
@@ -84,6 +106,28 @@ export class MemberReferralService {
     return HttpStatus.OK;
   }
 
+  async updateFromReferralCode({ referralCode, referredMember = null }) {
+    const memberReferral = await this.memberReferralRepository.findOne({
+      where: { referralCode },
+    });
+
+    if (!memberReferral)
+      throw new NotFoundException('Member Referral not found!');
+
+    const updated = await this.memberReferralRepository.update(
+      memberReferral.id,
+      {
+        status: 'utilized',
+        referredMember,
+      },
+    );
+
+    if (!updated)
+      throw new InternalServerErrorException(
+        'Failed to update referrals entity!',
+      );
+  }
+
   async remove(id: number) {
     const memberReferral = await this.memberReferralRepository.findOne({
       where: {
@@ -108,10 +152,15 @@ export class MemberReferralService {
     return HttpStatus.OK;
   }
 
-  async paginate(paginateDto: PaginateRequestDto) {
-    const { search, pageSize, pageNumber, startDate, endDate } = paginateDto;
+  async paginate(paginateDto: PaginateRequestDto, showUsedCodes = false) {
+    const { search, pageSize, pageNumber, startDate, endDate, userId } =
+      paginateDto;
 
     const whereConditions: any = {};
+
+    if (showUsedCodes) whereConditions.status = 'utilized';
+
+    if (userId) whereConditions.member = userId;
 
     if (search) whereConditions.referralCode = ILike(`%${search}%`);
 
@@ -126,7 +175,12 @@ export class MemberReferralService {
 
     const [rows, total] = await this.memberReferralRepository.findAndCount({
       where: whereConditions,
-      relations: ['member', 'referredMember', 'member.identity'],
+      relations: [
+        'member',
+        'referredMember',
+        'member.identity',
+        'referredMember.identity',
+      ],
       skip,
       take,
     });
@@ -142,6 +196,67 @@ export class MemberReferralService {
       totalPages: Math.ceil(total / pageSize),
       startRecord,
       endRecord,
+    };
+  }
+
+  // Method to fetch and build the referral tree starting from the root member
+  async getReferralTree(): Promise<any> {
+    const rootReferral = await this.memberReferralRepository.findOne({
+      where: {
+        referralCode: null,
+        status: 'utilized',
+      },
+      relations: ['member', 'member.identity'],
+    });
+
+    if (!rootReferral) throw new NotFoundException('No root member found');
+
+    const rootMember = rootReferral.member;
+    return this.buildTree(rootMember);
+  }
+
+  // Recursive method to build the tree structure
+  private async buildTree(member: Member): Promise<any> {
+    const referrals = await this.memberReferralRepository.find({
+      where: {
+        member: { id: member.id },
+        status: 'utilized',
+      },
+      relations: ['referredMember', 'referredMember.identity'],
+    });
+
+    const children = await Promise.all(
+      referrals.map(async (referral) => {
+        if (referral.referredMember) {
+          const childTree = await this.buildTree(referral.referredMember);
+
+          return {
+            payinCommission: referral.payinCommission,
+            payoutCommission: referral.payoutCommission,
+            topupCommission: referral.topupCommission,
+            referredMemberPayinCommission:
+              referral.referredMemberPayinCommission,
+            referredMemberPayoutCommission:
+              referral.referredMemberPayoutCommission,
+            referredMemberTopupCommission:
+              referral.referredMemberTopupCommission,
+            ...childTree,
+          };
+        }
+        return null;
+      }),
+    );
+
+    return {
+      id: member.id,
+      firstName: member.firstName,
+      lastName: member.lastName,
+      referralCode: member.referralCode,
+      email: member.identity.email,
+      payinCommission: member.payinCommissionRate,
+      payoutCommission: member.payoutCommissionRate,
+      topupCommission: member.topupCommissionRate,
+      children: children,
     };
   }
 }

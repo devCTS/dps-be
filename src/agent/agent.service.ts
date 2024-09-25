@@ -19,6 +19,7 @@ import {
 } from 'src/utils/dtos/paginate.dto';
 import { encryptPassword } from 'src/utils/utils';
 import { JwtService } from 'src/services/jwt/jwt.service';
+import { AgentReferralService } from 'src/agent-referral/agent-referral.service';
 
 @Injectable()
 export class AgentService {
@@ -27,11 +28,21 @@ export class AgentService {
     private readonly agentRepository: Repository<Agent>,
     private identityService: IdentityService,
     private jwtService: JwtService,
+    private agentReferralService: AgentReferralService,
   ) {}
 
   // Create Agent
   async create(createAgentDto: CreateAgentDto) {
-    const { email, password, firstName, lastName, phone } = createAgentDto;
+    const { email, password, firstName, lastName, phone, referralCode } =
+      createAgentDto;
+
+    if (referralCode) {
+      const isCodeValid = await this.agentReferralService.validateReferralCode(
+        referralCode,
+        'agent',
+      );
+      if (!isCodeValid) return;
+    }
 
     const identity = await this.identityService.create(
       email,
@@ -48,6 +59,13 @@ export class AgentService {
     });
 
     const created = await this.agentRepository.save(agent);
+
+    // Update Agent Referrals
+    if (referralCode)
+      await this.agentReferralService.updateFromReferralCode({
+        referralCode,
+        referredAgent: created,
+      });
 
     return plainToInstance(AgentResponseDto, created);
   }

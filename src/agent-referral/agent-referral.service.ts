@@ -1,6 +1,7 @@
 import {
   HttpStatus,
   Injectable,
+  InternalServerErrorException,
   NotAcceptableException,
   NotFoundException,
 } from '@nestjs/common';
@@ -58,6 +59,23 @@ export class AgentReferralService {
     return HttpStatus.CREATED;
   }
 
+  async validateReferralCode(referralCode, agentType) {
+    const isValidCode = await this.agentReferralRepository.findOne({
+      where: {
+        referralCode,
+        agentType,
+        status: 'approved',
+      },
+    });
+
+    if (!isValidCode)
+      throw new NotAcceptableException(
+        'This referral code is invalid or not acceptable!',
+      );
+
+    return true;
+  }
+
   async findAll() {
     const results = await this.agentReferralRepository.find({
       relations: ['agent'],
@@ -89,6 +107,33 @@ export class AgentReferralService {
     return HttpStatus.OK;
   }
 
+  async updateFromReferralCode({
+    referralCode,
+    referredMerchant = null,
+    referredAgent = null,
+  }) {
+    const agentReferral = await this.agentReferralRepository.findOne({
+      where: { referralCode },
+    });
+
+    if (!agentReferral)
+      throw new NotFoundException('Agent Referral not found!');
+
+    const updated = await this.agentReferralRepository.update(
+      agentReferral.id,
+      {
+        status: 'utilized',
+        referredMerchant,
+        referredAgent,
+      },
+    );
+
+    if (!updated)
+      throw new InternalServerErrorException(
+        'Failed to update referrals entity!',
+      );
+  }
+
   async remove(id: number) {
     const agentReferral = await this.agentReferralRepository.findOneBy({ id });
 
@@ -108,10 +153,15 @@ export class AgentReferralService {
     return HttpStatus.OK;
   }
 
-  async paginate(paginateDto: PaginateRequestDto) {
-    const { search, pageSize, pageNumber, startDate, endDate } = paginateDto;
+  async paginate(paginateDto: PaginateRequestDto, showUsedCodes = false) {
+    const { search, pageSize, pageNumber, startDate, endDate, userId } =
+      paginateDto;
 
     const whereConditions: any = {};
+
+    if (showUsedCodes) whereConditions.status = 'utilized';
+
+    if (userId) whereConditions.agent = userId;
 
     if (search) whereConditions.referralCode = ILike(`%${search}%`);
 
@@ -131,6 +181,8 @@ export class AgentReferralService {
         'referredAgent',
         'referredMerchant',
         'agent.identity',
+        'referredAgent.identity',
+        'referredMerchant.identity',
       ],
       skip,
       take,
@@ -147,6 +199,74 @@ export class AgentReferralService {
       startRecord,
       endRecord,
       data: rows,
+    };
+  }
+
+  // Method to fetch and build the referral tree starting from the root member
+  async getReferralTree(): Promise<any> {
+    const rootReferral = await this.agentReferralRepository.findOne({
+      where: {
+        referralCode: null,
+        status: 'utilized',
+      },
+      relations: ['agent', 'agent.identity'],
+    });
+
+    if (!rootReferral) throw new NotFoundException('No root agent found');
+
+    const rootAgent = rootReferral.agent;
+    return this.buildTree(rootAgent);
+  }
+
+  // Recursive method to build the tree structure
+  private async buildTree(agent: any): Promise<any> {
+    const referrals = await this.agentReferralRepository.find({
+      where: {
+        agent: { id: agent.id },
+        status: 'utilized',
+      },
+      relations: [
+        'agent',
+        'agent.identity',
+        'referredAgent',
+        'referredAgent.identity',
+        'referredMerchant',
+        'referredMerchant.identity',
+      ],
+    });
+
+    const children = await Promise.all(
+      referrals.map(async (referral) => {
+        if (referral.referredAgent) {
+          const childTree = await this.buildTree(referral.referredAgent);
+
+          return {
+            payinCommission: referral.payinCommission,
+            payoutCommission: referral.payoutCommission,
+            ...childTree,
+          };
+        } else if (referral.referredMerchant) {
+          const childTree = await this.buildTree(referral.referredMerchant);
+          return {
+            payinCommission: referral.payinCommission,
+            payoutCommission: referral.payoutCommission,
+            merchantPayinServiceRate: referral.merchantPayinServiceRate,
+            merchantPayoutServiceRate: referral.merchantPayoutServiceRate,
+            ...childTree,
+          };
+        } else {
+          return null;
+        }
+      }),
+    );
+
+    return {
+      id: agent.id,
+      firstName: agent.firstName,
+      lastName: agent.lastName,
+      referralCode: agent.referralCode,
+      email: agent.identity.email,
+      children: children,
     };
   }
 }

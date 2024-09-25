@@ -29,6 +29,7 @@ import {
   PaginateRequestDto,
 } from 'src/utils/dtos/paginate.dto';
 import { encryptPassword } from 'src/utils/utils';
+import { AgentReferralService } from 'src/agent-referral/agent-referral.service';
 
 @Injectable()
 export class MerchantService {
@@ -51,6 +52,7 @@ export class MerchantService {
     private readonly identityService: IdentityService,
     private readonly channelService: ChannelService,
     private readonly jwtService: JwtService,
+    private readonly agentReferralService: AgentReferralService,
   ) {}
 
   async create(createMerchantDto: CreateMerchantDto) {
@@ -85,6 +87,15 @@ export class MerchantService {
       amountRanges,
       ratios,
     } = createMerchantDto;
+
+    if (referralCode) {
+      const isCodeValid = await this.agentReferralService.validateReferralCode(
+        referralCode,
+        'merchant',
+      );
+      if (!isCodeValid) return;
+    }
+
     const identity = await this.identityService.create(
       email,
       password,
@@ -151,6 +162,13 @@ export class MerchantService {
       createdMerchant.identity,
     );
 
+    // Update Agent Referrals
+    if (referralCode)
+      await this.agentReferralService.updateFromReferralCode({
+        referralCode,
+        referredMerchant: createdMerchant,
+      });
+
     return HttpStatus.OK;
   }
 
@@ -215,9 +233,9 @@ export class MerchantService {
     delete updateDto.payinChannels;
     delete updateDto.payoutChannels;
     delete updateDto.ipAddresses;
-    delete updateDto.numberOfRangesOrRatio,
-      delete updateDto.amountRanges,
-      delete updateDto.ratios;
+    delete updateDto.numberOfRangesOrRatio;
+    delete updateDto.amountRanges;
+    delete updateDto.ratios;
 
     let result = null;
 

@@ -19,8 +19,8 @@ import {
   parseStartDate,
 } from 'src/utils/dtos/paginate.dto';
 import { ChannelService } from 'src/channel/channel.service';
-import { encryptPassword } from 'src/utils/utils';
 import { JwtService } from 'src/services/jwt/jwt.service';
+import { MemberReferralService } from 'src/member-referral/member-referral.service';
 
 @Injectable()
 export class MemberService {
@@ -30,6 +30,7 @@ export class MemberService {
     private readonly identityService: IdentityService,
     private readonly channelService: ChannelService,
     private readonly jwtService: JwtService,
+    private readonly memberReferralService: MemberReferralService,
   ) {}
 
   async create(createMemberDto: CreateMemberDto) {
@@ -49,6 +50,14 @@ export class MemberService {
       referralCode,
       channelProfile,
     } = createMemberDto;
+
+    if (referralCode) {
+      const isCodeValid =
+        await this.memberReferralService.validateReferralCode(referralCode);
+
+      if (!isCodeValid) return;
+    }
+
     const identity = await this.identityService.create(
       email,
       password,
@@ -79,10 +88,26 @@ export class MemberService {
       createdMember.identity,
     );
 
+    // Update Member Referrals
+    if (referralCode)
+      await this.memberReferralService.updateFromReferralCode({
+        referralCode,
+        referredMember: createdMember,
+      });
+
     return HttpStatus.OK;
   }
 
   async registerViaSignup(registerDto: RegisterDto) {
+    const { referralCode } = registerDto;
+
+    if (referralCode) {
+      const isCodeValid =
+        await this.memberReferralService.validateReferralCode(referralCode);
+
+      if (!isCodeValid) return;
+    }
+
     const verifiedContext =
       await this.identityService.isMemberVerifedForRegister(registerDto.email);
 
@@ -107,7 +132,15 @@ export class MemberService {
         singlePayoutUpperLimit: 1000000,
         topupCommissionRate: 4,
       });
+
       const createdMember = await this.memberRepository.save(member);
+
+      // Update Member Referrals
+      if (referralCode)
+        await this.memberReferralService.updateFromReferralCode({
+          referralCode,
+          referredMember: createdMember,
+        });
 
       return {
         token: await this.identityService.signin({

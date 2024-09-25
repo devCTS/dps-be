@@ -9,5 +9,6 @@ import { Member } from 'src/member/entities/member.entity';
   imports: [TypeOrmModule.forFeature([MemberReferral, Member])],
   controllers: [MemberReferralController],
   providers: [MemberReferralService],
+  exports: [MemberReferralService],
 })
 export class MemberReferralModule {}
