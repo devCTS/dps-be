@@ -18,79 +18,86 @@ export class SystemConfig {
   id: number;
 
   // Gateways and Timeouts
-  @ManyToOne(() => Gateway, (gateway) => gateway.defaultPayinGateway)
+  @ManyToOne(() => Gateway, (gateway) => gateway.defaultPayinGateway, {
+    nullable: true,
+  })
   @JoinColumn({ name: 'default_payin_gateway_id' })
   defaultPayinGateway: Gateway;
 
-  @ManyToOne(() => Gateway, (gateway) => gateway.defaultPayoutGateway)
+  @ManyToOne(() => Gateway, (gateway) => gateway.defaultPayoutGateway, {
+    nullable: true,
+  })
   @JoinColumn({ name: 'default_payout_gateway_id' })
   defaultPayoutGateway: Gateway;
 
-  @ManyToOne(() => Gateway, (gateway) => gateway.defaultWithdrawalGateway)
+  @ManyToOne(() => Gateway, (gateway) => gateway.defaultWithdrawalGateway, {
+    nullable: true,
+  })
   @JoinColumn({ name: 'default_withdrawal_gateway_id' })
   defaultWithdrawalGateway: Gateway;
 
-  @Column()
+  @Column({ nullable: true })
   payinTimeout: number;
 
-  @Column()
+  @Column({ nullable: true })
   payoutTimeout: number;
 
-  @Column()
+  @Column({ nullable: true })
   currency: string;
 
   // Topup Configurations
-  @Column()
-  topupThreshold: string;
+  @Column({ nullable: true })
+  topupThreshold: number;
 
-  @Column({ type: 'float' })
+  @Column({ type: 'float', nullable: true })
   topupAmount: number;
 
   @OneToMany(
     () => ChannelProfileFilledField,
     (field) => field.defaultTopupChannels,
+    { nullable: true },
   )
   defaultTopupChannels: ChannelProfileFilledField[];
 
   // Member Defaults
-  @Column({ type: 'float' })
+  @Column({ type: 'float', nullable: true })
   payinCommissionRateForMember: number;
 
-  @Column({ type: 'float' })
+  @Column({ type: 'float', nullable: true })
   payoutCommissionRateForMember: number;
 
-  @Column({ type: 'float' })
+  @Column({ type: 'float', nullable: true })
   topupCommissionRateForMember: number;
 
-  @Column()
+  @Column({ nullable: true })
   minimumPayoutAmountForMember: number;
 
-  @Column()
+  @Column({ nullable: true })
   maximumPayoutAmountForMember: number;
 
-  @Column()
+  @Column({ nullable: true })
   maximumDailyPayoutAmountForMember: number;
 
   // Merchant Defaults
-  @Column({ type: 'float' })
+  @Column({ type: 'float', nullable: true })
   payinServiceRateForMerchant: number;
 
-  @Column({ type: 'float' })
+  @Column({ type: 'float', nullable: true })
   payoutServiceRateForMerchant: number;
 
-  @Column()
+  @Column({ nullable: true })
   minimumPayoutAmountForMerchant: number;
 
-  @Column()
+  @Column({ nullable: true })
   maximumPayoutAmountForMerchant: number;
 
-  @Column({ type: 'float' })
+  @Column({ type: 'float', nullable: true })
   withdrawalServiceRateForMerchant: number;
 
-  @Column()
+  @Column({ nullable: true })
   minimumWithdrawalAmountForMerchant: number;
 
-  @Column()
+  @Column({ nullable: true })
   maximumWithdrawalAmountForMerchant: number;
 
   @CreateDateColumn({ type: 'timestamp' })

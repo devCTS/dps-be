@@ -29,8 +29,8 @@ export class CreateSystemConfigDto {
   currency: string;
 
   // Topup Configurations
-  @IsString()
-  topupThreshold: string;
+  @IsNumber()
+  topupThreshold: number;
 
   @IsNumber()
   topupAmount: number;

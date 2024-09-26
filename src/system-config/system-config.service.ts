@@ -9,7 +9,6 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { SystemConfig } from './entities/system-config.entity';
-import { ChannelProfileFilledField } from 'src/channel/entities/channelProfileFilledField.entity';
 
 import { ChannelService } from 'src/channel/channel.service';
 import { Identity } from 'src/identity/entities/identity.entity';
@@ -21,7 +20,6 @@ import { UpdateTopupConfigDto } from './dto/update-topup-config.dto';
 import { UpdateMemberDefaultsDto } from './dto/update-member-defaults.dto';
 import { UpdateMerchantDefaultsDto } from './dto/update-merchant-defaults.dto';
 import { Gateway } from 'src/gateway/entities/gateway.entity';
-import { throwError } from 'rxjs';
 import { plainToInstance } from 'class-transformer';
 import { SystemConfigResponseDto } from './dto/system-config-response.dto';
 
@@ -154,7 +152,36 @@ export class SystemConfigService {
     } = updateGatewaysTimeoutsDto;
 
     const latestResult = await this.findLatest(false);
-    if (!latestResult) throw new NotFoundException('Latest Record not found!');
+
+    if (!latestResult) {
+      const payinGateway = await this.gatewayRepository.findOne({
+        where: { id: defaultPayinGateway },
+      });
+      if (!payinGateway)
+        throw new NotFoundException('Gateway for payins not found!');
+
+      const payoutGateway = await this.gatewayRepository.findOne({
+        where: { id: defaultPayoutGateway },
+      });
+      if (!payoutGateway)
+        throw new NotFoundException('Gateway for payouts not found!');
+
+      const withdrawalGateway = await this.gatewayRepository.findOne({
+        where: { id: defaultWithdrawalGateway },
+      });
+      if (!withdrawalGateway)
+        throw new NotFoundException('Gateway for withdrawals not found!');
+
+      await this.systemConfigRepository.save({
+        payinGateway,
+        payoutGateway,
+        withdrawalGateway,
+        payinTimeout,
+        payoutTimeout,
+      });
+
+      return HttpStatus.CREATED;
+    }
 
     delete latestResult.defaultPayinGateway;
     delete latestResult.defaultPayoutGateway;
@@ -184,7 +211,14 @@ export class SystemConfigService {
     if (!currency) throw new NotAcceptableException('Currency Invalid!');
 
     const latestResult = await this.findLatest();
-    if (!latestResult) throw new NotFoundException('Latest Record not found!');
+
+    if (!latestResult) {
+      await this.systemConfigRepository.save({
+        currency,
+      });
+
+      return HttpStatus.CREATED;
+    }
 
     delete latestResult.currency;
     delete latestResult.id;
@@ -213,7 +247,21 @@ export class SystemConfigService {
     if (!identity) throw new NotFoundException('Identity not found!');
 
     const latestResult = await this.findLatest();
-    if (!latestResult) throw new NotFoundException('Latest Record not found!');
+
+    if (!latestResult) {
+      const systemConfig = await this.systemConfigRepository.save({
+        topupAmount,
+        topupThreshold,
+      });
+
+      await this.channelService.processChannelFilledFields(
+        defaultTopupChannels,
+        identity,
+        systemConfig,
+      );
+
+      return HttpStatus.CREATED;
+    }
 
     delete latestResult.topupAmount;
     delete latestResult.topupThreshold;
@@ -251,7 +299,18 @@ export class SystemConfigService {
     } = updateMemberDefaultsDto;
 
     const latestResult = await this.findLatest();
-    if (!latestResult) throw new NotFoundException('Latest Record not found!');
+
+    if (!latestResult) {
+      await this.systemConfigRepository.save({
+        payinCommissionRateForMember,
+        payoutCommissionRateForMember,
+        topupCommissionRateForMember,
+        maximumDailyPayoutAmountForMember,
+        maximumPayoutAmountForMember,
+        minimumPayoutAmountForMember,
+      });
+      return HttpStatus.CREATED;
+    }
 
     delete latestResult.payinCommissionRateForMember;
     delete latestResult.payoutCommissionRateForMember;
@@ -292,7 +351,20 @@ export class SystemConfigService {
     } = updateMerchantDefaultsDto;
 
     const latestResult = await this.findLatest();
-    if (!latestResult) throw new NotFoundException('Latest Record not found!');
+
+    if (!latestResult) {
+      await this.systemConfigRepository.save({
+        payinServiceRateForMerchant,
+        payoutServiceRateForMerchant,
+        maximumPayoutAmountForMerchant,
+        maximumWithdrawalAmountForMerchant,
+        minimumPayoutAmountForMerchant,
+        minimumWithdrawalAmountForMerchant,
+        withdrawalServiceRateForMerchant,
+      });
+
+      return HttpStatus.CREATED;
+    }
 
     delete latestResult.payinServiceRateForMerchant;
     delete latestResult.payoutServiceRateForMerchant;

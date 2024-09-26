@@ -17,7 +17,6 @@ import {
   parseEndDate,
   parseStartDate,
 } from 'src/utils/dtos/paginate.dto';
-import { encryptPassword } from 'src/utils/utils';
 import { JwtService } from 'src/services/jwt/jwt.service';
 import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 import { AgentReferralService } from 'src/agent-referral/agent-referral.service';

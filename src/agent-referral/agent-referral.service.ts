@@ -119,6 +119,8 @@ export class AgentReferralService {
 
   async updateFromReferralCode({
     referralCode,
+    merchantPayinServiceRate = null,
+    merchantPayoutServiceRate = null,
     referredMerchant = null,
     referredAgent = null,
   }) {
@@ -129,13 +131,17 @@ export class AgentReferralService {
     if (!agentReferral)
       throw new NotFoundException('Agent Referral not found!');
 
+    const updateData = {
+      status: 'utilized',
+      ...(merchantPayinServiceRate !== null && { merchantPayinServiceRate }),
+      ...(merchantPayoutServiceRate !== null && { merchantPayoutServiceRate }),
+      referredAgent,
+      referredMerchant,
+    };
+
     const updated = await this.agentReferralRepository.update(
       agentReferral.id,
-      {
-        status: 'utilized',
-        referredMerchant,
-        referredAgent,
-      },
+      updateData,
     );
 
     if (!updated)

@@ -170,6 +170,8 @@ export class MerchantService {
     if (referralCode)
       await this.agentReferralService.updateFromReferralCode({
         referralCode,
+        merchantPayinServiceRate: payinServiceRate,
+        merchantPayoutServiceRate: payoutServiceRate,
         referredMerchant: createdMerchant,
       });
 

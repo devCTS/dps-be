@@ -93,6 +93,9 @@ export class MemberService {
     if (referralCode)
       await this.memberReferralService.updateFromReferralCode({
         referralCode,
+        referredMemberPayinCommission: payinCommissionRate,
+        referredMemberPayoutCommission: payoutCommissionRate,
+        referredMemberTopupCommission: topupCommissionRate,
         referredMember: createdMember,
       });
 

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Delete } from '@nestjs/common';
 import { SystemConfigService } from './system-config.service';
 import { CreateSystemConfigDto } from './dto/create-system-config.dto';
 import { UpdateGatewaysTimeoutsDto } from './dto/update-gateways-timeouts.dto';
