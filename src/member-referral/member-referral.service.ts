@@ -95,6 +95,16 @@ export class MemberReferralService {
     };
   }
 
+  async findOneByCode(referralCode: string) {
+    const memberReferral = await this.memberReferralRepository.findOneBy({
+      referralCode,
+    });
+
+    if (!memberReferral) throw new NotFoundException('Referral not found!');
+
+    return memberReferral;
+  }
+
   async update(id: number, updateMemberReferralDto: UpdateMemberReferralDto) {
     const memberReferral = await this.memberReferralRepository.findOneBy({
       id,

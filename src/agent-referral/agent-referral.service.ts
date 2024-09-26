@@ -97,6 +97,16 @@ export class AgentReferralService {
     };
   }
 
+  async findOneByCode(referralCode: string) {
+    const agentReferral = await this.agentReferralRepository.findOneBy({
+      referralCode,
+    });
+
+    if (!agentReferral) throw new NotFoundException('Referral not found!');
+
+    return agentReferral;
+  }
+
   async update(id: number, updateAgentReferralDto: UpdateAgentReferralDto) {
     const agentReferral = await this.agentReferralRepository.findOneBy({ id });
     if (!agentReferral) throw new NotFoundException();

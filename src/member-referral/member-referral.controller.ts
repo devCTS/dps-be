@@ -31,6 +31,11 @@ export class MemberReferralController {
     return this.memberReferralService.getReferralTree();
   }
 
+  @Get(':code')
+  findOneByCode(@Param('code') code: string) {
+    return this.memberReferralService.findOneByCode(code);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.memberReferralService.findOne(+id);
