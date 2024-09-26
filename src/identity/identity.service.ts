@@ -328,6 +328,7 @@ export class IdentityService {
 
   async updateIps(ips: string[], identity: Identity): Promise<IP[]> {
     // Step 1: Delete existing IPs for the given identity
+    if (!ips || ips.length < 1) return;
     await this.ipRepository.delete({ identity });
 
     // Step 2: Create and save new IP entities
