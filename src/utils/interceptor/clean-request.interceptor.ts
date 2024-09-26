@@ -28,6 +28,8 @@ export class CleanRequestInterceptor implements NestInterceptor {
     if (obj && typeof obj === 'object') {
       return Object.entries(obj).reduce((acc, [key, value]) => {
         if (
+          value === null ||
+          value === undefined ||
           value === '' ||
           (Array.isArray(value) && value.length === 0) ||
           (typeof value === 'object' && Object.keys(value).length === 0)
