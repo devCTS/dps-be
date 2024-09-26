@@ -72,6 +72,7 @@ export class CreateMemberDto {
   @Min(0)
   dailyTotalPayoutLimit: number;
 
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ChannelProfileDto)

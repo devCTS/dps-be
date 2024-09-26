@@ -110,6 +110,8 @@ export class ChannelService {
     systemConfig: SystemConfig = null,
   ) {
     // Delete previous
+    if (!channelProfile || channelProfile.length < 1) return;
+
     await this.filledFieldRepository.delete({ identity: { id: identity.id } });
 
     for (const channelProfileObj of channelProfile) {

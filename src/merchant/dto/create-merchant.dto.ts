@@ -143,6 +143,7 @@ export class CreateMerchantDto {
   @IsNumber({}, { each: true })
   payoutChannels: number[];
 
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ChannelProfileDto)
