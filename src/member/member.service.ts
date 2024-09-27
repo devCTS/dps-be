@@ -223,16 +223,16 @@ export class MemberService {
   }
 
   async remove(id: number) {
-    const admin = await this.memberRepository.findOne({
+    const member = await this.memberRepository.findOne({
       where: { id: id },
       relations: ['identity'], // Ensure you load the identity relation
     });
 
-    if (!admin) throw new NotFoundException();
+    if (!member) throw new NotFoundException();
 
-    this.channelService.deleteChannelProfileOfUser(admin.identity);
-    this.memberRepository.delete(id);
-    this.identityService.remove(admin.identity?.id);
+    await this.channelService.deleteChannelProfileOfUser(member.identity);
+    await this.memberRepository.delete(id);
+    await this.identityService.remove(member.identity?.id);
 
     return HttpStatus.OK;
   }
