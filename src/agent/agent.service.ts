@@ -63,18 +63,19 @@ export class AgentService {
       firstName,
       lastName,
       phone,
+      referralCode: referralCode ? referralCode : null,
       withdrawalPassword: this.jwtService.getHashPassword(withdrawalPassword),
     });
 
     const created = await this.agentRepository.save(agent);
 
     // Update Agent Referrals
-    if (referralCode)
+    if (referralCode) {
       await this.agentReferralService.updateFromReferralCode({
         referralCode,
         referredAgent: created,
       });
-
+    }
     return plainToInstance(AgentResponseDto, created);
   }
 
