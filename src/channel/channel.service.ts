@@ -98,10 +98,15 @@ export class ChannelService {
   }
 
   async update(id: number, updateDto: UpdateChannelDto): Promise<HttpStatus> {
-    delete updateDto.profileFields;
-    await this.channelRepository.findOneBy({ id });
-
-    return HttpStatus.OK;
+    try {
+      delete updateDto.profileFields;
+      await this.channelRepository.update(id, updateDto);
+      return HttpStatus.OK;
+    } catch (error) {
+      throw new ConflictException(
+        'Channel name and tag name should be unique.',
+      );
+    }
   }
 
   async processChannelFilledFields(
