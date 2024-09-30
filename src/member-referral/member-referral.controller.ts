@@ -31,7 +31,7 @@ export class MemberReferralController {
     return this.memberReferralService.getReferralTree();
   }
 
-  @Get(':code')
+  @Get('/referral/:code')
   findOneByCode(@Param('code') code: string) {
     return this.memberReferralService.findOneByCode(code);
   }
