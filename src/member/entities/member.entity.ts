@@ -42,7 +42,7 @@ export class Member {
   @Column({ type: 'float' })
   payoutCommissionRate: number;
 
-  @Column({ type: 'integer' })
+  @Column({ type: 'float' })
   topupCommissionRate: number;
 
   @Column({ type: 'integer' })
