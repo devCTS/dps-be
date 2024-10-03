@@ -165,6 +165,10 @@ export class AdminService {
       });
     }
 
+    if (paginateDto.userId) {
+      query.andWhere('admin.id != :userId', { userId: paginateDto.userId });
+    }
+
     // Handle pagination
     const skip = (pageNumber - 1) * pageSize;
     query.skip(skip).take(pageSize);

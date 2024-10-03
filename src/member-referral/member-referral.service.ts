@@ -187,7 +187,7 @@ export class MemberReferralService {
 
     if (showUsedCodes) whereConditions.status = 'utilized';
 
-    if (userId) whereConditions.member = userId;
+    if (userId) whereConditions.member = { id: userId };
 
     if (search) whereConditions.referralCode = ILike(`%${search}%`);
 
