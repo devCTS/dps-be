@@ -1,5 +1,3 @@
-import { ChannelProfileFilledField } from 'src/channel/entities/channelProfileFilledField.entity';
-import { PayinPayoutChannel } from 'src/channel/entities/payinPayoutChannel.entity';
 import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
 import {
   Entity,
@@ -67,10 +65,4 @@ export class Identity {
 
   @OneToMany(() => IP, (ip) => ip.identity)
   ips: IP[];
-
-  @OneToMany(() => ChannelProfileFilledField, (field) => field.identity)
-  channelProfileFilledFields: ChannelProfileFilledField[];
-
-  @OneToMany(() => PayinPayoutChannel, (channel) => channel.identity)
-  payinPayoutChannels: PayinPayoutChannel[];
 }

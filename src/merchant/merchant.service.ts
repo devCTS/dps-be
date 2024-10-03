@@ -14,7 +14,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Merchant } from './entities/merchant.entity';
 import { Repository, Between } from 'typeorm';
 import { IdentityService } from 'src/identity/identity.service';
-import { ChannelService } from 'src/channel/channel.service';
 import { JwtService } from 'src/services/jwt/jwt.service';
 import { plainToInstance } from 'class-transformer';
 import { MerchantResponseDto } from './dto/merchant-response.dto';
@@ -51,7 +50,6 @@ export class MerchantService {
     private readonly proportionalRepository: Repository<ProportionalPayinMode>,
 
     private readonly identityService: IdentityService,
-    private readonly channelService: ChannelService,
     private readonly jwtService: JwtService,
     private readonly agentReferralService: AgentReferralService,
   ) {}
@@ -139,17 +137,6 @@ export class MerchantService {
       await this.identityService.updateIps(ipAddresses, identity);
 
     // add payin and payout channels
-    await this.channelService.updatePayinPayoutChannels(
-      identity,
-      payinChannels,
-      'Payin',
-    );
-
-    await this.channelService.updatePayinPayoutChannels(
-      identity,
-      payoutChannels,
-      'Payout',
-    );
 
     // add payin mode
     await this.updatePayinModeDetails(
@@ -161,10 +148,6 @@ export class MerchantService {
     );
 
     // Process the channels and their profile fields
-    await this.channelService.processChannelFilledFields(
-      channelProfile,
-      createdMerchant.identity,
-    );
 
     // Update Agent Referrals
     if (referralCode)
@@ -282,17 +265,6 @@ export class MerchantService {
     // update ips
     await this.identityService.updateIps(ipAddresses, merchant.identity);
     // update payin and payout channels
-    await this.channelService.updatePayinPayoutChannels(
-      merchant.identity,
-      payinChannels,
-      'Payin',
-    );
-
-    await this.channelService.updatePayinPayoutChannels(
-      merchant.identity,
-      payoutChannels,
-      'Payout',
-    );
 
     // update payin mode
     await this.updatePayinModeDetails(
@@ -301,11 +273,6 @@ export class MerchantService {
       numberOfRangesOrRatio,
       amountRanges,
       ratios,
-    );
-
-    await this.channelService.processChannelFilledFields(
-      channelProfile,
-      merchant.identity,
     );
 
     return HttpStatus.OK;
@@ -322,11 +289,9 @@ export class MerchantService {
     // delete ips
     await this.identityService.deleteIps(merchant.identity);
     // delete payin and payout channels
-    await this.channelService.deletePayinPayoutChannels(merchant.identity);
     // delete payin mode
     await this.deletePayinMode(id);
 
-    await this.channelService.deleteChannelProfileOfUser(merchant.identity);
     await this.merchantRepository.delete(id);
     await this.identityService.remove(merchant.identity?.id);
 
