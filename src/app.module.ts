@@ -21,6 +21,7 @@ import { UploadModule } from './upload/upload.module';
 import { AgentModule } from './agent/agent.module';
 import { AgentReferralModule } from './agent-referral/agent-referral.module';
 import { MemberReferralModule } from './member-referral/member-referral.module';
+import { PaymentSystemModule } from './payment-system/payment-system.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { MemberReferralModule } from './member-referral/member-referral.module';
     AgentModule,
     AgentReferralModule,
     MemberReferralModule,
+    PaymentSystemModule,
   ],
   controllers: [AppController],
   providers: [
