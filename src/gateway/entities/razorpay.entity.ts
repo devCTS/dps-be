@@ -1,11 +1,5 @@
 import { Identity } from 'src/identity/entities/identity.entity';
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  OneToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Razorpay {
@@ -30,7 +24,6 @@ export class Razorpay {
   @Column()
   sandbox_key_secret: string;
 
-  @OneToOne(() => Identity)
-  @JoinColumn({ name: 'identity' })
+  @ManyToOne(() => Identity, (identity) => identity.razorpay)
   identity: Identity;
 }

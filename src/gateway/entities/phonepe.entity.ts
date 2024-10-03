@@ -3,6 +3,7 @@ import {
   Column,
   Entity,
   JoinColumn,
+  ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -36,7 +37,6 @@ export class Phonepe {
   @Column()
   sandbox_salt_index: string;
 
-  @OneToOne(() => Identity)
-  @JoinColumn({ name: 'identity' })
+  @ManyToOne(() => Identity, (identity) => identity.phonepe)
   identity: Identity;
 }

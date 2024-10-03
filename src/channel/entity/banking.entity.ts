@@ -3,6 +3,7 @@ import {
   Column,
   Entity,
   JoinColumn,
+  ManyToOne,
   OneToOne,
   PrimaryColumn,
   PrimaryGeneratedColumn,
@@ -25,7 +26,6 @@ export class Banking {
   @Column()
   beneficiary_name: string;
 
-  @OneToOne(() => Identity)
-  @JoinColumn({ name: 'identity' })
+  @ManyToOne(() => Identity, (identity) => identity.banking)
   identity: Identity;
 }

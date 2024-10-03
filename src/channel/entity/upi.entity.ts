@@ -3,6 +3,7 @@ import {
   Column,
   Entity,
   JoinColumn,
+  ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -18,7 +19,6 @@ export class Upi {
   @Column()
   mobile_number: string;
 
-  @OneToOne(() => Identity)
-  @JoinColumn({ name: 'identity' })
+  @ManyToOne(() => Identity, (identity) => identity.upi)
   identity: Identity;
 }
