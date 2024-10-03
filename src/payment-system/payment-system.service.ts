@@ -14,4 +14,8 @@ export class PaymentSystemService {
   async getPayPage(userId: string, amount: string) {
     return await this.razorpayService.getPayPage();
   }
+
+  async createRazorPayPayout(payoutDetails) {
+    return await this.razorpayService.createPayout(payoutDetails);
+  }
 }

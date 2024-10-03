@@ -20,4 +20,9 @@ export class PaymentSystemController {
   getPhonepePayPage(@Body() body: { userId: string; amount: string }) {
     return this.service.getPayPage(body.userId, body.amount);
   }
+
+  @Post('/payout')
+  createRazorPaypayout(@Body() body: any) {
+    return this.service.createRazorPayPayout(body);
+  }
 }
