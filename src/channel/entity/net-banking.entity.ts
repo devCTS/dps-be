@@ -1,16 +1,8 @@
 import { Identity } from 'src/identity/entities/identity.entity';
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToOne,
-  PrimaryColumn,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
-export class Banking {
+export class NetBanking {
   @PrimaryGeneratedColumn()
   id: number;
 

@@ -1,4 +1,4 @@
-import { Controller, Post, HttpStatus } from '@nestjs/common';
+import { Controller, Post, HttpStatus, Get } from '@nestjs/common';
 import { AdminService } from 'src/admin/admin.service';
 
 @Controller('load')
@@ -10,4 +10,7 @@ export class LoadController {
     this.adminService.loadSuperAdmin();
     return HttpStatus.OK;
   }
+
+  @Get()
+  loadConfig() {}
 }

@@ -1,7 +1,6 @@
 import { Type } from 'class-transformer';
 import {
   IsArray,
-  IsIn,
   IsNotEmpty,
   IsNumber,
   IsString,
@@ -28,3 +27,14 @@ export class ChannelProfileDto {
   @Type(() => FilledFieldDto)
   profileFields: FilledFieldDto[];
 }
+
+export class ChannelProfileDto2 {
+  upi: { upi_id: string; mobile: string } | null;
+  net_banking: {
+    bank_name: string;
+  } | null;
+  e_wallet: any;
+}
+
+// either a key should have all the necessary fields or completly null or undefined.
+// User can send any combination of field and blank keys for channels.

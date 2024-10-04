@@ -1,5 +1,4 @@
-import { Identity } from 'src/identity/entities/identity.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Razorpay {
@@ -23,7 +22,4 @@ export class Razorpay {
 
   @Column()
   sandbox_key_secret: string;
-
-  @ManyToOne(() => Identity, (identity) => identity.razorpay)
-  identity: Identity;
 }

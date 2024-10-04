@@ -1,13 +1,5 @@
-import { Identity } from 'src/identity/entities/identity.entity';
 import { ChannelName } from 'src/utils/enum/enum';
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Config {
@@ -25,7 +17,4 @@ export class Config {
 
   @Column({ type: 'enum', enum: ChannelName })
   name: ChannelName;
-
-  @ManyToOne(() => Identity, (identity) => identity.config)
-  identity: Identity;
 }

@@ -1,6 +1,5 @@
-import { Identity } from 'src/identity/entities/identity.entity';
 import { ChannelName, GatewayName, PaymentType } from 'src/utils/enum/enum';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class ChannelSettings {
@@ -27,7 +26,4 @@ export class ChannelSettings {
 
   @Column({ type: 'float' })
   upstream_fee: number;
-
-  @ManyToOne(() => Identity, (identity) => identity.channelSettings)
-  identity: Identity;
 }

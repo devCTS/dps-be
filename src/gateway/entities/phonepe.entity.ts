@@ -1,12 +1,4 @@
-import { Identity } from 'src/identity/entities/identity.entity';
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Phonepe {
@@ -36,7 +28,4 @@ export class Phonepe {
 
   @Column()
   sandbox_salt_index: string;
-
-  @ManyToOne(() => Identity, (identity) => identity.phonepe)
-  identity: Identity;
 }

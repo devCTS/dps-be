@@ -1,6 +1,6 @@
 export enum ChannelName {
   UPI = 'UPI',
-  BANKING = 'BANKING',
+  BANKING = 'NET_BANKING',
   E_WALLET = 'E_WALLET',
 }
 
