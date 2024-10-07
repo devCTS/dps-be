@@ -1,4 +1,10 @@
-import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   CreateRazorpayDto,
   UpdateRazorpayDto,
@@ -9,12 +15,19 @@ import { Razorpay } from './entities/razorpay.entity';
 import { Repository } from 'typeorm';
 import { CreatePhonepeDto, UpdatePhonepDto } from './dto/create-phonepe.dto';
 import { Phonepe } from './entities/phonepe.entity';
+import {
+  CreateChannelSettingsDto,
+  UpdateChannelSettingsDto,
+} from './dto/create-channel-settings.dto';
+import { ChannelSettings } from './entities/channel-settings.entity';
 
 @Injectable()
 export class GatewayService {
   constructor(
     @InjectRepository(Razorpay)
     private readonly razorpayRepository: Repository<Razorpay>,
+    @InjectRepository(ChannelSettings)
+    private readonly channelSettingsRepository: Repository<ChannelSettings>,
     @InjectRepository(Phonepe)
     private readonly phonepeRepository: Repository<Phonepe>,
     private jwtService: JwtService,
@@ -99,6 +112,51 @@ export class GatewayService {
     });
 
     await this.phonepeRepository.update(id, updatedData);
+    return HttpStatus.OK;
+  }
+
+  async createChannelSettings(
+    createChannelSettingsDto: CreateChannelSettingsDto,
+  ) {
+    const isDataExists = await this.channelSettingsRepository.find();
+
+    if (isDataExists?.length > 0)
+      throw new ConflictException('Data already exists');
+
+    if (
+      createChannelSettingsDto.max_amount < createChannelSettingsDto.min_amount
+    )
+      throw new BadRequestException(
+        'Max amount should be greater than min amount.',
+      );
+
+    await this.channelSettingsRepository.save(createChannelSettingsDto);
+    return HttpStatus.OK;
+  }
+
+  async updateChannelSettings(
+    id: number,
+    updateChannelSettingsDto: UpdateChannelSettingsDto,
+  ) {
+    const existingSettings = await this.channelSettingsRepository.findOneBy({
+      id,
+    });
+
+    if (!existingSettings) throw new NotFoundException();
+
+    const updatedSettings = Object.assign(
+      {},
+      existingSettings,
+      updateChannelSettingsDto,
+    );
+
+    if (updatedSettings.max_amount < updatedSettings.min_amount)
+      throw new BadRequestException(
+        'Max amount should be greater than min amount.',
+      );
+
+    await this.channelSettingsRepository.update(id, updatedSettings);
+
     return HttpStatus.OK;
   }
 }
