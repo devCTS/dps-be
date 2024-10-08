@@ -1,4 +1,5 @@
 import {
+  CallBackStatus,
   ChannelName,
   GatewayName,
   OrderStatus,
@@ -8,14 +9,12 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  PrimaryColumn,
   PrimaryGeneratedColumn,
-  Timestamp,
   UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
-export class Payins {
+export class Payin {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -25,7 +24,7 @@ export class Payins {
   @Column()
   merchantOrderId: string;
 
-  @Column()
+  @Column({ type: 'float' })
   amount: number;
 
   @Column({ type: 'enum', enum: OrderStatus })
@@ -34,8 +33,8 @@ export class Payins {
   @Column({ type: 'enum', enum: ChannelName })
   channel: ChannelName;
 
-  @Column()
-  callbackStatus: string;
+  @Column({ type: 'enum', enum: CallBackStatus })
+  callbackStatus: CallBackStatus;
 
   @Column({ type: 'enum', enum: PaymentMadeOn })
   payinMadeOn: PaymentMadeOn;
