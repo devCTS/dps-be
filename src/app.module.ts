@@ -21,6 +21,7 @@ import { AgentReferralModule } from './agent-referral/agent-referral.module';
 import { MemberReferralModule } from './member-referral/member-referral.module';
 import { ChannelModule } from './channel/channel.module';
 import { GatewayModule } from './gateway/gateway.module';
+import { PaymentSystemModule } from './payment-system/payment-system.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { GatewayModule } from './gateway/gateway.module';
     MemberReferralModule,
     ChannelModule,
     GatewayModule,
+    PaymentSystemModule,
   ],
   controllers: [AppController],
   providers: [
