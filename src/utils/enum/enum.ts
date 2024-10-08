@@ -31,3 +31,8 @@ export enum PaymentMadeOn {
   GATEWAY = 'GATEWAY',
   MEMBER = 'MEMBER',
 }
+
+export enum SortedBy {
+  LATEST = 'latest',
+  OLDEST = 'oldest',
+}

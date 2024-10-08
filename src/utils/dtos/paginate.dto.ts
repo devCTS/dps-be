@@ -6,9 +6,11 @@ import {
   IsDateString,
   Matches,
   IsNumber,
+  IsEnum,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { BadRequestException } from '@nestjs/common';
+import { SortedBy } from '../enum/enum';
 
 // Helper function to convert DD/MM/YYYY to a valid Date object
 // Helper function to convert DD/MM/YYYY to a UTC Date object
@@ -66,4 +68,8 @@ export class PaginateRequestDto {
   @IsOptional()
   @IsNumber()
   userId?: number;
+
+  @IsOptional()
+  @IsEnum(SortedBy)
+  sortedBy?: SortedBy;
 }

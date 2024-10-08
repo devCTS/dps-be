@@ -43,7 +43,7 @@ export class Payin {
   gatewayName: GatewayName;
 
   @CreateDateColumn()
-  createDate: Date;
+  createdDate: Date;
 
   @UpdateDateColumn()
   updatedDate: Date;
