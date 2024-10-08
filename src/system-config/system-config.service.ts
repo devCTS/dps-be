@@ -10,7 +10,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 import { SystemConfig } from './entities/system-config.entity';
 
-import { ChannelService } from 'src/channel/channel.service';
 import { Identity } from 'src/identity/entities/identity.entity';
 
 import { CreateSystemConfigDto } from './dto/create-system-config.dto';
@@ -19,7 +18,6 @@ import { UpdateCurrencyDto } from './dto/update-currency.dto';
 import { UpdateTopupConfigDto } from './dto/update-topup-config.dto';
 import { UpdateMemberDefaultsDto } from './dto/update-member-defaults.dto';
 import { UpdateMerchantDefaultsDto } from './dto/update-merchant-defaults.dto';
-import { Gateway } from 'src/gateway/entities/gateway.entity';
 import { plainToInstance } from 'class-transformer';
 import { SystemConfigResponseDto } from './dto/system-config-response.dto';
 
@@ -30,9 +28,6 @@ export class SystemConfigService {
     private readonly systemConfigRepository: Repository<SystemConfig>,
     @InjectRepository(Identity)
     private readonly identityRepository: Repository<Identity>,
-    @InjectRepository(Gateway)
-    private readonly gatewayRepository: Repository<Gateway>,
-    private readonly channelService: ChannelService,
   ) {}
 
   async create(createSystemConfigDto: CreateSystemConfigDto) {
@@ -50,39 +45,6 @@ export class SystemConfigService {
       },
     });
     if (!identity) throw new NotFoundException('Identity not found!');
-
-    const payinGateway = await this.gatewayRepository.findOne({
-      where: { id: defaultPayinGateway },
-    });
-    if (!payinGateway)
-      throw new NotFoundException('Gateway for payins not found!');
-
-    const payoutGateway = await this.gatewayRepository.findOne({
-      where: { id: defaultPayoutGateway },
-    });
-    if (!payoutGateway)
-      throw new NotFoundException('Gateway for payouts not found!');
-
-    const withdrawalGateway = await this.gatewayRepository.findOne({
-      where: { id: defaultWithdrawalGateway },
-    });
-    if (!withdrawalGateway)
-      throw new NotFoundException('Gateway for withdrawals not found!');
-
-    const systemConfig = await this.systemConfigRepository.save({
-      defaultPayinGateway: payinGateway,
-      defaultPayoutGateway: payoutGateway,
-      defaultWithdrawalGateway: withdrawalGateway,
-      ...remainingSystemConfig,
-    });
-
-    if (!systemConfig) throw new InternalServerErrorException();
-
-    await this.channelService.processChannelFilledFields(
-      defaultTopupChannels,
-      identity,
-      systemConfig,
-    );
 
     return HttpStatus.CREATED;
   }
@@ -154,28 +116,7 @@ export class SystemConfigService {
     const latestResult = await this.findLatest(false);
 
     if (!latestResult) {
-      const payinGateway = await this.gatewayRepository.findOne({
-        where: { id: defaultPayinGateway },
-      });
-      if (!payinGateway)
-        throw new NotFoundException('Gateway for payins not found!');
-
-      const payoutGateway = await this.gatewayRepository.findOne({
-        where: { id: defaultPayoutGateway },
-      });
-      if (!payoutGateway)
-        throw new NotFoundException('Gateway for payouts not found!');
-
-      const withdrawalGateway = await this.gatewayRepository.findOne({
-        where: { id: defaultWithdrawalGateway },
-      });
-      if (!withdrawalGateway)
-        throw new NotFoundException('Gateway for withdrawals not found!');
-
       await this.systemConfigRepository.save({
-        payinGateway,
-        payoutGateway,
-        withdrawalGateway,
         payinTimeout,
         payoutTimeout,
       });
@@ -183,9 +124,6 @@ export class SystemConfigService {
       return HttpStatus.CREATED;
     }
 
-    delete latestResult.defaultPayinGateway;
-    delete latestResult.defaultPayoutGateway;
-    delete latestResult.defaultWithdrawalGateway;
     delete latestResult.payinTimeout;
     delete latestResult.payoutTimeout;
     delete latestResult.id;
@@ -254,18 +192,11 @@ export class SystemConfigService {
         topupThreshold,
       });
 
-      await this.channelService.processChannelFilledFields(
-        defaultTopupChannels,
-        identity,
-        systemConfig,
-      );
-
       return HttpStatus.CREATED;
     }
 
     delete latestResult.topupAmount;
     delete latestResult.topupThreshold;
-    delete latestResult.defaultTopupChannels;
     delete latestResult.id;
     delete latestResult.createdAt;
     delete latestResult.updatedAt;
@@ -278,12 +209,6 @@ export class SystemConfigService {
     });
 
     if (!newSystemConfig) throw new InternalServerErrorException();
-
-    await this.channelService.processChannelFilledFields(
-      defaultTopupChannels,
-      identity,
-      newSystemConfig,
-    );
 
     return HttpStatus.OK;
   }

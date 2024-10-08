@@ -8,7 +8,6 @@ import { ProportionalPayinMode } from './entities/proportionalPayinMode.entity';
 import { AmountRangePayinMode } from './entities/amountRangePayinMode.entity';
 import { JwtModule } from 'src/services/jwt/jwt.module';
 import { IdentityModule } from 'src/identity/identity.module';
-import { ChannelModule } from 'src/channel/channel.module';
 import { IP } from 'src/identity/entities/ip.entity';
 import { AgentReferralModule } from 'src/agent-referral/agent-referral.module';
 
@@ -23,7 +22,6 @@ import { AgentReferralModule } from 'src/agent-referral/agent-referral.module';
     ]),
     JwtModule,
     IdentityModule,
-    ChannelModule,
     AgentReferralModule,
   ],
   controllers: [MerchantController],

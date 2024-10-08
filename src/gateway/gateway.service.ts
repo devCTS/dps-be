@@ -1,325 +1,162 @@
-import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
-import { Between, ILike, Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
-
-import { CreateGatewayDto } from './dto/create-gateway.dto';
-import { UpdateGatewayDto } from './dto/update-gateway.dto';
-
-import { Gateway } from './entities/gateway.entity';
-import { Channel } from 'src/channel/entities/channel.entity';
-import { MerchantKey } from './entities/MerchantKey.entity';
-import { GatewayToChannel } from './entities/gatewayToChannel.entity';
-import { plainToInstance } from 'class-transformer';
-import { GatewayResponseDto } from './dto/gateway-response.dto';
 import {
-  PaginateRequestDto,
-  parseEndDate,
-  parseStartDate,
-} from 'src/utils/dtos/paginate.dto';
+  BadRequestException,
+  ConflictException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import {
+  CreateRazorpayDto,
+  UpdateRazorpayDto,
+} from './dto/create-razorpay.dto';
+import { JwtService } from 'src/services/jwt/jwt.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Razorpay } from './entities/razorpay.entity';
+import { Repository } from 'typeorm';
+import { CreatePhonepeDto, UpdatePhonepDto } from './dto/create-phonepe.dto';
+import { Phonepe } from './entities/phonepe.entity';
+import {
+  CreateChannelSettingsDto,
+  UpdateChannelSettingsDto,
+} from './dto/create-channel-settings.dto';
+import { ChannelSettings } from './entities/channel-settings.entity';
 
 @Injectable()
 export class GatewayService {
   constructor(
-    @InjectRepository(Gateway)
-    private readonly gatewayRepository: Repository<Gateway>,
-    @InjectRepository(GatewayToChannel)
-    private readonly gatewayToChannelRepository: Repository<GatewayToChannel>,
-    @InjectRepository(MerchantKey)
-    private readonly merchantKeyRepository: Repository<MerchantKey>,
-    @InjectRepository(Channel)
-    private readonly channelRepository: Repository<Channel>,
+    @InjectRepository(Razorpay)
+    private readonly razorpayRepository: Repository<Razorpay>,
+    @InjectRepository(ChannelSettings)
+    private readonly channelSettingsRepository: Repository<ChannelSettings>,
+    @InjectRepository(Phonepe)
+    private readonly phonepeRepository: Repository<Phonepe>,
+    private jwtService: JwtService,
   ) {}
 
-  async create(createGatewayDto: CreateGatewayDto) {
-    const {
-      name,
-      logo,
-      incomingStatus,
-      outgoingStatus,
-      uatMerchantKeys,
-      prodMerchantKeys,
-      channels,
-    } = createGatewayDto;
+  secretTextKeysRazorpay = [
+    'key_secret',
+    'key_id',
+    'sandbox_key_id',
+    'sandbox_key_secret',
+  ];
 
-    // Save Gateway
-    const gateway = await this.gatewayRepository.save({
-      name,
-      logo,
-      incomingStatus,
-      outgoingStatus,
+  secretTextKeysPhonepe = [
+    'merchant_id',
+    'sandbox_salt_index',
+    'sandbox_salt_key',
+    'sandbox_merchant_id',
+    'salt_index',
+    'salt_key',
+  ];
+
+  async createRazorPay(createRazorPayDto: CreateRazorpayDto) {
+    const secretTextKeys = this.secretTextKeysRazorpay;
+
+    secretTextKeys.forEach((key) => {
+      secretTextKeys.forEach((key) => {
+        createRazorPayDto[key] = this.jwtService.getHashPassword(
+          createRazorPayDto[key],
+        );
+      });
     });
 
-    // Save UatMerchantKey
-    for (const key of uatMerchantKeys)
-      await this.merchantKeyRepository.save({
-        label: key.label,
-        value: key.value,
-        uatGateway: gateway,
-        prodGateway: null,
-      });
-
-    // Save ProdMerchantKey
-    for (const key of prodMerchantKeys)
-      await this.merchantKeyRepository.save({
-        label: key.label,
-        value: key.value,
-        uatGateway: null,
-        prodGateway: gateway,
-      });
-
-    for (const channelData of channels) {
-      const {
-        id,
-        payinsEnabled,
-        payoutsEnabled,
-        payinFees,
-        payoutFees,
-        lowerLimitForPayins,
-        upperLimitForPayins,
-        lowerLimitForPayouts,
-        upperLimitForPayouts,
-      } = channelData;
-
-      const channel = await this.channelRepository.findOne({
-        where: { id },
-      });
-
-      if (!channel)
-        throw new NotFoundException(`Channel with ID ${id} not found`);
-
-      // Create GatewayToChannel
-      await this.gatewayToChannelRepository.save({
-        gateway,
-        channel,
-        payinsEnabled,
-        payoutsEnabled,
-        payinFees,
-        payoutFees,
-        lowerLimitForPayins,
-        upperLimitForPayins,
-        lowerLimitForPayouts,
-        upperLimitForPayouts,
-      });
-    }
-
-    return HttpStatus.CREATED;
-  }
-
-  async findAll() {
-    const gateways = await this.gatewayRepository.find({
-      relations: [
-        'gatewayToChannel',
-        'uatMerchantKeys',
-        'prodMerchantKeys',
-        'gatewayToChannel.channel',
-      ],
-    });
-
-    return {
-      total: gateways.length,
-      data: plainToInstance(GatewayResponseDto, gateways),
-    };
-  }
-
-  async findOne(id: number) {
-    const gateway = await this.gatewayRepository.findOne({
-      where: {
-        id,
-      },
-      relations: [
-        'gatewayToChannel',
-        'uatMerchantKeys',
-        'prodMerchantKeys',
-        'gatewayToChannel.channel',
-      ],
-    });
-
-    if (!gateway) throw new NotFoundException();
-
-    return plainToInstance(GatewayResponseDto, gateway);
-  }
-
-  async update(id: number, updateGatewayDto: UpdateGatewayDto) {
-    const {
-      name,
-      logo,
-      incomingStatus,
-      outgoingStatus,
-      uatMerchantKeys,
-      prodMerchantKeys,
-      channels,
-    } = updateGatewayDto;
-
-    const gateway = await this.gatewayRepository.findOne({
-      where: { id },
-      relations: ['gatewayToChannel', 'uatMerchantKeys', 'prodMerchantKeys'],
-    });
-
-    if (!gateway) throw new NotFoundException();
-
-    // Update Gateway
-    await this.gatewayRepository.update(id, {
-      name,
-      logo,
-      incomingStatus,
-      outgoingStatus,
-    });
-
-    // Delete UatMerchantKey entries related to current gateway and save new
-    await this.merchantKeyRepository.delete({
-      uatGateway: gateway,
-    });
-    for (const key of uatMerchantKeys) {
-      await this.merchantKeyRepository.save({
-        label: key.label,
-        value: key.value,
-        uatGateway: gateway,
-        prodGateway: null,
-      });
-    }
-
-    // Delete ProdMerchantKey entries related to current gateway and save new
-    await this.merchantKeyRepository.delete({
-      prodGateway: gateway,
-    });
-    for (const key of prodMerchantKeys) {
-      await this.merchantKeyRepository.save({
-        label: key.label,
-        value: key.value,
-        prodGateway: gateway,
-        uatGateway: null,
-      });
-    }
-
-    // Delete gatewayToChannel entries related to current gateway and save new
-    await this.gatewayToChannelRepository.delete({ gateway });
-    for (const channelData of channels) {
-      const {
-        id,
-        payinsEnabled,
-        payoutsEnabled,
-        payinFees,
-        payoutFees,
-        lowerLimitForPayins,
-        upperLimitForPayins,
-        lowerLimitForPayouts,
-        upperLimitForPayouts,
-      } = channelData;
-
-      const channel = await this.channelRepository.findOne({
-        where: { id },
-      });
-
-      if (!channel)
-        throw new NotFoundException(`Channel with ID ${id} not found`);
-
-      await this.gatewayToChannelRepository.save({
-        gateway,
-        channel,
-        payinsEnabled,
-        payoutsEnabled,
-        payinFees,
-        payoutFees,
-        lowerLimitForPayins,
-        upperLimitForPayins,
-        lowerLimitForPayouts,
-        upperLimitForPayouts,
-      });
-    }
-
+    await this.razorpayRepository.save(createRazorPayDto);
     return HttpStatus.OK;
   }
 
-  async remove(id: number) {
-    const gateway = await this.gatewayRepository.findOne({
-      where: {
-        id,
-      },
-      relations: ['gatewayToChannel', 'uatMerchantKeys', 'prodMerchantKeys'],
+  async updateRazorpay(id: number, updateRazorpayDto: UpdateRazorpayDto) {
+    const secretTextKeys = this.secretTextKeysRazorpay;
+
+    const existingData = await this.razorpayRepository.findOneBy({ id });
+    if (!existingData) throw new NotFoundException();
+
+    const updatedData = Object.assign({}, existingData, updateRazorpayDto);
+
+    secretTextKeys.forEach((key) => {
+      if (updateRazorpayDto[key]) {
+        updatedData[key] = this.jwtService.getHashPassword(updatedData[key]);
+      }
     });
 
-    if (!gateway) throw new NotFoundException();
-
-    await this.merchantKeyRepository.delete({
-      uatGateway: gateway,
-    });
-    await this.merchantKeyRepository.delete({
-      prodGateway: gateway,
-    });
-    await this.gatewayToChannelRepository.delete({ gateway });
-    await this.gatewayRepository.remove(gateway);
-
+    await this.razorpayRepository.update(id, updatedData);
     return HttpStatus.OK;
   }
 
-  async paginate(paginateDto: PaginateRequestDto) {
-    const { search, pageSize, pageNumber, startDate, endDate } = paginateDto;
+  async createPhonepe(createPhonepeDto: CreatePhonepeDto) {
+    const phonepeSecretKeys = this.secretTextKeysPhonepe;
 
-    const whereClause: any = {};
-
-    if (search) whereClause.name = ILike(`%${search}%`);
-
-    if (startDate && endDate) {
-      whereClause.createdAt = Between(
-        parseStartDate(startDate),
-        parseEndDate(endDate),
+    phonepeSecretKeys.forEach((key) => {
+      createPhonepeDto[key] = this.jwtService.getHashPassword(
+        createPhonepeDto[key],
       );
-    }
-
-    const skip = (pageNumber - 1) * pageSize;
-
-    const [rows, total] = await this.gatewayRepository.findAndCount({
-      where: whereClause,
-      relations: [
-        'uatMerchantKeys',
-        'prodMerchantKeys',
-        'gatewayToChannel',
-        'gatewayToChannel.channel',
-      ],
-      skip,
-      take: pageSize,
     });
 
-    const dtos = plainToInstance(GatewayResponseDto, rows);
-
-    const startRecord = skip + 1;
-    const endRecord = Math.min(skip + pageSize, total);
-
-    return {
-      total,
-      page: pageNumber,
-      pageSize,
-      totalPages: Math.ceil(total / pageSize),
-      startRecord,
-      endRecord,
-      data: dtos,
-    };
+    await this.phonepeRepository.save(createPhonepeDto);
+    return HttpStatus.OK;
   }
 
-  async exportRecords(startDate: string, endDate: string) {
-    startDate = parseStartDate(startDate);
-    endDate = parseEndDate(endDate);
+  async updatePhonepe(id: number, updatePhonepeDto: UpdatePhonepDto) {
+    const secretKeysPhonepe = this.secretTextKeysPhonepe;
 
-    const parsedStartDate = new Date(startDate);
-    const parsedEndDate = new Date(endDate);
+    const existingData = await this.phonepeRepository.findOneBy({ id });
+    if (!existingData) throw new NotFoundException();
 
-    const [rows, total] = await this.gatewayRepository.findAndCount({
-      relations: [
-        'gatewayToChannel',
-        'uatMerchantKeys',
-        'prodMerchantKeys',
-        'gatewayToChannel.channel',
-      ],
-      where: {
-        createdAt: Between(parsedStartDate, parsedEndDate),
-      },
+    const updatedData = Object.assign({}, existingData, updatePhonepeDto);
+
+    secretKeysPhonepe.forEach((key) => {
+      if (updatePhonepeDto[key]) {
+        updatedData[key] = this.jwtService.getHashPassword(
+          updatePhonepeDto[key],
+        );
+      }
     });
 
-    const dtos = plainToInstance(GatewayResponseDto, rows);
+    await this.phonepeRepository.update(id, updatedData);
+    return HttpStatus.OK;
+  }
 
-    return {
-      total,
-      data: dtos,
-    };
+  async createChannelSettings(
+    createChannelSettingsDto: CreateChannelSettingsDto,
+  ) {
+    const isDataExists = await this.channelSettingsRepository.find();
+
+    if (isDataExists?.length > 0)
+      throw new ConflictException('Data already exists');
+
+    if (
+      createChannelSettingsDto.max_amount < createChannelSettingsDto.min_amount
+    )
+      throw new BadRequestException(
+        'Max amount should be greater than min amount.',
+      );
+
+    await this.channelSettingsRepository.save(createChannelSettingsDto);
+    return HttpStatus.OK;
+  }
+
+  async updateChannelSettings(
+    id: number,
+    updateChannelSettingsDto: UpdateChannelSettingsDto,
+  ) {
+    const existingSettings = await this.channelSettingsRepository.findOneBy({
+      id,
+    });
+
+    if (!existingSettings) throw new NotFoundException();
+
+    const updatedSettings = Object.assign(
+      {},
+      existingSettings,
+      updateChannelSettingsDto,
+    );
+
+    if (updatedSettings.max_amount < updatedSettings.min_amount)
+      throw new BadRequestException(
+        'Max amount should be greater than min amount.',
+      );
+
+    await this.channelSettingsRepository.update(id, updatedSettings);
+
+    return HttpStatus.OK;
   }
 }

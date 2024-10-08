@@ -18,7 +18,6 @@ import {
   parseEndDate,
   parseStartDate,
 } from 'src/utils/dtos/paginate.dto';
-import { ChannelService } from 'src/channel/channel.service';
 import { JwtService } from 'src/services/jwt/jwt.service';
 import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 import { MemberReferralService } from 'src/member-referral/member-referral.service';
@@ -29,7 +28,6 @@ export class MemberService {
     @InjectRepository(Member)
     private readonly memberRepository: Repository<Member>,
     private readonly identityService: IdentityService,
-    private readonly channelService: ChannelService,
     private readonly jwtService: JwtService,
     private readonly memberReferralService: MemberReferralService,
   ) {}
@@ -82,12 +80,6 @@ export class MemberService {
     });
 
     const createdMember = await this.memberRepository.save(member);
-
-    // Process the channels and their profile fields
-    await this.channelService.processChannelFilledFields(
-      createMemberDto.channelProfile,
-      createdMember.identity,
-    );
 
     // Update Member Referrals
     if (referralCode)
@@ -214,11 +206,6 @@ export class MemberService {
       );
     }
 
-    await this.channelService.processChannelFilledFields(
-      channelProfile,
-      member.identity,
-    );
-
     return HttpStatus.OK;
   }
 
@@ -230,7 +217,6 @@ export class MemberService {
 
     if (!member) throw new NotFoundException();
 
-    await this.channelService.deleteChannelProfileOfUser(member.identity);
     await this.memberRepository.delete(id);
     await this.identityService.remove(member.identity?.id);
 

@@ -1,48 +1,60 @@
+import { Body, Controller, Param, ParseIntPipe, Post } from '@nestjs/common';
 import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
+  CreateRazorpayDto,
+  UpdateRazorpayDto,
+} from './dto/create-razorpay.dto';
 import { GatewayService } from './gateway.service';
-import { CreateGatewayDto } from './dto/create-gateway.dto';
-import { UpdateGatewayDto } from './dto/update-gateway.dto';
-import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
+import { CreatePhonepeDto, UpdatePhonepDto } from './dto/create-phonepe.dto';
+import {
+  CreateChannelSettingsDto,
+  UpdateChannelSettingsDto,
+} from './dto/create-channel-settings.dto';
 
 @Controller('gateway')
 export class GatewayController {
-  constructor(private readonly gatewayService: GatewayService) {}
+  constructor(private gatewayService: GatewayService) {}
 
-  @Post()
-  create(@Body() createGatewayDto: CreateGatewayDto) {
-    return this.gatewayService.create(createGatewayDto);
+  @Post('razorpay/create')
+  CreateRazorpay(@Body() createRazorpayDto: CreateRazorpayDto) {
+    return this.gatewayService.createRazorPay(createRazorpayDto);
   }
 
-  @Get()
-  findAll() {
-    return this.gatewayService.findAll();
+  @Post('razorpay/update/:id')
+  UpdateRazorpay(
+    @Body() updateRazorpayDto: UpdateRazorpayDto,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.gatewayService.updateRazorpay(id, updateRazorpayDto);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.gatewayService.findOne(+id);
+  @Post('phonepe/create')
+  createPhonepe(@Body() createPhonepeDto: CreatePhonepeDto) {
+    return this.gatewayService.createPhonepe(createPhonepeDto);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateGatewayDto: UpdateGatewayDto) {
-    return this.gatewayService.update(+id, updateGatewayDto);
+  @Post('phonepe/update/:id')
+  updatePhonepe(
+    @Body() updatePhonepeDto: UpdatePhonepDto,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.gatewayService.updatePhonepe(id, updatePhonepeDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.gatewayService.remove(+id);
+  @Post('channel-setting/create')
+  createChannelSettings(
+    @Body() createChannelSettingsDto: CreateChannelSettingsDto,
+  ) {
+    return this.gatewayService.createChannelSettings(createChannelSettingsDto);
   }
 
-  @Post('paginate')
-  paginate(@Body() paginateRequestDto: PaginateRequestDto) {
-    return this.gatewayService.paginate(paginateRequestDto);
+  @Post('channel-setting/update/:id')
+  updateChannelSettings(
+    @Body() updateChannelSettingsDto: UpdateChannelSettingsDto,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.gatewayService.updateChannelSettings(
+      id,
+      updateChannelSettingsDto,
+    );
   }
 }

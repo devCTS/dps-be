@@ -1,5 +1,3 @@
-import { ChannelProfileFilledField } from 'src/channel/entities/channelProfileFilledField.entity';
-import { PayinPayoutChannel } from 'src/channel/entities/payinPayoutChannel.entity';
 import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
 import {
   Entity,
@@ -14,6 +12,9 @@ import { Admin } from 'src/admin/entities/admin.entity';
 import { Member } from 'src/member/entities/member.entity';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { Agent } from 'src/agent/entities/agent.entity';
+import { NetBanking } from 'src/channel/entity/net-banking.entity';
+import { EWallet } from 'src/channel/entity/e-wallet.entity';
+import { Upi } from 'src/channel/entity/upi.entity';
 
 @Entity()
 export class Identity {
@@ -68,9 +69,12 @@ export class Identity {
   @OneToMany(() => IP, (ip) => ip.identity)
   ips: IP[];
 
-  @OneToMany(() => ChannelProfileFilledField, (field) => field.identity)
-  channelProfileFilledFields: ChannelProfileFilledField[];
+  @OneToMany(() => NetBanking, (banking) => banking.identity)
+  banking: NetBanking[];
 
-  @OneToMany(() => PayinPayoutChannel, (channel) => channel.identity)
-  payinPayoutChannels: PayinPayoutChannel[];
+  @OneToMany(() => EWallet, (ewallet) => ewallet.identity)
+  ewallet: EWallet[];
+
+  @OneToMany(() => Upi, (upi) => upi.identity)
+  upi: Upi[];
 }

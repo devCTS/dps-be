@@ -1,37 +1,32 @@
-import { Controller, Get, Post, Body, Patch, Param } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { ChannelService } from './channel.service';
-import { CreateChannelDto } from './dto/create-channel.dto';
-import { UpdateChannelDto } from './dto/update-channel.dto';
-import { ChannelResponseDto } from './dto/channel-response.dto';
+import { UpdateChannelConfigDto } from './dto/update-channel-config.dto';
+import { ChannelName } from 'src/utils/enum/enum';
+import { CreateChannelConfigDto } from './dto/create-channel-config.dto';
 
 @Controller('channel')
 export class ChannelController {
-  constructor(private readonly channelService: ChannelService) {}
+  constructor(private channelService: ChannelService) {}
 
-  @Post()
-  create(
-    @Body() createChannelDto: CreateChannelDto,
-  ): Promise<ChannelResponseDto> {
-    return this.channelService.create(createChannelDto);
+  @Post('update')
+  createChannelConfig(@Body() createChannelConfigDto: CreateChannelConfigDto) {
+    return this.channelService.createChannelConfig(createChannelConfigDto);
   }
 
-  @Get()
-  findAll() {
-    return this.channelService.findAll();
+  @Post('update')
+  async updateChannelConfig(
+    @Body() updateChannelConfigDto: UpdateChannelConfigDto,
+  ) {
+    return this.channelService.updateChannelConfig(updateChannelConfigDto);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.channelService.findOne(+id);
+  @Get('config')
+  getAllConfig() {
+    return this.channelService.getAllConfig();
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateChannelDto: UpdateChannelDto) {
-    return this.channelService.update(+id, updateChannelDto);
-  }
-
-  @Post('paginate')
-  paginate() {
-    return this.channelService.findAll();
+  @Get('config/:name')
+  getConfig(@Param('name') name: ChannelName) {
+    return this.channelService.getConfig(name);
   }
 }

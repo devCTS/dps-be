@@ -10,6 +10,8 @@ import { Admin } from 'src/admin/entities/admin.entity';
 import { Member } from 'src/member/entities/member.entity';
 import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
 import { Agent } from 'src/agent/entities/agent.entity';
+import { ChannelModule } from 'src/channel/channel.module';
+import { GatewayModule } from 'src/gateway/gateway.module';
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { Agent } from 'src/agent/entities/agent.entity';
       Agent,
     ]),
     JwtModule,
+    ChannelModule,
+    GatewayModule,
   ],
   controllers: [IdentityController],
   providers: [IdentityService],

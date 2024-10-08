@@ -9,32 +9,11 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Gateway } from 'src/gateway/entities/gateway.entity';
-import { ChannelProfileFilledField } from 'src/channel/entities/channelProfileFilledField.entity';
 
 @Entity()
 export class SystemConfig {
   @PrimaryGeneratedColumn()
   id: number;
-
-  // Gateways and Timeouts
-  @ManyToOne(() => Gateway, (gateway) => gateway.defaultPayinGateway, {
-    nullable: true,
-  })
-  @JoinColumn({ name: 'default_payin_gateway_id' })
-  defaultPayinGateway: Gateway;
-
-  @ManyToOne(() => Gateway, (gateway) => gateway.defaultPayoutGateway, {
-    nullable: true,
-  })
-  @JoinColumn({ name: 'default_payout_gateway_id' })
-  defaultPayoutGateway: Gateway;
-
-  @ManyToOne(() => Gateway, (gateway) => gateway.defaultWithdrawalGateway, {
-    nullable: true,
-  })
-  @JoinColumn({ name: 'default_withdrawal_gateway_id' })
-  defaultWithdrawalGateway: Gateway;
 
   @Column({ nullable: true })
   payinTimeout: number;
@@ -51,13 +30,6 @@ export class SystemConfig {
 
   @Column({ type: 'float', nullable: true })
   topupAmount: number;
-
-  @OneToMany(
-    () => ChannelProfileFilledField,
-    (field) => field.defaultTopupChannels,
-    { nullable: true },
-  )
-  defaultTopupChannels: ChannelProfileFilledField[];
 
   // Member Defaults
   @Column({ type: 'float', nullable: true })

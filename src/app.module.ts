@@ -8,19 +8,19 @@ import { IdentityModule } from './identity/identity.module';
 import { AdminModule } from './admin/admin.module';
 import { MerchantModule } from './merchant/merchant.module';
 import { MemberModule } from './member/member.module';
-import { ChannelModule } from './channel/channel.module';
 import { LoadModule } from './load/load.module';
 import { SubMerchantModule } from './sub-merchant/sub-merchant.module';
 import { ServicesModule } from './services/services.module';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { ExportModule } from './export/export.module';
-import { GatewayModule } from './gateway/gateway.module';
 import { SystemConfigModule } from './system-config/system-config.module';
 import { RolesModule } from './roles/roles.module';
 import { UploadModule } from './upload/upload.module';
 import { AgentModule } from './agent/agent.module';
 import { AgentReferralModule } from './agent-referral/agent-referral.module';
 import { MemberReferralModule } from './member-referral/member-referral.module';
+import { ChannelModule } from './channel/channel.module';
+import { GatewayModule } from './gateway/gateway.module';
 import { PaymentSystemModule } from './payment-system/payment-system.module';
 
 @Module({
@@ -49,18 +49,18 @@ import { PaymentSystemModule } from './payment-system/payment-system.module';
     AdminModule,
     MerchantModule,
     MemberModule,
-    ChannelModule,
     LoadModule,
     SubMerchantModule,
     ServicesModule,
     ExportModule,
-    GatewayModule,
     SystemConfigModule,
     RolesModule,
     UploadModule,
     AgentModule,
     AgentReferralModule,
     MemberReferralModule,
+    ChannelModule,
+    GatewayModule,
     PaymentSystemModule,
   ],
   controllers: [AppController],
