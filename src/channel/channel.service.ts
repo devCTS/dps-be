@@ -1,9 +1,15 @@
-import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Config } from './entity/config.entity';
 import { UpdateChannelConfigDto } from './dto/update-channel-config.dto';
 import { ChannelName } from 'src/utils/enum/enum';
+import { CreateChannelConfigDto } from './dto/create-channel-config.dto';
 
 @Injectable()
 export class ChannelService {
@@ -11,6 +17,12 @@ export class ChannelService {
     @InjectRepository(Config)
     private readonly configChannelRepository: Repository<Config>,
   ) {}
+
+  async createChannelConfig(createChannelConfigDto: CreateChannelConfigDto) {
+    const isChannelConfigExists = await this.configChannelRepository.find();
+
+    if (isChannelConfigExists?.length > 0) throw new ConflictException();
+  }
 
   async updateChannelConfig(updateChannelConfigDto: UpdateChannelConfigDto) {
     const name = updateChannelConfigDto.name;

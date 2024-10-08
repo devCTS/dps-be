@@ -1,16 +1,6 @@
-import { IsBoolean, IsEnum, IsNotEmpty, IsOptional } from 'class-validator';
-import { ChannelName } from 'src/utils/enum/enum';
+import { PartialType } from '@nestjs/mapped-types';
+import { CreateChannelConfigDto } from './create-channel-config.dto';
 
-export class UpdateChannelConfigDto {
-  @IsNotEmpty()
-  @IsEnum(ChannelName)
-  name: ChannelName;
-
-  @IsOptional()
-  @IsBoolean()
-  incoming?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
-  outgoing?: boolean;
-}
+export class UpdateChannelConfigDto extends PartialType(
+  CreateChannelConfigDto,
+) {}
