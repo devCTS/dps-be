@@ -66,9 +66,9 @@ export class PayinService {
     const [rows, total] = await query.getManyAndCount();
 
     // Adding data from dummy file. Will be changed later
-    let data = Object.assign({}, rows, adminPayins[0]);
+    // let data = Object.assign({}, rows, adminPayins[0]);
 
-    const dtos = plainToInstance(PayinResponseDto, data);
+    const dtos = plainToInstance(PayinResponseDto, adminPayins);
 
     const startRecord = skip + 1;
     const endRecord = Math.min(skip + pageSize, total);
