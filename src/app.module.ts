@@ -22,6 +22,7 @@ import { MemberReferralModule } from './member-referral/member-referral.module';
 import { ChannelModule } from './channel/channel.module';
 import { GatewayModule } from './gateway/gateway.module';
 import { PaymentSystemModule } from './payment-system/payment-system.module';
+import { PayinsModule } from './payins/payins.module';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { PaymentSystemModule } from './payment-system/payment-system.module';
     ChannelModule,
     GatewayModule,
     PaymentSystemModule,
+    PayinsModule,
   ],
   controllers: [AppController],
   providers: [
