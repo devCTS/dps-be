@@ -42,6 +42,15 @@ export class Payin {
   @Column({ nullable: true, type: 'enum', enum: GatewayName })
   gatewayName: GatewayName;
 
+  @Column()
+  user: string;
+
+  @Column()
+  merchant: string;
+
+  @Column()
+  member: string;
+
   @CreateDateColumn()
   createdDate: Date;
 

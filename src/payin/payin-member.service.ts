@@ -8,12 +8,12 @@ import {
 import { Payin } from './entities/payin.entity';
 import { Repository } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
-import { PayinResponseDto } from './dto/payin-response.dto';
-import { adminPayins } from './data/dummy-data';
+import { memberAllPayins } from './data/dummy-data';
 import { SortedBy } from 'src/utils/enum/enum';
+import { PayinMemberResponseDto } from './dto/payin-member-response.dto';
 
 @Injectable()
-export class PayinService {
+export class PayinMemberService {
   constructor(
     @InjectRepository(Payin)
     private payinRepository: Repository<Payin>,
@@ -69,7 +69,7 @@ export class PayinService {
     // Adding data from dummy file. Will be changed later
     // let data = Object.assign({}, rows, adminPayins[0]);
 
-    const dtos = plainToInstance(PayinResponseDto, adminPayins);
+    const dtos = plainToInstance(PayinMemberResponseDto, memberAllPayins);
 
     const startRecord = skip + 1;
     const endRecord = Math.min(skip + pageSize, total);

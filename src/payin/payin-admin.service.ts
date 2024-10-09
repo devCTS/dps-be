@@ -11,9 +11,10 @@ import { plainToInstance } from 'class-transformer';
 import { PayinResponseDto } from './dto/payin-response.dto';
 import { adminPayins } from './data/dummy-data';
 import { SortedBy } from 'src/utils/enum/enum';
+import { PayinAdminResponseDto } from './dto/payin-admin-response.dto';
 
 @Injectable()
-export class PayinService {
+export class PayinAdminService {
   constructor(
     @InjectRepository(Payin)
     private payinRepository: Repository<Payin>,
@@ -39,7 +40,7 @@ export class PayinService {
       const startDate = parseStartDate(paginateRequestDto.startDate);
       const endDate = parseEndDate(paginateRequestDto.endDate);
 
-      query.andWhere('member.created_at BETWEEN :startDate AND :endDate', {
+      query.andWhere('payin.created_at BETWEEN :startDate AND :endDate', {
         startDate,
         endDate,
       });
@@ -69,7 +70,7 @@ export class PayinService {
     // Adding data from dummy file. Will be changed later
     // let data = Object.assign({}, rows, adminPayins[0]);
 
-    const dtos = plainToInstance(PayinResponseDto, adminPayins);
+    const dtos = plainToInstance(PayinAdminResponseDto, adminPayins);
 
     const startRecord = skip + 1;
     const endRecord = Math.min(skip + pageSize, total);

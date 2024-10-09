@@ -13,7 +13,7 @@ import {
   PaymentMadeOn,
 } from 'src/utils/enum/enum';
 
-export class PayinResponseDto {
+export class PayinAdminResponseDto {
   @IsNotEmpty()
   @IsNumber()
   id: number;
