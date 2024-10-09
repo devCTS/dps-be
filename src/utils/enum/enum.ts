@@ -36,3 +36,8 @@ export enum SortedBy {
   LATEST = 'latest',
   OLDEST = 'oldest',
 }
+
+export enum NotificationStatus {
+  SUCCESS = 'SUCCESS',
+  PENDING = 'PENDING',
+}

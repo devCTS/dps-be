@@ -20,12 +20,14 @@ import { JwtGuard } from 'src/services/jwt/jwt.guard';
 import { RolesGuard } from 'src/roles/roles.guard';
 import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 import { IdentityService } from 'src/identity/identity.service';
+import { PayoutService } from 'src/payout/payout.service';
 
 @Controller('member')
 export class MemberController {
   constructor(
     private readonly memberService: MemberService,
     private identityService: IdentityService,
+    private readonly payoutService: PayoutService,
   ) {}
 
   // @Roles(Role.MEMBER)
@@ -76,5 +78,15 @@ export class MemberController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     return this.memberService.changePassword(changePasswordDto, id);
+  }
+
+  @Post('payouts/paginate')
+  paginatePayouts(@Body() paginateRequestDto: PaginateRequestDto) {
+    return this.payoutService.paginate(paginateRequestDto, 'member');
+  }
+
+  @Get('payout/:id')
+  getPayoutDetails(@Param('id') id: string) {
+    return this.payoutService.getPayoutDetails(+id, 'member');
   }
 }

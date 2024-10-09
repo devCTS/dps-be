@@ -9,4 +9,10 @@ export class CreateEndUserDto {
 
   @IsString()
   phone: string;
+
+  @IsString()
+  channel: string;
+
+  @IsString()
+  channelDetails: string;
 }

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EndUser } from './entities/end-user.entity';
 import { Repository } from 'typeorm';
@@ -12,8 +12,40 @@ export class EndUserService {
   ) {}
 
   async create(createEndUserDto: CreateEndUserDto) {
-    const endUser = await this.endUserRepository.save({ ...createEndUserDto });
+    const { channelDetails } = createEndUserDto;
+
+    const channelDetailsJson = JSON.stringify(channelDetails);
+
+    const endUser = await this.endUserRepository.save({
+      channelDetails: channelDetailsJson,
+      ...createEndUserDto,
+    });
 
     return endUser;
+  }
+
+  async findOne(id) {
+    const endUser = await this.endUserRepository.findOne({
+      where: id,
+      relations: [],
+    });
+
+    if (!endUser) throw new NotFoundException('End user not found!');
+
+    endUser.channelDetails = JSON.parse(endUser.channelDetails);
+
+    return endUser;
+  }
+
+  async findAll() {
+    const endUsers = await this.endUserRepository.find({
+      relations: [],
+    });
+
+    endUsers.forEach((endUser) => {
+      endUser.channelDetails = JSON.parse(endUser.channelDetails);
+    });
+
+    return endUsers;
   }
 }

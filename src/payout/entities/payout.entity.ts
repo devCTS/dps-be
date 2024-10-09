@@ -2,6 +2,12 @@ import { EndUser } from 'src/end-user/entities/end-user.entity';
 import { Member } from 'src/member/entities/member.entity';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
 import {
+  ChannelName,
+  GatewayName,
+  NotificationStatus,
+  OrderStatus,
+} from 'src/utils/enum/enum';
+import {
   Column,
   CreateDateColumn,
   Entity,
@@ -22,20 +28,30 @@ export class Payout {
   @Column({ type: 'float' })
   amount: number;
 
-  @Column()
+  @Column({ type: 'enum', enum: OrderStatus })
   status: string;
 
-  @Column()
+  @Column({ type: 'enum', enum: ChannelName })
   channel: string;
 
-  @Column()
+  @Column({
+    type: 'enum',
+    enum: NotificationStatus,
+    default: NotificationStatus.PENDING,
+  })
   notificationStatus: string;
 
   @Column()
   payoutMadeVia: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'enum', enum: GatewayName, nullable: true })
   gatewayName: string;
+
+  @Column({ nullable: true })
+  transactionId: string;
+
+  @Column({ nullable: true })
+  receipt: string;
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;

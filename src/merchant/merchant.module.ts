@@ -10,6 +10,7 @@ import { JwtModule } from 'src/services/jwt/jwt.module';
 import { IdentityModule } from 'src/identity/identity.module';
 import { IP } from 'src/identity/entities/ip.entity';
 import { AgentReferralModule } from 'src/agent-referral/agent-referral.module';
+import { PayoutModule } from 'src/payout/payout.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { AgentReferralModule } from 'src/agent-referral/agent-referral.module';
     JwtModule,
     IdentityModule,
     AgentReferralModule,
+    PayoutModule,
   ],
   controllers: [MerchantController],
   providers: [MerchantService],

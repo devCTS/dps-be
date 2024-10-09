@@ -19,12 +19,14 @@ import { AdminResponseDto } from './dto/admin-response.dto';
 import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
 import { IdentityService } from 'src/identity/identity.service';
 import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
+import { PayoutService } from 'src/payout/payout.service';
 
 @Controller('admin')
 export class AdminController {
   constructor(
     private readonly adminService: AdminService,
     private identityService: IdentityService,
+    private readonly payoutService: PayoutService,
   ) {}
 
   @Post()
@@ -68,5 +70,20 @@ export class AdminController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     return this.adminService.changePassword(changePasswordDto, id);
+  }
+
+  @Post('payouts/paginate')
+  paginatePayouts(@Body() paginateRequestDto: PaginateRequestDto) {
+    return this.payoutService.paginate(paginateRequestDto, 'admin');
+  }
+
+  @Post('pending-payouts/paginate')
+  paginatePendingPayouts(@Body() paginateRequestDto: PaginateRequestDto) {
+    return this.payoutService.paginate(paginateRequestDto, 'admin', true);
+  }
+
+  @Get('payout/:id')
+  getPayoutDetails(@Param('id') id: string) {
+    return this.payoutService.getPayoutDetails(+id, 'admin');
   }
 }

@@ -41,8 +41,8 @@ export class PayoutController {
     return this.payoutService.remove(+id);
   }
 
-  @Post('paginate')
-  paginate(@Body() paginateRequestDto: PaginateRequestDto) {
-    return this.payoutService.paginate(paginateRequestDto);
-  }
+  // @Post('paginate')
+  // paginate(@Body() paginateRequestDto: PaginateRequestDto) {
+  //   return this.payoutService.paginate(paginateRequestDto);
+  // }
 }

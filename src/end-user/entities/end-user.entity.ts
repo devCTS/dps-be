@@ -21,6 +21,6 @@ export class EndUser {
   @Column()
   channelDetails: string;
 
-  @OneToMany(() => Payout, (payout) => payout.user)
+  @OneToMany(() => Payout, (payout) => payout.user, { nullable: true })
   payout: Payout;
 }
