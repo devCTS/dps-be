@@ -24,6 +24,7 @@ import { GatewayModule } from './gateway/gateway.module';
 import { PaymentSystemModule } from './payment-system/payment-system.module';
 import { PayoutModule } from './payout/payout.module';
 import { EndUserModule } from './end-user/end-user.module';
+import { PayinModule } from './payin/payin.module';
 
 @Module({
   imports: [
@@ -66,6 +67,7 @@ import { EndUserModule } from './end-user/end-user.module';
     PaymentSystemModule,
     PayoutModule,
     EndUserModule,
+    PayinModule,
   ],
   controllers: [AppController],
   providers: [
