@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   PaginateRequestDto,
@@ -8,10 +12,13 @@ import {
 import { Payin } from './entities/payin.entity';
 import { Repository } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
-import { PayinResponseDto } from './dto/payin-response.dto';
 import { adminPayins } from './data/dummy-data';
 import { SortedBy } from 'src/utils/enum/enum';
-import { PayinAdminResponseDto } from './dto/payin-admin-response.dto';
+import {
+  PayinAdminResponseDto,
+  PayinDetailsAdminResDto,
+} from './dto/payin-admin-response.dto';
+import { adminPayinOrders } from './data/dummy-order-details';
 
 @Injectable()
 export class PayinAdminService {
@@ -84,5 +91,22 @@ export class PayinAdminService {
       startRecord,
       endRecord,
     };
+  }
+
+  async getPayinOrderDetails(id: number) {
+    try {
+      const orderDetails = await this.payinRepository.findOneBy({ id });
+      if (!orderDetails) throw new NotFoundException('Order not found.');
+
+      const details = plainToInstance(
+        PayinDetailsAdminResDto,
+        adminPayinOrders,
+      );
+
+      return details;
+    } catch (error) {
+      console.log(error);
+      throw new InternalServerErrorException();
+    }
   }
 }

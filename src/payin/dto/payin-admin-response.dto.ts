@@ -1,4 +1,5 @@
 import {
+  IsDate,
   IsEnum,
   IsNotEmpty,
   IsNumber,
@@ -73,4 +74,46 @@ export class PayinAdminResponseDto {
   @IsNotEmpty()
   @IsNumber()
   systemProfit: number;
+}
+
+export class PayinDetailsAdminResDto {
+  @IsNumber()
+  id: number;
+
+  @IsString()
+  systemOrderId: string;
+
+  @IsString()
+  merchantOrderId: string;
+
+  @IsNumber()
+  amount: number;
+
+  @IsEnum(OrderStatus)
+  status: OrderStatus;
+
+  @IsEnum(ChannelName)
+  channel: ChannelName;
+
+  @IsDate()
+  createdAt: Date;
+
+  @IsDate()
+  updatedAt: Date;
+
+  @IsEnum(CallBackStatus)
+  callbackStatus: CallBackStatus;
+
+  @IsString()
+  user: string;
+
+  @IsString()
+  merchant: string;
+
+  @IsEnum(PaymentMadeOn)
+  payinMadeOn: PaymentMadeOn;
+  member: string;
+
+  @IsEnum(GatewayName)
+  gatewayName: GatewayName | null;
 }

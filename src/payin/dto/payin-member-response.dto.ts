@@ -1,4 +1,5 @@
 import {
+  IsDate,
   IsEnum,
   IsNotEmpty,
   IsNumber,
@@ -39,4 +40,30 @@ export class PayinMemberResponseDto {
   @IsOptional()
   @IsNumber()
   quotaDebit: number;
+}
+
+export class PayinDetailsMemberResDto {
+  @IsNumber()
+  id: number;
+
+  @IsString()
+  systemOrderId: string;
+
+  @IsNumber()
+  amount: number;
+
+  @IsEnum(OrderStatus)
+  status: OrderStatus;
+
+  @IsEnum(ChannelName)
+  channel: ChannelName;
+
+  @IsDate()
+  createdAt: Date;
+
+  @IsDate()
+  updatedAt: Date;
+
+  @IsString()
+  user: string;
 }
