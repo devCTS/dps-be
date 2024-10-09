@@ -1,5 +1,6 @@
 import { Identity } from 'src/identity/entities/identity.entity';
 import { MemberReferral } from 'src/member-referral/entities/member-referral.entity';
+import { Payout } from 'src/payout/entities/payout.entity';
 import {
   Entity,
   Column,
@@ -67,4 +68,7 @@ export class Member {
   // Used referral code of anther member
   @OneToOne(() => MemberReferral, (referral) => referral.referredMember)
   memberReferral: MemberReferral;
+
+  @OneToMany(() => Payout, (payout) => payout.member)
+  payout: Payout;
 }
