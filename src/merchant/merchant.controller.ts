@@ -1,3 +1,4 @@
+import { PayoutMerchantService } from './../payout/payout-merchant.service';
 import {
   Controller,
   Get,
@@ -21,7 +22,7 @@ export class MerchantController {
   constructor(
     private readonly merchantService: MerchantService,
     private identityService: IdentityService,
-    private readonly payoutService: PayoutService,
+    private readonly payoutMerchantService: PayoutMerchantService,
   ) {}
 
   @Post()
@@ -80,11 +81,11 @@ export class MerchantController {
 
   @Post('payouts/paginate')
   paginatePayouts(@Body() paginateRequestDto: PaginateRequestDto) {
-    return this.payoutService.paginate(paginateRequestDto, 'merchant');
+    return this.payoutMerchantService.paginate(paginateRequestDto);
   }
 
   @Get('payout/:id')
   getPayoutDetails(@Param('id') id: string) {
-    return this.payoutService.getPayoutDetails(+id, 'merchant');
+    return this.payoutMerchantService.getPayoutDetails(+id);
   }
 }

@@ -1,3 +1,4 @@
+import { PayoutAdminService } from './../payout/payout-admin.service';
 import {
   Controller,
   Get,
@@ -26,7 +27,7 @@ export class AdminController {
   constructor(
     private readonly adminService: AdminService,
     private identityService: IdentityService,
-    private readonly payoutService: PayoutService,
+    private readonly payoutAdminService: PayoutAdminService,
   ) {}
 
   @Post()
@@ -74,16 +75,16 @@ export class AdminController {
 
   @Post('payouts/paginate')
   paginatePayouts(@Body() paginateRequestDto: PaginateRequestDto) {
-    return this.payoutService.paginate(paginateRequestDto, 'admin');
+    return this.payoutAdminService.paginate(paginateRequestDto);
   }
 
   @Post('pending-payouts/paginate')
   paginatePendingPayouts(@Body() paginateRequestDto: PaginateRequestDto) {
-    return this.payoutService.paginate(paginateRequestDto, 'admin', true);
+    return this.payoutAdminService.paginate(paginateRequestDto, true);
   }
 
   @Get('payout/:id')
   getPayoutDetails(@Param('id') id: string) {
-    return this.payoutService.getPayoutDetails(+id, 'admin');
+    return this.payoutAdminService.getPayoutDetails(+id);
   }
 }

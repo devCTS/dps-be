@@ -21,13 +21,14 @@ import { RolesGuard } from 'src/roles/roles.guard';
 import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 import { IdentityService } from 'src/identity/identity.service';
 import { PayoutService } from 'src/payout/payout.service';
+import { PayoutMemberService } from 'src/payout/payout-member.service';
 
 @Controller('member')
 export class MemberController {
   constructor(
     private readonly memberService: MemberService,
     private identityService: IdentityService,
-    private readonly payoutService: PayoutService,
+    private readonly payoutMemberService: PayoutMemberService,
   ) {}
 
   // @Roles(Role.MEMBER)
@@ -82,11 +83,11 @@ export class MemberController {
 
   @Post('payouts/paginate')
   paginatePayouts(@Body() paginateRequestDto: PaginateRequestDto) {
-    return this.payoutService.paginate(paginateRequestDto, 'member');
+    return this.payoutMemberService.paginate(paginateRequestDto);
   }
 
   @Get('payout/:id')
   getPayoutDetails(@Param('id') id: string) {
-    return this.payoutService.getPayoutDetails(+id, 'member');
+    return this.payoutMemberService.getPayoutDetails(+id);
   }
 }

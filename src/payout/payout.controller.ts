@@ -40,9 +40,4 @@ export class PayoutController {
   remove(@Param('id') id: string) {
     return this.payoutService.remove(+id);
   }
-
-  // @Post('paginate')
-  // paginate(@Body() paginateRequestDto: PaginateRequestDto) {
-  //   return this.payoutService.paginate(paginateRequestDto);
-  // }
 }
