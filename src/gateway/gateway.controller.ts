@@ -44,7 +44,7 @@ export class GatewayController {
     return this.gatewayService.createPhonepe(createPhonepeDto);
   }
 
-  @Get('razorpay')
+  @Get('phonepe')
   getPhonepeConfig() {
     return this.gatewayService.getPhonepe();
   }
