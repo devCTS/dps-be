@@ -1,6 +1,9 @@
-import { IsBoolean, IsNotEmpty } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsNumber } from 'class-validator';
 
 export class RazorpayResponseDto {
+  @IsNumber()
+  id: number;
+
   @IsBoolean()
   @IsNotEmpty()
   incoming: boolean;
