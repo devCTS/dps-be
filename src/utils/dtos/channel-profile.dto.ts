@@ -20,6 +20,9 @@ export class ChannelProfileDto {
   upi: { upi_id: string; mobile: string } | null;
   net_banking: {
     bank_name: string;
+    beneficiary_name: string;
+    ifsc: string;
+    account_number: string;
   } | null;
   e_wallet: {
     app: string;
