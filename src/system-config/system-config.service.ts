@@ -20,6 +20,8 @@ import { UpdateMemberDefaultsDto } from './dto/update-member-defaults.dto';
 import { UpdateMerchantDefaultsDto } from './dto/update-merchant-defaults.dto';
 import { plainToInstance } from 'class-transformer';
 import { SystemConfigResponseDto } from './dto/system-config-response.dto';
+import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
+import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
 
 @Injectable()
 export class SystemConfigService {
@@ -28,6 +30,8 @@ export class SystemConfigService {
     private readonly systemConfigRepository: Repository<SystemConfig>,
     @InjectRepository(Identity)
     private readonly identityRepository: Repository<Identity>,
+    @InjectRepository(TransactionUpdate)
+    private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
   ) {}
 
   async create(createSystemConfigDto: CreateSystemConfigDto) {
@@ -316,5 +320,39 @@ export class SystemConfigService {
     if (!newSystemConfig) throw new InternalServerErrorException();
 
     return HttpStatus.OK;
+  }
+
+  async updateSystemProfit(amount, failed) {
+    const systemConfig = await this.findLatest();
+
+    if (!systemConfig) throw new NotFoundException('SystemConfig not found!');
+
+    await this.systemConfigRepository.update(systemConfig.id, {
+      systemProfit: systemConfig.systemProfit + amount,
+    });
+
+    const transactionUpdateEntries =
+      await this.transactionUpdateRepository.find({
+        where: {
+          userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
+          pending: true,
+        },
+        relations: ['identity'],
+      });
+
+    for (const entry of transactionUpdateEntries) {
+      let beforeValue = systemConfig.systemProfit;
+      let afterValue = 0;
+
+      if (entry.userType === UserTypeForTransactionUpdates.SYSTEM_PROFIT)
+        afterValue = systemConfig.systemProfit + amount;
+
+      if (failed) afterValue = systemConfig.systemProfit;
+
+      await this.transactionUpdateRepository.update(entry.userType, {
+        before: beforeValue,
+        after: afterValue,
+      });
+    }
   }
 }

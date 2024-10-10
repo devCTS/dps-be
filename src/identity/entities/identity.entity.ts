@@ -6,6 +6,8 @@ import {
   OneToMany,
   Unique,
   OneToOne,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { IP } from './ip.entity';
 import { Admin } from 'src/admin/entities/admin.entity';
@@ -15,6 +17,7 @@ import { Agent } from 'src/agent/entities/agent.entity';
 import { NetBanking } from 'src/channel/entity/net-banking.entity';
 import { EWallet } from 'src/channel/entity/e-wallet.entity';
 import { Upi } from 'src/channel/entity/upi.entity';
+import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 
 @Entity()
 export class Identity {
@@ -77,4 +80,11 @@ export class Identity {
 
   @OneToMany(() => Upi, (upi) => upi.identity)
   upi: Upi[];
+
+  @OneToMany(
+    () => TransactionUpdate,
+    (transactionUpdate) => transactionUpdate.user,
+    { nullable: true },
+  )
+  transactionUpdate: TransactionUpdate[];
 }

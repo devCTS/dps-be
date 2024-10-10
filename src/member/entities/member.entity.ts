@@ -83,4 +83,10 @@ export class Member {
 
   @OneToMany(() => Payout, (payout) => payout.member)
   payout: Payout;
+
+  @Column({ type: 'float', nullable: true, default: 0 }) // remove nullable
+  quota: number;
+
+  @Column({ type: 'float', nullable: true, default: 0 }) // remove nullable
+  balance: number;
 }

@@ -1,6 +1,7 @@
 import { EndUser } from 'src/end-user/entities/end-user.entity';
 import { Member } from 'src/member/entities/member.entity';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
+import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import {
   ChannelName,
   GatewayName,
@@ -13,6 +14,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -70,4 +72,11 @@ export class Payout {
   @ManyToOne(() => Member, (member) => member.payout, { nullable: true })
   @JoinColumn()
   member: Member;
+
+  @OneToMany(
+    () => TransactionUpdate,
+    (transactionUpdate) => transactionUpdate.payinOrder,
+    { nullable: true },
+  )
+  transactionUpdate: TransactionUpdate[];
 }

@@ -1,3 +1,4 @@
+import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import {
   CallBackStatus,
   ChannelName,
@@ -9,6 +10,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -56,4 +58,11 @@ export class Payin {
 
   @UpdateDateColumn()
   updatedDate: Date;
+
+  @OneToMany(
+    () => TransactionUpdate,
+    (transactionUpdate) => transactionUpdate.payinOrder,
+    { nullable: true },
+  )
+  transactionUpdate: TransactionUpdate[];
 }

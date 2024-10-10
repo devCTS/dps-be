@@ -41,3 +41,18 @@ export enum NotificationStatus {
   SUCCESS = 'SUCCESS',
   PENDING = 'PENDING',
 }
+
+export enum OrderType {
+  PAYIN = 'Payin',
+  PAYOUT = 'Payout',
+  TOPUP = 'Topup',
+  WITHDRAWAl = 'Withdrawal',
+}
+
+export enum UserTypeForTransactionUpdates {
+  MERCHANT_BALANCE = 'merchant_balance',
+  MEMBER_QUOTA = 'member_quota',
+  MEMBER_BALANCE = 'member_balance',
+  AGENT_BALANCE = 'agent_balance',
+  SYSTEM_PROFIT = 'system_profit',
+}

@@ -21,12 +21,17 @@ import {
 import { JwtService } from 'src/services/jwt/jwt.service';
 import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 import { MemberReferralService } from 'src/member-referral/member-referral.service';
+import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
+import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
 
 @Injectable()
 export class MemberService {
   constructor(
     @InjectRepository(Member)
     private readonly memberRepository: Repository<Member>,
+    @InjectRepository(TransactionUpdate)
+    private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
+
     private readonly identityService: IdentityService,
     private readonly jwtService: JwtService,
     private readonly memberReferralService: MemberReferralService,
@@ -324,5 +329,83 @@ export class MemberService {
       changePasswordDto,
       membaeData.identity.id,
     );
+  }
+
+  async updateQuota(identityId, amount, failed) {
+    const member = await this.memberRepository.findOne({
+      where: {
+        identity: identityId,
+      },
+      relations: ['identity'],
+    });
+
+    if (!member) throw new NotFoundException('Member not found!');
+
+    await this.memberRepository.update(member.id, {
+      quota: member.quota + amount,
+    });
+
+    const transactionUpdateEntries =
+      await this.transactionUpdateRepository.find({
+        where: {
+          user: identityId,
+          pending: true,
+        },
+        relations: ['identity'],
+      });
+
+    for (const entry of transactionUpdateEntries) {
+      let beforeValue = member.quota;
+      let afterValue = 0;
+
+      if (entry.userType === UserTypeForTransactionUpdates.MEMBER_QUOTA)
+        afterValue = member.quota + amount;
+
+      if (failed) afterValue = member.quota;
+
+      await this.transactionUpdateRepository.update(entry.user?.id, {
+        before: beforeValue,
+        after: afterValue,
+      });
+    }
+  }
+
+  async updateBalance(identityId, amount, failed) {
+    const member = await this.memberRepository.findOne({
+      where: {
+        identity: identityId,
+      },
+      relations: ['identity'],
+    });
+
+    if (!member) throw new NotFoundException('Member not found!');
+
+    await this.memberRepository.update(member.id, {
+      quota: member.quota + amount,
+    });
+
+    const transactionUpdateEntries =
+      await this.transactionUpdateRepository.find({
+        where: {
+          user: identityId,
+          pending: true,
+        },
+        relations: ['identity'],
+      });
+
+    for (const entry of transactionUpdateEntries) {
+      let beforeValue = member.balance;
+      let afterValue = 0;
+
+      if (entry.userType === UserTypeForTransactionUpdates.MEMBER_BALANCE)
+        afterValue = member.balance + amount;
+
+      if (failed) afterValue = member.balance;
+
+      await this.transactionUpdateRepository.update(entry.user?.id, {
+        before: beforeValue,
+        after: afterValue,
+      });
+    }
   }
 }

@@ -11,6 +11,8 @@ import { IdentityModule } from 'src/identity/identity.module';
 import { IP } from 'src/identity/entities/ip.entity';
 import { AgentReferralModule } from 'src/agent-referral/agent-referral.module';
 import { PayoutModule } from 'src/payout/payout.module';
+import { TransactionUpdatesModule } from 'src/transaction-updates/transaction-updates.module';
+import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 
 @Module({
   imports: [
@@ -20,11 +22,13 @@ import { PayoutModule } from 'src/payout/payout.module';
       ProportionalPayinMode,
       AmountRangePayinMode,
       IP,
+      TransactionUpdate,
     ]),
     JwtModule,
     IdentityModule,
     AgentReferralModule,
     PayoutModule,
+    TransactionUpdatesModule,
   ],
   controllers: [MerchantController],
   providers: [MerchantService],

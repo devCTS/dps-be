@@ -107,4 +107,7 @@ export class Merchant {
 
   @OneToMany(() => Payout, (payout) => payout.merchant)
   payout: Payout;
+
+  @Column({ type: 'float', nullable: true, default: 0 }) // remove nullable
+  balance: number;
 }
