@@ -25,6 +25,9 @@ export class MemberResponseDto {
   phone: string | null;
 
   @Expose()
+  telegramId: string;
+
+  @Expose()
   id: number;
 
   @Expose()
@@ -47,6 +50,15 @@ export class MemberResponseDto {
 
   @Expose()
   dailyTotalPayoutLimit: number;
+
+  @Expose()
+  withdrawalRate: number;
+
+  @Expose()
+  minWithdrawalAmount: number;
+
+  @Expose()
+  maxWithdrawalAmount: number;
 
   @Expose()
   @DateFormat()

@@ -3,9 +3,7 @@ import {
   IsString,
   IsOptional,
   IsBoolean,
-  IsInt,
   Min,
-  Max,
   IsNotEmpty,
   IsNumber,
   IsEmail,
@@ -41,6 +39,9 @@ export class CreateMemberDto {
   phone?: string;
 
   @IsString()
+  telegramId: string;
+
+  @IsString()
   @IsOptional()
   referralCode?: string;
 
@@ -71,6 +72,15 @@ export class CreateMemberDto {
   @IsNumber()
   @Min(0)
   dailyTotalPayoutLimit: number;
+
+  @IsNumber()
+  withdrawalRate: number;
+
+  @IsNumber()
+  minWithdrawalAmount: number;
+
+  @IsNumber()
+  maxWithdrawalAmount: number;
 
   @IsOptional()
   @IsArray()
