@@ -50,6 +50,10 @@ export class GatewayService {
   ];
 
   async createRazorPay(createRazorPayDto: CreateRazorpayDto) {
+    const isGatewayExists = await this.razorpayRepository.find();
+
+    if (isGatewayExists?.length > 0) throw new ConflictException();
+
     const secretTextKeys = this.secretTextKeysRazorpay;
 
     secretTextKeys.forEach((key) => {
@@ -83,6 +87,10 @@ export class GatewayService {
   }
 
   async createPhonepe(createPhonepeDto: CreatePhonepeDto) {
+    const isGatewayExists = await this.phonepeRepository.find();
+
+    if (isGatewayExists?.length > 0) throw new ConflictException();
+
     const phonepeSecretKeys = this.secretTextKeysPhonepe;
 
     phonepeSecretKeys.forEach((key) => {
