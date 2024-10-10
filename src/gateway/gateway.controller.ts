@@ -31,12 +31,9 @@ export class GatewayController {
     return this.gatewayService.getRazorpay();
   }
 
-  @Post('razorpay/update/:id')
-  UpdateRazorpay(
-    @Body() updateRazorpayDto: UpdateRazorpayDto,
-    @Param('id', ParseIntPipe) id: number,
-  ) {
-    return this.gatewayService.updateRazorpay(id, updateRazorpayDto);
+  @Post('razorpay/update')
+  UpdateRazorpay(@Body() updateRazorpayDto: UpdateRazorpayDto) {
+    return this.gatewayService.updateRazorpay(updateRazorpayDto);
   }
 
   @Post('phonepe/create')
@@ -49,12 +46,9 @@ export class GatewayController {
     return this.gatewayService.getPhonepe();
   }
 
-  @Post('phonepe/update/:id')
-  updatePhonepe(
-    @Body() updatePhonepeDto: UpdatePhonepDto,
-    @Param('id', ParseIntPipe) id: number,
-  ) {
-    return this.gatewayService.updatePhonepe(id, updatePhonepeDto);
+  @Post('phonepe/update')
+  updatePhonepe(@Body() updatePhonepeDto: UpdatePhonepDto) {
+    return this.gatewayService.updatePhonepe(updatePhonepeDto);
   }
 
   @Post('channel-setting/create')

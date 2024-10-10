@@ -78,13 +78,13 @@ export class GatewayService {
     return result;
   }
 
-  async updateRazorpay(id: number, updateRazorpayDto: UpdateRazorpayDto) {
+  async updateRazorpay(updateRazorpayDto: UpdateRazorpayDto) {
     const secretTextKeys = this.secretTextKeysRazorpay;
 
-    const existingData = await this.razorpayRepository.findOneBy({ id });
+    const existingData = await this.razorpayRepository.find();
     if (!existingData) throw new NotFoundException();
 
-    const updatedData = Object.assign({}, existingData, updateRazorpayDto);
+    const updatedData = Object.assign({}, existingData[0], updateRazorpayDto);
 
     secretTextKeys.forEach((key) => {
       if (updateRazorpayDto[key]) {
@@ -92,7 +92,7 @@ export class GatewayService {
       }
     });
 
-    await this.razorpayRepository.update(id, updatedData);
+    await this.razorpayRepository.update(existingData[0].id, updatedData);
     return HttpStatus.OK;
   }
 
@@ -120,13 +120,13 @@ export class GatewayService {
     return result;
   }
 
-  async updatePhonepe(id: number, updatePhonepeDto: UpdatePhonepDto) {
+  async updatePhonepe(updatePhonepeDto: UpdatePhonepDto) {
     const secretKeysPhonepe = this.secretTextKeysPhonepe;
 
-    const existingData = await this.phonepeRepository.findOneBy({ id });
+    const existingData = await this.phonepeRepository.find();
     if (!existingData) throw new NotFoundException();
 
-    const updatedData = Object.assign({}, existingData, updatePhonepeDto);
+    const updatedData = Object.assign({}, existingData[0], updatePhonepeDto);
 
     secretKeysPhonepe.forEach((key) => {
       if (updatePhonepeDto[key]) {
@@ -136,7 +136,7 @@ export class GatewayService {
       }
     });
 
-    await this.phonepeRepository.update(id, updatedData);
+    await this.phonepeRepository.update(existingData[0].id, updatedData);
     return HttpStatus.OK;
   }
 
