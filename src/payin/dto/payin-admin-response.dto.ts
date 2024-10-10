@@ -1,4 +1,5 @@
 import {
+  IsDate,
   IsEnum,
   IsNotEmpty,
   IsNumber,
@@ -13,7 +14,7 @@ import {
   PaymentMadeOn,
 } from 'src/utils/enum/enum';
 
-export class PayinResponseDto {
+export class PayinAdminResponseDto {
   @IsNotEmpty()
   @IsNumber()
   id: number;
@@ -73,4 +74,46 @@ export class PayinResponseDto {
   @IsNotEmpty()
   @IsNumber()
   systemProfit: number;
+}
+
+export class PayinDetailsAdminResDto {
+  @IsNumber()
+  id: number;
+
+  @IsString()
+  systemOrderId: string;
+
+  @IsString()
+  merchantOrderId: string;
+
+  @IsNumber()
+  amount: number;
+
+  @IsEnum(OrderStatus)
+  status: OrderStatus;
+
+  @IsEnum(ChannelName)
+  channel: ChannelName;
+
+  @IsDate()
+  createdAt: Date;
+
+  @IsDate()
+  updatedAt: Date;
+
+  @IsEnum(CallBackStatus)
+  callbackStatus: CallBackStatus;
+
+  @IsString()
+  user: string;
+
+  @IsString()
+  merchant: string;
+
+  @IsEnum(PaymentMadeOn)
+  payinMadeOn: PaymentMadeOn;
+  member: string;
+
+  @IsEnum(GatewayName)
+  gatewayName: GatewayName | null;
 }

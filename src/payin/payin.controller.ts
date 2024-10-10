@@ -1,14 +1,24 @@
-import { Body, Controller, Param, Post } from '@nestjs/common';
-import { PayinService } from './payin.service';
+import { Body, Controller, Param, ParseIntPipe, Post } from '@nestjs/common';
 import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
-import { SortedBy } from 'src/utils/enum/enum';
+import { PayinAdminService } from './payin-admin.service';
+import { PayinMerchantService } from './payin-merchant.service';
+import { PayinMemberService } from './payin-member.service';
 
 @Controller('payin')
 export class PayinController {
-  constructor(private payinService: PayinService) {}
+  constructor(
+    private payinAdminService: PayinAdminService,
+    private payinMemberService: PayinMemberService,
+    private payinMerchantService: PayinMerchantService,
+  ) {}
 
   @Post('paginate')
-  paginate(@Body() paginateRequestDto: PaginateRequestDto) {
-    return this.payinService.paginatePayins(paginateRequestDto);
+  adminPayins(@Body() paginateRequestDto: PaginateRequestDto) {
+    return this.payinAdminService.paginatePayins(paginateRequestDto);
+  }
+
+  @Post('order-details/:id')
+  getPayinOrderDetails(@Param('id', ParseIntPipe) id: number) {
+    return this.payinAdminService.getPayinOrderDetails(id);
   }
 }

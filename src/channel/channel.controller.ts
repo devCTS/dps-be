@@ -8,9 +8,9 @@ import { CreateChannelConfigDto } from './dto/create-channel-config.dto';
 export class ChannelController {
   constructor(private channelService: ChannelService) {}
 
-  @Post('update')
-  createChannelConfig(@Body() createChannelConfigDto: CreateChannelConfigDto) {
-    return this.channelService.createChannelConfig(createChannelConfigDto);
+  @Post('load-channels')
+  loadChannelConfig() {
+    return this.channelService.createChannelConfig();
   }
 
   @Post('update')

@@ -7,7 +7,7 @@ export class Config {
   id: number;
 
   @Column({ unique: true })
-  tag: string;
+  tag_name: string;
 
   @Column()
   incoming: boolean;

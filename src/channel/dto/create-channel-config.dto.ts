@@ -1,11 +1,13 @@
-import { IsBoolean, IsEnum, IsNotEmpty, IsOptional } from 'class-validator';
+import {
+  IsBoolean,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { ChannelName } from 'src/utils/enum/enum';
-import { PrimaryGeneratedColumn } from 'typeorm';
 
 export class CreateChannelConfigDto {
-  @PrimaryGeneratedColumn()
-  id: number;
-
   @IsNotEmpty()
   @IsEnum(ChannelName)
   name: ChannelName;
@@ -17,4 +19,8 @@ export class CreateChannelConfigDto {
   @IsNotEmpty()
   @IsBoolean()
   outgoing: boolean;
+
+  @IsNotEmpty()
+  @IsString()
+  tag_name: string;
 }

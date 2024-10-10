@@ -16,25 +16,16 @@ export class FilledFieldDto {
   value: string;
 }
 
-// DTO for the ChannelProfileField with the filled fields array
 export class ChannelProfileDto {
-  @IsNumber()
-  @IsNotEmpty()
-  channelId: number;
-
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => FilledFieldDto)
-  profileFields: FilledFieldDto[];
-}
-
-export class ChannelProfileDto2 {
   upi: { upi_id: string; mobile: string } | null;
   net_banking: {
     bank_name: string;
+    beneficiary_name: string;
+    ifsc: string;
+    account_number: string;
   } | null;
-  e_wallet: any;
+  e_wallet: {
+    app: string;
+    mobile: string;
+  } | null;
 }
-
-// either a key should have all the necessary fields or completly null or undefined.
-// User can send any combination of field and blank keys for channels.

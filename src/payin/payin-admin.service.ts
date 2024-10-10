@@ -1,4 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import {
+  HttpStatus,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   PaginateRequestDto,
@@ -8,16 +13,21 @@ import {
 import { Payin } from './entities/payin.entity';
 import { Repository } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
-import { PayinResponseDto } from './dto/payin-response.dto';
 import { adminPayins } from './data/dummy-data';
-import { SortedBy } from 'src/utils/enum/enum';
+import { OrderStatus, SortedBy } from 'src/utils/enum/enum';
+import {
+  PayinAdminResponseDto,
+  PayinDetailsAdminResDto,
+} from './dto/payin-admin-response.dto';
+import { adminPayinOrders } from './data/dummy-order-details';
 
 @Injectable()
-export class PayinService {
+export class PayinAdminService {
   constructor(
     @InjectRepository(Payin)
     private payinRepository: Repository<Payin>,
   ) {}
+
   async paginatePayins(paginateRequestDto: PaginateRequestDto) {
     const query = this.payinRepository.createQueryBuilder('payin');
 
@@ -38,7 +48,7 @@ export class PayinService {
       const startDate = parseStartDate(paginateRequestDto.startDate);
       const endDate = parseEndDate(paginateRequestDto.endDate);
 
-      query.andWhere('member.created_at BETWEEN :startDate AND :endDate', {
+      query.andWhere('payin.created_at BETWEEN :startDate AND :endDate', {
         startDate,
         endDate,
       });
@@ -68,7 +78,7 @@ export class PayinService {
     // Adding data from dummy file. Will be changed later
     // let data = Object.assign({}, rows, adminPayins[0]);
 
-    const dtos = plainToInstance(PayinResponseDto, adminPayins);
+    const dtos = plainToInstance(PayinAdminResponseDto, adminPayins);
 
     const startRecord = skip + 1;
     const endRecord = Math.min(skip + pageSize, total);
@@ -82,5 +92,35 @@ export class PayinService {
       startRecord,
       endRecord,
     };
+  }
+
+  async getPayinOrderDetails(id: number) {
+    try {
+      const orderDetails = await this.payinRepository.findOneBy({ id });
+      if (!orderDetails) throw new NotFoundException('Order not found.');
+
+      const details = plainToInstance(
+        PayinDetailsAdminResDto,
+        adminPayinOrders,
+      );
+
+      return details;
+    } catch (error) {
+      console.log(error);
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async updateOrderStatus(id: number, orderStatus: OrderStatus) {
+    const payinOrderDetails = await this.getPayinOrderDetails(id);
+
+    if (!payinOrderDetails)
+      throw new NotFoundException('Order details not found');
+
+    const updatedDetais = { ...payinOrderDetails, status: orderStatus };
+
+    await this.payinRepository.update(id, updatedDetais);
+
+    return HttpStatus.OK;
   }
 }
