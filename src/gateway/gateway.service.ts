@@ -20,6 +20,8 @@ import {
   UpdateChannelSettingsDto,
 } from './dto/create-channel-settings.dto';
 import { ChannelSettings } from './entities/channel-settings.entity';
+import { plainToInstance } from 'class-transformer';
+import { RazorpayResponseDto } from './dto/razorpay-response.dto';
 
 @Injectable()
 export class GatewayService {
@@ -66,6 +68,13 @@ export class GatewayService {
 
     await this.razorpayRepository.save(createRazorPayDto);
     return HttpStatus.OK;
+  }
+
+  async getRazorpay() {
+    const razorpayData = await this.razorpayRepository.find();
+    if (!razorpayData) throw new NotFoundException();
+    const result = plainToInstance(RazorpayResponseDto, razorpayData[0]);
+    return result;
   }
 
   async updateRazorpay(id: number, updateRazorpayDto: UpdateRazorpayDto) {

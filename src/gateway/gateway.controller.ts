@@ -1,4 +1,11 @@
-import { Body, Controller, Param, ParseIntPipe, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+} from '@nestjs/common';
 import {
   CreateRazorpayDto,
   UpdateRazorpayDto,
@@ -17,6 +24,11 @@ export class GatewayController {
   @Post('razorpay/create')
   CreateRazorpay(@Body() createRazorpayDto: CreateRazorpayDto) {
     return this.gatewayService.createRazorPay(createRazorpayDto);
+  }
+
+  @Get('razorpay')
+  getRazorpayConfig() {
+    return this.gatewayService.getRazorpay();
   }
 
   @Post('razorpay/update/:id')
