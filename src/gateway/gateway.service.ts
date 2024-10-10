@@ -22,6 +22,7 @@ import {
 import { ChannelSettings } from './entities/channel-settings.entity';
 import { plainToInstance } from 'class-transformer';
 import { RazorpayResponseDto } from './dto/razorpay-response.dto';
+import { PhonepeResponseDto } from './dto/phonepe-response.dto';
 
 @Injectable()
 export class GatewayService {
@@ -110,6 +111,13 @@ export class GatewayService {
 
     await this.phonepeRepository.save(createPhonepeDto);
     return HttpStatus.OK;
+  }
+
+  async getPhonepe() {
+    const phonepeData = await this.phonepeRepository.find();
+    if (!phonepeData) throw new NotFoundException();
+    const result = plainToInstance(PhonepeResponseDto, phonepeData[0]);
+    return result;
   }
 
   async updatePhonepe(id: number, updatePhonepeDto: UpdatePhonepDto) {

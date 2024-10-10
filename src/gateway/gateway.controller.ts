@@ -44,6 +44,11 @@ export class GatewayController {
     return this.gatewayService.createPhonepe(createPhonepeDto);
   }
 
+  @Get('razorpay')
+  getPhonepeConfig() {
+    return this.gatewayService.getPhonepe();
+  }
+
   @Post('phonepe/update/:id')
   updatePhonepe(
     @Body() updatePhonepeDto: UpdatePhonepDto,
