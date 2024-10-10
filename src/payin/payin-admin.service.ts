@@ -1,4 +1,5 @@
 import {
+  HttpStatus,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -13,7 +14,7 @@ import { Payin } from './entities/payin.entity';
 import { Repository } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import { adminPayins } from './data/dummy-data';
-import { SortedBy } from 'src/utils/enum/enum';
+import { OrderStatus, SortedBy } from 'src/utils/enum/enum';
 import {
   PayinAdminResponseDto,
   PayinDetailsAdminResDto,
@@ -108,5 +109,18 @@ export class PayinAdminService {
       console.log(error);
       throw new InternalServerErrorException();
     }
+  }
+
+  async updateOrderStatus(id: number, orderStatus: OrderStatus) {
+    const payinOrderDetails = await this.getPayinOrderDetails(id);
+
+    if (!payinOrderDetails)
+      throw new NotFoundException('Order details not found');
+
+    const updatedDetais = { ...payinOrderDetails, status: orderStatus };
+
+    await this.payinRepository.update(id, updatedDetais);
+
+    return HttpStatus.OK;
   }
 }
