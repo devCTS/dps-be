@@ -57,7 +57,11 @@ export class ChannelService {
   }
 
   async getAllConfig() {
-    return await this.configChannelRepository.find();
+    return await this.configChannelRepository.find({
+      order: {
+        id: 'ASC',
+      },
+    });
   }
 
   async getConfig(name: ChannelName) {
