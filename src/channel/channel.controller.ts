@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { ChannelService } from './channel.service';
 import { UpdateChannelConfigDto } from './dto/update-channel-config.dto';
 import { ChannelName } from 'src/utils/enum/enum';
@@ -13,7 +13,7 @@ export class ChannelController {
     return this.channelService.createChannelConfig();
   }
 
-  @Post('update')
+  @Patch('update')
   async updateChannelConfig(
     @Body() updateChannelConfigDto: UpdateChannelConfigDto,
   ) {
