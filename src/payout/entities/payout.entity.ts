@@ -61,6 +61,9 @@ export class Payout {
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
 
+  @Column({ type: 'float', nullable: true })
+  gatewayServiceRate: number;
+
   @ManyToOne(() => EndUser, (endUser) => endUser.payout)
   @JoinColumn()
   user: EndUser;

@@ -1,3 +1,6 @@
+import { EndUser } from 'src/end-user/entities/end-user.entity';
+import { Member } from 'src/member/entities/member.entity';
+import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import {
   CallBackStatus,
@@ -10,6 +13,8 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -44,20 +49,26 @@ export class Payin {
   @Column({ nullable: true, type: 'enum', enum: GatewayName })
   gatewayName: GatewayName;
 
-  @Column()
-  user: string;
-
-  @Column()
-  merchant: string;
-
-  @Column()
-  member: string;
-
   @CreateDateColumn()
   createdDate: Date;
 
   @UpdateDateColumn()
   updatedDate: Date;
+
+  @Column({ type: 'float', nullable: true })
+  gatewayServiceRate: number;
+
+  @ManyToOne(() => EndUser, (endUser) => endUser.payin)
+  @JoinColumn()
+  user: EndUser;
+
+  @ManyToOne(() => Merchant, (merchant) => merchant.payin)
+  @JoinColumn()
+  merchant: Merchant;
+
+  @ManyToOne(() => Member, (member) => member.payin, { nullable: true })
+  @JoinColumn()
+  member: Member;
 
   @OneToMany(
     () => TransactionUpdate,

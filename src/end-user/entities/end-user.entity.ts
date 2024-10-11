@@ -1,3 +1,4 @@
+import { Payin } from 'src/payin/entities/payin.entity';
 import { Payout } from 'src/payout/entities/payout.entity';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
@@ -20,6 +21,9 @@ export class EndUser {
 
   @Column()
   channelDetails: string;
+
+  @OneToMany(() => Payin, (payin) => payin.user, { nullable: true })
+  payin: Payout;
 
   @OneToMany(() => Payout, (payout) => payout.user, { nullable: true })
   payout: Payout;

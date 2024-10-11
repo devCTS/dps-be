@@ -63,6 +63,6 @@ export class Agent {
   @OneToOne(() => AgentReferral, (referral) => referral.referredAgent)
   agentReferral: AgentReferral;
 
-  @Column({ type: 'float', nullable: true, default: 0 }) // Remove nullable
+  @Column({ type: 'float', default: 0 })
   balance: number;
 }

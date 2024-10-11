@@ -1,5 +1,6 @@
 import { Identity } from 'src/identity/entities/identity.entity';
 import { MemberReferral } from 'src/member-referral/entities/member-referral.entity';
+import { Payin } from 'src/payin/entities/payin.entity';
 import { Payout } from 'src/payout/entities/payout.entity';
 import {
   Entity,
@@ -81,12 +82,15 @@ export class Member {
   @OneToOne(() => MemberReferral, (referral) => referral.referredMember)
   memberReferral: MemberReferral;
 
+  @OneToMany(() => Payin, (payin) => payin.member)
+  payin: Payin;
+
   @OneToMany(() => Payout, (payout) => payout.member)
   payout: Payout;
 
-  @Column({ type: 'float', nullable: true, default: 0 }) // remove nullable
+  @Column({ type: 'float', default: 0 })
   quota: number;
 
-  @Column({ type: 'float', nullable: true, default: 0 }) // remove nullable
+  @Column({ type: 'float', default: 0 })
   balance: number;
 }

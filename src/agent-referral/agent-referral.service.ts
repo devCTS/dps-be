@@ -78,7 +78,7 @@ export class AgentReferralService {
 
   async findAll() {
     const results = await this.agentReferralRepository.find({
-      relations: ['agent'],
+      relations: ['agent', 'referredMerchant', 'referredAgent'],
     });
 
     return {
@@ -285,5 +285,26 @@ export class AgentReferralService {
       children: children,
       agentType: agent.integrationId ? 'merchant' : 'agent',
     };
+  }
+
+  async getReferralTreeOfUser(userId: number) {
+    const referralTree = await this.getReferralTree();
+    return this.trimTreeToUser(referralTree, userId);
+  }
+
+  private trimTreeToUser(tree: any, userId: number): any {
+    if (tree.id === userId) return tree;
+
+    const trimmedChildren = tree.children
+      .map((child: any) => this.trimTreeToUser(child, userId))
+      .filter((child: any) => child !== null);
+
+    if (trimmedChildren.length > 0)
+      return {
+        ...tree,
+        children: trimmedChildren,
+      };
+
+    return null;
   }
 }
