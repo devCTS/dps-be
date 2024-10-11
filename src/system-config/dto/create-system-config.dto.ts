@@ -5,19 +5,21 @@ import {
   IsOptional,
   IsArray,
   ValidateNested,
+  IsEnum,
 } from 'class-validator';
 import { ChannelProfileDto } from 'src/utils/dtos/channel-profile.dto';
+import { GatewayName } from 'src/utils/enum/enum';
 
 export class CreateSystemConfigDto {
   // Gateways and Timeouts
-  @IsNumber()
-  defaultPayinGateway: number;
+  @IsEnum(GatewayName)
+  defaultPayinGateway: GatewayName;
 
-  @IsNumber()
-  defaultPayoutGateway: number;
+  @IsEnum(GatewayName)
+  defaultPayoutGateway: GatewayName;
 
-  @IsNumber()
-  defaultWithdrawalGateway: number;
+  @IsEnum(GatewayName)
+  defaultWithdrawalGateway: GatewayName;
 
   @IsNumber()
   payinTimeout: number;
@@ -35,6 +37,7 @@ export class CreateSystemConfigDto {
   @IsNumber()
   topupAmount: number;
 
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ChannelProfileDto)
