@@ -48,6 +48,10 @@ export class MemberService {
       phone,
       referralCode,
       channelProfile,
+      minWithdrawalAmount,
+      maxWithdrawalAmount,
+      withdrawalRate,
+      telegramId,
     } = createMemberDto;
 
     if (referralCode) {
@@ -77,6 +81,10 @@ export class MemberService {
       singlePayoutLowerLimit,
       singlePayoutUpperLimit,
       topupCommissionRate,
+      telegramId,
+      minWithdrawalAmount,
+      maxWithdrawalAmount,
+      withdrawalRate,
     });
 
     const createdMember = await this.memberRepository.save(member);
