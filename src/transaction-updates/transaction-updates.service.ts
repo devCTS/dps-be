@@ -1,5 +1,5 @@
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { CreateTransactionUpdateDto } from './dto/create-transaction-update.dto';
 import { UpdateTransactionUpdateDto } from './dto/update-transaction-update.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -13,8 +13,11 @@ export class TransactionUpdatesService {
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
   ) {}
 
-  create(createTransactionUpdateDto: CreateTransactionUpdateDto) {
-    return 'This action adds a new transactionUpdate';
+  async create(createTransactionUpdateDto: CreateTransactionUpdateDto) {
+    const transactionUpdate = await this.transactionUpdateRepository.save({
+      ...createTransactionUpdateDto,
+    });
+    return HttpStatus.CREATED;
   }
 
   async updatePendingStatusToFalse(orderId, orderType: OrderType) {
