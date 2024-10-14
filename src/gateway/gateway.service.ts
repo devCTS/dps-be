@@ -15,14 +15,12 @@ import { Razorpay } from './entities/razorpay.entity';
 import { Repository } from 'typeorm';
 import { CreatePhonepeDto, UpdatePhonepDto } from './dto/create-phonepe.dto';
 import { Phonepe } from './entities/phonepe.entity';
-import {
-  CreateChannelSettingsDto,
-  UpdateChannelSettingsDto,
-} from './dto/create-channel-settings.dto';
+import { UpdateChannelSettingsDto } from './dto/create-channel-settings.dto';
 import { ChannelSettings } from './entities/channel-settings.entity';
 import { plainToInstance } from 'class-transformer';
 import { RazorpayResponseDto } from './dto/razorpay-response.dto';
 import { PhonepeResponseDto } from './dto/phonepe-response.dto';
+import { loadChannelData } from './data/channel.data';
 
 @Injectable()
 export class GatewayService {
@@ -140,22 +138,20 @@ export class GatewayService {
     return HttpStatus.OK;
   }
 
-  async createChannelSettings(
-    createChannelSettingsDto: CreateChannelSettingsDto,
-  ) {
+  async createChannelSettings() {
     const isDataExists = await this.channelSettingsRepository.find();
 
     if (isDataExists?.length > 0)
       throw new ConflictException('Data already exists');
 
-    if (
-      createChannelSettingsDto.max_amount < createChannelSettingsDto.min_amount
-    )
-      throw new BadRequestException(
-        'Max amount should be greater than min amount.',
-      );
+    const channelSettings = loadChannelData();
 
-    await this.channelSettingsRepository.save(createChannelSettingsDto);
+    const channelData = channelSettings.map((channelsetting) =>
+      this.channelSettingsRepository.create(channelsetting),
+    );
+
+    await this.channelSettingsRepository.save(channelData);
+
     return HttpStatus.OK;
   }
 
@@ -175,7 +171,7 @@ export class GatewayService {
       updateChannelSettingsDto,
     );
 
-    if (updatedSettings.max_amount < updatedSettings.min_amount)
+    if (updatedSettings.maxAmount < updatedSettings.minAmount)
       throw new BadRequestException(
         'Max amount should be greater than min amount.',
       );

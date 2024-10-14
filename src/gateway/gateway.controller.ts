@@ -12,10 +12,7 @@ import {
 } from './dto/create-razorpay.dto';
 import { GatewayService } from './gateway.service';
 import { CreatePhonepeDto, UpdatePhonepDto } from './dto/create-phonepe.dto';
-import {
-  CreateChannelSettingsDto,
-  UpdateChannelSettingsDto,
-} from './dto/create-channel-settings.dto';
+import { UpdateChannelSettingsDto } from './dto/create-channel-settings.dto';
 
 @Controller('gateway')
 export class GatewayController {
@@ -52,10 +49,8 @@ export class GatewayController {
   }
 
   @Post('channel-setting/create')
-  createChannelSettings(
-    @Body() createChannelSettingsDto: CreateChannelSettingsDto,
-  ) {
-    return this.gatewayService.createChannelSettings(createChannelSettingsDto);
+  createChannelSettings() {
+    return this.gatewayService.createChannelSettings();
   }
 
   @Post('channel-setting/update/:id')
