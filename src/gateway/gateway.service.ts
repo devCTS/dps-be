@@ -156,27 +156,24 @@ export class GatewayService {
   }
 
   async updateChannelSettings(
-    id: number,
     updateChannelSettingsDto: UpdateChannelSettingsDto,
   ) {
-    const existingSettings = await this.channelSettingsRepository.findOneBy({
-      id,
+    const { channelName, type, gatewayName } = updateChannelSettingsDto;
+
+    if (!channelName || !type || !gatewayName) throw new BadRequestException();
+
+    const channelsetting = await this.channelSettingsRepository.findOne({
+      where: {
+        type,
+        gatewayName,
+        channelName,
+      },
     });
 
-    if (!existingSettings) throw new NotFoundException();
-
-    const updatedSettings = Object.assign(
-      {},
-      existingSettings,
+    await this.channelSettingsRepository.update(
+      channelsetting.id,
       updateChannelSettingsDto,
     );
-
-    if (updatedSettings.maxAmount < updatedSettings.minAmount)
-      throw new BadRequestException(
-        'Max amount should be greater than min amount.',
-      );
-
-    await this.channelSettingsRepository.update(id, updatedSettings);
 
     return HttpStatus.OK;
   }

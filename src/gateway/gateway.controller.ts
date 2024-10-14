@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  ParseIntPipe,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post } from '@nestjs/common';
 import {
   CreateRazorpayDto,
   UpdateRazorpayDto,
@@ -53,14 +46,10 @@ export class GatewayController {
     return this.gatewayService.createChannelSettings();
   }
 
-  @Post('channel-setting/update/:id')
+  @Patch('channel-setting/update')
   updateChannelSettings(
     @Body() updateChannelSettingsDto: UpdateChannelSettingsDto,
-    @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.gatewayService.updateChannelSettings(
-      id,
-      updateChannelSettingsDto,
-    );
+    return this.gatewayService.updateChannelSettings(updateChannelSettingsDto);
   }
 }
