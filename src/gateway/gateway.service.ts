@@ -12,7 +12,7 @@ import {
 import { JwtService } from 'src/services/jwt/jwt.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Razorpay } from './entities/razorpay.entity';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 import { CreatePhonepeDto, UpdatePhonepDto } from './dto/create-phonepe.dto';
 import { Phonepe } from './entities/phonepe.entity';
 import { UpdateChannelSettingsDto } from './dto/create-channel-settings.dto';
@@ -21,6 +21,7 @@ import { plainToInstance } from 'class-transformer';
 import { RazorpayResponseDto } from './dto/razorpay-response.dto';
 import { PhonepeResponseDto } from './dto/phonepe-response.dto';
 import { loadChannelData } from './data/channel.data';
+import { GetChannelSettingsDto } from './dto/get-channel-settings.dto';
 
 @Injectable()
 export class GatewayService {
@@ -138,6 +139,34 @@ export class GatewayService {
     return HttpStatus.OK;
   }
 
+  async getAllChannelsSetting() {
+    const channelSettingsExists = await this.channelSettingsRepository.find();
+
+    if (!channelSettingsExists)
+      throw new NotFoundException('Channels not found.');
+
+    return channelSettingsExists;
+  }
+
+  async getChannelSettings(getChannelSettingsDto: GetChannelSettingsDto) {
+    const { channelName, type, gatewayName } = getChannelSettingsDto;
+
+    if (!channelName || !type || !gatewayName) throw new BadRequestException();
+
+    const channelSetting = await this.channelSettingsRepository.findOne({
+      where: {
+        channelName,
+        type,
+        gatewayName,
+      },
+    });
+
+    if (!channelSetting)
+      throw new NotFoundException('Channel setting not found.');
+
+    return channelSetting;
+  }
+
   async createChannelSettings() {
     const isDataExists = await this.channelSettingsRepository.find();
 
@@ -162,13 +191,14 @@ export class GatewayService {
 
     if (!channelName || !type || !gatewayName) throw new BadRequestException();
 
-    const channelsetting = await this.channelSettingsRepository.findOne({
-      where: {
-        type,
-        gatewayName,
-        channelName,
-      },
+    const channelsetting = await this.getChannelSettings({
+      type,
+      channelName,
+      gatewayName,
     });
+
+    if (!channelsetting)
+      throw new NotFoundException('Channel settings not found.');
 
     await this.channelSettingsRepository.update(
       channelsetting.id,

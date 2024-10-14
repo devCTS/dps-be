@@ -6,6 +6,7 @@ import {
 import { GatewayService } from './gateway.service';
 import { CreatePhonepeDto, UpdatePhonepDto } from './dto/create-phonepe.dto';
 import { UpdateChannelSettingsDto } from './dto/create-channel-settings.dto';
+import { GetChannelSettingsDto } from './dto/get-channel-settings.dto';
 
 @Controller('gateway')
 export class GatewayController {
@@ -39,6 +40,16 @@ export class GatewayController {
   @Post('phonepe/update')
   updatePhonepe(@Body() updatePhonepeDto: UpdatePhonepDto) {
     return this.gatewayService.updatePhonepe(updatePhonepeDto);
+  }
+
+  @Get('channel-settings/all')
+  getAllChannelSettings() {
+    return this.gatewayService.getAllChannelsSetting();
+  }
+
+  @Post('channel-settings')
+  getChannelSettings(@Body() getChannelsettingsDto: GetChannelSettingsDto) {
+    return this.gatewayService.getChannelSettings(getChannelsettingsDto);
   }
 
   @Post('channel-setting/create')
