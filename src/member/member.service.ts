@@ -21,12 +21,25 @@ import {
 import { JwtService } from 'src/services/jwt/jwt.service';
 import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 import { MemberReferralService } from 'src/member-referral/member-referral.service';
+import { Upi } from 'src/channel/entity/upi.entity';
+import { NetBanking } from 'src/channel/entity/net-banking.entity';
+import { EWallet } from 'src/channel/entity/e-wallet.entity';
 
 @Injectable()
 export class MemberService {
   constructor(
     @InjectRepository(Member)
     private readonly memberRepository: Repository<Member>,
+
+    @InjectRepository(Upi)
+    private readonly upiRepository: Repository<Upi>,
+
+    @InjectRepository(NetBanking)
+    private readonly netBankingRepository: Repository<NetBanking>,
+
+    @InjectRepository(EWallet)
+    private readonly eWalletRepository: Repository<EWallet>,
+
     private readonly identityService: IdentityService,
     private readonly jwtService: JwtService,
     private readonly memberReferralService: MemberReferralService,
@@ -66,6 +79,16 @@ export class MemberService {
       password,
       'MEMBER',
     );
+
+    // Create channel
+    channelProfile.forEach((profile) => {
+      if (profile.upi) {
+      }
+      if (profile.eWallet) {
+      }
+      if (profile.netBanking) {
+      }
+    });
 
     // Create and save the Admin
     const member = this.memberRepository.create({
