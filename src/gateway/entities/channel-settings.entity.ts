@@ -7,23 +7,23 @@ export class ChannelSettings {
   id: number;
 
   @Column({ type: 'enum', enum: GatewayName })
-  gateway_name: GatewayName;
+  gatewayName: GatewayName;
 
   @Column({ type: 'enum', enum: PaymentType })
   type: PaymentType;
 
   @Column({ type: 'enum', enum: ChannelName })
-  channel_name: ChannelName;
+  channelName: ChannelName;
 
   @Column()
   enabled: boolean;
 
   @Column({ type: 'float' })
-  min_amount: number;
+  minAmount: number;
 
   @Column({ type: 'float' })
-  max_amount: number;
+  maxAmount: number;
 
   @Column({ type: 'float' })
-  upstream_fee: number;
+  upstreamFee: number;
 }

@@ -7,11 +7,9 @@ import {
   IsNotEmpty,
   IsNumber,
   IsEmail,
-  IsArray,
   ValidateNested,
 } from 'class-validator';
 import { IsValidPassword } from 'src/utils/decorators/validPassword.decorator';
-import { IsValidPhoneNumber } from 'src/utils/decorators/validPhoneNumber';
 import { ChannelProfileDto } from 'src/utils/dtos/channel-profile.dto';
 
 export class CreateMemberDto {
@@ -83,8 +81,7 @@ export class CreateMemberDto {
   maxWithdrawalAmount: number;
 
   @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
   @Type(() => ChannelProfileDto)
-  channelProfile: ChannelProfileDto[];
+  @ValidateNested({ each: true })
+  channelProfile: ChannelProfileDto;
 }

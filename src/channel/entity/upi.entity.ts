@@ -1,12 +1,5 @@
 import { Identity } from 'src/identity/entities/identity.entity';
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Upi {
@@ -14,10 +7,10 @@ export class Upi {
   id: number;
 
   @Column()
-  upi_id: string;
+  upiId: string;
 
   @Column()
-  mobile_number: string;
+  mobile: string;
 
   @ManyToOne(() => Identity, (identity) => identity.upi)
   identity: Identity;

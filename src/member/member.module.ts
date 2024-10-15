@@ -10,6 +10,7 @@ import { MemberReferralModule } from 'src/member-referral/member-referral.module
 import { PayoutModule } from 'src/payout/payout.module';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { TransactionUpdatesModule } from 'src/transaction-updates/transaction-updates.module';
+import { ChannelModule } from 'src/channel/channel.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { TransactionUpdatesModule } from 'src/transaction-updates/transaction-up
     MemberReferralModule,
     PayoutModule,
     TransactionUpdatesModule,
+    ChannelModule,
   ],
   controllers: [MemberController],
   providers: [MemberService],

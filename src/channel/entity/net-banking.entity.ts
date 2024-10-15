@@ -7,17 +7,17 @@ export class NetBanking {
   id: number;
 
   @Column()
-  account_number: string;
+  accountNumber: string;
 
   @Column()
-  ifsc_code: string;
+  ifsc: string;
 
   @Column()
-  bank_name: string;
+  bankName: string;
 
   @Column()
-  beneficiary_name: string;
+  beneficiaryName: string;
 
-  @ManyToOne(() => Identity, (identity) => identity.banking)
+  @ManyToOne(() => Identity, (identity) => identity.netBanking)
   identity: Identity;
 }

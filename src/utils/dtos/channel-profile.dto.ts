@@ -16,16 +16,55 @@ export class FilledFieldDto {
   value: string;
 }
 
+export class UpiDto {
+  @IsNotEmpty()
+  @IsString()
+  upiId: string;
+
+  @IsNotEmpty()
+  @IsString()
+  mobile: string;
+}
+
+export class NetBankingDto {
+  @IsNotEmpty()
+  @IsString()
+  bankName: string;
+
+  @IsNotEmpty()
+  @IsString()
+  beneficiaryName: string;
+
+  @IsNotEmpty()
+  @IsString()
+  ifsc: string;
+
+  @IsNotEmpty()
+  @IsString()
+  accountNumber: string;
+}
+
+export class EWalletDto {
+  @IsNotEmpty()
+  @IsString()
+  app: string;
+
+  @IsNotEmpty()
+  @IsString()
+  mobile: string;
+}
+
 export class ChannelProfileDto {
-  upi: { upi_id: string; mobile: string } | null;
-  net_banking: {
-    bank_name: string;
-    beneficiary_name: string;
-    ifsc: string;
-    account_number: string;
-  } | null;
-  e_wallet: {
-    app: string;
-    mobile: string;
-  } | null;
+  @IsArray()
+  @Type(() => UpiDto)
+  @ValidateNested({ each: true })
+  upi: UpiDto[] | null;
+
+  @Type(() => NetBankingDto)
+  @ValidateNested({ each: true })
+  netBanking: NetBankingDto[] | null;
+
+  @Type(() => EWalletDto)
+  @ValidateNested({ each: true })
+  eWallet: EWalletDto[] | null;
 }

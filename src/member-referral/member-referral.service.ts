@@ -244,7 +244,6 @@ export class MemberReferralService {
 
   // Recursive method to build the tree structure
   private async buildTree(member: Member): Promise<any> {
-    // Fetch the member's referrals (children)
     const referrals = await this.memberReferralRepository.find({
       where: {
         member: { id: member.id },
@@ -257,10 +256,8 @@ export class MemberReferralService {
     const children = await Promise.all(
       referrals.map(async (referral) => {
         if (referral.referredMember) {
-          // Build the tree for the referred member (child node)
           const childTree = await this.buildTree(referral.referredMember);
 
-          // Return the child's referral data, commissions, and the built tree
           return {
             id: referral.referredMember.id,
             firstName: referral.referredMember.firstName,
@@ -284,7 +281,6 @@ export class MemberReferralService {
       }),
     );
 
-    // Return the current member with their own details and the recursively built children
     return {
       id: member.id,
       firstName: member.firstName,

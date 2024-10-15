@@ -35,20 +35,14 @@ export class SystemConfigService {
   ) {}
 
   async create(createSystemConfigDto: CreateSystemConfigDto) {
-    const {
-      defaultTopupChannels,
-      defaultPayinGateway,
-      defaultPayoutGateway,
-      defaultWithdrawalGateway,
-      ...remainingSystemConfig
-    } = createSystemConfigDto;
-
     const identity = await this.identityRepository.findOne({
       where: {
         userType: 'SUPER_ADMIN',
       },
     });
     if (!identity) throw new NotFoundException('Identity not found!');
+
+    await this.systemConfigRepository.save(createSystemConfigDto);
 
     return HttpStatus.CREATED;
   }
@@ -72,14 +66,6 @@ export class SystemConfigService {
         createdAt: 'DESC',
       },
       take: 1,
-      relations: [
-        'defaultPayinGateway',
-        'defaultPayoutGateway',
-        'defaultWithdrawalGateway',
-        'defaultTopupChannels',
-        'defaultTopupChannels.field',
-        'defaultTopupChannels.field.channel',
-      ],
     });
 
     return plainToInstance(SystemConfigResponseDto, latestResult[0]);

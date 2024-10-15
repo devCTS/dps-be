@@ -282,8 +282,8 @@ export class AgentReferralService {
       lastName: agent.lastName,
       referralCode: agent.referralCode,
       email: agent.identity.email,
-      children: children,
       agentType: agent.integrationId ? 'merchant' : 'agent',
+      children: children.filter((child) => child !== null),
     };
   }
 
