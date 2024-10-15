@@ -102,7 +102,7 @@ export class MemberService {
 
     const createdMember = await this.memberRepository.save(member);
 
-    if (channelProfile.upi) {
+    if (channelProfile?.upi) {
       for (const element of channelProfile.upi) {
         await this.upiRepository.save({
           ...element,
@@ -111,7 +111,7 @@ export class MemberService {
       }
     }
 
-    if (channelProfile.eWallet) {
+    if (channelProfile?.eWallet) {
       for (const element of channelProfile.eWallet) {
         await this.upiRepository.save({
           ...element,
@@ -120,7 +120,7 @@ export class MemberService {
       }
     }
 
-    if (channelProfile.netBanking) {
+    if (channelProfile?.netBanking) {
       for (const element of channelProfile.netBanking) {
         await this.upiRepository.save({
           ...element,

@@ -80,6 +80,7 @@ export class CreateMemberDto {
   @IsNumber()
   maxWithdrawalAmount: number;
 
+  @IsOptional()
   @Type(() => ChannelProfileDto)
   @ValidateNested({ each: true })
   channelProfile: ChannelProfileDto;
