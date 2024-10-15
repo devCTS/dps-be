@@ -177,7 +177,7 @@ export class AgentReferralService {
 
     if (showUsedCodes) whereConditions.status = 'utilized';
 
-    if (userId) whereConditions.agent = userId;
+    if (userId) whereConditions.agent = { id: userId };
 
     if (search) whereConditions.referralCode = ILike(`%${search}%`);
 
@@ -254,15 +254,20 @@ export class AgentReferralService {
     const children = await Promise.all(
       referrals.map(async (referral) => {
         if (referral.referredAgent) {
-          const childTree = await this.buildTree(referral.referredAgent);
-
+          let childTree = {};
+          if (!agent.integrationId)
+            childTree = await this.buildTree(referral.referredAgent);
+          else return null;
           return {
             payinCommission: referral.payinCommission,
             payoutCommission: referral.payoutCommission,
             ...childTree,
           };
         } else if (referral.referredMerchant) {
-          const childTree = await this.buildTree(referral.referredMerchant);
+          let childTree = {};
+          if (!agent.integrationId)
+            childTree = await this.buildTree(referral.referredMerchant);
+          else return null;
           return {
             payinCommission: referral.payinCommission,
             payoutCommission: referral.payoutCommission,

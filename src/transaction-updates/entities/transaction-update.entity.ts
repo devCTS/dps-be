@@ -21,7 +21,7 @@ export class TransactionUpdate {
   @Column()
   userType: UserTypeForTransactionUpdates;
 
-  @Column()
+  @Column({ type: 'float' })
   rate: number;
 
   @Column({ type: 'float' })

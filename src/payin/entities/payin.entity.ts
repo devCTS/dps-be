@@ -40,10 +40,14 @@ export class Payin {
   @Column({ type: 'enum', enum: ChannelName })
   channel: ChannelName;
 
-  @Column({ type: 'enum', enum: CallBackStatus })
+  @Column({
+    type: 'enum',
+    enum: CallBackStatus,
+    default: CallBackStatus.PENDING,
+  })
   callbackStatus: CallBackStatus;
 
-  @Column({ type: 'enum', enum: PaymentMadeOn })
+  @Column({ type: 'enum', enum: PaymentMadeOn, nullable: true })
   payinMadeOn: PaymentMadeOn;
 
   @Column({ nullable: true, type: 'enum', enum: GatewayName })

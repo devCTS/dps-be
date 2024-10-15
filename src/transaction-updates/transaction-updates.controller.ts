@@ -17,10 +17,10 @@ export class TransactionUpdatesController {
     private readonly transactionUpdatesService: TransactionUpdatesService,
   ) {}
 
-  @Post()
-  create(@Body() createTransactionUpdateDto: CreateTransactionUpdateDto) {
-    return this.transactionUpdatesService.create(createTransactionUpdateDto);
-  }
+  // @Post()
+  // create(@Body() createTransactionUpdateDto: CreateTransactionUpdateDto) {
+  //   return this.transactionUpdatesService.create(createTransactionUpdateDto);
+  // }
 
   @Get()
   findAll() {

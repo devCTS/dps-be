@@ -4,7 +4,7 @@ import { CreateTransactionUpdateDto } from './dto/create-transaction-update.dto'
 import { UpdateTransactionUpdateDto } from './dto/update-transaction-update.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { OrderType } from 'src/utils/enum/enum';
+import { OrderType, UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
 import { AgentReferralService } from 'src/agent-referral/agent-referral.service';
 
 @Injectable()
@@ -15,35 +15,53 @@ export class TransactionUpdatesService {
     private readonly agentReferralService: AgentReferralService,
   ) {}
 
-  async create(orderDetails) {
-    const {
-      orderType,
-      userType,
-      rate,
-      amount,
-      before,
-      after,
-      pending,
-      userId,
-    } = orderDetails;
+  async processReferral(referral, orderType, payinAmount, orderDetails) {
+    let userType = UserTypeForTransactionUpdates.MERCHANT_BALANCE;
+    let before = referral.balance || 0;
+    let rate =
+      (orderType === OrderType.PAYIN
+        ? referral.payinCommission
+        : referral.payoutCommission) || 2;
+    let amount = (payinAmount * rate) / 100;
+    let after = before + payinAmount - amount;
 
-    const referrals =
-      await this.agentReferralService.getReferralTreeOfUser(userId);
-
-    for (const referral in referrals) {
-      if (referral) {
-      }
+    switch (referral.agentType) {
+      case 'merchant':
+        userType = UserTypeForTransactionUpdates.MERCHANT_BALANCE;
+        break;
+      case 'agent':
+        userType = UserTypeForTransactionUpdates.AGENT_BALANCE;
+        break;
+      case 'member':
+        userType = UserTypeForTransactionUpdates.MEMBER_BALANCE;
+        break;
     }
 
-    const transactionUpdate = await this.transactionUpdateRepository.save({
+    const transactionUpdate = {
       orderType,
       userType,
       rate,
       amount,
       before,
       after,
-      pending,
-    });
+      payinOrder: orderDetails,
+    };
+
+    await this.transactionUpdateRepository.save(transactionUpdate);
+
+    if (referral.children && referral.children.length > 0)
+      for (const child of referral.children)
+        await this.processReferral(child, orderType, payinAmount, orderDetails);
+  }
+
+  async create({ orderDetails, orderType }) {
+    const { rate, amount, merchantId } = orderDetails;
+
+    const referrals =
+      await this.agentReferralService.getReferralTreeOfUser(merchantId);
+
+    if (referrals)
+      this.processReferral(referrals, orderType, amount, orderDetails);
 
     return HttpStatus.CREATED;
   }

@@ -17,7 +17,7 @@ export class PayoutService {
 
   async create(createPayoutDto: CreatePayoutDto) {
     const payout = await this.payoutRepository.save({ ...createPayoutDto });
-    if (payout) await this.transactionUpdateService.create(payout);
+    // if (payout) await this.transactionUpdateService.create(payout);
     return HttpStatus.CREATED;
   }
 
@@ -28,7 +28,7 @@ export class PayoutService {
 
     await this.payoutRepository.update(id, { status: OrderStatus.ASSIGNED });
 
-    await this.transactionUpdateService.create(payinOrderDetails);
+    // await this.transactionUpdateService.create(payinOrderDetails);
 
     return HttpStatus.OK;
   }
