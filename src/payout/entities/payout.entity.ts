@@ -30,8 +30,8 @@ export class Payout {
   @Column({ type: 'float' })
   amount: number;
 
-  @Column({ type: 'enum', enum: OrderStatus })
-  status: string;
+  @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.INITIATED })
+  status: OrderStatus;
 
   @Column({ type: 'enum', enum: ChannelName })
   channel: string;

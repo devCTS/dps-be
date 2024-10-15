@@ -6,9 +6,10 @@ import { Payout } from './entities/payout.entity';
 import { PayoutAdminService } from './payout-admin.service';
 import { PayoutMemberService } from './payout-member.service';
 import { PayoutMerchantService } from './payout-merchant.service';
+import { TransactionUpdatesModule } from 'src/transaction-updates/transaction-updates.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Payout])],
+  imports: [TypeOrmModule.forFeature([Payout]), TransactionUpdatesModule],
   controllers: [PayoutController],
   providers: [
     PayoutService,

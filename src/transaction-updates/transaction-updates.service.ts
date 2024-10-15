@@ -5,18 +5,46 @@ import { UpdateTransactionUpdateDto } from './dto/update-transaction-update.dto'
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { OrderType } from 'src/utils/enum/enum';
+import { AgentReferralService } from 'src/agent-referral/agent-referral.service';
 
 @Injectable()
 export class TransactionUpdatesService {
   constructor(
     @InjectRepository(TransactionUpdate)
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
+    private readonly agentReferralService: AgentReferralService,
   ) {}
 
-  async create(createTransactionUpdateDto: CreateTransactionUpdateDto) {
+  async create(orderDetails) {
+    const {
+      orderType,
+      userType,
+      rate,
+      amount,
+      before,
+      after,
+      pending,
+      userId,
+    } = orderDetails;
+
+    const referrals =
+      await this.agentReferralService.getReferralTreeOfUser(userId);
+
+    for (const referral in referrals) {
+      if (referral) {
+      }
+    }
+
     const transactionUpdate = await this.transactionUpdateRepository.save({
-      ...createTransactionUpdateDto,
+      orderType,
+      userType,
+      rate,
+      amount,
+      before,
+      after,
+      pending,
     });
+
     return HttpStatus.CREATED;
   }
 
