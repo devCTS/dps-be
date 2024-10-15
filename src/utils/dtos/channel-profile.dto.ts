@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 
 export class FilledFieldDto {
   @IsNumber()
@@ -48,7 +54,15 @@ export class EWalletDto {
 }
 
 export class ChannelProfileDto {
+  @Type(() => UpiDto)
+  @ValidateNested({ each: true })
   upi: UpiDto | null;
+
+  @Type(() => NetBankingDto)
+  @ValidateNested({ each: true })
   netBanking: NetBankingDto | null;
+
+  @Type(() => EWalletDto)
+  @ValidateNested({ each: true })
   eWallet: EWalletDto | null;
 }

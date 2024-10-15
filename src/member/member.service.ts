@@ -80,16 +80,6 @@ export class MemberService {
       'MEMBER',
     );
 
-    // Create channel
-    channelProfile.forEach((profile) => {
-      if (profile.upi) {
-      }
-      if (profile.eWallet) {
-      }
-      if (profile.netBanking) {
-      }
-    });
-
     // Create and save the Admin
     const member = this.memberRepository.create({
       identity,
@@ -111,6 +101,26 @@ export class MemberService {
     });
 
     const createdMember = await this.memberRepository.save(member);
+
+    if (channelProfile.upi) {
+      await this.upiRepository.save({
+        ...channelProfile.upi,
+        identity,
+      });
+    }
+    if (channelProfile.eWallet) {
+      await this.upiRepository.save({
+        ...channelProfile.eWallet,
+        identity,
+      });
+    }
+
+    if (channelProfile.netBanking) {
+      await this.upiRepository.save({
+        ...channelProfile.netBanking,
+        identity,
+      });
+    }
 
     // Update Member Referrals
     if (referralCode)
