@@ -1,12 +1,5 @@
 import { Identity } from 'src/identity/entities/identity.entity';
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class EWallet {
@@ -19,6 +12,6 @@ export class EWallet {
   @Column()
   mobile_number: string;
 
-  @ManyToOne(() => Identity, (identity) => identity.ewallet)
+  @ManyToOne(() => Identity, (identity) => identity.eWallet)
   identity: Identity;
 }

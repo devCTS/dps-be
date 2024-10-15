@@ -18,6 +18,6 @@ export class NetBanking {
   @Column()
   beneficiaryName: string;
 
-  @ManyToOne(() => Identity, (identity) => identity.banking)
+  @ManyToOne(() => Identity, (identity) => identity.netBanking)
   identity: Identity;
 }

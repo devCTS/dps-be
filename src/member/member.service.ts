@@ -103,23 +103,30 @@ export class MemberService {
     const createdMember = await this.memberRepository.save(member);
 
     if (channelProfile.upi) {
-      await this.upiRepository.save({
-        ...channelProfile.upi,
-        identity,
-      });
+      for (const element of channelProfile.upi) {
+        await this.upiRepository.save({
+          ...element,
+          identity,
+        });
+      }
     }
+
     if (channelProfile.eWallet) {
-      await this.upiRepository.save({
-        ...channelProfile.eWallet,
-        identity,
-      });
+      for (const element of channelProfile.eWallet) {
+        await this.upiRepository.save({
+          ...element,
+          identity,
+        });
+      }
     }
 
     if (channelProfile.netBanking) {
-      await this.upiRepository.save({
-        ...channelProfile.netBanking,
-        identity,
-      });
+      for (const element of channelProfile.netBanking) {
+        await this.upiRepository.save({
+          ...element,
+          identity,
+        });
+      }
     }
 
     // Update Member Referrals
@@ -207,9 +214,12 @@ export class MemberService {
       where: { id },
       relations: [
         'identity',
-        'identity.channelProfileFilledFields',
-        'identity.channelProfileFilledFields.field',
-        'identity.channelProfileFilledFields.field.channel',
+        'identity.upi',
+        'identity.eWallet',
+        'identity.netBanking',
+        // 'identity.channelProfileFilledFields',
+        // 'identity.channelProfileFilledFields.field',
+        // 'identity.channelProfileFilledFields.field.channel',
       ],
     });
 

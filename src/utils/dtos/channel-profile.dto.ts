@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  IsArray,
   IsNotEmpty,
   IsNumber,
   IsString,
@@ -54,15 +55,16 @@ export class EWalletDto {
 }
 
 export class ChannelProfileDto {
+  @IsArray()
   @Type(() => UpiDto)
   @ValidateNested({ each: true })
-  upi: UpiDto | null;
+  upi: UpiDto[] | null;
 
   @Type(() => NetBankingDto)
   @ValidateNested({ each: true })
-  netBanking: NetBankingDto | null;
+  netBanking: NetBankingDto[] | null;
 
   @Type(() => EWalletDto)
   @ValidateNested({ each: true })
-  eWallet: EWalletDto | null;
+  eWallet: EWalletDto[] | null;
 }

@@ -1,9 +1,7 @@
-import { ClassSerializerInterceptor, UseInterceptors } from '@nestjs/common';
-import { Exclude, Expose, Transform } from 'class-transformer';
+import { Exclude, Expose, Transform, Type } from 'class-transformer';
 import { Identity } from 'src/identity/entities/identity.entity';
-import { Rename } from 'src/utils/decorators/rename.decorator';
 import { DateFormat } from 'src/utils/decorators/dateformat.decorator';
-import { TransformChannelProfileFields } from 'src/utils/decorators/channel-profile.decorator';
+import { ChannelProfileDto, UpiDto } from 'src/utils/dtos/channel-profile.dto';
 
 @Exclude()
 export class MemberResponseDto {
@@ -69,8 +67,18 @@ export class MemberResponseDto {
   updatedAt: Date;
 
   @Expose()
-  @TransformChannelProfileFields()
-  channelProfile: any;
+  @Transform(
+    ({ obj }) => {
+      const channelProfile = {
+        upi: obj.identity.upi,
+        eWallet: obj.identity.eWallet,
+        netBanking: obj.identity.netBanking,
+      };
+      return channelProfile;
+    },
+    { toClassOnly: true },
+  )
+  channelProfile: ChannelProfileDto;
 
   @Exclude()
   identity: Identity;
