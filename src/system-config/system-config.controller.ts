@@ -6,6 +6,7 @@ import { UpdateCurrencyDto } from './dto/update-currency.dto';
 import { UpdateTopupConfigDto } from './dto/update-topup-config.dto';
 import { UpdateMemberDefaultsDto } from './dto/update-member-defaults.dto';
 import { UpdateMerchantDefaultsDto } from './dto/update-merchant-defaults.dto';
+import { UpdateWithdrawalDefaultsDto } from './dto/update-withdrawal-default.dto';
 
 @Controller('system-config')
 export class SystemConfigController {
@@ -62,6 +63,15 @@ export class SystemConfigController {
   ) {
     return this.systemConfigService.updateMerchantDefaults(
       updateMerchantDefaultsDto,
+    );
+  }
+
+  @Patch('/withdrawal-defaults')
+  updateWithdrawalDefaults(
+    @Body() updateWithdrawalDefaultsDto: UpdateWithdrawalDefaultsDto,
+  ) {
+    return this.systemConfigService.updateWithdrawalDefaults(
+      updateWithdrawalDefaultsDto,
     );
   }
 }

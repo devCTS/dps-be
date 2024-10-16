@@ -63,14 +63,16 @@ export class SystemConfig {
   @Column({ nullable: true })
   maximumPayoutAmountForMerchant: number;
 
+  // Withdrawal defaults
+
   @Column({ type: 'float', nullable: true })
-  withdrawalServiceRateForMerchant: number;
+  withdrawalRate: number;
 
   @Column({ nullable: true })
-  minimumWithdrawalAmountForMerchant: number;
+  minWithdrawalAmount: number;
 
   @Column({ nullable: true })
-  maximumWithdrawalAmountForMerchant: number;
+  maxWithdrawalAmount: number;
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
