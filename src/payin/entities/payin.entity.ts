@@ -63,7 +63,7 @@ export class Payin {
   gatewayServiceRate: number;
 
   @ManyToOne(() => EndUser, (endUser) => endUser.payin)
-  @JoinColumn()
+  @JoinColumn({ name: 'enduser_id' })
   user: EndUser;
 
   @ManyToOne(() => Merchant, (merchant) => merchant.payin)

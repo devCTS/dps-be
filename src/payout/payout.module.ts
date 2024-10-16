@@ -7,9 +7,14 @@ import { PayoutAdminService } from './payout-admin.service';
 import { PayoutMemberService } from './payout-member.service';
 import { PayoutMerchantService } from './payout-merchant.service';
 import { TransactionUpdatesModule } from 'src/transaction-updates/transaction-updates.module';
+import { EndUserModule } from 'src/end-user/end-user.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Payout]), TransactionUpdatesModule],
+  imports: [
+    TypeOrmModule.forFeature([Payout]),
+    TransactionUpdatesModule,
+    EndUserModule,
+  ],
   controllers: [PayoutController],
   providers: [
     PayoutService,

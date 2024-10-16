@@ -31,6 +31,11 @@ export class AgentReferralController {
     return this.agentReferralService.getReferralTree();
   }
 
+  @Get('/tree/:userId')
+  getReferralTreeOfUser(@Param('userId') userId: string) {
+    return this.agentReferralService.getReferralTreeOfUser(+userId);
+  }
+
   @Get('/referral/:code')
   findOneByCode(@Param('code') code: string) {
     return this.agentReferralService.findOneByCode(code);

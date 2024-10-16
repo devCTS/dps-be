@@ -40,4 +40,24 @@ export class PayoutController {
   remove(@Param('id') id: string) {
     return this.payoutService.remove(+id);
   }
+
+  @Post('update-status-assigned')
+  updatePayinStatusToAssigned(@Body() body) {
+    return this.payoutService.updatePayoutStatusToAssigned(body);
+  }
+
+  @Post('update-status-completed')
+  updatePayinStatusToCompleted(@Body() body) {
+    return this.payoutService.updatePayoutStatusToComplete(body);
+  }
+
+  @Post('update-status-failed')
+  updatePayinStatusToFailed(@Body() body) {
+    return this.payoutService.updatePayoutStatusToFailed(body);
+  }
+
+  @Post('update-status-submitted')
+  updatePayinStatusToSubmitted(@Body() body) {
+    return this.payoutService.updatePayoutStatusToSubmitted(body);
+  }
 }

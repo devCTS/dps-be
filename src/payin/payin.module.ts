@@ -9,12 +9,18 @@ import { TransactionUpdatesModule } from 'src/transaction-updates/transaction-up
 import { PayinService } from './payin.service';
 import { EndUserModule } from 'src/end-user/end-user.module';
 import { EndUser } from 'src/end-user/entities/end-user.entity';
+import { IdentityModule } from 'src/identity/identity.module';
+import { Identity } from 'src/identity/entities/identity.entity';
+import { Merchant } from 'src/merchant/entities/merchant.entity';
+import { MerchantModule } from 'src/merchant/merchant.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Payin, EndUser]),
+    TypeOrmModule.forFeature([Payin, EndUser, Identity, Merchant]),
     TransactionUpdatesModule,
     EndUserModule,
+    IdentityModule,
+    MerchantModule,
   ],
   controllers: [PayinController],
   providers: [

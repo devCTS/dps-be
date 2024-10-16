@@ -7,6 +7,7 @@ import {
   GatewayName,
   NotificationStatus,
   OrderStatus,
+  PaymentMadeOn,
 } from 'src/utils/enum/enum';
 import {
   Column,
@@ -43,7 +44,7 @@ export class Payout {
   })
   notificationStatus: string;
 
-  @Column()
+  @Column({ type: 'enum', enum: PaymentMadeOn })
   payoutMadeVia: string;
 
   @Column({ type: 'enum', enum: GatewayName, nullable: true })

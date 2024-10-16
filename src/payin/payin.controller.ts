@@ -28,4 +28,24 @@ export class PayinController {
   getPayinOrderDetails(@Param('id', ParseIntPipe) id: number) {
     return this.payinAdminService.getPayinOrderDetails(id);
   }
+
+  @Post('update-status-assigned')
+  updatePayinStatusToAssigned(@Body() body) {
+    return this.payinService.updatePayinStatusToAssigned(body);
+  }
+
+  @Post('update-status-completed')
+  updatePayinStatusToCompleted(@Body() body) {
+    return this.payinService.updatePayinStatusToComplete(body);
+  }
+
+  @Post('update-status-failed')
+  updatePayinStatusToFailed(@Body() body) {
+    return this.payinService.updatePayinStatusToFailed(body);
+  }
+
+  @Post('update-status-submitted')
+  updatePayinStatusToSubmitted(@Body() body) {
+    return this.payinService.updatePayinStatusToSubmitted(body);
+  }
 }

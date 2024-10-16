@@ -273,6 +273,8 @@ export class MemberReferralService {
               referral.referredMemberPayoutCommission,
             referredMemberTopupCommission:
               referral.referredMemberTopupCommission,
+            balance: referral.referredMember.balance,
+            quota: referral.referredMember.quota,
 
             children: childTree.children,
           };
@@ -290,7 +292,30 @@ export class MemberReferralService {
       payinCommission: member.payinCommissionRate,
       payoutCommission: member.payoutCommissionRate,
       topupCommission: member.topupCommissionRate,
+      balance: member.balance,
+      quota: member.quota,
       children: children.filter((child) => child !== null),
     };
+  }
+
+  async getReferralTreeOfUser(userId: number) {
+    const referralTree = await this.getReferralTree();
+    return this.trimTreeToUser(referralTree, userId);
+  }
+
+  private trimTreeToUser(tree: any, userId: number): any {
+    if (tree.id === userId) return tree;
+
+    const trimmedChildren = tree.children
+      .map((child: any) => this.trimTreeToUser(child, userId))
+      .filter((child: any) => child !== null);
+
+    if (trimmedChildren.length > 0)
+      return {
+        ...tree,
+        children: trimmedChildren,
+      };
+
+    return null;
   }
 }

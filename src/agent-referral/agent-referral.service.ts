@@ -261,6 +261,7 @@ export class AgentReferralService {
           return {
             payinCommission: referral.payinCommission,
             payoutCommission: referral.payoutCommission,
+            balance: referral.referredAgent.balance,
             ...childTree,
           };
         } else if (referral.referredMerchant) {
@@ -273,6 +274,7 @@ export class AgentReferralService {
             payoutCommission: referral.payoutCommission,
             merchantPayinServiceRate: referral.merchantPayinServiceRate,
             merchantPayoutServiceRate: referral.merchantPayoutServiceRate,
+            balance: referral.referredMerchant.balance,
             ...childTree,
           };
         } else {
@@ -288,6 +290,7 @@ export class AgentReferralService {
       referralCode: agent.referralCode,
       email: agent.identity.email,
       agentType: agent.integrationId ? 'merchant' : 'agent',
+      balance: agent.balance,
       children: children.filter((child) => child !== null),
     };
   }

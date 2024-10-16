@@ -1,39 +1,79 @@
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
-import { CreatePayoutDto } from './dto/create-payout.dto';
 import { UpdatePayoutDto } from './dto/update-payout.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Payout } from './entities/payout.entity';
 import { Repository } from 'typeorm';
 import { TransactionUpdatesService } from 'src/transaction-updates/transaction-updates.service';
-import { OrderStatus } from 'src/utils/enum/enum';
+import { OrderStatus, OrderType, PaymentMadeOn } from 'src/utils/enum/enum';
+import { EndUserService } from 'src/end-user/end-user.service';
+import { Merchant } from 'src/merchant/entities/merchant.entity';
 
 @Injectable()
 export class PayoutService {
   constructor(
     @InjectRepository(Payout)
     private readonly payoutRepository: Repository<Payout>,
+    @InjectRepository(Payout)
+    private readonly merchantRepository: Repository<Merchant>,
     private readonly transactionUpdateService: TransactionUpdatesService,
+    private readonly endUserService: EndUserService,
   ) {}
 
-  async create(createPayoutDto: CreatePayoutDto) {
-    const payout = await this.payoutRepository.save({ ...createPayoutDto });
-    // if (payout) await this.transactionUpdateService.create(payout);
+  async create(payoutDetails) {
+    const { user, merchantId } = payoutDetails;
+
+    const endUser = await this.endUserService.create({
+      ...user,
+    });
+
+    const merchant = await this.merchantRepository.findOneBy({
+      id: merchantId,
+    });
+
+    const payout = await this.payoutRepository.save({
+      ...payoutDetails,
+      user: endUser,
+      merchant,
+    });
+
+    if (payout)
+      await this.transactionUpdateService.create({
+        orderDetails: payout,
+        orderType: OrderType.PAYOUT,
+        userId: merchantId,
+      });
+
     return HttpStatus.CREATED;
   }
 
-  async updatePayoutStatusToAssigned(id: number) {
-    const payinOrderDetails = await this.payoutRepository.findOneBy({ id });
+  async updatePayoutStatusToAssigned(body) {
+    const { id, paymentMode, memberId } = body;
 
-    if (!payinOrderDetails) throw new NotFoundException('Order not found');
+    const payoutOrderDetails = await this.payoutRepository.findOne({
+      where: { id },
+      relations: ['merchant'],
+    });
 
-    await this.payoutRepository.update(id, { status: OrderStatus.ASSIGNED });
+    if (!payoutOrderDetails) throw new NotFoundException('Order not found');
 
-    // await this.transactionUpdateService.create(payinOrderDetails);
+    await this.payoutRepository.update(id, {
+      status: OrderStatus.ASSIGNED,
+      payoutMadeVia: paymentMode,
+    });
+
+    if (payoutOrderDetails.payoutMadeVia === PaymentMadeOn.MEMBER)
+      await this.transactionUpdateService.create({
+        orderDetails: payoutOrderDetails,
+        userId: memberId,
+        forMember: true,
+        orderType: OrderType.PAYOUT,
+      });
 
     return HttpStatus.OK;
   }
 
-  async updatePayoutStatusToCompleted(id: number) {
+  async updatePayoutStatusToComplete(body) {
+    const { id } = body;
     const payinOrderDetails = await this.payoutRepository.findOneBy({ id });
 
     if (!payinOrderDetails) throw new NotFoundException('Order not found');
@@ -43,7 +83,9 @@ export class PayoutService {
     return HttpStatus.OK;
   }
 
-  async updatePayoutStatusToFailed(id: number) {
+  async updatePayoutStatusToFailed(body) {
+    const { id } = body;
+
     const payinOrderDetails = await this.payoutRepository.findOneBy({ id });
 
     if (!payinOrderDetails) throw new NotFoundException('Order not found');
@@ -53,7 +95,9 @@ export class PayoutService {
     return HttpStatus.OK;
   }
 
-  async updatePayoutStatusToSubmitted(id: number) {
+  async updatePayoutStatusToSubmitted(body) {
+    const { id } = body;
+
     const payinOrderDetails = await this.payoutRepository.findOneBy({ id });
 
     if (!payinOrderDetails) throw new NotFoundException('Order not found');
