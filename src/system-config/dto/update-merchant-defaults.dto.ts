@@ -14,11 +14,11 @@ export class UpdateMerchantDefaultsDto {
   maximumPayoutAmountForMerchant: number;
 
   @IsNumber()
-  withdrawalServiceRateForMerchant: number;
+  withdrawalRate: number;
 
   @IsNumber()
-  minimumWithdrawalAmountForMerchant: number;
+  minWithdrawalAmount: number;
 
   @IsNumber()
-  maximumWithdrawalAmountForMerchant: number;
+  maxithdrawalAmount: number;
 }

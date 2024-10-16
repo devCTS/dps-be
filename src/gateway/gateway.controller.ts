@@ -1,14 +1,12 @@
-import { Body, Controller, Param, ParseIntPipe, Post } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post } from '@nestjs/common';
 import {
   CreateRazorpayDto,
   UpdateRazorpayDto,
 } from './dto/create-razorpay.dto';
 import { GatewayService } from './gateway.service';
 import { CreatePhonepeDto, UpdatePhonepDto } from './dto/create-phonepe.dto';
-import {
-  CreateChannelSettingsDto,
-  UpdateChannelSettingsDto,
-} from './dto/create-channel-settings.dto';
+import { UpdateChannelSettingsDto } from './dto/create-channel-settings.dto';
+import { GetChannelSettingsDto } from './dto/get-channel-settings.dto';
 
 @Controller('gateway')
 export class GatewayController {
@@ -19,12 +17,14 @@ export class GatewayController {
     return this.gatewayService.createRazorPay(createRazorpayDto);
   }
 
-  @Post('razorpay/update/:id')
-  UpdateRazorpay(
-    @Body() updateRazorpayDto: UpdateRazorpayDto,
-    @Param('id', ParseIntPipe) id: number,
-  ) {
-    return this.gatewayService.updateRazorpay(id, updateRazorpayDto);
+  @Get('razorpay')
+  getRazorpayConfig() {
+    return this.gatewayService.getRazorpay();
+  }
+
+  @Post('razorpay/update')
+  UpdateRazorpay(@Body() updateRazorpayDto: UpdateRazorpayDto) {
+    return this.gatewayService.updateRazorpay(updateRazorpayDto);
   }
 
   @Post('phonepe/create')
@@ -32,29 +32,35 @@ export class GatewayController {
     return this.gatewayService.createPhonepe(createPhonepeDto);
   }
 
-  @Post('phonepe/update/:id')
-  updatePhonepe(
-    @Body() updatePhonepeDto: UpdatePhonepDto,
-    @Param('id', ParseIntPipe) id: number,
-  ) {
-    return this.gatewayService.updatePhonepe(id, updatePhonepeDto);
+  @Get('phonepe')
+  getPhonepeConfig() {
+    return this.gatewayService.getPhonepe();
+  }
+
+  @Post('phonepe/update')
+  updatePhonepe(@Body() updatePhonepeDto: UpdatePhonepDto) {
+    return this.gatewayService.updatePhonepe(updatePhonepeDto);
+  }
+
+  @Get('channel-settings/all')
+  getAllChannelSettings() {
+    return this.gatewayService.getAllChannelsSetting();
+  }
+
+  @Post('channel-settings')
+  getChannelSettings(@Body() getChannelsettingsDto: GetChannelSettingsDto) {
+    return this.gatewayService.getChannelSettings(getChannelsettingsDto);
   }
 
   @Post('channel-setting/create')
-  createChannelSettings(
-    @Body() createChannelSettingsDto: CreateChannelSettingsDto,
-  ) {
-    return this.gatewayService.createChannelSettings(createChannelSettingsDto);
+  createChannelSettings() {
+    return this.gatewayService.createChannelSettings();
   }
 
-  @Post('channel-setting/update/:id')
+  @Patch('channel-setting/update')
   updateChannelSettings(
     @Body() updateChannelSettingsDto: UpdateChannelSettingsDto,
-    @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.gatewayService.updateChannelSettings(
-      id,
-      updateChannelSettingsDto,
-    );
+    return this.gatewayService.updateChannelSettings(updateChannelSettingsDto);
   }
 }

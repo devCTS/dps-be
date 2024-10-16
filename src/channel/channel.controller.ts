@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { ChannelService } from './channel.service';
 import { UpdateChannelConfigDto } from './dto/update-channel-config.dto';
 import { ChannelName } from 'src/utils/enum/enum';
@@ -8,12 +8,12 @@ import { CreateChannelConfigDto } from './dto/create-channel-config.dto';
 export class ChannelController {
   constructor(private channelService: ChannelService) {}
 
-  @Post('update')
-  createChannelConfig(@Body() createChannelConfigDto: CreateChannelConfigDto) {
-    return this.channelService.createChannelConfig(createChannelConfigDto);
+  @Post('load-channels')
+  loadChannelConfig() {
+    return this.channelService.createChannelConfig();
   }
 
-  @Post('update')
+  @Patch('update')
   async updateChannelConfig(
     @Body() updateChannelConfigDto: UpdateChannelConfigDto,
   ) {

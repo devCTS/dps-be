@@ -3,17 +3,13 @@ import {
   IsString,
   IsOptional,
   IsBoolean,
-  IsInt,
   Min,
-  Max,
   IsNotEmpty,
   IsNumber,
   IsEmail,
-  IsArray,
   ValidateNested,
 } from 'class-validator';
 import { IsValidPassword } from 'src/utils/decorators/validPassword.decorator';
-import { IsValidPhoneNumber } from 'src/utils/decorators/validPhoneNumber';
 import { ChannelProfileDto } from 'src/utils/dtos/channel-profile.dto';
 
 export class CreateMemberDto {
@@ -39,6 +35,9 @@ export class CreateMemberDto {
   @IsString()
   // @IsValidPhoneNumber()
   phone?: string;
+
+  @IsString()
+  telegramId: string;
 
   @IsString()
   @IsOptional()
@@ -72,9 +71,17 @@ export class CreateMemberDto {
   @Min(0)
   dailyTotalPayoutLimit: number;
 
+  @IsNumber()
+  withdrawalRate: number;
+
+  @IsNumber()
+  minWithdrawalAmount: number;
+
+  @IsNumber()
+  maxWithdrawalAmount: number;
+
   @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
   @Type(() => ChannelProfileDto)
-  channelProfile: ChannelProfileDto[];
+  @ValidateNested({ each: true })
+  channelProfile: ChannelProfileDto;
 }

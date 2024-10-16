@@ -21,12 +21,25 @@ import {
 import { JwtService } from 'src/services/jwt/jwt.service';
 import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 import { MemberReferralService } from 'src/member-referral/member-referral.service';
+import { Upi } from 'src/channel/entity/upi.entity';
+import { NetBanking } from 'src/channel/entity/net-banking.entity';
+import { EWallet } from 'src/channel/entity/e-wallet.entity';
 
 @Injectable()
 export class MemberService {
   constructor(
     @InjectRepository(Member)
     private readonly memberRepository: Repository<Member>,
+
+    @InjectRepository(Upi)
+    private readonly upiRepository: Repository<Upi>,
+
+    @InjectRepository(NetBanking)
+    private readonly netBankingRepository: Repository<NetBanking>,
+
+    @InjectRepository(EWallet)
+    private readonly eWalletRepository: Repository<EWallet>,
+
     private readonly identityService: IdentityService,
     private readonly jwtService: JwtService,
     private readonly memberReferralService: MemberReferralService,
@@ -48,6 +61,10 @@ export class MemberService {
       phone,
       referralCode,
       channelProfile,
+      minWithdrawalAmount,
+      maxWithdrawalAmount,
+      withdrawalRate,
+      telegramId,
     } = createMemberDto;
 
     if (referralCode) {
@@ -77,9 +94,40 @@ export class MemberService {
       singlePayoutLowerLimit,
       singlePayoutUpperLimit,
       topupCommissionRate,
+      telegramId,
+      minWithdrawalAmount,
+      maxWithdrawalAmount,
+      withdrawalRate,
     });
 
     const createdMember = await this.memberRepository.save(member);
+
+    if (channelProfile?.upi) {
+      for (const element of channelProfile.upi) {
+        await this.upiRepository.save({
+          ...element,
+          identity,
+        });
+      }
+    }
+
+    if (channelProfile?.eWallet) {
+      for (const element of channelProfile.eWallet) {
+        await this.upiRepository.save({
+          ...element,
+          identity,
+        });
+      }
+    }
+
+    if (channelProfile?.netBanking) {
+      for (const element of channelProfile.netBanking) {
+        await this.upiRepository.save({
+          ...element,
+          identity,
+        });
+      }
+    }
 
     // Update Member Referrals
     if (referralCode)
@@ -166,9 +214,12 @@ export class MemberService {
       where: { id },
       relations: [
         'identity',
-        'identity.channelProfileFilledFields',
-        'identity.channelProfileFilledFields.field',
-        'identity.channelProfileFilledFields.field.channel',
+        'identity.upi',
+        'identity.eWallet',
+        'identity.netBanking',
+        // 'identity.channelProfileFilledFields',
+        // 'identity.channelProfileFilledFields.field',
+        // 'identity.channelProfileFilledFields.field.channel',
       ],
     });
 

@@ -1,17 +1,11 @@
 import { PartialType } from '@nestjs/mapped-types';
-import {
-  IsBoolean,
-  IsEnum,
-  IsNotEmpty,
-  IsNumber,
-  IsString,
-} from 'class-validator';
+import { IsBoolean, IsEnum, IsNotEmpty, IsNumber } from 'class-validator';
 import { ChannelName, GatewayName, PaymentType } from 'src/utils/enum/enum';
 
 export class CreateChannelSettingsDto {
   @IsNotEmpty()
   @IsEnum(GatewayName)
-  gateway_name: GatewayName;
+  gatewayName: GatewayName;
 
   @IsNotEmpty()
   @IsEnum(PaymentType)
@@ -19,7 +13,7 @@ export class CreateChannelSettingsDto {
 
   @IsNotEmpty()
   @IsEnum(ChannelName)
-  channel_name: ChannelName;
+  channelName: ChannelName;
 
   @IsNotEmpty()
   @IsBoolean()
@@ -27,15 +21,15 @@ export class CreateChannelSettingsDto {
 
   @IsNotEmpty()
   @IsNumber()
-  min_amount: number;
+  minAmount: number;
 
   @IsNotEmpty()
   @IsNumber()
-  max_amount: number;
+  maxAmount: number;
 
   @IsNotEmpty()
   @IsNumber()
-  upstream_fee: number;
+  upstreamFee: number;
 }
 
 export class UpdateChannelSettingsDto extends PartialType(

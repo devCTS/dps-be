@@ -6,6 +6,7 @@ import { Member } from './entities/member.entity';
 import { IdentityModule } from 'src/identity/identity.module';
 import { JwtModule } from 'src/services/jwt/jwt.module';
 import { MemberReferralModule } from 'src/member-referral/member-referral.module';
+import { ChannelModule } from 'src/channel/channel.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { MemberReferralModule } from 'src/member-referral/member-referral.module
     IdentityModule,
     JwtModule,
     MemberReferralModule,
+    ChannelModule,
   ],
   controllers: [MemberController],
   providers: [MemberService],

@@ -54,6 +54,18 @@ export class Member {
   @Column({ type: 'integer' })
   dailyTotalPayoutLimit: number;
 
+  @Column()
+  telegramId: string;
+
+  @Column({ type: 'float' })
+  withdrawalRate: number;
+
+  @Column({ type: 'float' })
+  minWithdrawalAmount: number;
+
+  @Column({ type: 'float' })
+  maxWithdrawalAmount: number;
+
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 

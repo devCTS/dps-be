@@ -16,25 +16,55 @@ export class FilledFieldDto {
   value: string;
 }
 
-// DTO for the ChannelProfileField with the filled fields array
-export class ChannelProfileDto {
-  @IsNumber()
+export class UpiDto {
   @IsNotEmpty()
-  channelId: number;
+  @IsString()
+  upiId: string;
 
+  @IsNotEmpty()
+  @IsString()
+  mobile: string;
+}
+
+export class NetBankingDto {
+  @IsNotEmpty()
+  @IsString()
+  bankName: string;
+
+  @IsNotEmpty()
+  @IsString()
+  beneficiaryName: string;
+
+  @IsNotEmpty()
+  @IsString()
+  ifsc: string;
+
+  @IsNotEmpty()
+  @IsString()
+  accountNumber: string;
+}
+
+export class EWalletDto {
+  @IsNotEmpty()
+  @IsString()
+  app: string;
+
+  @IsNotEmpty()
+  @IsString()
+  mobile: string;
+}
+
+export class ChannelProfileDto {
   @IsArray()
+  @Type(() => UpiDto)
   @ValidateNested({ each: true })
-  @Type(() => FilledFieldDto)
-  profileFields: FilledFieldDto[];
-}
+  upi: UpiDto[] | null;
 
-export class ChannelProfileDto2 {
-  upi: { upi_id: string; mobile: string } | null;
-  net_banking: {
-    bank_name: string;
-  } | null;
-  e_wallet: any;
-}
+  @Type(() => NetBankingDto)
+  @ValidateNested({ each: true })
+  netBanking: NetBankingDto[] | null;
 
-// either a key should have all the necessary fields or completly null or undefined.
-// User can send any combination of field and blank keys for channels.
+  @Type(() => EWalletDto)
+  @ValidateNested({ each: true })
+  eWallet: EWalletDto[] | null;
+}

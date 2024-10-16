@@ -118,12 +118,14 @@ export class SystemConfigResponseDto {
   @Expose()
   maximumPayoutAmountForMerchant: number;
 
-  @Expose()
-  withdrawalServiceRateForMerchant: number;
+  // Withdrawal defaults
 
   @Expose()
-  minimumWithdrawalAmountForMerchant: number;
+  withdrawalRate: number;
 
   @Expose()
-  maximumWithdrawalAmountForMerchant: number;
+  minWithdrawalAmount: number;
+
+  @Expose()
+  maxWithdrawalAmount: number;
 }

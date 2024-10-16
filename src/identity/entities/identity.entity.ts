@@ -4,7 +4,6 @@ import {
   Column,
   PrimaryGeneratedColumn,
   OneToMany,
-  Unique,
   OneToOne,
 } from 'typeorm';
 import { IP } from './ip.entity';
@@ -70,10 +69,10 @@ export class Identity {
   ips: IP[];
 
   @OneToMany(() => NetBanking, (banking) => banking.identity)
-  banking: NetBanking[];
+  netBanking: NetBanking[];
 
   @OneToMany(() => EWallet, (ewallet) => ewallet.identity)
-  ewallet: EWallet[];
+  eWallet: EWallet[];
 
   @OneToMany(() => Upi, (upi) => upi.identity)
   upi: Upi[];
