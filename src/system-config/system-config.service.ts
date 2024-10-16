@@ -20,6 +20,7 @@ import { UpdateMemberDefaultsDto } from './dto/update-member-defaults.dto';
 import { UpdateMerchantDefaultsDto } from './dto/update-merchant-defaults.dto';
 import { plainToInstance } from 'class-transformer';
 import { SystemConfigResponseDto } from './dto/system-config-response.dto';
+import { UpdateWithdrawalDefaultsDto } from './dto/update-withdrawal-default.dto';
 
 @Injectable()
 export class SystemConfigService {
@@ -255,10 +256,7 @@ export class SystemConfigService {
       payinServiceRateForMerchant,
       payoutServiceRateForMerchant,
       maximumPayoutAmountForMerchant,
-      maximumWithdrawalAmountForMerchant,
       minimumPayoutAmountForMerchant,
-      minimumWithdrawalAmountForMerchant,
-      withdrawalServiceRateForMerchant,
     } = updateMerchantDefaultsDto;
 
     const latestResult = await this.findLatest();
@@ -268,10 +266,7 @@ export class SystemConfigService {
         payinServiceRateForMerchant,
         payoutServiceRateForMerchant,
         maximumPayoutAmountForMerchant,
-        maximumWithdrawalAmountForMerchant,
         minimumPayoutAmountForMerchant,
-        minimumWithdrawalAmountForMerchant,
-        withdrawalServiceRateForMerchant,
       });
 
       return HttpStatus.CREATED;
@@ -280,10 +275,10 @@ export class SystemConfigService {
     delete latestResult.payinServiceRateForMerchant;
     delete latestResult.payoutServiceRateForMerchant;
     delete latestResult.maximumPayoutAmountForMerchant;
-    delete latestResult.maximumWithdrawalAmountForMerchant;
+    delete latestResult.maxWithdrawalAmount;
     delete latestResult.minimumPayoutAmountForMerchant;
-    delete latestResult.minimumWithdrawalAmountForMerchant;
-    delete latestResult.withdrawalServiceRateForMerchant;
+    delete latestResult.minWithdrawalAmount;
+    delete latestResult.withdrawalRate;
     delete latestResult.id;
     delete latestResult.createdAt;
     delete latestResult.updatedAt;
@@ -292,14 +287,29 @@ export class SystemConfigService {
       payinServiceRateForMerchant,
       payoutServiceRateForMerchant,
       maximumPayoutAmountForMerchant,
-      maximumWithdrawalAmountForMerchant,
       minimumPayoutAmountForMerchant,
-      minimumWithdrawalAmountForMerchant,
-      withdrawalServiceRateForMerchant,
       ...latestResult,
     });
 
     if (!newSystemConfig) throw new InternalServerErrorException();
+
+    return HttpStatus.OK;
+  }
+
+  async updateWithdrawalDefaults(
+    updateWithdrawalDefaultsDto: UpdateWithdrawalDefaultsDto,
+  ) {
+    const latestResult = await this.findLatest(false);
+
+    if (!latestResult) {
+      await this.systemConfigRepository.save(updateWithdrawalDefaultsDto);
+
+      return HttpStatus.OK;
+    }
+    await this.systemConfigRepository.update(latestResult.id, {
+      ...latestResult,
+      ...updateWithdrawalDefaultsDto,
+    });
 
     return HttpStatus.OK;
   }
