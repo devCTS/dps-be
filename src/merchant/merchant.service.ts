@@ -21,15 +21,16 @@ import { IP } from 'src/identity/entities/ip.entity';
 import { PayinMode } from './entities/payinMode.entity';
 import { AmountRangePayinMode } from './entities/amountRangePayinMode.entity';
 import { ProportionalPayinMode } from './entities/proportionalPayinMode.entity';
-import { identity } from 'rxjs';
 import {
   parseStartDate,
   parseEndDate,
   PaginateRequestDto,
 } from 'src/utils/dtos/paginate.dto';
-import { encryptPassword } from 'src/utils/utils';
 import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 import { AgentReferralService } from 'src/agent-referral/agent-referral.service';
+import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
+import { OrderType, UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
+import { userInfo } from 'os';
 
 @Injectable()
 export class MerchantService {
@@ -48,6 +49,9 @@ export class MerchantService {
 
     @InjectRepository(ProportionalPayinMode)
     private readonly proportionalRepository: Repository<ProportionalPayinMode>,
+
+    @InjectRepository(TransactionUpdate)
+    private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
 
     private readonly identityService: IdentityService,
     private readonly jwtService: JwtService,
@@ -165,12 +169,12 @@ export class MerchantService {
     const results = await this.merchantRepository.find({
       relations: [
         'identity',
-        'identity.channelProfileFilledFields',
-        'identity.channelProfileFilledFields.field',
-        'identity.channelProfileFilledFields.field.channel',
+        // 'identity.channelProfileFilledFields',
+        // 'identity.channelProfileFilledFields.field',
+        // 'identity.channelProfileFilledFields.field.channel',
         'identity.ips',
-        'identity.payinPayoutChannels',
-        'identity.payinPayoutChannels.channel',
+        // 'identity.payinPayoutChannels',
+        // 'identity.payinPayoutChannels.channel',
         'payinModeDetails',
         'payinModeDetails.proportionalRange',
         'payinModeDetails.amountRangeRange',
@@ -513,5 +517,44 @@ export class MerchantService {
     });
 
     return { message: 'Withdrawal password changed.' };
+  }
+
+  async updateBalance(identityId, amount, failed) {
+    const merchant = await this.merchantRepository.findOne({
+      where: {
+        identity: identityId,
+      },
+      relations: ['identity'],
+    });
+
+    if (!merchant) throw new NotFoundException('Merchant not found!');
+
+    await this.merchantRepository.update(merchant.id, {
+      balance: merchant.balance + amount,
+    });
+
+    const transactionUpdateEntries =
+      await this.transactionUpdateRepository.find({
+        where: {
+          user: identityId,
+          pending: true,
+        },
+        relations: ['identity'],
+      });
+
+    for (const entry of transactionUpdateEntries) {
+      let beforeValue = merchant.balance;
+      let afterValue = 0;
+
+      if (entry.userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE)
+        afterValue = merchant.balance + amount;
+
+      if (failed) afterValue = merchant.balance;
+
+      await this.transactionUpdateRepository.update(entry.user?.id, {
+        before: beforeValue,
+        after: afterValue,
+      });
+    }
   }
 }

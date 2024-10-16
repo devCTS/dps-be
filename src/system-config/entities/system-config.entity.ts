@@ -79,4 +79,7 @@ export class SystemConfig {
 
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
+
+  @Column({ type: 'float', default: 0 })
+  systemProfit: number;
 }

@@ -1,3 +1,4 @@
+import { PayoutMerchantService } from './../payout/payout-merchant.service';
 import {
   Controller,
   Get,
@@ -14,12 +15,14 @@ import { UpdateMerchantDto } from './dto/update-merchant.dto';
 import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
 import { IdentityService } from 'src/identity/identity.service';
 import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
+import { PayoutService } from 'src/payout/payout.service';
 
 @Controller('merchant')
 export class MerchantController {
   constructor(
     private readonly merchantService: MerchantService,
     private identityService: IdentityService,
+    private readonly payoutMerchantService: PayoutMerchantService,
   ) {}
 
   @Post()
@@ -74,5 +77,15 @@ export class MerchantController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     return this.merchantService.changeWithdrawalPassword(changePasswordDto, id);
+  }
+
+  @Post('payouts/paginate')
+  paginatePayouts(@Body() paginateRequestDto: PaginateRequestDto) {
+    return this.payoutMerchantService.paginate(paginateRequestDto);
+  }
+
+  @Get('payout/:id')
+  getPayoutDetails(@Param('id') id: string) {
+    return this.payoutMerchantService.getPayoutDetails(+id);
   }
 }

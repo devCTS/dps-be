@@ -20,12 +20,17 @@ import {
 import { JwtService } from 'src/services/jwt/jwt.service';
 import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 import { AgentReferralService } from 'src/agent-referral/agent-referral.service';
+import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
+import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
 
 @Injectable()
 export class AgentService {
   constructor(
     @InjectRepository(Agent)
     private readonly agentRepository: Repository<Agent>,
+    @InjectRepository(TransactionUpdate)
+    private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
+
     private identityService: IdentityService,
     private jwtService: JwtService,
     private agentReferralService: AgentReferralService,
@@ -275,5 +280,44 @@ export class AgentService {
     });
 
     return { message: 'Withdrawal password changed.' };
+  }
+
+  async updateBalance(identityId, amount, failed) {
+    const agent = await this.agentRepository.findOne({
+      where: {
+        identity: identityId,
+      },
+      relations: ['identity'],
+    });
+
+    if (!agent) throw new NotFoundException('Agent not found!');
+
+    await this.agentRepository.update(agent.id, {
+      balance: agent.balance + amount,
+    });
+
+    const transactionUpdateEntries =
+      await this.transactionUpdateRepository.find({
+        where: {
+          user: identityId,
+          pending: true,
+        },
+        relations: ['identity'],
+      });
+
+    for (const entry of transactionUpdateEntries) {
+      let beforeValue = agent.balance;
+      let afterValue = 0;
+
+      if (entry.userType === UserTypeForTransactionUpdates.AGENT_BALANCE)
+        afterValue = agent.balance + amount;
+
+      if (failed) afterValue = agent.balance;
+
+      await this.transactionUpdateRepository.update(entry.user?.id, {
+        before: beforeValue,
+        after: afterValue,
+      });
+    }
   }
 }

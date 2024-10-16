@@ -62,4 +62,7 @@ export class Agent {
   // Used referrel code of another agent
   @OneToOne(() => AgentReferral, (referral) => referral.referredAgent)
   agentReferral: AgentReferral;
+
+  @Column({ type: 'float', default: 0 })
+  balance: number;
 }

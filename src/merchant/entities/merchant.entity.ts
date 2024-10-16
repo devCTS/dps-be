@@ -13,6 +13,8 @@ import { PayinMode } from './payinMode.entity';
 import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
 import { Identity } from 'src/identity/entities/identity.entity';
 import { AgentReferral } from 'src/agent-referral/entities/agent-referral.entity';
+import { Payout } from 'src/payout/entities/payout.entity';
+import { Payin } from 'src/payin/entities/payin.entity';
 
 @Entity()
 export class Merchant {
@@ -103,4 +105,13 @@ export class Merchant {
 
   @OneToOne(() => AgentReferral, (referral) => referral.referredMerchant)
   agentReferral: AgentReferral;
+
+  @OneToMany(() => Payin, (payin) => payin.merchant)
+  payin: Payout;
+
+  @OneToMany(() => Payout, (payout) => payout.merchant)
+  payout: Payout;
+
+  @Column({ type: 'float', default: 0 })
+  balance: number;
 }

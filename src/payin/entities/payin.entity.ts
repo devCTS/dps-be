@@ -1,3 +1,7 @@
+import { EndUser } from 'src/end-user/entities/end-user.entity';
+import { Member } from 'src/member/entities/member.entity';
+import { Merchant } from 'src/merchant/entities/merchant.entity';
+import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import {
   CallBackStatus,
   ChannelName,
@@ -9,6 +13,9 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -27,33 +34,50 @@ export class Payin {
   @Column({ type: 'float' })
   amount: number;
 
-  @Column({ type: 'enum', enum: OrderStatus })
+  @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.INITIATED })
   status: OrderStatus;
 
   @Column({ type: 'enum', enum: ChannelName })
   channel: ChannelName;
 
-  @Column({ type: 'enum', enum: CallBackStatus })
+  @Column({
+    type: 'enum',
+    enum: CallBackStatus,
+    default: CallBackStatus.PENDING,
+  })
   callbackStatus: CallBackStatus;
 
-  @Column({ type: 'enum', enum: PaymentMadeOn })
+  @Column({ type: 'enum', enum: PaymentMadeOn, nullable: true })
   payinMadeOn: PaymentMadeOn;
 
   @Column({ nullable: true, type: 'enum', enum: GatewayName })
   gatewayName: GatewayName;
-
-  @Column()
-  user: string;
-
-  @Column()
-  merchant: string;
-
-  @Column()
-  member: string;
 
   @CreateDateColumn()
   createdDate: Date;
 
   @UpdateDateColumn()
   updatedDate: Date;
+
+  @Column({ type: 'float', nullable: true })
+  gatewayServiceRate: number;
+
+  @ManyToOne(() => EndUser, (endUser) => endUser.payin)
+  @JoinColumn({ name: 'enduser_id' })
+  user: EndUser;
+
+  @ManyToOne(() => Merchant, (merchant) => merchant.payin)
+  @JoinColumn()
+  merchant: Merchant;
+
+  @ManyToOne(() => Member, (member) => member.payin, { nullable: true })
+  @JoinColumn()
+  member: Member;
+
+  @OneToMany(
+    () => TransactionUpdate,
+    (transactionUpdate) => transactionUpdate.payinOrder,
+    { nullable: true },
+  )
+  transactionUpdate: TransactionUpdate[];
 }

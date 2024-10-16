@@ -78,7 +78,7 @@ export class AgentReferralService {
 
   async findAll() {
     const results = await this.agentReferralRepository.find({
-      relations: ['agent'],
+      relations: ['agent', 'referredMerchant', 'referredAgent'],
     });
 
     return {
@@ -177,7 +177,7 @@ export class AgentReferralService {
 
     if (showUsedCodes) whereConditions.status = 'utilized';
 
-    if (userId) whereConditions.agent = userId;
+    if (userId) whereConditions.agent = { id: userId };
 
     if (search) whereConditions.referralCode = ILike(`%${search}%`);
 
@@ -254,20 +254,27 @@ export class AgentReferralService {
     const children = await Promise.all(
       referrals.map(async (referral) => {
         if (referral.referredAgent) {
-          const childTree = await this.buildTree(referral.referredAgent);
-
+          let childTree = {};
+          if (!agent.integrationId)
+            childTree = await this.buildTree(referral.referredAgent);
+          else return null;
           return {
             payinCommission: referral.payinCommission,
             payoutCommission: referral.payoutCommission,
+            balance: referral.referredAgent.balance,
             ...childTree,
           };
         } else if (referral.referredMerchant) {
-          const childTree = await this.buildTree(referral.referredMerchant);
+          let childTree = {};
+          if (!agent.integrationId)
+            childTree = await this.buildTree(referral.referredMerchant);
+          else return null;
           return {
             payinCommission: referral.payinCommission,
             payoutCommission: referral.payoutCommission,
             merchantPayinServiceRate: referral.merchantPayinServiceRate,
             merchantPayoutServiceRate: referral.merchantPayoutServiceRate,
+            balance: referral.referredMerchant.balance,
             ...childTree,
           };
         } else {
@@ -282,8 +289,30 @@ export class AgentReferralService {
       lastName: agent.lastName,
       referralCode: agent.referralCode,
       email: agent.identity.email,
-      children: children,
       agentType: agent.integrationId ? 'merchant' : 'agent',
+      balance: agent.balance,
+      children: children.filter((child) => child !== null),
     };
+  }
+
+  async getReferralTreeOfUser(userId: number) {
+    const referralTree = await this.getReferralTree();
+    return this.trimTreeToUser(referralTree, userId);
+  }
+
+  private trimTreeToUser(tree: any, userId: number): any {
+    if (tree.id === userId) return tree;
+
+    const trimmedChildren = tree.children
+      .map((child: any) => this.trimTreeToUser(child, userId))
+      .filter((child: any) => child !== null);
+
+    if (trimmedChildren.length > 0)
+      return {
+        ...tree,
+        children: trimmedChildren,
+      };
+
+    return null;
   }
 }
