@@ -56,7 +56,7 @@ export class Member {
   @Column({ type: 'integer' })
   dailyTotalPayoutLimit: number;
 
-  @Column()
+  @Column({ nullable: true })
   telegramId: string;
 
   @Column({ type: 'float' })

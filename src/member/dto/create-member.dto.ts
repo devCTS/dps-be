@@ -36,6 +36,7 @@ export class CreateMemberDto {
   // @IsValidPhoneNumber()
   phone?: string;
 
+  @IsOptional()
   @IsString()
   telegramId: string;
 

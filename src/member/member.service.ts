@@ -204,9 +204,12 @@ export class MemberService {
     const results = await this.memberRepository.find({
       relations: [
         'identity',
-        'identity.channelProfileFilledFields',
-        'identity.channelProfileFilledFields.field',
-        'identity.channelProfileFilledFields.field.channel',
+        'identity.upi',
+        'identity.eWallet',
+        'identity.netBanking',
+        // 'identity.channelProfileFilledFields',
+        // 'identity.channelProfileFilledFields.field',
+        // 'identity.channelProfileFilledFields.field.channel',
       ],
     });
 
@@ -231,6 +234,7 @@ export class MemberService {
   }
 
   async update(id: number, updateDto: UpdateMemberDto): Promise<HttpStatus> {
+    console.log(updateDto);
     const channelProfile = updateDto.channelProfile;
     const email = updateDto.email;
     const password = updateDto.password;
