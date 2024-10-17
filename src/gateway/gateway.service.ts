@@ -5,15 +5,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import {
-  CreateRazorpayDto,
-  UpdateRazorpayDto,
-} from './dto/create-razorpay.dto';
+import { UpdateRazorpayDto } from './dto/create-razorpay.dto';
 import { JwtService } from 'src/services/jwt/jwt.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Razorpay } from './entities/razorpay.entity';
 import { Not, Repository } from 'typeorm';
-import { CreatePhonepeDto, UpdatePhonepDto } from './dto/create-phonepe.dto';
+import { UpdatePhonepDto } from './dto/create-phonepe.dto';
 import { Phonepe } from './entities/phonepe.entity';
 import { UpdateChannelSettingsDto } from './dto/create-channel-settings.dto';
 import { ChannelSettings } from './entities/channel-settings.entity';
@@ -22,6 +19,7 @@ import { RazorpayResponseDto } from './dto/razorpay-response.dto';
 import { PhonepeResponseDto } from './dto/phonepe-response.dto';
 import { loadChannelData } from './data/channel.data';
 import { GetChannelSettingsDto } from './dto/get-channel-settings.dto';
+import { loadPhonepeData, loadRazorpayData } from './data/gateway.data';
 
 @Injectable()
 export class GatewayService {
@@ -51,8 +49,10 @@ export class GatewayService {
     'salt_key',
   ];
 
-  async createRazorPay(createRazorPayDto: CreateRazorpayDto) {
+  async createRazorPay() {
     const isGatewayExists = await this.razorpayRepository.find();
+
+    const createRazorPayDto = loadRazorpayData();
 
     if (isGatewayExists?.length > 0) throw new ConflictException();
 
@@ -67,7 +67,6 @@ export class GatewayService {
     });
 
     await this.razorpayRepository.save(createRazorPayDto);
-    return HttpStatus.OK;
   }
 
   async getRazorpay() {
@@ -95,8 +94,9 @@ export class GatewayService {
     return HttpStatus.OK;
   }
 
-  async createPhonepe(createPhonepeDto: CreatePhonepeDto) {
+  async createPhonepe() {
     const isGatewayExists = await this.phonepeRepository.find();
+    const createPhonepeDto = loadPhonepeData();
 
     if (isGatewayExists?.length > 0) throw new ConflictException();
 
@@ -109,7 +109,6 @@ export class GatewayService {
     });
 
     await this.phonepeRepository.save(createPhonepeDto);
-    return HttpStatus.OK;
   }
 
   async getPhonepe() {
@@ -180,8 +179,6 @@ export class GatewayService {
     );
 
     await this.channelSettingsRepository.save(channelData);
-
-    return HttpStatus.OK;
   }
 
   async updateChannelSettings(

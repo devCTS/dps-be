@@ -33,8 +33,6 @@ export class ChannelService {
     });
 
     await this.configChannelRepository.save(channelConfigs);
-
-    return HttpStatus.OK;
   }
 
   async updateChannelConfig(updateChannelConfigDto: UpdateChannelConfigDto) {

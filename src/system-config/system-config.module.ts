@@ -14,5 +14,6 @@ import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-
   ],
   controllers: [SystemConfigController],
   providers: [SystemConfigService],
+  exports: [SystemConfigService],
 })
 export class SystemConfigModule {}

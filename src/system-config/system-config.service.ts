@@ -23,6 +23,7 @@ import { SystemConfigResponseDto } from './dto/system-config-response.dto';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
 import { UpdateWithdrawalDefaultsDto } from './dto/update-withdrawal-default.dto';
+import { systemConfigData } from './data/system-config.data';
 
 @Injectable()
 export class SystemConfigService {
@@ -35,17 +36,15 @@ export class SystemConfigService {
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
   ) {}
 
-  async create(createSystemConfigDto: CreateSystemConfigDto) {
+  async create() {
     const identity = await this.identityRepository.findOne({
       where: {
         userType: 'SUPER_ADMIN',
       },
     });
+    const createSystemConfigDto = systemConfigData();
     if (!identity) throw new NotFoundException('Identity not found!');
-
     await this.systemConfigRepository.save(createSystemConfigDto);
-
-    return HttpStatus.CREATED;
   }
 
   async findAll() {

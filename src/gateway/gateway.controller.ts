@@ -1,10 +1,7 @@
 import { Body, Controller, Get, Patch, Post } from '@nestjs/common';
-import {
-  CreateRazorpayDto,
-  UpdateRazorpayDto,
-} from './dto/create-razorpay.dto';
+import { UpdateRazorpayDto } from './dto/create-razorpay.dto';
 import { GatewayService } from './gateway.service';
-import { CreatePhonepeDto, UpdatePhonepDto } from './dto/create-phonepe.dto';
+import { UpdatePhonepDto } from './dto/create-phonepe.dto';
 import { UpdateChannelSettingsDto } from './dto/create-channel-settings.dto';
 import { GetChannelSettingsDto } from './dto/get-channel-settings.dto';
 
@@ -13,8 +10,8 @@ export class GatewayController {
   constructor(private gatewayService: GatewayService) {}
 
   @Post('razorpay/create')
-  CreateRazorpay(@Body() createRazorpayDto: CreateRazorpayDto) {
-    return this.gatewayService.createRazorPay(createRazorpayDto);
+  CreateRazorpay() {
+    return this.gatewayService.createRazorPay();
   }
 
   @Get('razorpay')
@@ -28,8 +25,8 @@ export class GatewayController {
   }
 
   @Post('phonepe/create')
-  createPhonepe(@Body() createPhonepeDto: CreatePhonepeDto) {
-    return this.gatewayService.createPhonepe(createPhonepeDto);
+  createPhonepe() {
+    return this.gatewayService.createPhonepe();
   }
 
   @Get('phonepe')

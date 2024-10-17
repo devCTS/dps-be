@@ -1,16 +1,37 @@
-import { Controller, Post, HttpStatus, Get } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  HttpStatus,
+  Get,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { AdminService } from 'src/admin/admin.service';
+import { ChannelService } from 'src/channel/channel.service';
+import { GatewayService } from 'src/gateway/gateway.service';
+import { SystemConfigService } from 'src/system-config/system-config.service';
 
 @Controller('load')
 export class LoadController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly channelService: ChannelService,
+    private readonly gatewaysService: GatewayService,
+    private readonly sysConfigService: SystemConfigService,
+  ) {}
 
   @Post()
-  loadAll() {
-    this.adminService.loadSuperAdmin();
-    return HttpStatus.OK;
-  }
+  async loadAll() {
+    try {
+      await this.adminService.loadSuperAdmin();
+      await this.channelService.createChannelConfig();
+      await this.gatewaysService.createChannelSettings();
+      await this.gatewaysService.createPhonepe();
+      await this.gatewaysService.createRazorPay();
+      await this.sysConfigService.create();
 
-  @Get()
-  loadConfig() {}
+      return HttpStatus.CREATED;
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
+  }
 }

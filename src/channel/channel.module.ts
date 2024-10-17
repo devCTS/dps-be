@@ -15,6 +15,9 @@ import { Upi } from './entity/upi.entity';
   ],
   controllers: [ChannelController],
   providers: [ChannelService],
-  exports: [TypeOrmModule.forFeature([Upi, NetBanking, EWallet])],
+  exports: [
+    TypeOrmModule.forFeature([Upi, NetBanking, EWallet]),
+    ChannelService,
+  ],
 })
 export class ChannelModule {}

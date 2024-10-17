@@ -13,8 +13,8 @@ export class SystemConfigController {
   constructor(private readonly systemConfigService: SystemConfigService) {}
 
   @Post()
-  create(@Body() createSystemConfigDto: CreateSystemConfigDto) {
-    return this.systemConfigService.create(createSystemConfigDto);
+  create() {
+    return this.systemConfigService.create();
   }
 
   @Get('/latest')

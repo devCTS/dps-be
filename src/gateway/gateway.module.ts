@@ -16,5 +16,6 @@ import { JwtModule } from 'src/services/jwt/jwt.module';
   ],
   controllers: [GatewayController],
   providers: [GatewayService],
+  exports: [GatewayService],
 })
 export class GatewayModule {}
