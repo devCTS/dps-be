@@ -26,14 +26,34 @@ export class PayinController {
     return this.payinService.create(createPayinDto);
   }
 
-  @Post('paginate')
+  @Post('admin/paginate')
   adminPayins(@Body() paginateRequestDto: PaginateRequestDto) {
     return this.payinAdminService.paginatePayins(paginateRequestDto);
   }
 
+  @Post('merchant/paginate')
+  merchantPayins(@Body() paginateRequestDto: PaginateRequestDto) {
+    return this.payinMerchantService.paginatePayins(paginateRequestDto);
+  }
+
+  @Post('member/paginate')
+  memberPayins(@Body() paginateRequestDto: PaginateRequestDto) {
+    return this.payinMemberService.paginatePayins(paginateRequestDto);
+  }
+
   @Get('admin/:id')
-  getPayinOrderDetails(@Param('id', ParseIntPipe) id: number) {
+  getPayinOrderDetailsAdmin(@Param('id', ParseIntPipe) id: number) {
     return this.payinAdminService.getPayinDetails(id);
+  }
+
+  @Get('merchant/:id')
+  getPayinOrderDetailsMerchant(@Param('id', ParseIntPipe) id: number) {
+    return this.payinMerchantService.getPayinDetails(id);
+  }
+
+  @Get('member/:id')
+  getPayinOrderDetailsMember(@Param('id', ParseIntPipe) id: number) {
+    return this.payinMemberService.getPayinDetails(id);
   }
 
   @Post('update-status-assigned')
@@ -41,7 +61,7 @@ export class PayinController {
     return this.payinService.updatePayinStatusToAssigned(body);
   }
 
-  @Post('update-status-completed')
+  @Post('update-status-complete')
   updatePayinStatusToCompleted(@Body() body) {
     return this.payinService.updatePayinStatusToComplete(body);
   }

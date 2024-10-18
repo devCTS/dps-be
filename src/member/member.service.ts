@@ -410,7 +410,7 @@ export class MemberService {
   async updateBalance(identityId, amount, failed) {
     const member = await this.memberRepository.findOne({
       where: {
-        identity: identityId,
+        identity: { id: identityId },
       },
       relations: ['identity'],
     });
@@ -424,10 +424,10 @@ export class MemberService {
     const transactionUpdateEntries =
       await this.transactionUpdateRepository.find({
         where: {
-          user: identityId,
+          user: { id: identityId },
           pending: true,
         },
-        relations: ['identity'],
+        relations: ['user'],
       });
 
     for (const entry of transactionUpdateEntries) {

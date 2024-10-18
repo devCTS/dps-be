@@ -15,6 +15,9 @@ import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { MerchantModule } from 'src/merchant/merchant.module';
 import { SystemConfigModule } from 'src/system-config/system-config.module';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
+import { MemberModule } from 'src/member/member.module';
+import { Member } from 'src/member/entities/member.entity';
+import { AgentModule } from 'src/agent/agent.module';
 
 @Module({
   imports: [
@@ -24,11 +27,14 @@ import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-
       Identity,
       Merchant,
       TransactionUpdate,
+      Member,
     ]),
     TransactionUpdatesModule,
     EndUserModule,
     IdentityModule,
     MerchantModule,
+    MemberModule,
+    AgentModule,
     SystemConfigModule,
     TransactionUpdatesModule,
   ],

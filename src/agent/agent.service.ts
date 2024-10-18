@@ -285,7 +285,7 @@ export class AgentService {
   async updateBalance(identityId, amount, failed) {
     const agent = await this.agentRepository.findOne({
       where: {
-        identity: identityId,
+        identity: { id: identityId },
       },
       relations: ['identity'],
     });
@@ -299,10 +299,10 @@ export class AgentService {
     const transactionUpdateEntries =
       await this.transactionUpdateRepository.find({
         where: {
-          user: identityId,
+          user: { id: identityId },
           pending: true,
         },
-        relations: ['identity'],
+        relations: ['user'],
       });
 
     for (const entry of transactionUpdateEntries) {

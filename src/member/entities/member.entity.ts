@@ -19,7 +19,7 @@ export class Member {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Identity, (identity) => identity.members)
+  @OneToOne(() => Identity, (identity) => identity.member)
   @JoinColumn({ name: 'identity' })
   identity: Identity;
 

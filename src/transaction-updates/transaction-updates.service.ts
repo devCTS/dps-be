@@ -27,64 +27,72 @@ export class TransactionUpdatesService {
     private readonly systemConfigService: SystemConfigService,
   ) {}
 
-  async processReferral(referral, orderType, orderAmount, orderDetails) {
+  async processReferral(
+    referral,
+    orderType,
+    orderAmount,
+    orderDetails,
+    forMember,
+  ) {
     let userType = UserTypeForTransactionUpdates.MERCHANT_BALANCE;
     let before = 0,
       rate = 2, // service rate / commission rates
       amount = 0, // total service fee / commissions
       after = 0;
 
-    switch (referral.agentType) {
-      case 'merchant':
-        userType = UserTypeForTransactionUpdates.MERCHANT_BALANCE;
+    if (forMember) {
+      if (!referral.children || referral.children.length <= 0) {
+        userType = UserTypeForTransactionUpdates.MEMBER_QUOTA;
         rate =
           orderType === OrderType.PAYIN
-            ? referral.merchantPayinServiceRate
-            : referral.merchantPayoutServiceRate;
+            ? referral.payinCommission
+            : referral.payoutCommission;
         amount = (orderAmount / 100) * rate;
-        before = referral.balance;
+        before = referral.quota;
         after =
           orderType === OrderType.PAYIN
-            ? before + orderAmount - amount
-            : before - orderAmount - amount;
-        break;
-
-      case 'agent':
-        userType = UserTypeForTransactionUpdates.AGENT_BALANCE;
+            ? before - orderAmount + amount
+            : before + orderAmount + amount;
+      } else {
+        userType = UserTypeForTransactionUpdates.MEMBER_BALANCE;
         rate =
-          (orderType === OrderType.PAYIN
+          orderType === OrderType.PAYIN
             ? referral.payinCommission
-            : referral.payoutCommission) ?? 2;
+            : referral.payoutCommission;
         amount = (orderAmount / 100) * rate;
         before = referral.balance;
         after = before + amount;
-        break;
-
-      case 'member':
-        if (!referral.children || referral.children.length <= 0) {
-          userType = UserTypeForTransactionUpdates.MEMBER_QUOTA;
+      }
+    } else {
+      switch (referral.agentType) {
+        case 'merchant':
+          userType = UserTypeForTransactionUpdates.MERCHANT_BALANCE;
           rate =
             orderType === OrderType.PAYIN
-              ? referral.payinCommission
-              : referral.payoutCommission;
+              ? referral.merchantPayinServiceRate
+              : referral.merchantPayoutServiceRate;
           amount = (orderAmount / 100) * rate;
-          before = referral.quota;
+          before = referral.balance;
           after =
             orderType === OrderType.PAYIN
-              ? before - orderAmount + amount
-              : before + orderAmount + amount;
-        } else {
-          userType = UserTypeForTransactionUpdates.MEMBER_BALANCE;
+              ? before + orderAmount - amount
+              : before - orderAmount - amount;
+          break;
+
+        case 'agent':
+          userType = UserTypeForTransactionUpdates.AGENT_BALANCE;
           rate =
-            orderType === OrderType.PAYIN
+            (orderType === OrderType.PAYIN
               ? referral.payinCommission
-              : referral.payoutCommission;
+              : referral.payoutCommission) ?? 2;
           amount = (orderAmount / 100) * rate;
           before = referral.balance;
           after = before + amount;
-        }
+          break;
 
-        break;
+        default:
+          break;
+      }
     }
 
     const identity = await this.identityRepository.findOne({
@@ -116,7 +124,60 @@ export class TransactionUpdatesService {
         orderType,
         orderAmount,
         orderDetails,
+        forMember,
       );
+  }
+
+  async addSystemProfit(orderDetails, orderType) {
+    const systemProfitExists = await this.transactionUpdateRepository.findOne({
+      where: {
+        userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
+        payinOrder: orderDetails.id,
+      },
+    });
+    if (systemProfitExists)
+      await this.transactionUpdateRepository.remove(systemProfitExists);
+
+    const transactionUpdateEntries =
+      await this.transactionUpdateRepository.find({
+        where: {
+          payinOrder: { id: orderDetails.id },
+          pending: true,
+        },
+        relations: ['payinOrder'],
+      });
+
+    const systemConfig = await this.systemConfigService.findLatest();
+
+    let beforeProfit = systemConfig.systemProfit;
+    let profitFromCurrentOrder = transactionUpdateEntries.reduce(
+      (acc, entry) => {
+        if (entry.userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE)
+          // Add service fee paid by merchant
+          acc += entry.amount;
+
+        if (
+          entry.userType === UserTypeForTransactionUpdates.AGENT_BALANCE ||
+          entry.userType === UserTypeForTransactionUpdates.MEMBER_BALANCE ||
+          entry.userType === UserTypeForTransactionUpdates.GATEWAY_FEE
+        )
+          // Deduct agent commissions
+          acc -= entry.amount;
+
+        return acc;
+      },
+      0,
+    );
+    let afterProfit = beforeProfit + profitFromCurrentOrder;
+
+    await this.transactionUpdateRepository.save({
+      orderType,
+      userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
+      before: beforeProfit,
+      amount: profitFromCurrentOrder,
+      after: afterProfit,
+      payinOrder: orderDetails,
+    });
   }
 
   async create({ orderDetails, orderType, userId, forMember = false }) {
@@ -127,59 +188,17 @@ export class TransactionUpdatesService {
       : await this.agentReferralService.getReferralTreeOfUser(userId);
 
     if (referrals) {
-      await this.processReferral(referrals, orderType, amount, orderDetails);
-
-      const transactionUpdateEntries =
-        await this.transactionUpdateRepository.find({
-          where: {
-            payinOrder: { id: orderDetails.id },
-            pending: true,
-          },
-          relations: ['payinOrder'],
-        });
-
-      const systemConfig = await this.systemConfigService.findLatest();
-
-      let beforeProfit = systemConfig.systemProfit;
-      let profitFromCurrentOrder = transactionUpdateEntries.reduce(
-        (acc, entry) => {
-          if (entry.userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE)
-            // Add service fee paid by merchant
-            acc += entry.amount;
-
-          if (entry.userType === UserTypeForTransactionUpdates.AGENT_BALANCE)
-            // Deduct agent commissions
-            acc -= entry.amount;
-
-          return acc;
-        },
-        0,
-      );
-      let afterProfit = beforeProfit + profitFromCurrentOrder;
-
-      await this.transactionUpdateRepository.save({
+      await this.processReferral(
+        referrals,
         orderType,
-        userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
-        before: beforeProfit,
-        amount: profitFromCurrentOrder,
-        after: afterProfit,
-        payinOrder: orderDetails,
-      });
+        amount,
+        orderDetails,
+        forMember,
+      );
+      this.addSystemProfit(orderDetails, orderType);
     }
 
     return HttpStatus.CREATED;
-  }
-
-  async updatePendingStatusToFalse(orderId, orderType: OrderType) {
-    const transactionUpdates = await this.transactionUpdateRepository.find({
-      where: { payinOrder: orderId, orderType, pending: true },
-    });
-
-    const transactionUpdateIds = transactionUpdates.map((el) => el.id);
-
-    await this.transactionUpdateRepository.update(transactionUpdateIds, {
-      pending: false,
-    });
   }
 
   findAll() {

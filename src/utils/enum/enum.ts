@@ -55,4 +55,5 @@ export enum UserTypeForTransactionUpdates {
   MEMBER_BALANCE = 'member_balance',
   AGENT_BALANCE = 'agent_balance',
   SYSTEM_PROFIT = 'system_profit',
+  GATEWAY_FEE = 'gateway_fee',
 }

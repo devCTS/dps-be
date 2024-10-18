@@ -47,17 +47,17 @@ export class Identity {
     | 'SUB_ADMIN'
     | 'AGENT';
 
-  @OneToMany(() => Merchant, (merchant) => merchant.identity, {
+  @OneToOne(() => Merchant, (merchant) => merchant.identity, {
     cascade: true,
     onDelete: 'CASCADE',
   })
-  merchants: Merchant[];
+  merchant: Merchant;
 
-  @OneToMany(() => Member, (member) => member.identity, {
+  @OneToOne(() => Member, (member) => member.identity, {
     cascade: true,
     onDelete: 'CASCADE',
   })
-  members: Member[];
+  member: Member;
 
   @OneToOne(() => Admin, (admin) => admin.identity)
   admins: Admin[];

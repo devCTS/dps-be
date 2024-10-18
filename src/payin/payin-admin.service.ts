@@ -1,8 +1,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
+import {
+  PaginateRequestDto,
+  parseEndDate,
+  parseStartDate,
+} from 'src/utils/dtos/paginate.dto';
 import { Payin } from './entities/payin.entity';
-import { Repository } from 'typeorm';
+import {
+  Between,
+  ILike,
+  LessThanOrEqual,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import {
   PayinAdminResponseDto,
@@ -21,25 +31,50 @@ export class PayinAdminService {
   ) {}
 
   async paginatePayins(paginateRequestDto: PaginateRequestDto) {
-    const { search, pageSize, pageNumber, startDate, endDate, userId } =
+    const { search, pageSize, pageNumber, startDate, endDate, sortedBy } =
       paginateRequestDto;
 
     const skip = (pageNumber - 1) * pageSize;
     const take = pageSize;
 
-    const [rows, total] = await this.payinRepository.findAndCount({
-      relations: ['merchant', 'user'],
-      skip,
-      take,
-    });
+    const queryBuilder = this.payinRepository
+      .createQueryBuilder('payin')
+      .leftJoinAndSelect('payin.merchant', 'merchant')
+      .leftJoinAndSelect('payin.user', 'user')
+      .leftJoinAndSelect('payin.member', 'member')
+      .skip(skip)
+      .take(take);
+
+    if (search)
+      queryBuilder.andWhere(`CONCAT(payin.merchant) ILIKE :search`, {
+        search: `%${search}%`,
+      });
+
+    if (startDate && endDate) {
+      const parsedStartDate = parseStartDate(startDate);
+      const parsedEndDate = parseEndDate(endDate);
+
+      queryBuilder.andWhere(
+        'payin.created_at BETWEEN :startDate AND :endDate',
+        {
+          startDate: parsedStartDate,
+          endDate: parsedEndDate,
+        },
+      );
+    }
+
+    if (sortedBy)
+      if (sortedBy === 'latest')
+        queryBuilder.orderBy('payin.created_at', 'DESC');
+      else if (sortedBy === 'oldest')
+        queryBuilder.orderBy('payin.created_at', 'ASC');
+
+    const [rows, total] = await queryBuilder.getManyAndCount();
 
     const startRecord = skip + 1;
     const endRecord = Math.min(skip + pageSize, total);
 
-    const dtos = plainToInstance(PayinAdminResponseDto, [
-      // ...rows,
-      ...adminPayins,
-    ]);
+    const dtos = plainToInstance(PayinAdminResponseDto, rows);
 
     return {
       total,
@@ -55,7 +90,7 @@ export class PayinAdminService {
   async getPayinDetails(id: number) {
     const payin = await this.payinRepository.findOne({
       where: { id },
-      relations: ['user', 'merchant'],
+      relations: ['user', 'merchant', 'member'],
     });
     if (!payin) throw new NotFoundException('Order not found!');
 
@@ -70,14 +105,12 @@ export class PayinAdminService {
     const response = {
       ...payin,
       transactionDetails: {
-        transactionId: '848484575775784',
-        receipt:
-          'https://unsplash.com/photos/black-flat-screen-computer-monitor-cFFEeHNZEqw',
-        member: {
-          'Upi Id': '9149965887@2912',
-          'Mobile Number': '9149965887',
-        },
-        gateway: null,
+        transactionId: payin.transactionId,
+        receipt: payin.transactionReceipt,
+        member: payin.member ? JSON.parse(payin.transactionDetails) : null,
+        gateway: payin.gatewayName
+          ? JSON.parse(payin.transactionDetails)
+          : null,
       },
       balancesAndProfit: transactionUpdateEntries,
     };

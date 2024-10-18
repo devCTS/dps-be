@@ -7,6 +7,7 @@ import {
   PaymentMadeOn,
   UserTypeForTransactionUpdates,
 } from 'src/utils/enum/enum';
+import { CreateDateColumn } from 'typeorm';
 
 @Exclude()
 export class PayinAdminResponseDto {
@@ -44,9 +45,13 @@ export class PayinAdminResponseDto {
   merchant: string;
 
   @Expose()
+  @Transform(({ value }) => value?.toLowerCase(), { toClassOnly: true })
   payinMadeOn: PaymentMadeOn;
 
   @Expose()
+  @Transform(({ value }) => value?.firstName + value?.lastName, {
+    toClassOnly: true,
+  })
   member: string | null;
 
   @Expose()
@@ -112,9 +117,17 @@ export class PayinDetailsAdminResDto {
   merchant: {};
 
   @Expose()
+  @Transform(({ value }) => value?.toLowerCase(), { toClassOnly: true })
   payinMadeOn: PaymentMadeOn;
 
   @Expose()
+  @Transform(
+    ({ value }) => ({
+      id: value?.id,
+      name: value?.firstName + value?.lastName,
+    }),
+    { toClassOnly: true },
+  )
   member: {} | null;
 
   @Expose()
@@ -139,6 +152,7 @@ function TransformBalancesAndProfit() {
           member_balance: 'agent',
           system_profit: 'system',
           member_quota: 'member',
+          gateway_fee: 'gateway',
         };
 
         const role = roleMapping[item.userType] || item.userType;
@@ -199,6 +213,14 @@ function TransformBalancesAndProfit() {
               balanceAfter: item.after,
             };
 
+          case UserTypeForTransactionUpdates.GATEWAY_FEE:
+            return {
+              role,
+              name: item.name,
+              upstreamFee: item.amount,
+              upstreamRate: item.rate,
+            };
+
           default:
             return;
         }
@@ -208,11 +230,18 @@ function TransformBalancesAndProfit() {
       const systemProfitEntry = filteredValues.find(
         (entry) => entry.role === 'system',
       );
+      const merchantEntry = filteredValues.find(
+        (entry) => entry.role === 'merchant',
+      );
       const otherEntries = filteredValues.filter(
-        (entry) => entry.role !== 'system',
+        (entry) => entry.role !== 'system' && entry.role !== 'merchant',
       );
 
-      return [...otherEntries.reverse(), systemProfitEntry].filter(Boolean);
+      return [
+        merchantEntry,
+        ...otherEntries.reverse(),
+        systemProfitEntry,
+      ].filter(Boolean);
     },
     { toClassOnly: true },
   );

@@ -19,93 +19,134 @@ import {
   PayinMemberResponseDto,
 } from './dto/payin-member-response.dto';
 import { memberPayinOrders } from './data/dummy-order-details';
+import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 
 @Injectable()
 export class PayinMemberService {
   constructor(
     @InjectRepository(Payin)
     private payinRepository: Repository<Payin>,
+    @InjectRepository(TransactionUpdate)
+    private transactionUpdateRepository: Repository<TransactionUpdate>,
   ) {}
 
   async paginatePayins(paginateRequestDto: PaginateRequestDto) {
-    const query = this.payinRepository.createQueryBuilder('payin');
+    const { search, pageSize, pageNumber, startDate, endDate, sortedBy } =
+      paginateRequestDto;
 
-    const search = paginateRequestDto.search;
-    const pageSize = paginateRequestDto.pageSize;
-    const pageNumber = paginateRequestDto.pageNumber;
-    const sortedBy = paginateRequestDto.sortedBy;
+    const skip = (pageNumber - 1) * pageSize;
+    const take = pageSize;
 
-    if (search) {
-      query.andWhere(
-        `CONCAT(merchant.first_name, ' ', merchant.last_name) ILIKE :search`,
-        { search: `%${search}%` },
+    const queryBuilder = this.payinRepository
+      .createQueryBuilder('payin')
+      .leftJoinAndSelect('payin.merchant', 'merchant')
+      .leftJoinAndSelect('payin.user', 'user')
+      .leftJoinAndSelect('payin.member', 'member')
+      .leftJoinAndSelect('member.identity', 'identity')
+      .skip(skip)
+      .take(take);
+
+    if (search)
+      queryBuilder.andWhere(`CONCAT(payin.merchant) ILIKE :search`, {
+        search: `%${search}%`,
+      });
+
+    if (startDate && endDate) {
+      const parsedStartDate = parseStartDate(startDate);
+      const parsedEndDate = parseEndDate(endDate);
+
+      queryBuilder.andWhere(
+        'payin.created_at BETWEEN :startDate AND :endDate',
+        {
+          startDate: parsedStartDate,
+          endDate: parsedEndDate,
+        },
       );
     }
 
-    // Handle filtering by created_at between startDate and endDate
-    if (paginateRequestDto.startDate && paginateRequestDto.endDate) {
-      const startDate = parseStartDate(paginateRequestDto.startDate);
-      const endDate = parseEndDate(paginateRequestDto.endDate);
+    if (sortedBy)
+      if (sortedBy === 'latest')
+        queryBuilder.orderBy('payin.created_at', 'DESC');
+      else if (sortedBy === 'oldest')
+        queryBuilder.orderBy('payin.created_at', 'ASC');
 
-      query.andWhere('member.created_at BETWEEN :startDate AND :endDate', {
-        startDate,
-        endDate,
-      });
-    }
-
-    // Sorting
-    if (sortedBy) {
-      switch (sortedBy) {
-        case SortedBy.LATEST:
-          query.orderBy('payin.createdDate', 'DESC');
-          break;
-        case SortedBy.OLDEST:
-          query.orderBy('payin.createdDate', 'ASC');
-          break;
-        default:
-          break;
-      }
-    }
-
-    // Handle pagination
-    const skip = (pageNumber - 1) * pageSize;
-    query.skip(skip).take(pageSize);
-
-    // Execute query
-    const [rows, total] = await query.getManyAndCount();
-
-    // Adding data from dummy file. Will be changed later
-    // let data = Object.assign({}, rows, adminPayins[0]);
-
-    const dtos = plainToInstance(PayinMemberResponseDto, memberAllPayins);
+    const [rows, total] = await queryBuilder.getManyAndCount();
 
     const startRecord = skip + 1;
     const endRecord = Math.min(skip + pageSize, total);
 
+    const dtos = await Promise.all(
+      rows.map(async (row) => {
+        const transactionUpdate =
+          await this.transactionUpdateRepository.findOne({
+            where: {
+              payinOrder: { id: row.id },
+              user: { id: row.member?.identity?.id },
+            },
+            relations: ['payinOrder', 'user', 'user.member'],
+          });
+
+        return {
+          ...plainToInstance(PayinMemberResponseDto, row),
+          commission: transactionUpdate.amount,
+          quotaDebit: transactionUpdate.after,
+        };
+      }),
+    );
+
     return {
-      data: dtos,
       total,
       page: pageNumber,
       pageSize,
       totalPages: Math.ceil(total / pageSize),
       startRecord,
       endRecord,
+      data: dtos,
     };
   }
 
-  async getPayinOrderDetails(id: number) {
+  async getPayinDetails(id: number) {
     try {
-      const orderDetails = await this.payinRepository.findOneBy({ id });
+      const orderDetails = await this.payinRepository.findOne({
+        where: { id },
+        relations: ['user', 'member', 'merchant', 'member.identity'],
+      });
       if (!orderDetails) throw new NotFoundException('Order not found.');
 
-      const details = plainToInstance(
-        PayinDetailsMemberResDto,
-        memberPayinOrders,
-      );
+      const transactionUpdate = await this.transactionUpdateRepository.findOne({
+        where: {
+          payinOrder: { id },
+          user: { id: orderDetails.member?.identity?.id },
+        },
+        relations: ['payinOrder', 'user', 'user.member'],
+      });
+
+      const res = {
+        ...orderDetails,
+        transactionDetails: {
+          transactionId: orderDetails.transactionId,
+          receipt: orderDetails.transactionReceipt,
+          member: orderDetails.member
+            ? JSON.parse(orderDetails.transactionDetails)
+            : null,
+          gateway: orderDetails.gatewayName
+            ? JSON.parse(orderDetails.transactionDetails)
+            : null,
+        },
+        quotaDetails: {
+          commissionRate: transactionUpdate.rate,
+          commissionAmount: transactionUpdate.amount,
+          quotaDeducted: transactionUpdate.after,
+          withHeldAmount:
+            (orderDetails.amount / 100) * orderDetails.member.withdrawalRate,
+          withHeldRate: orderDetails.member.withdrawalRate,
+        },
+      };
+
+      const details = plainToInstance(PayinDetailsMemberResDto, res);
 
       return details;
     } catch (error) {
-      console.log(error);
       throw new InternalServerErrorException();
     }
   }

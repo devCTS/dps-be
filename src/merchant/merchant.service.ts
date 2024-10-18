@@ -507,7 +507,7 @@ export class MerchantService {
   async updateBalance(identityId, amount, failed) {
     const merchant = await this.merchantRepository.findOne({
       where: {
-        identity: identityId,
+        identity: { id: identityId },
       },
       relations: ['identity'],
     });
@@ -521,10 +521,10 @@ export class MerchantService {
     const transactionUpdateEntries =
       await this.transactionUpdateRepository.find({
         where: {
-          user: identityId,
+          user: { id: identityId },
           pending: true,
         },
-        relations: ['identity'],
+        relations: ['user'],
       });
 
     for (const entry of transactionUpdateEntries) {
