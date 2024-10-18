@@ -241,12 +241,10 @@ export class AgentService {
     }
 
     if (updateLoginCredentials) {
-      const hashedPassword = this.jwtService.getHashPassword(password);
-
       await this.identityService.updateLogin(
         updatedAgent.identity.id,
         email,
-        hashedPassword,
+        password,
       );
     }
 

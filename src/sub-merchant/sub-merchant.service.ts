@@ -101,7 +101,6 @@ export class SubMerchantService {
     );
 
     if (updateLoginCredentials) {
-      const hashedPassword = this.jwtService.getHashPassword(password);
       const updatedAdmin = await this.subMerchantRepository.findOne({
         where: { id },
         relations: ['identity'], // Explicitly specify the relations
@@ -110,7 +109,7 @@ export class SubMerchantService {
       await this.identityService.updateLogin(
         updatedAdmin.identity.id,
         email,
-        hashedPassword,
+        password,
       );
     }
 
