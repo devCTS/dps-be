@@ -114,4 +114,10 @@ export class Merchant {
 
   @Column({ type: 'float', default: 0 })
   balance: number;
+
+  @Column()
+  payinChannels: string;
+
+  @Column()
+  payoutChannels: string;
 }

@@ -108,12 +108,10 @@ export class MerchantResponseDto {
   channelProfile: ChannelProfileDto;
 
   @Expose()
-  @TransformChannelList('Payin')
-  payinChannels: any[];
+  payinChannels: number[];
 
   @Expose()
-  @TransformChannelList('Payout')
-  payoutChannels: any[];
+  payoutChannels: number[];
 
   @Expose()
   numberOfRangesOrRatio?: number;

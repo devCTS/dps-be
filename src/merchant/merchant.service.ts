@@ -144,6 +144,8 @@ export class MerchantService {
       payinMode,
       integrationId: '11',
       withdrawalPassword: hashedWithdrawalPassword,
+      payinChannels,
+      payoutChannels,
     });
 
     const createdMerchant = await this.merchantRepository.save(merchant);
@@ -233,7 +235,17 @@ export class MerchantService {
       ],
     });
 
-    return plainToInstance(MerchantResponseDto, results);
+    const newPayinChannels = JSON.parse(results.payinChannels);
+    const newPayoutChannels = JSON.parse(results.payoutChannels);
+
+    delete results.payinChannels;
+    delete results.payoutChannels;
+
+    return plainToInstance(MerchantResponseDto, {
+      ...results,
+      payoutChannels: newPayoutChannels,
+      payinChannels: newPayinChannels,
+    });
   }
 
   async update(id: number, updateDto: UpdateMerchantDto) {
@@ -255,8 +267,6 @@ export class MerchantService {
     delete updateDto.channelProfile;
     delete updateDto.email;
     delete updateDto.password;
-    delete updateDto.payinChannels;
-    delete updateDto.payoutChannels;
     delete updateDto.ipAddresses;
     delete updateDto.numberOfRangesOrRatio;
     delete updateDto.amountRanges;
@@ -522,6 +532,7 @@ export class MerchantService {
 
     // Execute query
     const [rows, total] = await query.getManyAndCount();
+
     const dtos = plainToInstance(MerchantResponseDto, rows);
 
     const startRecord = skip + 1;

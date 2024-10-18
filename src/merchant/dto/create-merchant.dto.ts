@@ -133,15 +133,13 @@ export class CreateMerchantDto {
   @Min(0)
   maxWithdrawal: number;
 
-  @IsArray()
-  @ArrayNotEmpty()
-  @IsNumber({}, { each: true })
-  payinChannels: number[];
+  @IsNotEmpty()
+  @IsString()
+  payinChannels: string;
 
-  @IsArray()
-  @ArrayNotEmpty()
-  @IsNumber({}, { each: true })
-  payoutChannels: number[];
+  @IsNotEmpty()
+  @IsString()
+  payoutChannels: string;
 
   @IsOptional()
   @ValidateNested({ each: true })
