@@ -13,6 +13,7 @@ import { AgentReferralModule } from 'src/agent-referral/agent-referral.module';
 import { PayoutModule } from 'src/payout/payout.module';
 import { TransactionUpdatesModule } from 'src/transaction-updates/transaction-updates.module';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
+import { ChannelModule } from 'src/channel/channel.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-
     AgentReferralModule,
     PayoutModule,
     TransactionUpdatesModule,
+    ChannelModule,
   ],
   controllers: [MerchantController],
   providers: [MerchantService],

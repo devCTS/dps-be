@@ -104,7 +104,7 @@ export class AgentService {
 
     if (channelProfile?.eWallet && channelProfile.eWallet.length > 0) {
       for (const element of channelProfile.eWallet) {
-        await this.upiRepository.save({
+        await this.eWalletRepository.save({
           ...element,
           identity,
         });
@@ -113,7 +113,7 @@ export class AgentService {
 
     if (channelProfile?.netBanking && channelProfile.netBanking.length > 0) {
       for (const element of channelProfile.netBanking) {
-        await this.upiRepository.save({
+        await this.netBankingRepository.save({
           ...element,
           identity,
         });

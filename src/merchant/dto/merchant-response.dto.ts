@@ -4,6 +4,7 @@ import { TransformChannelList } from 'src/utils/decorators/channel-list.decorato
 import { PayinMode } from '../entities/payinMode.entity';
 import { TransformPayinModeDetails } from 'src/utils/decorators/payin-mode.decorator';
 import { TransformChannelProfileFields } from 'src/utils/decorators/channel-profile.decorator';
+import { ChannelProfileDto } from 'src/utils/dtos/channel-profile.dto';
 
 @Exclude()
 export class MerchantResponseDto {
@@ -93,11 +94,18 @@ export class MerchantResponseDto {
   ips: string[];
 
   @Expose()
-  @TransformChannelProfileFields()
-  channelProfile: {
-    channelName: string;
-    fields: { label: string; value: string }[];
-  }[];
+  @Transform(
+    ({ obj }) => {
+      const channelProfile = {
+        upi: obj.identity.upi,
+        eWallet: obj.identity.eWallet,
+        netBanking: obj.identity.netBanking,
+      };
+      return channelProfile;
+    },
+    { toClassOnly: true },
+  )
+  channelProfile: ChannelProfileDto;
 
   @Expose()
   @TransformChannelList('Payin')

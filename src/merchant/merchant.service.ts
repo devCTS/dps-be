@@ -31,6 +31,9 @@ import { AgentReferralService } from 'src/agent-referral/agent-referral.service'
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { OrderType, UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
 import { userInfo } from 'os';
+import { Upi } from 'src/channel/entity/upi.entity';
+import { NetBanking } from 'src/channel/entity/net-banking.entity';
+import { EWallet } from 'src/channel/entity/e-wallet.entity';
 
 @Injectable()
 export class MerchantService {
@@ -52,6 +55,15 @@ export class MerchantService {
 
     @InjectRepository(TransactionUpdate)
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
+
+    @InjectRepository(Upi)
+    private readonly upiRepository: Repository<Upi>,
+
+    @InjectRepository(NetBanking)
+    private readonly netBankingRepository: Repository<NetBanking>,
+
+    @InjectRepository(EWallet)
+    private readonly eWalletRepository: Repository<EWallet>,
 
     private readonly identityService: IdentityService,
     private readonly jwtService: JwtService,
@@ -136,6 +148,33 @@ export class MerchantService {
 
     const createdMerchant = await this.merchantRepository.save(merchant);
 
+    if (channelProfile?.upi && channelProfile.upi.length > 0) {
+      for (const element of channelProfile.upi) {
+        await this.upiRepository.save({
+          ...element,
+          identity,
+        });
+      }
+    }
+
+    if (channelProfile?.eWallet && channelProfile.eWallet.length > 0) {
+      for (const element of channelProfile.eWallet) {
+        await this.eWalletRepository.save({
+          ...element,
+          identity,
+        });
+      }
+    }
+
+    if (channelProfile?.netBanking && channelProfile.netBanking.length > 0) {
+      for (const element of channelProfile.netBanking) {
+        await this.netBankingRepository.save({
+          ...element,
+          identity,
+        });
+      }
+    }
+
     // add ips
     if (ipAddresses)
       await this.identityService.updateIps(ipAddresses, identity);
@@ -184,6 +223,9 @@ export class MerchantService {
       where: { id },
       relations: [
         'identity',
+        'identity.upi',
+        'identity.eWallet',
+        'identity.netBanking',
         'identity.ips',
         'payinModeDetails',
         'payinModeDetails.proportionalRange',
@@ -241,6 +283,50 @@ export class MerchantService {
       where: { id: id },
       relations: ['identity'],
     });
+
+    // Deleting all existing Data
+    await this.upiRepository.delete({
+      identity: {
+        id: merchant.identity.id,
+      },
+    });
+    await this.eWalletRepository.delete({
+      identity: {
+        id: merchant.identity.id,
+      },
+    });
+    await this.netBankingRepository.delete({
+      identity: {
+        id: merchant.identity.id,
+      },
+    });
+
+    if (channelProfile?.upi && channelProfile.upi.length > 0) {
+      for (const element of channelProfile.upi) {
+        await this.upiRepository.save({
+          ...element,
+          identity: merchant.identity,
+        });
+      }
+    }
+
+    if (channelProfile?.eWallet && channelProfile.eWallet.length > 0) {
+      for (const element of channelProfile.eWallet) {
+        await this.eWalletRepository.save({
+          ...element,
+          identity: merchant.identity,
+        });
+      }
+    }
+
+    if (channelProfile?.netBanking && channelProfile.netBanking.length > 0) {
+      for (const element of channelProfile.netBanking) {
+        await this.netBankingRepository.save({
+          ...element,
+          identity: merchant.identity,
+        });
+      }
+    }
 
     if (updateLoginCredentials) {
       const hashedPassword = this.jwtService.getHashPassword(password);
