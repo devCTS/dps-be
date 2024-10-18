@@ -79,12 +79,12 @@ export class SystemConfigService {
       take: 1,
       relations: withRelations
         ? [
-            'defaultPayinGateway',
-            'defaultPayoutGateway',
-            'defaultWithdrawalGateway',
-            'defaultTopupChannels',
-            'defaultTopupChannels.field',
-            'defaultTopupChannels.field.channel',
+            // 'defaultPayinGateway',
+            // 'defaultPayoutGateway',
+            // 'defaultWithdrawalGateway',
+            // 'defaultTopupChannels',
+            // 'defaultTopupChannels.field',
+            // 'defaultTopupChannels.field.channel',
           ]
         : [],
     });

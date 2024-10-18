@@ -1,126 +1,87 @@
-import {
-  HttpStatus,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  PaginateRequestDto,
-  parseEndDate,
-  parseStartDate,
-} from 'src/utils/dtos/paginate.dto';
+import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
 import { Payin } from './entities/payin.entity';
 import { Repository } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
-import { adminPayins } from './data/dummy-data';
-import { OrderStatus, SortedBy } from 'src/utils/enum/enum';
 import {
   PayinAdminResponseDto,
   PayinDetailsAdminResDto,
 } from './dto/payin-admin-response.dto';
-import { adminPayinOrders } from './data/dummy-order-details';
+import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
+import { adminPayins } from './data/dummy-data';
 
 @Injectable()
 export class PayinAdminService {
   constructor(
     @InjectRepository(Payin)
     private payinRepository: Repository<Payin>,
+    @InjectRepository(TransactionUpdate)
+    private transactionUpdateRepository: Repository<TransactionUpdate>,
   ) {}
 
   async paginatePayins(paginateRequestDto: PaginateRequestDto) {
-    const query = this.payinRepository.createQueryBuilder('payin');
+    const { search, pageSize, pageNumber, startDate, endDate, userId } =
+      paginateRequestDto;
 
-    const search = paginateRequestDto.search;
-    const pageSize = paginateRequestDto.pageSize;
-    const pageNumber = paginateRequestDto.pageNumber;
-    const sortedBy = paginateRequestDto.sortedBy;
-
-    if (search) {
-      query.andWhere(
-        `CONCAT(merchant.first_name, ' ', merchant.last_name) ILIKE :search`,
-        { search: `%${search}%` },
-      );
-    }
-
-    // Handle filtering by created_at between startDate and endDate
-    if (paginateRequestDto.startDate && paginateRequestDto.endDate) {
-      const startDate = parseStartDate(paginateRequestDto.startDate);
-      const endDate = parseEndDate(paginateRequestDto.endDate);
-
-      query.andWhere('payin.created_at BETWEEN :startDate AND :endDate', {
-        startDate,
-        endDate,
-      });
-    }
-
-    // Sorting
-    if (sortedBy) {
-      switch (sortedBy) {
-        case SortedBy.LATEST:
-          query.orderBy('payin.createdDate', 'DESC');
-          break;
-        case SortedBy.OLDEST:
-          query.orderBy('payin.createdDate', 'ASC');
-          break;
-        default:
-          break;
-      }
-    }
-
-    // Handle pagination
     const skip = (pageNumber - 1) * pageSize;
-    query.skip(skip).take(pageSize);
+    const take = pageSize;
 
-    // Execute query
-    const [rows, total] = await query.getManyAndCount();
-
-    // Adding data from dummy file. Will be changed later
-    // let data = Object.assign({}, rows, adminPayins[0]);
-
-    const dtos = plainToInstance(PayinAdminResponseDto, adminPayins);
+    const [rows, total] = await this.payinRepository.findAndCount({
+      relations: ['merchant', 'user'],
+      skip,
+      take,
+    });
 
     const startRecord = skip + 1;
     const endRecord = Math.min(skip + pageSize, total);
 
+    const dtos = plainToInstance(PayinAdminResponseDto, [
+      // ...rows,
+      ...adminPayins,
+    ]);
+
     return {
-      data: dtos,
       total,
       page: pageNumber,
       pageSize,
       totalPages: Math.ceil(total / pageSize),
       startRecord,
       endRecord,
+      data: dtos,
     };
   }
 
-  async getPayinOrderDetails(id: number) {
-    try {
-      const orderDetails = await this.payinRepository.findOneBy({ id });
-      if (!orderDetails) throw new NotFoundException('Order not found.');
+  async getPayinDetails(id: number) {
+    const payin = await this.payinRepository.findOne({
+      where: { id },
+      relations: ['user', 'merchant'],
+    });
+    if (!payin) throw new NotFoundException('Order not found!');
 
-      const details = plainToInstance(
-        PayinDetailsAdminResDto,
-        adminPayinOrders,
-      );
+    const transactionUpdateEntries =
+      await this.transactionUpdateRepository.find({
+        where: {
+          payinOrder: { id },
+        },
+        relations: ['payinOrder', 'user'],
+      });
 
-      return details;
-    } catch (error) {
-      console.log(error);
-      throw new InternalServerErrorException();
-    }
-  }
+    const response = {
+      ...payin,
+      transactionDetails: {
+        transactionId: '848484575775784',
+        receipt:
+          'https://unsplash.com/photos/black-flat-screen-computer-monitor-cFFEeHNZEqw',
+        member: {
+          'Upi Id': '9149965887@2912',
+          'Mobile Number': '9149965887',
+        },
+        gateway: null,
+      },
+      balancesAndProfit: transactionUpdateEntries,
+    };
 
-  async updateOrderStatus(id: number, orderStatus: OrderStatus) {
-    const payinOrderDetails = await this.getPayinOrderDetails(id);
-
-    if (!payinOrderDetails)
-      throw new NotFoundException('Order details not found');
-
-    const updatedDetais = { ...payinOrderDetails, status: orderStatus };
-
-    await this.payinRepository.update(id, updatedDetais);
-
-    return HttpStatus.OK;
+    return plainToInstance(PayinDetailsAdminResDto, response);
   }
 }

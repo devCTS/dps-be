@@ -169,12 +169,7 @@ export class MerchantService {
     const results = await this.merchantRepository.find({
       relations: [
         'identity',
-        // 'identity.channelProfileFilledFields',
-        // 'identity.channelProfileFilledFields.field',
-        // 'identity.channelProfileFilledFields.field.channel',
         'identity.ips',
-        // 'identity.payinPayoutChannels',
-        // 'identity.payinPayoutChannels.channel',
         'payinModeDetails',
         'payinModeDetails.proportionalRange',
         'payinModeDetails.amountRangeRange',
@@ -189,12 +184,7 @@ export class MerchantService {
       where: { id },
       relations: [
         'identity',
-        'identity.channelProfileFilledFields',
-        'identity.channelProfileFilledFields.field',
-        'identity.channelProfileFilledFields.field.channel',
         'identity.ips',
-        'identity.payinPayoutChannels',
-        'identity.payinPayoutChannels.channel',
         'payinModeDetails',
         'payinModeDetails.proportionalRange',
         'payinModeDetails.amountRangeRange',
@@ -392,12 +382,7 @@ export class MerchantService {
     const [rows, total] = await this.merchantRepository.findAndCount({
       relations: [
         'identity',
-        'identity.channelProfileFilledFields',
-        'identity.channelProfileFilledFields.field',
-        'identity.channelProfileFilledFields.field.channel',
         'identity.ips',
-        'identity.payinPayoutChannels',
-        'identity.payinPayoutChannels.channel',
         'payinModeDetails',
         'payinModeDetails.proportionalRange',
         'payinModeDetails.amountRangeRange',

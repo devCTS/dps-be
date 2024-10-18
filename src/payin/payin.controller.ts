@@ -1,4 +1,11 @@
-import { Body, Controller, Param, ParseIntPipe, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+} from '@nestjs/common';
 import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
 import { PayinAdminService } from './payin-admin.service';
 import { PayinMerchantService } from './payin-merchant.service';
@@ -24,9 +31,9 @@ export class PayinController {
     return this.payinAdminService.paginatePayins(paginateRequestDto);
   }
 
-  @Post('order-details/:id')
+  @Get('admin/:id')
   getPayinOrderDetails(@Param('id', ParseIntPipe) id: number) {
-    return this.payinAdminService.getPayinOrderDetails(id);
+    return this.payinAdminService.getPayinDetails(id);
   }
 
   @Post('update-status-assigned')
