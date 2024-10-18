@@ -245,6 +245,51 @@ export class MemberService {
       relations: ['identity'],
     });
 
+    // Deleting all existing Data
+    await this.upiRepository.delete({
+      identity: {
+        id: member.identity.id,
+      },
+    });
+    await this.eWalletRepository.delete({
+      identity: {
+        id: member.identity.id,
+      },
+    });
+    await this.netBankingRepository.delete({
+      identity: {
+        id: member.identity.id,
+      },
+    });
+
+    // Adding all the channels
+    if (channelProfile.upi && channelProfile.upi.length > 0) {
+      for (const element of channelProfile.upi) {
+        await this.upiRepository.save({
+          ...element,
+          identity: member.identity,
+        });
+      }
+    }
+
+    if (channelProfile?.eWallet) {
+      for (const element of channelProfile.eWallet) {
+        await this.eWalletRepository.save({
+          ...element,
+          identity: member.identity,
+        });
+      }
+    }
+
+    if (channelProfile?.netBanking) {
+      for (const element of channelProfile.netBanking) {
+        await this.netBankingRepository.save({
+          ...element,
+          identity: member.identity,
+        });
+      }
+    }
+
     if (updateLoginCredentials) {
       const hashedPassword = this.jwtService.getHashPassword(password);
       const updatedAdmin = await this.memberRepository.findOne({
