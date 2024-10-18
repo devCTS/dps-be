@@ -8,6 +8,7 @@ import { JwtModule } from 'src/services/jwt/jwt.module';
 import { AgentReferralModule } from 'src/agent-referral/agent-referral.module';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { TransactionUpdatesModule } from 'src/transaction-updates/transaction-updates.module';
+import { ChannelModule } from 'src/channel/channel.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { TransactionUpdatesModule } from 'src/transaction-updates/transaction-up
     JwtModule,
     AgentReferralModule,
     TransactionUpdatesModule,
+    ChannelModule,
   ],
   providers: [AgentService],
   controllers: [AgentController],

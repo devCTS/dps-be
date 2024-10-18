@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import {
   IsBoolean,
   IsEmail,
@@ -5,9 +6,11 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  ValidateNested,
 } from 'class-validator';
 import { IsValidPassword } from 'src/utils/decorators/validPassword.decorator';
 import { IsValidPhoneNumber } from 'src/utils/decorators/validPhoneNumber';
+import { ChannelProfileDto } from 'src/utils/dtos/channel-profile.dto';
 
 export class CreateAgentDto {
   @IsString()
@@ -42,20 +45,24 @@ export class CreateAgentDto {
   @IsValidPassword()
   withdrawalPassword: string;
 
-  // TO BE USED LATER
-  // @IsNumber()
-  // @IsNotEmpty()
-  // withdrawalServiceRate: number;
+  @IsNumber()
+  @IsNotEmpty()
+  withdrawalRate: number;
 
-  // @IsNumber()
-  // @IsNotEmpty()
-  // minWithdrawalAmount: number;
+  @IsNumber()
+  @IsNotEmpty()
+  minWithdrawalAmount: number;
 
-  // @IsNumber()
-  // @IsNotEmpty()
-  // maxWithdrawalAmount: number;
+  @IsNumber()
+  @IsNotEmpty()
+  maxWithdrawalAmount: number;
 
   @IsString()
   @IsOptional()
   referralCode: string;
+
+  @IsOptional()
+  @Type(() => ChannelProfileDto)
+  @ValidateNested({ each: true })
+  channelProfile: ChannelProfileDto;
 }

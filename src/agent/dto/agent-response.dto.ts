@@ -1,6 +1,7 @@
 import { Exclude, Expose, Transform } from 'class-transformer';
 import { Identity } from 'src/identity/entities/identity.entity';
 import { DateFormat } from 'src/utils/decorators/dateformat.decorator';
+import { ChannelProfileDto } from 'src/utils/dtos/channel-profile.dto';
 
 @Exclude()
 export class AgentResponseDto {
@@ -46,4 +47,18 @@ export class AgentResponseDto {
 
   @Expose()
   maxWithdrawalAmount: number;
+
+  @Expose()
+  @Transform(
+    ({ obj }) => {
+      const channelProfile = {
+        upi: obj.identity.upi,
+        eWallet: obj.identity.eWallet,
+        netBanking: obj.identity.netBanking,
+      };
+      return channelProfile;
+    },
+    { toClassOnly: true },
+  )
+  channelProfile: ChannelProfileDto;
 }

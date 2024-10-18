@@ -22,6 +22,9 @@ import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 import { AgentReferralService } from 'src/agent-referral/agent-referral.service';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
+import { Upi } from 'src/channel/entity/upi.entity';
+import { NetBanking } from 'src/channel/entity/net-banking.entity';
+import { EWallet } from 'src/channel/entity/e-wallet.entity';
 
 @Injectable()
 export class AgentService {
@@ -30,6 +33,14 @@ export class AgentService {
     private readonly agentRepository: Repository<Agent>,
     @InjectRepository(TransactionUpdate)
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
+    @InjectRepository(Upi)
+    private readonly upiRepository: Repository<Upi>,
+
+    @InjectRepository(NetBanking)
+    private readonly netBankingRepository: Repository<NetBanking>,
+
+    @InjectRepository(EWallet)
+    private readonly eWalletRepository: Repository<EWallet>,
 
     private identityService: IdentityService,
     private jwtService: JwtService,
@@ -46,6 +57,10 @@ export class AgentService {
       phone,
       withdrawalPassword,
       referralCode,
+      minWithdrawalAmount,
+      maxWithdrawalAmount,
+      withdrawalRate,
+      channelProfile,
     } = createAgentDto;
 
     if (referralCode) {
@@ -70,9 +85,39 @@ export class AgentService {
       phone,
       referralCode: referralCode ? referralCode : null,
       withdrawalPassword: this.jwtService.getHashPassword(withdrawalPassword),
+      minWithdrawalAmount,
+      maxWithdrawalAmount,
+      withdrawalRate,
     });
 
     const created = await this.agentRepository.save(agent);
+
+    if (channelProfile?.upi) {
+      for (const element of channelProfile.upi) {
+        await this.upiRepository.save({
+          ...element,
+          identity,
+        });
+      }
+    }
+
+    if (channelProfile?.eWallet) {
+      for (const element of channelProfile.eWallet) {
+        await this.upiRepository.save({
+          ...element,
+          identity,
+        });
+      }
+    }
+
+    if (channelProfile?.netBanking) {
+      for (const element of channelProfile.netBanking) {
+        await this.upiRepository.save({
+          ...element,
+          identity,
+        });
+      }
+    }
 
     // Update Agent Referrals
     if (referralCode) {
@@ -81,6 +126,7 @@ export class AgentService {
         referredAgent: created,
       });
     }
+
     return plainToInstance(AgentResponseDto, created);
   }
 
@@ -88,7 +134,12 @@ export class AgentService {
   async findOne(id: number): Promise<AgentResponseDto> {
     const results = await this.agentRepository.findOne({
       where: { id: id },
-      relations: ['identity'],
+      relations: [
+        'identity',
+        'identity.upi',
+        'identity.eWallet',
+        'identity.netBanking',
+      ],
     });
 
     return plainToInstance(AgentResponseDto, results);
@@ -97,7 +148,12 @@ export class AgentService {
   // Find all agents
   async findAll(): Promise<AgentResponseDto[]> {
     const results = await this.agentRepository.find({
-      relations: ['identity'],
+      relations: [
+        'identity',
+        'identity.upi',
+        'identity.eWallet',
+        'identity.netBanking',
+      ],
     });
 
     return plainToInstance(AgentResponseDto, results);
@@ -121,10 +177,12 @@ export class AgentService {
     const email = updateAgentDto.email;
     const password = updateAgentDto.password;
     const updateLoginCredentials = updateAgentDto.updateLoginCredentials;
+    const channelProfile = updateAgentDto.channelProfile;
 
     delete updateAgentDto.email;
     delete updateAgentDto.password;
     delete updateAgentDto.updateLoginCredentials;
+    delete updateAgentDto.channelProfile;
 
     const result = await this.agentRepository.update(
       { id: id },

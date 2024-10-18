@@ -40,8 +40,8 @@ export class Agent {
   @Column()
   withdrawalPassword: string;
 
-  @Column({ default: '0.3' })
-  withdrawalServiceRate: string;
+  @Column({ type: 'float', default: 0.3 })
+  withdrawalRate: number;
 
   @Column({ default: 1000 })
   minWithdrawalAmount: number;
