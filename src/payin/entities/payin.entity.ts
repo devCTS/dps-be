@@ -62,6 +62,12 @@ export class Payin {
   @Column({ type: 'float', nullable: true })
   gatewayServiceRate: number;
 
+  @Column({ type: 'float' })
+  merchantCharge: number;
+
+  @Column({ type: 'float' })
+  systemProfit: number;
+
   @ManyToOne(() => EndUser, (endUser) => endUser.payin)
   @JoinColumn({ name: 'enduser_id' })
   user: EndUser;

@@ -1,119 +1,219 @@
-import {
-  IsDate,
-  IsEnum,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { Exclude, Expose, Transform } from 'class-transformer';
 import {
   CallBackStatus,
   ChannelName,
   GatewayName,
   OrderStatus,
   PaymentMadeOn,
+  UserTypeForTransactionUpdates,
 } from 'src/utils/enum/enum';
 
+@Exclude()
 export class PayinAdminResponseDto {
-  @IsNotEmpty()
-  @IsNumber()
+  @Expose()
   id: number;
 
-  @IsNotEmpty()
-  @IsString()
+  @Expose()
   systemOrderId: string;
 
-  @IsNotEmpty()
-  @IsString()
+  @Expose()
   merchantOrderId: string;
 
-  @IsNotEmpty()
-  @IsNumber()
+  @Expose()
   amount: number;
 
-  @IsNotEmpty()
-  @IsEnum(OrderStatus)
-  status: OrderStatus;
+  @Expose()
+  @Transform(({ value }) => value?.toLowerCase(), { toClassOnly: true })
+  status: string;
 
-  @IsNotEmpty()
-  @IsEnum(ChannelName)
+  @Expose()
   channel: ChannelName;
 
-  @IsNotEmpty()
-  @IsEnum(CallBackStatus)
+  @Expose()
+  @Transform(({ value }) => value?.toLowerCase(), { toClassOnly: true })
   callbackStatus: CallBackStatus;
 
-  @IsNotEmpty()
-  @IsString()
+  @Expose()
+  @Transform(({ value }) => value?.name, { toClassOnly: true })
   user: string;
 
-  @IsNotEmpty()
-  @IsString()
+  @Expose()
+  @Transform(({ value }) => value?.firstName + value?.lastName, {
+    toClassOnly: true,
+  })
   merchant: string;
 
-  @IsNotEmpty()
-  @IsEnum(PaymentMadeOn)
+  @Expose()
   payinMadeOn: PaymentMadeOn;
 
-  @IsOptional()
-  @IsString()
+  @Expose()
   member: string | null;
 
-  @IsOptional()
-  @IsEnum(GatewayName)
+  @Expose()
   gatewayName: GatewayName | null;
 
-  @IsNotEmpty()
-  @IsNumber()
-  merchantFee: number;
-
-  @IsNotEmpty()
-  @IsNumber()
+  @Expose()
   merchantCharge: number;
 
-  @IsNotEmpty()
-  @IsNumber()
+  @Expose()
   systemProfit: number;
 }
 
+@Exclude()
 export class PayinDetailsAdminResDto {
-  @IsNumber()
+  @Expose()
   id: number;
 
-  @IsString()
+  @Expose()
   systemOrderId: string;
 
-  @IsString()
+  @Expose()
   merchantOrderId: string;
 
-  @IsNumber()
+  @Expose()
   amount: number;
 
-  @IsEnum(OrderStatus)
+  @Expose()
+  @Transform(({ value }) => value?.toLowerCase(), { toClassOnly: true })
   status: OrderStatus;
 
-  @IsEnum(ChannelName)
+  @Expose()
   channel: ChannelName;
 
-  @IsDate()
+  @Expose()
   createdAt: Date;
 
-  @IsDate()
+  @Expose()
   updatedAt: Date;
 
-  @IsEnum(CallBackStatus)
+  @Expose()
+  @Transform(({ value }) => value?.toLowerCase(), { toClassOnly: true })
   callbackStatus: CallBackStatus;
 
-  @IsString()
-  user: string;
+  @Expose()
+  @Transform(
+    ({ value }) => ({
+      name: value?.name,
+      mobile: value?.mobile,
+      email: value?.email,
+    }),
+    { toClassOnly: true },
+  )
+  user: {};
 
-  @IsString()
-  merchant: string;
+  @Expose()
+  @Transform(
+    ({ value }) => ({
+      id: value?.id,
+      name: value?.firstName + value?.lastName,
+    }),
+    { toClassOnly: true },
+  )
+  merchant: {};
 
-  @IsEnum(PaymentMadeOn)
+  @Expose()
   payinMadeOn: PaymentMadeOn;
-  member: string;
 
-  @IsEnum(GatewayName)
+  @Expose()
+  member: {} | null;
+
+  @Expose()
+  @Transform(({ value }) => value?.toLowerCase(), { toClassOnly: true })
   gatewayName: GatewayName | null;
+
+  @Expose()
+  transactionDetails: {};
+
+  @Expose()
+  @TransformBalancesAndProfit()
+  balancesAndProfit: [];
+}
+
+function TransformBalancesAndProfit() {
+  return Transform(
+    ({ value }) => {
+      const mappedValues = value.map((item) => {
+        const roleMapping = {
+          agent_balance: 'agent',
+          merchant_balance: 'merchant',
+          member_balance: 'agent',
+          system_profit: 'system',
+          member_quota: 'member',
+        };
+
+        const role = roleMapping[item.userType] || item.userType;
+
+        switch (item.userType) {
+          case UserTypeForTransactionUpdates.MERCHANT_BALANCE:
+            return {
+              role,
+              name: item.name,
+              serviceRate: item.rate,
+              serviceFee: item.amount,
+              balanceEarned: item.after - item.before,
+              balanceBefore: item.before,
+              balanceAfter: item.after,
+            };
+
+          case UserTypeForTransactionUpdates.AGENT_BALANCE:
+            return {
+              role,
+              name: item.name,
+              commissionRate: item.rate,
+              commissionAmount: item.amount,
+              balanceEarned: item.after - item.before,
+              balanceBefore: item.before,
+              balanceAfter: item.after,
+              isAgentOf: item.isAgentOf,
+            };
+
+          case UserTypeForTransactionUpdates.MEMBER_QUOTA:
+            return {
+              role,
+              name: item.name,
+              commissionRate: item.rate,
+              commissionAmount: item.amount,
+              quotaDeducted: item.after - item.before,
+              quotaBefore: item.before,
+              quotaAfter: item.after,
+            };
+
+          case UserTypeForTransactionUpdates.MEMBER_BALANCE:
+            return {
+              role,
+              name: item.name,
+              commissionRate: item.rate,
+              commissionAmount: item.amount,
+              balanceEarned: item.after - item.before,
+              balanceBefore: item.before,
+              balanceAfter: item.after,
+              isAgentOf: item.isAgentOf,
+              isMember: true,
+            };
+
+          case UserTypeForTransactionUpdates.SYSTEM_PROFIT:
+            return {
+              role,
+              profit: item.after - item.before,
+              balanceBefore: item.before,
+              balanceAfter: item.after,
+            };
+
+          default:
+            return;
+        }
+      });
+
+      const filteredValues = mappedValues.filter(Boolean);
+      const systemProfitEntry = filteredValues.find(
+        (entry) => entry.role === 'system',
+      );
+      const otherEntries = filteredValues.filter(
+        (entry) => entry.role !== 'system',
+      );
+
+      return [...otherEntries.reverse(), systemProfitEntry].filter(Boolean);
+    },
+    { toClassOnly: true },
+  );
 }

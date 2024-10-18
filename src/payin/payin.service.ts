@@ -6,6 +6,7 @@ import { OrderStatus, OrderType, PaymentMadeOn } from 'src/utils/enum/enum';
 import { TransactionUpdatesService } from 'src/transaction-updates/transaction-updates.service';
 import { EndUserService } from 'src/end-user/end-user.service';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
+import { SystemConfigService } from 'src/system-config/system-config.service';
 
 @Injectable()
 export class PayinService {
@@ -16,6 +17,7 @@ export class PayinService {
     private readonly merchantRepository: Repository<Merchant>,
     private readonly transactionUpdateService: TransactionUpdatesService,
     private readonly endUserService: EndUserService,
+    private readonly systemConfigService: SystemConfigService,
   ) {}
 
   async create(payinDetails) {
@@ -29,9 +31,18 @@ export class PayinService {
       id: merchantId,
     });
 
+    const systemConfig = await this.systemConfigService.findLatest(false);
+
+    const merchantCharge =
+      (payinDetails.amount / 100) * merchant.payinServiceRate;
+
+    const systemProfit = merchantCharge + systemConfig.systemProfit;
+
     const payin = await this.payinRepository.save({
       ...payinDetails,
       user: endUser,
+      merchantCharge,
+      systemProfit,
       merchant,
     });
 

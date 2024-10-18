@@ -1,14 +1,19 @@
+import { SystemConfig } from './../system-config/entities/system-config.entity';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { CreateTransactionUpdateDto } from './dto/create-transaction-update.dto';
 import { UpdateTransactionUpdateDto } from './dto/update-transaction-update.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { OrderType, UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
+import {
+  OrderStatus,
+  OrderType,
+  UserTypeForTransactionUpdates,
+} from 'src/utils/enum/enum';
 import { AgentReferralService } from 'src/agent-referral/agent-referral.service';
-import { IdentityService } from 'src/identity/identity.service';
 import { Identity } from 'src/identity/entities/identity.entity';
 import { MemberReferralService } from 'src/member-referral/member-referral.service';
+import { SystemConfigService } from 'src/system-config/system-config.service';
 
 @Injectable()
 export class TransactionUpdatesService {
@@ -19,6 +24,7 @@ export class TransactionUpdatesService {
     private readonly identityRepository: Repository<Identity>,
     private readonly agentReferralService: AgentReferralService,
     private readonly memberReferralService: MemberReferralService,
+    private readonly systemConfigService: SystemConfigService,
   ) {}
 
   async processReferral(referral, orderType, orderAmount, orderDetails) {
@@ -93,10 +99,15 @@ export class TransactionUpdatesService {
       amount,
       before,
       after,
+      name: `${referral.firstName} ${referral.lastName}`,
+      isAgentOf:
+        referral.children?.length > 0
+          ? `${referral.children[0]?.firstName} ${referral.children[0]?.lastName}`
+          : null,
       payinOrder: orderDetails,
       user: identity,
     };
-    // system profit
+
     await this.transactionUpdateRepository.save(transactionUpdate);
 
     if (referral.children && referral.children.length > 0)
@@ -115,8 +126,46 @@ export class TransactionUpdatesService {
       ? await this.memberReferralService.getReferralTreeOfUser(userId)
       : await this.agentReferralService.getReferralTreeOfUser(userId);
 
-    if (referrals)
-      this.processReferral(referrals, orderType, amount, orderDetails);
+    if (referrals) {
+      await this.processReferral(referrals, orderType, amount, orderDetails);
+
+      const transactionUpdateEntries =
+        await this.transactionUpdateRepository.find({
+          where: {
+            payinOrder: { id: orderDetails.id },
+            pending: true,
+          },
+          relations: ['payinOrder'],
+        });
+
+      const systemConfig = await this.systemConfigService.findLatest();
+
+      let beforeProfit = systemConfig.systemProfit;
+      let profitFromCurrentOrder = transactionUpdateEntries.reduce(
+        (acc, entry) => {
+          if (entry.userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE)
+            // Add service fee paid by merchant
+            acc += entry.amount;
+
+          if (entry.userType === UserTypeForTransactionUpdates.AGENT_BALANCE)
+            // Deduct agent commissions
+            acc -= entry.amount;
+
+          return acc;
+        },
+        0,
+      );
+      let afterProfit = beforeProfit + profitFromCurrentOrder;
+
+      await this.transactionUpdateRepository.save({
+        orderType,
+        userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
+        before: beforeProfit,
+        amount: profitFromCurrentOrder,
+        after: afterProfit,
+        payinOrder: orderDetails,
+      });
+    }
 
     return HttpStatus.CREATED;
   }

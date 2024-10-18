@@ -7,6 +7,7 @@ import { AgentReferralModule } from 'src/agent-referral/agent-referral.module';
 import { IdentityModule } from 'src/identity/identity.module';
 import { Identity } from 'src/identity/entities/identity.entity';
 import { MemberReferralModule } from 'src/member-referral/member-referral.module';
+import { SystemConfigModule } from 'src/system-config/system-config.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { MemberReferralModule } from 'src/member-referral/member-referral.module
     AgentReferralModule,
     MemberReferralModule,
     IdentityModule,
+    SystemConfigModule,
   ],
   controllers: [TransactionUpdatesController],
   providers: [TransactionUpdatesService],

@@ -202,12 +202,7 @@ export class MemberService {
 
   async findAll(): Promise<MemberResponseDto[]> {
     const results = await this.memberRepository.find({
-      relations: [
-        'identity',
-        'identity.channelProfileFilledFields',
-        'identity.channelProfileFilledFields.field',
-        'identity.channelProfileFilledFields.field.channel',
-      ],
+      relations: ['identity'],
     });
 
     return plainToInstance(MemberResponseDto, results);
@@ -221,9 +216,6 @@ export class MemberService {
         'identity.upi',
         'identity.eWallet',
         'identity.netBanking',
-        // 'identity.channelProfileFilledFields',
-        // 'identity.channelProfileFilledFields.field',
-        // 'identity.channelProfileFilledFields.field.channel',
       ],
     });
 
@@ -339,12 +331,7 @@ export class MemberService {
     const parsedEndDate = new Date(endDate);
 
     const [rows, total] = await this.memberRepository.findAndCount({
-      relations: [
-        'identity',
-        'identity.channelProfileFilledFields',
-        'identity.channelProfileFilledFields.field',
-        'identity.channelProfileFilledFields.field.channel',
-      ],
+      relations: ['identity'],
       where: {
         createdAt: Between(parsedStartDate, parsedEndDate),
       },

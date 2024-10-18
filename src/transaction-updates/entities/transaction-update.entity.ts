@@ -21,7 +21,13 @@ export class TransactionUpdate {
   @Column()
   userType: UserTypeForTransactionUpdates;
 
-  @Column({ type: 'float' })
+  @Column({ nullable: true })
+  name: string;
+
+  @Column({ nullable: true })
+  isAgentOf: string;
+
+  @Column({ nullable: true, type: 'float' })
   rate: number;
 
   @Column({ type: 'float' })
