@@ -1,3 +1,4 @@
+import { Exclude, Expose, Transform } from 'class-transformer';
 import {
   IsDate,
   IsEnum,
@@ -6,64 +7,77 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { ChannelName, OrderStatus } from 'src/utils/enum/enum';
+import {
+  CallBackStatus,
+  ChannelName,
+  GatewayName,
+  OrderStatus,
+  PaymentMadeOn,
+} from 'src/utils/enum/enum';
 
+@Exclude()
 export class PayinMemberResponseDto {
-  @IsNotEmpty()
-  @IsNumber()
+  @Expose()
   id: number;
 
-  @IsNotEmpty()
-  @IsString()
+  @Expose()
   systemOrderId: string;
 
-  @IsNotEmpty()
-  @IsNumber()
+  @Expose()
   amount: number;
 
-  @IsNotEmpty()
-  @IsEnum(OrderStatus)
-  status: OrderStatus;
+  @Expose()
+  @Transform(({ value }) => value?.toLowerCase(), { toClassOnly: true })
+  status: string;
 
-  @IsNotEmpty()
-  @IsEnum(ChannelName)
+  @Expose()
   channel: ChannelName;
 
-  @IsNotEmpty()
-  @IsString()
+  @Expose()
+  @Transform(({ value }) => value?.name, { toClassOnly: true })
   user: string;
 
-  @IsOptional()
-  @IsNumber()
+  @Expose()
   commission: number;
 
-  @IsOptional()
-  @IsNumber()
+  @Expose()
   quotaDebit: number;
 }
 
 export class PayinDetailsMemberResDto {
-  @IsNumber()
+  @Expose()
   id: number;
 
-  @IsString()
+  @Expose()
   systemOrderId: string;
 
-  @IsNumber()
+  @Expose()
   amount: number;
 
-  @IsEnum(OrderStatus)
+  @Expose()
+  @Transform(({ value }) => value?.toLowerCase(), { toClassOnly: true })
   status: OrderStatus;
 
-  @IsEnum(ChannelName)
+  @Expose()
   channel: ChannelName;
 
-  @IsDate()
+  @Expose()
   createdAt: Date;
 
-  @IsDate()
+  @Expose()
   updatedAt: Date;
 
-  @IsString()
-  user: string;
+  @Expose()
+  @Transform(
+    ({ value }) => ({
+      name: value?.name,
+      mobile: value?.mobile,
+      email: value?.email,
+    }),
+    { toClassOnly: true },
+  )
+  user: {};
+
+  @Expose()
+  quotaDetails: {};
 }

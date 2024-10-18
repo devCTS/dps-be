@@ -21,7 +21,7 @@ export class Merchant {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Identity, (identity) => identity.merchants)
+  @OneToOne(() => Identity, (identity) => identity.merchant)
   @JoinColumn({ name: 'identity' })
   identity: Identity;
 

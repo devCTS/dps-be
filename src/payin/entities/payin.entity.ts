@@ -68,6 +68,15 @@ export class Payin {
   @Column({ type: 'float' })
   systemProfit: number;
 
+  @Column({ nullable: true })
+  transactionId: string;
+
+  @Column({ nullable: true })
+  transactionReceipt: string;
+
+  @Column({ nullable: true })
+  transactionDetails: string;
+
   @ManyToOne(() => EndUser, (endUser) => endUser.payin)
   @JoinColumn({ name: 'enduser_id' })
   user: EndUser;
@@ -86,4 +95,10 @@ export class Payin {
     { nullable: true },
   )
   transactionUpdate: TransactionUpdate[];
+
+  @CreateDateColumn({ type: 'timestamp' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ type: 'timestamp' })
+  updatedAt: Date;
 }

@@ -311,22 +311,23 @@ export class SystemConfigService {
     return HttpStatus.OK;
   }
 
-  async updateSystemProfit(amount, failed) {
+  async updateSystemProfit(amount, orderId, failed) {
     const systemConfig = await this.findLatest();
 
     if (!systemConfig) throw new NotFoundException('SystemConfig not found!');
 
-    await this.systemConfigRepository.update(systemConfig.id, {
-      systemProfit: systemConfig.systemProfit + amount,
-    });
+    if (!failed)
+      await this.systemConfigRepository.update(systemConfig.id, {
+        systemProfit: systemConfig.systemProfit + amount,
+      });
 
     const transactionUpdateEntries =
       await this.transactionUpdateRepository.find({
         where: {
           userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
           pending: true,
+          payinOrder: { id: orderId },
         },
-        relations: ['identity'],
       });
 
     for (const entry of transactionUpdateEntries) {
