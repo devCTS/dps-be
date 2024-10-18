@@ -274,7 +274,7 @@ export class MerchantService {
 
     let result = null;
 
-    if (updateWithdrawalCredentials)
+    if (updateWithdrawalCredentials) {
       result = await this.merchantRepository.update(
         { id: id },
         {
@@ -284,7 +284,7 @@ export class MerchantService {
           ),
         },
       );
-    else {
+    } else {
       delete updateDto.withdrawalPassword;
       result = await this.merchantRepository.update({ id: id }, updateDto);
     }
@@ -339,16 +339,15 @@ export class MerchantService {
     }
 
     if (updateLoginCredentials) {
-      const hashedPassword = this.jwtService.getHashPassword(password);
-      const updatedAdmin = await this.merchantRepository.findOne({
+      const updatedMerchant = await this.merchantRepository.findOne({
         where: { id },
         relations: ['identity'], // Explicitly specify the relations
       });
 
       await this.identityService.updateLogin(
-        updatedAdmin.identity.id,
+        updatedMerchant.identity.id,
         email,
-        hashedPassword,
+        password,
       );
     }
 
