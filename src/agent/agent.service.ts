@@ -25,6 +25,7 @@ import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
 import { Upi } from 'src/channel/entity/upi.entity';
 import { NetBanking } from 'src/channel/entity/net-banking.entity';
 import { EWallet } from 'src/channel/entity/e-wallet.entity';
+import { identity } from 'rxjs';
 
 @Injectable()
 export class AgentService {
@@ -92,7 +93,7 @@ export class AgentService {
 
     const created = await this.agentRepository.save(agent);
 
-    if (channelProfile?.upi) {
+    if (channelProfile?.upi && channelProfile.upi.length > 0) {
       for (const element of channelProfile.upi) {
         await this.upiRepository.save({
           ...element,
@@ -101,7 +102,7 @@ export class AgentService {
       }
     }
 
-    if (channelProfile?.eWallet) {
+    if (channelProfile?.eWallet && channelProfile.eWallet.length > 0) {
       for (const element of channelProfile.eWallet) {
         await this.upiRepository.save({
           ...element,
@@ -110,7 +111,7 @@ export class AgentService {
       }
     }
 
-    if (channelProfile?.netBanking) {
+    if (channelProfile?.netBanking && channelProfile.netBanking.length > 0) {
       for (const element of channelProfile.netBanking) {
         await this.upiRepository.save({
           ...element,
@@ -189,13 +190,58 @@ export class AgentService {
       updateAgentDto,
     );
 
+    const updatedAgent = await this.agentRepository.findOne({
+      where: { id },
+      relations: ['identity'], // Explicitly specify the relations
+    });
+
+    // Deleting all existing Data
+    await this.upiRepository.delete({
+      identity: {
+        id: updatedAgent.identity.id,
+      },
+    });
+    await this.eWalletRepository.delete({
+      identity: {
+        id: updatedAgent.identity.id,
+      },
+    });
+    await this.netBankingRepository.delete({
+      identity: {
+        id: updatedAgent.identity.id,
+      },
+    });
+
+    // Adding all the channels
+    if (channelProfile.upi && channelProfile.upi.length > 0) {
+      for (const element of channelProfile.upi) {
+        await this.upiRepository.save({
+          ...element,
+          identity: updatedAgent.identity,
+        });
+      }
+    }
+
+    if (channelProfile?.eWallet) {
+      for (const element of channelProfile.eWallet) {
+        await this.eWalletRepository.save({
+          ...element,
+          identity: updatedAgent.identity,
+        });
+      }
+    }
+
+    if (channelProfile?.netBanking) {
+      for (const element of channelProfile.netBanking) {
+        await this.netBankingRepository.save({
+          ...element,
+          identity: updatedAgent.identity,
+        });
+      }
+    }
+
     if (updateLoginCredentials) {
       const hashedPassword = this.jwtService.getHashPassword(password);
-
-      const updatedAgent = await this.agentRepository.findOne({
-        where: { id },
-        relations: ['identity'], // Explicitly specify the relations
-      });
 
       await this.identityService.updateLogin(
         updatedAgent.identity.id,

@@ -10,7 +10,7 @@ export class EWallet {
   app: string;
 
   @Column()
-  mobile_number: string;
+  mobile: string;
 
   @ManyToOne(() => Identity, (identity) => identity.eWallet)
   identity: Identity;

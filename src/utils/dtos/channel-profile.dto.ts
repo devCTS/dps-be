@@ -55,7 +55,6 @@ export class EWalletDto {
 }
 
 export class ChannelProfileDto {
-  @IsArray()
   @Type(() => UpiDto)
   @ValidateNested({ each: true })
   upi: UpiDto[] | null;
