@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsNumber, ValidateNested } from 'class-validator';
+import { IsArray, IsNumber, IsOptional, ValidateNested } from 'class-validator';
 import { ChannelProfileDto } from 'src/utils/dtos/channel-profile.dto';
 
 export class UpdateTopupConfigDto {
@@ -9,8 +9,8 @@ export class UpdateTopupConfigDto {
   @IsNumber()
   topupAmount: number;
 
-  @IsArray()
+  @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => ChannelProfileDto)
-  defaultTopupChannels: ChannelProfileDto[];
+  channelProfile: ChannelProfileDto;
 }

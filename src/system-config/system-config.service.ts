@@ -24,6 +24,9 @@ import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-
 import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
 import { UpdateWithdrawalDefaultsDto } from './dto/update-withdrawal-default.dto';
 import { systemConfigData } from './data/system-config.data';
+import { Upi } from 'src/channel/entity/upi.entity';
+import { NetBanking } from 'src/channel/entity/net-banking.entity';
+import { EWallet } from 'src/channel/entity/e-wallet.entity';
 
 @Injectable()
 export class SystemConfigService {
@@ -34,6 +37,14 @@ export class SystemConfigService {
     private readonly identityRepository: Repository<Identity>,
     @InjectRepository(TransactionUpdate)
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
+    @InjectRepository(Upi)
+    private readonly upiRepository: Repository<Upi>,
+
+    @InjectRepository(NetBanking)
+    private readonly netBankingRepository: Repository<NetBanking>,
+
+    @InjectRepository(EWallet)
+    private readonly eWalletRepository: Repository<EWallet>,
   ) {}
 
   async create() {
@@ -164,7 +175,7 @@ export class SystemConfigService {
   }
 
   async updateTopupConfigurations(updateTopupConfigDto: UpdateTopupConfigDto) {
-    const { topupAmount, topupThreshold, defaultTopupChannels } =
+    const { topupAmount, topupThreshold, channelProfile } =
       updateTopupConfigDto;
 
     const identity = await this.identityRepository.findOne({
@@ -172,6 +183,7 @@ export class SystemConfigService {
         userType: 'SUPER_ADMIN',
       },
     });
+
     if (!identity) throw new NotFoundException('Identity not found!');
 
     const latestResult = await this.findLatest();
@@ -194,7 +206,7 @@ export class SystemConfigService {
     const newSystemConfig = await this.systemConfigRepository.save({
       topupAmount,
       topupThreshold,
-      defaultTopupChannels,
+      channelProfile,
       ...latestResult,
     });
 
