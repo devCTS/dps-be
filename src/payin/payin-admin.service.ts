@@ -25,7 +25,7 @@ export class PayinAdminService {
   ) {}
 
   async paginatePayins(paginateRequestDto: PaginateRequestDto) {
-    const { search, pageSize, pageNumber, startDate, endDate, sortedBy } =
+    const { search, pageSize, pageNumber, startDate, endDate, sortBy } =
       paginateRequestDto;
 
     const skip = (pageNumber - 1) * pageSize;
@@ -41,9 +41,12 @@ export class PayinAdminService {
       .take(take);
 
     if (search)
-      queryBuilder.andWhere(`CONCAT(payin.merchant) ILIKE :search`, {
-        search: `%${search}%`,
-      });
+      queryBuilder.andWhere(
+        `CONCAT(payin.id, ' ', payin.merchant) ILIKE :search`,
+        {
+          search: `%${search}%`,
+        },
+      );
 
     if (startDate && endDate) {
       const parsedStartDate = parseStartDate(startDate);
@@ -57,12 +60,6 @@ export class PayinAdminService {
         },
       );
     }
-
-    if (sortedBy)
-      if (sortedBy === 'latest')
-        queryBuilder.orderBy('payin.created_at', 'DESC');
-      else if (sortedBy === 'oldest')
-        queryBuilder.orderBy('payin.created_at', 'ASC');
 
     const [rows, total] = await queryBuilder.getManyAndCount();
 
@@ -106,7 +103,7 @@ export class PayinAdminService {
       totalPages: Math.ceil(total / pageSize),
       startRecord,
       endRecord,
-      data: dtos,
+      data: sortBy === 'latest' ? dtos.reverse() : dtos,
     };
   }
 

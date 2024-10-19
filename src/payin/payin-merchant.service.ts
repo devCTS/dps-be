@@ -29,7 +29,7 @@ export class PayinMerchantService {
   ) {}
 
   async paginatePayins(paginateRequestDto: PaginateRequestDto) {
-    const { search, pageSize, pageNumber, startDate, endDate, sortedBy } =
+    const { search, pageSize, pageNumber, startDate, endDate, sortBy } =
       paginateRequestDto;
 
     const skip = (pageNumber - 1) * pageSize;
@@ -61,12 +61,6 @@ export class PayinMerchantService {
         },
       );
     }
-
-    if (sortedBy)
-      if (sortedBy === 'latest')
-        queryBuilder.orderBy('payin.created_at', 'DESC');
-      else if (sortedBy === 'oldest')
-        queryBuilder.orderBy('payin.created_at', 'ASC');
 
     const [rows, total] = await queryBuilder.getManyAndCount();
 
@@ -101,7 +95,7 @@ export class PayinMerchantService {
       totalPages: Math.ceil(total / pageSize),
       startRecord,
       endRecord,
-      data: dtos,
+      data: sortBy === 'latest' ? dtos.reverse() : dtos,
     };
   }
 

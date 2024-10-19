@@ -12,13 +12,10 @@ import {
 import { Payin } from './entities/payin.entity';
 import { Repository } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
-import { memberAllPayins } from './data/dummy-data';
-import { SortedBy } from 'src/utils/enum/enum';
 import {
   PayinDetailsMemberResDto,
   PayinMemberResponseDto,
 } from './dto/payin-member-response.dto';
-import { memberPayinOrders } from './data/dummy-order-details';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 
 @Injectable()
@@ -31,7 +28,7 @@ export class PayinMemberService {
   ) {}
 
   async paginatePayins(paginateRequestDto: PaginateRequestDto) {
-    const { search, pageSize, pageNumber, startDate, endDate, sortedBy } =
+    const { search, pageSize, pageNumber, startDate, endDate, sortBy } =
       paginateRequestDto;
 
     const skip = (pageNumber - 1) * pageSize;
@@ -64,12 +61,6 @@ export class PayinMemberService {
       );
     }
 
-    if (sortedBy)
-      if (sortedBy === 'latest')
-        queryBuilder.orderBy('payin.created_at', 'DESC');
-      else if (sortedBy === 'oldest')
-        queryBuilder.orderBy('payin.created_at', 'ASC');
-
     const [rows, total] = await queryBuilder.getManyAndCount();
 
     const startRecord = skip + 1;
@@ -101,7 +92,7 @@ export class PayinMemberService {
       totalPages: Math.ceil(total / pageSize),
       startRecord,
       endRecord,
-      data: dtos,
+      data: sortBy === 'latest' ? dtos.reverse() : dtos,
     };
   }
 

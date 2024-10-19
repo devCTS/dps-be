@@ -291,6 +291,10 @@ export class AgentReferralService {
       email: agent.identity.email,
       agentType: agent.integrationId ? 'merchant' : 'agent',
       balance: agent.balance,
+      payinCommission:
+        referrals.length > 0 ? referrals[0].payinCommission : null,
+      payoutCommission:
+        referrals.length > 0 ? referrals[0].payoutCommission : null,
       children: children.filter((child) => child !== null),
     };
   }

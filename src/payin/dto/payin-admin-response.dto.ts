@@ -24,6 +24,12 @@ export class PayinAdminResponseDto {
   amount: number;
 
   @Expose()
+  createdAt: Date;
+
+  @Expose()
+  updatedAt: Date;
+
+  @Expose()
   @Transform(({ value }) => value?.toLowerCase(), { toClassOnly: true })
   status: string;
 

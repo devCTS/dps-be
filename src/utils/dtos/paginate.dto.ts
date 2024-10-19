@@ -71,5 +71,5 @@ export class PaginateRequestDto {
 
   @IsOptional()
   @IsEnum(SortedBy)
-  sortedBy?: SortedBy;
+  sortBy?: SortedBy;
 }
