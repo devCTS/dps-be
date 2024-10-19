@@ -6,20 +6,14 @@ import {
   parseStartDate,
 } from 'src/utils/dtos/paginate.dto';
 import { Payin } from './entities/payin.entity';
-import {
-  Between,
-  ILike,
-  LessThanOrEqual,
-  MoreThanOrEqual,
-  Repository,
-} from 'typeorm';
+import { Repository } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import {
   PayinAdminResponseDto,
   PayinDetailsAdminResDto,
 } from './dto/payin-admin-response.dto';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
-import { adminPayins } from './data/dummy-data';
+import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
 
 @Injectable()
 export class PayinAdminService {
@@ -40,6 +34,7 @@ export class PayinAdminService {
     const queryBuilder = this.payinRepository
       .createQueryBuilder('payin')
       .leftJoinAndSelect('payin.merchant', 'merchant')
+      .leftJoinAndSelect('merchant.identity', 'identity')
       .leftJoinAndSelect('payin.user', 'user')
       .leftJoinAndSelect('payin.member', 'member')
       .skip(skip)
@@ -74,7 +69,35 @@ export class PayinAdminService {
     const startRecord = skip + 1;
     const endRecord = Math.min(skip + pageSize, total);
 
-    const dtos = plainToInstance(PayinAdminResponseDto, rows);
+    // fetch merchantCharge and systemProfit from transactionUpdate entity
+    const dtos = await Promise.all(
+      rows.map(async (row) => {
+        const merchantRow = await this.transactionUpdateRepository.findOne({
+          where: {
+            payinOrder: { id: row.id },
+            user: { id: row.merchant?.identity?.id },
+            userType: UserTypeForTransactionUpdates.MERCHANT_BALANCE,
+          },
+          relations: ['payinOrder', 'user', 'user.merchant'],
+        });
+
+        const systemProfitRow = await this.transactionUpdateRepository.findOne({
+          where: {
+            payinOrder: { id: row.id },
+            userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
+          },
+          relations: ['payinOrder'],
+        });
+
+        const response = {
+          ...row,
+          merchantCharge: merchantRow?.amount,
+          systemProfit: systemProfitRow?.after,
+        };
+
+        return plainToInstance(PayinAdminResponseDto, response);
+      }),
+    );
 
     return {
       total,

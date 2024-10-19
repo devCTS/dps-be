@@ -89,7 +89,7 @@ export class PayinMemberService {
         return {
           ...plainToInstance(PayinMemberResponseDto, row),
           commission: transactionUpdate.amount,
-          quotaDebit: transactionUpdate.after,
+          quotaDebit: transactionUpdate.after - transactionUpdate.before,
         };
       }),
     );
@@ -136,7 +136,7 @@ export class PayinMemberService {
         quotaDetails: {
           commissionRate: transactionUpdate.rate,
           commissionAmount: transactionUpdate.amount,
-          quotaDeducted: transactionUpdate.after,
+          quotaDeducted: transactionUpdate.after - transactionUpdate.before,
           withHeldAmount:
             (orderDetails.amount / 100) * orderDetails.member.withdrawalRate,
           withHeldRate: orderDetails.member.withdrawalRate,

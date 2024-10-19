@@ -432,29 +432,22 @@ export class MemberService {
       quota: member.quota + amount,
     });
 
-    const transactionUpdateEntries =
-      await this.transactionUpdateRepository.find({
+    const transactionUpdateMember =
+      await this.transactionUpdateRepository.findOne({
         where: {
-          user: identityId,
+          user: { id: identityId },
           pending: true,
         },
-        relations: ['identity'],
+        relations: ['user'],
       });
 
-    for (const entry of transactionUpdateEntries) {
-      let beforeValue = member.quota;
-      let afterValue = 0;
+    let beforeValue = member.quota;
+    let afterValue = failed ? member.quota : amount + beforeValue;
 
-      if (entry.userType === UserTypeForTransactionUpdates.MEMBER_QUOTA)
-        afterValue = member.quota + amount;
-
-      if (failed) afterValue = member.quota;
-
-      await this.transactionUpdateRepository.update(entry.user?.id, {
-        before: beforeValue,
-        after: afterValue,
-      });
-    }
+    await this.transactionUpdateRepository.update(transactionUpdateMember, {
+      before: beforeValue,
+      after: afterValue,
+    });
   }
 
   async updateBalance(identityId, amount, failed) {
@@ -471,8 +464,8 @@ export class MemberService {
       quota: member.quota + amount,
     });
 
-    const transactionUpdateEntries =
-      await this.transactionUpdateRepository.find({
+    const transactionUpdateMember =
+      await this.transactionUpdateRepository.findOne({
         where: {
           user: { id: identityId },
           pending: true,
@@ -480,19 +473,12 @@ export class MemberService {
         relations: ['user'],
       });
 
-    for (const entry of transactionUpdateEntries) {
-      let beforeValue = member.balance;
-      let afterValue = 0;
+    let beforeValue = member.balance;
+    let afterValue = failed ? member.balance : amount + beforeValue;
 
-      if (entry.userType === UserTypeForTransactionUpdates.MEMBER_BALANCE)
-        afterValue = member.balance + amount;
-
-      if (failed) afterValue = member.balance;
-
-      await this.transactionUpdateRepository.update(entry.user?.id, {
-        before: beforeValue,
-        after: afterValue,
-      });
-    }
+    await this.transactionUpdateRepository.update(transactionUpdateMember, {
+      before: beforeValue,
+      after: afterValue,
+    });
   }
 }

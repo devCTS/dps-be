@@ -398,8 +398,8 @@ export class AgentService {
       balance: agent.balance + amount,
     });
 
-    const transactionUpdateEntries =
-      await this.transactionUpdateRepository.find({
+    const transactionUpdateAgent =
+      await this.transactionUpdateRepository.findOne({
         where: {
           user: { id: identityId },
           pending: true,
@@ -407,19 +407,12 @@ export class AgentService {
         relations: ['user'],
       });
 
-    for (const entry of transactionUpdateEntries) {
-      let beforeValue = agent.balance;
-      let afterValue = 0;
+    let beforeValue = agent.balance;
+    let afterValue = failed ? agent.balance : amount + beforeValue;
 
-      if (entry.userType === UserTypeForTransactionUpdates.AGENT_BALANCE)
-        afterValue = agent.balance + amount;
-
-      if (failed) afterValue = agent.balance;
-
-      await this.transactionUpdateRepository.update(entry.user?.id, {
-        before: beforeValue,
-        after: afterValue,
-      });
-    }
+    await this.transactionUpdateRepository.update(transactionUpdateAgent, {
+      before: beforeValue,
+      after: afterValue,
+    });
   }
 }

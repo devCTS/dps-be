@@ -1,6 +1,7 @@
 import {
   HttpStatus,
   Injectable,
+  InternalServerErrorException,
   NotAcceptableException,
   NotFoundException,
 } from '@nestjs/common';
@@ -19,7 +20,6 @@ import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { SystemConfigService } from 'src/system-config/system-config.service';
 import { Member } from 'src/member/entities/member.entity';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
-import { Agent } from 'src/agent/entities/agent.entity';
 import { MemberService } from 'src/member/member.service';
 import { MerchantService } from 'src/merchant/merchant.service';
 import { AgentService } from 'src/agent/agent.service';
@@ -50,23 +50,18 @@ export class PayinService {
     const endUser = await this.endUserService.create({
       ...user,
     });
+    if (!endUser)
+      throw new InternalServerErrorException('Unable to create end-user!');
 
     const merchant = await this.merchantRepository.findOneBy({
       id: merchantId,
     });
-
-    const systemConfig = await this.systemConfigService.findLatest(false);
-
-    const merchantCharge =
-      (payinDetails.amount / 100) * merchant.payinServiceRate;
-
-    const systemProfit = merchantCharge + systemConfig.systemProfit;
+    if (!merchant)
+      throw new InternalServerErrorException('Merchant not found!');
 
     const payin = await this.payinRepository.save({
       ...payinDetails,
       user: endUser,
-      merchantCharge,
-      systemProfit,
       merchant,
     });
 
@@ -116,13 +111,14 @@ export class PayinService {
     if (paymentMode === PaymentMadeOn.MEMBER)
       member = await this.memberRepository.findOneBy({ id: memberId });
 
-    if (payinOrderDetails.payinMadeOn === PaymentMadeOn.MEMBER)
+    if (paymentMode === PaymentMadeOn.MEMBER) {
       await this.transactionUpdateService.create({
         orderDetails: payinOrderDetails,
         userId: memberId,
         forMember: true,
         orderType: OrderType.PAYIN,
       });
+    }
 
     if (payinOrderDetails.payinMadeOn === PaymentMadeOn.GATEWAY) {
       await this.transactionUpdateRepository.save({
@@ -184,35 +180,31 @@ export class PayinService {
     const transactionUpdateEntries =
       await this.transactionUpdateRepository.find({
         where: {
-          payinOrder: id,
+          payinOrder: { id },
           pending: true,
         },
-        relations: ['user'],
+        relations: ['payinOrder', 'user'],
       });
 
     transactionUpdateEntries.forEach(async (entry) => {
       if (entry.userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE)
-        await this.merchantService.updateBalance(
-          entry.user.id,
-          entry.after,
-          true,
-        );
+        await this.merchantService.updateBalance(entry.user.id, 0, true);
 
       if (entry.userType === UserTypeForTransactionUpdates.MEMBER_BALANCE)
-        await this.memberService.updateBalance(
-          entry.user.id,
-          entry.after,
-          true,
-        );
+        await this.memberService.updateBalance(entry.user.id, 0, true);
 
       if (entry.userType === UserTypeForTransactionUpdates.MEMBER_QUOTA)
-        await this.memberService.updateQuota(entry.user.id, entry.after, false);
+        await this.memberService.updateQuota(entry.user.id, 0, true);
 
       if (entry.userType === UserTypeForTransactionUpdates.AGENT_BALANCE)
-        await this.agentService.updateBalance(entry.user.id, entry.after, true);
+        await this.agentService.updateBalance(entry.user.id, 0, true);
 
       if (entry.userType === UserTypeForTransactionUpdates.SYSTEM_PROFIT)
-        await this.systemConfigService.updateSystemProfit(0, true, id);
+        await this.systemConfigService.updateSystemProfit(
+          0,
+          payinOrderDetails.id,
+          true,
+        );
 
       await this.transactionUpdateRepository.update(entry, {
         pending: false,
@@ -235,6 +227,7 @@ export class PayinService {
         userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
         pending: true,
       },
+      relations: ['payinOrder'],
     });
 
     const transactionUpdateEntries =
@@ -243,7 +236,7 @@ export class PayinService {
           payinOrder: { id },
           pending: true,
         },
-        relations: ['user'],
+        relations: ['user', 'payinOrder'],
       });
 
     transactionUpdateEntries.forEach(async (entry) => {
@@ -274,8 +267,8 @@ export class PayinService {
       if (entry.userType === UserTypeForTransactionUpdates.SYSTEM_PROFIT)
         await this.systemConfigService.updateSystemProfit(
           transactionUpdate.amount,
-          false,
           id,
+          true,
         );
 
       await this.transactionUpdateRepository.update(entry, {

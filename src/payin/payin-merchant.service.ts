@@ -17,6 +17,7 @@ import {
   PayinMerchantResponseDto,
 } from './dto/payin-merchant-response.dto';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
+import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
 
 @Injectable()
 export class PayinMerchantService {
@@ -37,7 +38,7 @@ export class PayinMerchantService {
     const queryBuilder = this.payinRepository
       .createQueryBuilder('payin')
       .leftJoinAndSelect('payin.merchant', 'merchant')
-      .leftJoinAndSelect('payin.merchant.identity', 'merchant.identity')
+      .leftJoinAndSelect('merchant.identity', 'identity')
       .leftJoinAndSelect('payin.user', 'user')
       .leftJoinAndSelect('payin.member', 'member')
       .skip(skip)
@@ -83,11 +84,13 @@ export class PayinMerchantService {
             relations: ['payinOrder', 'user', 'user.merchant'],
           });
 
-        return {
-          ...plainToInstance(PayinMerchantResponseDto, row),
+        const response = {
+          ...row,
           serviceCharge: transactionUpdate.amount,
-          balanceCredit: transactionUpdate.after,
+          balanceCredit: transactionUpdate.after - transactionUpdate.before,
         };
+
+        return plainToInstance(PayinMerchantResponseDto, response);
       }),
     );
 
@@ -106,9 +109,19 @@ export class PayinMerchantService {
     try {
       const orderDetails = await this.payinRepository.findOne({
         where: { id },
-        relations: ['user', 'member', 'merchant'],
+        relations: ['user', 'merchant', 'member'],
       });
       if (!orderDetails) throw new NotFoundException('Order not found.');
+
+      const transactionUpdateMerchant =
+        await this.transactionUpdateRepository.findOne({
+          where: {
+            payinOrder: { id: orderDetails.id },
+            userType: UserTypeForTransactionUpdates.MERCHANT_BALANCE,
+            user: { id: orderDetails.merchant?.identity?.id },
+          },
+          relations: ['payinOrder', 'user', 'user.merchant'],
+        });
 
       const res = {
         ...orderDetails,
@@ -123,9 +136,10 @@ export class PayinMerchantService {
             : null,
         },
         balanceDetails: {
-          serviceRate: orderDetails.merchantCharge,
-          serviceFee: (orderDetails.amount / 100) * orderDetails.merchantCharge,
-          balanceEarned: orderDetails.amount - orderDetails.merchantCharge,
+          serviceRate: transactionUpdateMerchant.rate,
+          serviceFee: transactionUpdateMerchant.amount,
+          balanceEarned:
+            transactionUpdateMerchant.after - transactionUpdateMerchant.before,
         },
       };
 
