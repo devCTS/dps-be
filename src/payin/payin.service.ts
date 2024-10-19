@@ -235,15 +235,6 @@ export class PayinService {
         'order status is not submitted or already failed or completed!',
       );
 
-    const transactionUpdate = await this.transactionUpdateRepository.findOne({
-      where: {
-        payinOrder: { id },
-        userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
-        pending: true,
-      },
-      relations: ['payinOrder'],
-    });
-
     const transactionUpdateEntries =
       await this.transactionUpdateRepository.find({
         where: {
@@ -280,7 +271,7 @@ export class PayinService {
 
       if (entry.userType === UserTypeForTransactionUpdates.SYSTEM_PROFIT)
         await this.systemConfigService.updateSystemProfit(
-          transactionUpdate.amount,
+          entry.amount,
           id,
           false,
         );

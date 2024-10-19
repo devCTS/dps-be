@@ -185,7 +185,7 @@ export class TransactionUpdatesService {
       orderType,
       userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
       before: beforeProfit,
-      amount: profitFromCurrentOrder.merchantTotal,
+      amount: afterProfit - beforeProfit,
       after: afterProfit,
       payinOrder: orderDetails,
     });
