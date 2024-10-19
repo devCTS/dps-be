@@ -626,9 +626,12 @@ export class MerchantService {
     let beforeValue = merchant.balance;
     let afterValue = failed ? merchant.balance : amount + beforeValue;
 
-    await this.transactionUpdateRepository.update(transactionUpdateMerchant, {
-      before: beforeValue,
-      after: afterValue,
-    });
+    await this.transactionUpdateRepository.update(
+      transactionUpdateMerchant.id,
+      {
+        before: beforeValue,
+        after: afterValue,
+      },
+    );
   }
 }

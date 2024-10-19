@@ -325,24 +325,17 @@ export class SystemConfigService {
       relations: ['payinOrder'],
     });
 
-    let beforeValue = systemConfig.systemProfit;
-    let afterValue = 0;
+    await this.systemConfigRepository.update(systemConfig.id, {
+      systemProfit: systemConfig.systemProfit + amount,
+    });
 
-    if (!failed) {
-      await this.systemConfigRepository.update(systemConfig.id, {
-        systemProfit: systemConfig.systemProfit + amount,
-      });
-      await this.transactionUpdateRepository.update(systemProfitRow, {
-        before: beforeValue,
-        after: beforeValue + amount,
-      });
-    } else {
-      afterValue = beforeValue;
-      await this.transactionUpdateRepository.update(systemProfitRow, {
-        before: beforeValue,
-        after: afterValue,
-      });
-    }
+    let beforeValue = systemConfig.systemProfit;
+    let afterValue = failed ? beforeValue : beforeValue + amount;
+
+    await this.transactionUpdateRepository.update(systemProfitRow.id, {
+      before: beforeValue,
+      after: afterValue,
+    });
   }
 
   async updateWithdrawalDefaults(

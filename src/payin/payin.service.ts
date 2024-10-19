@@ -106,6 +106,9 @@ export class PayinService {
     });
     if (!payinOrderDetails) throw new NotFoundException('Order not found');
 
+    if (payinOrderDetails.status !== OrderStatus.INITIATED)
+      throw new NotAcceptableException('order status is not initiated!');
+
     let member;
     if (paymentMode === PaymentMadeOn.MEMBER)
       member = await this.memberRepository.findOneBy({ id: memberId });
@@ -160,6 +163,9 @@ export class PayinService {
 
     if (!payinOrderDetails) throw new NotFoundException('Order not found');
 
+    if (payinOrderDetails.status !== OrderStatus.ASSIGNED)
+      throw new NotAcceptableException('order status is not assigned!');
+
     await this.payinRepository.update(id, {
       status: OrderStatus.SUBMITTED,
       transactionId,
@@ -174,6 +180,11 @@ export class PayinService {
 
     const payinOrderDetails = await this.payinRepository.findOneBy({ id });
     if (!payinOrderDetails) throw new NotFoundException('Order not found');
+
+    if (payinOrderDetails.status !== OrderStatus.SUBMITTED)
+      throw new NotAcceptableException(
+        'order status is not submitted or already failed or completed!',
+      );
 
     const transactionUpdateEntries =
       await this.transactionUpdateRepository.find({
@@ -204,7 +215,7 @@ export class PayinService {
           true,
         );
 
-      await this.transactionUpdateRepository.update(entry, {
+      await this.transactionUpdateRepository.update(entry.id, {
         pending: false,
       });
     });
@@ -219,14 +230,10 @@ export class PayinService {
     const payinOrderDetails = await this.payinRepository.findOneBy({ id });
     if (!payinOrderDetails) throw new NotFoundException('Order not found');
 
-    const transactionUpdate = await this.transactionUpdateRepository.findOne({
-      where: {
-        payinOrder: { id },
-        userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
-        pending: true,
-      },
-      relations: ['payinOrder'],
-    });
+    if (payinOrderDetails.status !== OrderStatus.SUBMITTED)
+      throw new NotAcceptableException(
+        'order status is not submitted or already failed or completed!',
+      );
 
     const transactionUpdateEntries =
       await this.transactionUpdateRepository.find({
@@ -264,12 +271,12 @@ export class PayinService {
 
       if (entry.userType === UserTypeForTransactionUpdates.SYSTEM_PROFIT)
         await this.systemConfigService.updateSystemProfit(
-          transactionUpdate.amount,
+          entry.amount,
           id,
-          true,
+          false,
         );
 
-      await this.transactionUpdateRepository.update(entry, {
+      await this.transactionUpdateRepository.update(entry.id, {
         pending: false,
       });
     });
