@@ -134,8 +134,9 @@ export class TransactionUpdatesService {
     const systemProfitExists = await this.transactionUpdateRepository.findOne({
       where: {
         userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
-        payinOrder: orderDetails.id,
+        payinOrder: { id: orderDetails.id },
       },
+      relations: ['payinOrder'],
     });
     if (systemProfitExists)
       await this.transactionUpdateRepository.remove(systemProfitExists);

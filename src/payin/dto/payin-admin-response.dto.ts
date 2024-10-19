@@ -51,7 +51,9 @@ export class PayinAdminResponseDto {
   merchant: string;
 
   @Expose()
-  @Transform(({ value }) => value?.toLowerCase(), { toClassOnly: true })
+  @Transform(({ value }) => (value ? value.toLowerCase() : null), {
+    toClassOnly: true,
+  })
   payinMadeOn: PaymentMadeOn;
 
   @Expose()
@@ -123,8 +125,10 @@ export class PayinDetailsAdminResDto {
   merchant: {};
 
   @Expose()
-  @Transform(({ value }) => value?.toLowerCase(), { toClassOnly: true })
-  payinMadeOn: PaymentMadeOn;
+  @Transform(({ value }) => (value ? value.toLowerCase() : null), {
+    toClassOnly: true,
+  })
+  payinMadeOn: PaymentMadeOn | null;
 
   @Expose()
   @Transform(

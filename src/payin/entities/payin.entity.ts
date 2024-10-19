@@ -47,7 +47,7 @@ export class Payin {
   })
   callbackStatus: CallBackStatus;
 
-  @Column({ type: 'enum', enum: PaymentMadeOn, nullable: true })
+  @Column({ type: 'enum', enum: PaymentMadeOn, nullable: true, default: null })
   payinMadeOn: PaymentMadeOn;
 
   @Column({ nullable: true, type: 'enum', enum: GatewayName })
