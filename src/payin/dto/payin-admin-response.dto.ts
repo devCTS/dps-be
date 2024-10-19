@@ -239,13 +239,20 @@ function TransformBalancesAndProfit() {
       const merchantEntry = filteredValues.find(
         (entry) => entry.role === 'merchant',
       );
+      const gatewayEntry = filteredValues.find(
+        (entry) => entry.role === 'gateway',
+      );
       const otherEntries = filteredValues.filter(
-        (entry) => entry.role !== 'system' && entry.role !== 'merchant',
+        (entry) =>
+          entry.role !== 'system' &&
+          entry.role !== 'merchant' &&
+          entry.role !== 'gateway',
       );
 
       return [
         merchantEntry,
         ...otherEntries.reverse(),
+        gatewayEntry,
         systemProfitEntry,
       ].filter(Boolean);
     },

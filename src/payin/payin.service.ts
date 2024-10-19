@@ -82,22 +82,21 @@ export class PayinService {
       memberId,
       gatewayServiceRate,
       memberPaymentDetails,
+      gatewayName,
       gatewayPaymentDetails,
     } = body;
 
     if (
       paymentMode === PaymentMadeOn.GATEWAY &&
-      !gatewayServiceRate &&
-      !gatewayPaymentDetails
+      (!gatewayServiceRate || !gatewayPaymentDetails || !gatewayName)
     )
       throw new NotAcceptableException(
-        'gateway service rate or payment details missing!',
+        'gateway service rate or gateway payment details missing!',
       );
 
     if (
       paymentMode === PaymentMadeOn.MEMBER &&
-      !memberId &&
-      !memberPaymentDetails
+      (!memberId || !memberPaymentDetails)
     )
       throw new NotAcceptableException('memberId or payment details missing!');
 
@@ -111,16 +110,15 @@ export class PayinService {
     if (paymentMode === PaymentMadeOn.MEMBER)
       member = await this.memberRepository.findOneBy({ id: memberId });
 
-    if (paymentMode === PaymentMadeOn.MEMBER) {
+    if (paymentMode === PaymentMadeOn.MEMBER)
       await this.transactionUpdateService.create({
         orderDetails: payinOrderDetails,
         userId: memberId,
         forMember: true,
         orderType: OrderType.PAYIN,
       });
-    }
 
-    if (payinOrderDetails.payinMadeOn === PaymentMadeOn.GATEWAY) {
+    if (paymentMode === PaymentMadeOn.GATEWAY) {
       await this.transactionUpdateRepository.save({
         orderType: OrderType.PAYIN,
         userType: UserTypeForTransactionUpdates.GATEWAY_FEE,
@@ -141,7 +139,7 @@ export class PayinService {
       status: OrderStatus.ASSIGNED,
       payinMadeOn: paymentMode,
       member: paymentMode === PaymentMadeOn.MEMBER ? member : null,
-      gatewayName: paymentMode === PaymentMadeOn.GATEWAY ? paymentMode : null,
+      gatewayName: paymentMode === PaymentMadeOn.GATEWAY ? gatewayName : null,
       gatewayServiceRate:
         paymentMode === PaymentMadeOn.GATEWAY ? gatewayServiceRate : null,
       transactionDetails:
@@ -283,8 +281,10 @@ export class PayinService {
     return HttpStatus.OK;
   }
 
-  findAll() {
-    return `This action returns all payout`;
+  async findAll() {
+    const payins = await this.payinRepository.find();
+
+    return payins;
   }
 
   findOne(id: number) {

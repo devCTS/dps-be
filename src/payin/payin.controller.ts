@@ -41,6 +41,11 @@ export class PayinController {
     return this.payinMemberService.paginatePayins(paginateRequestDto);
   }
 
+  @Get()
+  getAllPayins() {
+    return this.payinService.findAll();
+  }
+
   @Get('admin/:id')
   getPayinOrderDetailsAdmin(@Param('id', ParseIntPipe) id: number) {
     return this.payinAdminService.getPayinDetails(id);

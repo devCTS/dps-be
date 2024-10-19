@@ -29,7 +29,7 @@ export class PayinMerchantService {
   ) {}
 
   async paginatePayins(paginateRequestDto: PaginateRequestDto) {
-    const { search, pageSize, pageNumber, startDate, endDate, sortBy } =
+    const { search, pageSize, pageNumber, startDate, endDate, sortBy, userId } =
       paginateRequestDto;
 
     const skip = (pageNumber - 1) * pageSize;
@@ -43,6 +43,8 @@ export class PayinMerchantService {
       .leftJoinAndSelect('payin.member', 'member')
       .skip(skip)
       .take(take);
+
+    if (userId) queryBuilder.andWhere('merchant.id = :userId', { userId });
 
     if (search)
       queryBuilder.andWhere(`CONCAT(payin.merchant) ILIKE :search`, {

@@ -164,16 +164,21 @@ export class TransactionUpdatesService {
           case UserTypeForTransactionUpdates.AGENT_BALANCE:
             acc.agentTotal += entry.amount;
             break;
+          case UserTypeForTransactionUpdates.GATEWAY_FEE:
+            acc.agentTotal += entry.amount;
+            break;
           default:
             break;
         }
         return acc;
       },
-      { merchantTotal: 0, memberTotal: 0, agentTotal: 0 },
+      { merchantTotal: 0, memberTotal: 0, agentTotal: 0, gatewayTotal: 0 },
     );
     const afterProfit =
       profitFromCurrentOrder.merchantTotal -
-      (profitFromCurrentOrder.memberTotal + profitFromCurrentOrder.agentTotal);
+      (profitFromCurrentOrder.memberTotal +
+        profitFromCurrentOrder.agentTotal +
+        profitFromCurrentOrder.gatewayTotal);
 
     await this.transactionUpdateRepository.save({
       orderType,

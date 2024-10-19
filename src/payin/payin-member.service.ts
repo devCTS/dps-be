@@ -28,7 +28,7 @@ export class PayinMemberService {
   ) {}
 
   async paginatePayins(paginateRequestDto: PaginateRequestDto) {
-    const { search, pageSize, pageNumber, startDate, endDate, sortBy } =
+    const { search, pageSize, pageNumber, startDate, endDate, sortBy, userId } =
       paginateRequestDto;
 
     const skip = (pageNumber - 1) * pageSize;
@@ -42,6 +42,8 @@ export class PayinMemberService {
       .leftJoinAndSelect('member.identity', 'identity')
       .skip(skip)
       .take(take);
+
+    if (userId) queryBuilder.andWhere('member.id = :userId', { userId });
 
     if (search)
       queryBuilder.andWhere(`CONCAT(payin.merchant) ILIKE :search`, {
@@ -129,8 +131,9 @@ export class PayinMemberService {
           commissionAmount: transactionUpdate.amount,
           quotaDeducted: transactionUpdate.after - transactionUpdate.before,
           withHeldAmount:
-            (orderDetails.amount / 100) * orderDetails.member.withdrawalRate,
-          withHeldRate: orderDetails.member.withdrawalRate,
+            (orderDetails.amount / 100) * orderDetails.member?.withdrawalRate ||
+            0,
+          withHeldRate: orderDetails.member?.withdrawalRate || 0,
         },
       };
 
