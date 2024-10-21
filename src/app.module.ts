@@ -26,6 +26,7 @@ import { PayoutModule } from './payout/payout.module';
 import { EndUserModule } from './end-user/end-user.module';
 import { PayinModule } from './payin/payin.module';
 import { TransactionUpdatesModule } from './transaction-updates/transaction-updates.module';
+import { SocketModule } from './socket/socket.module';
 
 @Module({
   imports: [
@@ -70,6 +71,7 @@ import { TransactionUpdatesModule } from './transaction-updates/transaction-upda
     EndUserModule,
     PayinModule,
     TransactionUpdatesModule,
+    SocketModule,
   ],
   controllers: [AppController],
   providers: [

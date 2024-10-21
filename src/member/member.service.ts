@@ -228,7 +228,6 @@ export class MemberService {
   }
 
   async update(id: number, updateDto: UpdateMemberDto): Promise<HttpStatus> {
-    console.log(updateDto);
     const channelProfile = updateDto.channelProfile;
     const email = updateDto.email;
     const password = updateDto.password;
@@ -263,7 +262,7 @@ export class MemberService {
     });
 
     // Adding all the channels
-    if (channelProfile.upi && channelProfile.upi.length > 0) {
+    if (channelProfile?.upi && channelProfile.upi.length > 0) {
       for (const element of channelProfile.upi) {
         await this.upiRepository.save({
           ...element,

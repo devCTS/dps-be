@@ -85,4 +85,8 @@ export class CreateMemberDto {
   @Type(() => ChannelProfileDto)
   @ValidateNested({ each: true })
   channelProfile: ChannelProfileDto;
+
+  @IsOptional()
+  @IsBoolean()
+  isOnline: boolean;
 }
