@@ -69,9 +69,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
         updateLoginCredentials: false,
       });
 
-      this.server
-        .to(roomId)
-        .emit('statusUpdate', { userId: socket.id, status: status });
+      socket.emit('statusUpdate', { userId: socket.id, status: status });
     }
   }
 }
