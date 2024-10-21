@@ -311,39 +311,31 @@ export class SystemConfigService {
     return HttpStatus.OK;
   }
 
-  async updateSystemProfit(amount, orderId, failed) {
+  async updateSystemProfit(amount, orderId: number, failed) {
     const systemConfig = await this.findLatest();
 
     if (!systemConfig) throw new NotFoundException('SystemConfig not found!');
 
-    if (!failed)
-      await this.systemConfigRepository.update(systemConfig.id, {
-        systemProfit: systemConfig.systemProfit + amount,
-      });
+    const systemProfitRow = await this.transactionUpdateRepository.findOne({
+      where: {
+        userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
+        pending: true,
+        payinOrder: { id: orderId },
+      },
+      relations: ['payinOrder'],
+    });
 
-    const transactionUpdateEntries =
-      await this.transactionUpdateRepository.find({
-        where: {
-          userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
-          pending: true,
-          payinOrder: { id: orderId },
-        },
-      });
+    await this.systemConfigRepository.update(systemConfig.id, {
+      systemProfit: systemConfig.systemProfit + amount,
+    });
 
-    for (const entry of transactionUpdateEntries) {
-      let beforeValue = systemConfig.systemProfit;
-      let afterValue = 0;
+    let beforeValue = systemConfig.systemProfit;
+    let afterValue = failed ? beforeValue : beforeValue + amount;
 
-      if (entry.userType === UserTypeForTransactionUpdates.SYSTEM_PROFIT)
-        afterValue = systemConfig.systemProfit + amount;
-
-      if (failed) afterValue = systemConfig.systemProfit;
-
-      await this.transactionUpdateRepository.update(entry.userType, {
-        before: beforeValue,
-        after: afterValue,
-      });
-    }
+    await this.transactionUpdateRepository.update(systemProfitRow.id, {
+      before: beforeValue,
+      after: afterValue,
+    });
   }
 
   async updateWithdrawalDefaults(

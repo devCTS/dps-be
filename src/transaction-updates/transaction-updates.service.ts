@@ -36,11 +36,12 @@ export class TransactionUpdatesService {
   ) {
     let userType = UserTypeForTransactionUpdates.MERCHANT_BALANCE;
     let before = 0,
-      rate = 2, // service rate / commission rates
+      rate = 0.5, // service rate / commission rates
       amount = 0, // total service fee / commissions
       after = 0;
 
     if (forMember) {
+      // Member Quota - member selected for payment
       if (!referral.children || referral.children.length <= 0) {
         userType = UserTypeForTransactionUpdates.MEMBER_QUOTA;
         rate =
@@ -54,6 +55,7 @@ export class TransactionUpdatesService {
             ? before - orderAmount + amount
             : before + orderAmount + amount;
       } else {
+        // agent members
         userType = UserTypeForTransactionUpdates.MEMBER_BALANCE;
         rate =
           orderType === OrderType.PAYIN
@@ -84,7 +86,7 @@ export class TransactionUpdatesService {
           rate =
             (orderType === OrderType.PAYIN
               ? referral.payinCommission
-              : referral.payoutCommission) ?? 2;
+              : referral.payoutCommission) ?? 0.5;
           amount = (orderAmount / 100) * rate;
           before = referral.balance;
           after = before + amount;
@@ -97,7 +99,7 @@ export class TransactionUpdatesService {
 
     const identity = await this.identityRepository.findOne({
       where: { email: referral.email },
-      relations: ['merchants', 'members', 'agent'],
+      relations: ['merchant', 'member', 'agent'],
     });
 
     const transactionUpdate = {
@@ -132,8 +134,9 @@ export class TransactionUpdatesService {
     const systemProfitExists = await this.transactionUpdateRepository.findOne({
       where: {
         userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
-        payinOrder: orderDetails.id,
+        payinOrder: { id: orderDetails.id },
       },
+      relations: ['payinOrder'],
     });
     if (systemProfitExists)
       await this.transactionUpdateRepository.remove(systemProfitExists);
@@ -152,29 +155,37 @@ export class TransactionUpdatesService {
     let beforeProfit = systemConfig.systemProfit;
     let profitFromCurrentOrder = transactionUpdateEntries.reduce(
       (acc, entry) => {
-        if (entry.userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE)
-          // Add service fee paid by merchant
-          acc += entry.amount;
-
-        if (
-          entry.userType === UserTypeForTransactionUpdates.AGENT_BALANCE ||
-          entry.userType === UserTypeForTransactionUpdates.MEMBER_BALANCE ||
-          entry.userType === UserTypeForTransactionUpdates.GATEWAY_FEE
-        )
-          // Deduct agent commissions
-          acc -= entry.amount;
-
+        switch (entry.userType) {
+          case UserTypeForTransactionUpdates.MERCHANT_BALANCE:
+            acc.merchantTotal += entry.amount;
+            break;
+          case UserTypeForTransactionUpdates.MEMBER_BALANCE:
+            acc.memberTotal += entry.amount;
+            break;
+          case UserTypeForTransactionUpdates.AGENT_BALANCE:
+            acc.agentTotal += entry.amount;
+            break;
+          case UserTypeForTransactionUpdates.GATEWAY_FEE:
+            acc.agentTotal += entry.amount;
+            break;
+          default:
+            break;
+        }
         return acc;
       },
-      0,
+      { merchantTotal: 0, memberTotal: 0, agentTotal: 0, gatewayTotal: 0 },
     );
-    let afterProfit = beforeProfit + profitFromCurrentOrder;
+    const afterProfit =
+      profitFromCurrentOrder.merchantTotal -
+      (profitFromCurrentOrder.memberTotal +
+        profitFromCurrentOrder.agentTotal +
+        profitFromCurrentOrder.gatewayTotal);
 
     await this.transactionUpdateRepository.save({
       orderType,
       userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
       before: beforeProfit,
-      amount: profitFromCurrentOrder,
+      amount: afterProfit - beforeProfit,
       after: afterProfit,
       payinOrder: orderDetails,
     });

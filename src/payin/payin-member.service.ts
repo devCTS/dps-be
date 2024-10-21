@@ -12,13 +12,10 @@ import {
 import { Payin } from './entities/payin.entity';
 import { Repository } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
-import { memberAllPayins } from './data/dummy-data';
-import { SortedBy } from 'src/utils/enum/enum';
 import {
   PayinDetailsMemberResDto,
   PayinMemberResponseDto,
 } from './dto/payin-member-response.dto';
-import { memberPayinOrders } from './data/dummy-order-details';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 
 @Injectable()
@@ -31,7 +28,7 @@ export class PayinMemberService {
   ) {}
 
   async paginatePayins(paginateRequestDto: PaginateRequestDto) {
-    const { search, pageSize, pageNumber, startDate, endDate, sortedBy } =
+    const { search, pageSize, pageNumber, startDate, endDate, sortBy, userId } =
       paginateRequestDto;
 
     const skip = (pageNumber - 1) * pageSize;
@@ -45,6 +42,8 @@ export class PayinMemberService {
       .leftJoinAndSelect('member.identity', 'identity')
       .skip(skip)
       .take(take);
+
+    if (userId) queryBuilder.andWhere('member.id = :userId', { userId });
 
     if (search)
       queryBuilder.andWhere(`CONCAT(payin.merchant) ILIKE :search`, {
@@ -63,12 +62,6 @@ export class PayinMemberService {
         },
       );
     }
-
-    if (sortedBy)
-      if (sortedBy === 'latest')
-        queryBuilder.orderBy('payin.created_at', 'DESC');
-      else if (sortedBy === 'oldest')
-        queryBuilder.orderBy('payin.created_at', 'ASC');
 
     const [rows, total] = await queryBuilder.getManyAndCount();
 
@@ -89,7 +82,7 @@ export class PayinMemberService {
         return {
           ...plainToInstance(PayinMemberResponseDto, row),
           commission: transactionUpdate.amount,
-          quotaDebit: transactionUpdate.after,
+          quotaDebit: transactionUpdate.after - transactionUpdate.before,
         };
       }),
     );
@@ -101,7 +94,7 @@ export class PayinMemberService {
       totalPages: Math.ceil(total / pageSize),
       startRecord,
       endRecord,
-      data: dtos,
+      data: sortBy === 'latest' ? dtos.reverse() : dtos,
     };
   }
 
@@ -136,10 +129,11 @@ export class PayinMemberService {
         quotaDetails: {
           commissionRate: transactionUpdate.rate,
           commissionAmount: transactionUpdate.amount,
-          quotaDeducted: transactionUpdate.after,
+          quotaDeducted: transactionUpdate.after - transactionUpdate.before,
           withHeldAmount:
-            (orderDetails.amount / 100) * orderDetails.member.withdrawalRate,
-          withHeldRate: orderDetails.member.withdrawalRate,
+            (orderDetails.amount / 100) * orderDetails.member?.withdrawalRate ||
+            0,
+          withHeldRate: orderDetails.member?.withdrawalRate || 0,
         },
       };
 

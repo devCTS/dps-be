@@ -117,7 +117,9 @@ export class PayinMerchantOrderResDto {
   merchant: {};
 
   @Expose()
-  @Transform(({ value }) => value?.toLowerCase(), { toClassOnly: true })
+  @Transform(({ value }) => (value ? value.toLowerCase() : null), {
+    toClassOnly: true,
+  })
   payinMadeOn: PaymentMadeOn;
 
   @Expose()

@@ -1,38 +1,54 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { convertToBase64, isFileExtensionSave } from './helpers/image-upload';
+import { Injectable } from '@nestjs/common';
+import { Express } from 'express';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import * as uniqid from 'uniqid';
 
 @Injectable()
 export class UploadService {
-  async uploadImage(file: any) {
-    // types
-    type ValidFileExtension = 'jpeg' | 'jpg' | 'png';
-    type ValidMimeType = 'image/jpeg' | 'image/jpg' | 'image/png';
+  private s3Client: S3Client = null;
 
-    const validFileExtensions: ValidFileExtension[] = ['jpeg', 'jpg', 'png'];
-    const validMimeTypes: ValidMimeType[] = [
-      'image/jpeg',
-      'image/jpg',
-      'image/png',
-    ];
+  constructor() {
+    this.s3Client = new S3Client({
+      region: process.env.AWS_REGION,
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY,
+        secretAccessKey: process.env.AWS_SECRET_KEY,
+      },
+    });
+  }
 
-    const fileName = file?.originalname;
+  async upload(file: Express.Multer.File, payinOrderId: string) {
+    try {
+      const params = {
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: `${payinOrderId}_${uniqid()}`,
+        Body: file.buffer,
+        ContentType: 'image/jpg,jpeg,png',
+      };
 
-    // check for file name
-    if (!fileName) throw new BadRequestException('File must be png jpg/jpeg.');
+      const command = new PutObjectCommand(params);
+      const data = await this.s3Client.send(command);
 
-    // allowed size 20 MB
-    if (file.size < 20971520)
-      throw new BadRequestException('File size should be less than 20 MB');
+      if (data.$metadata.httpStatusCode !== 200) {
+        return;
+      }
+      let url = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${params.Key}`;
 
-    // Valid mime
-    if (!validMimeTypes.includes(file.mimetype))
-      throw new BadRequestException('Invalid file mime type.');
+      return { url, key: params.Key };
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
-    // check valid mime type
-    const isValidImage = await isFileExtensionSave(file.buffer);
-    if (!isValidImage)
-      throw new BadRequestException('Invalid image mime type.');
+  findAll() {
+    return `This action returns all upload`;
+  }
 
-    return convertToBase64(file);
+  findOne(id: number) {
+    return `This action returns a #${id} upload`;
+  }
+
+  remove(id: number) {
+    return `This action removes a #${id} upload`;
   }
 }

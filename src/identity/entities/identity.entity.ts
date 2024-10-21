@@ -60,10 +60,10 @@ export class Identity {
   member: Member;
 
   @OneToOne(() => Admin, (admin) => admin.identity)
-  admins: Admin[];
+  admin: Admin;
 
   @OneToOne(() => Agent, (agent) => agent.identity)
-  agent: Agent[];
+  agent: Agent;
 
   @OneToMany(() => Submerchant, (submerchant) => submerchant.identity)
   submerchants: Submerchant[];

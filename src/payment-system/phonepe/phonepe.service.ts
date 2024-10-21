@@ -59,7 +59,7 @@ export class PhonepeService {
 
     try {
       const request_url = this.api_url + this.api_end_point;
-      console.log(request_url);
+
       const observable = this.httpService.post(
         request_url,
         {

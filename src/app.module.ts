@@ -15,7 +15,7 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { ExportModule } from './export/export.module';
 import { SystemConfigModule } from './system-config/system-config.module';
 import { RolesModule } from './roles/roles.module';
-import { UploadModule } from './upload/upload.module';
+
 import { AgentModule } from './agent/agent.module';
 import { AgentReferralModule } from './agent-referral/agent-referral.module';
 import { MemberReferralModule } from './member-referral/member-referral.module';
@@ -27,6 +27,7 @@ import { EndUserModule } from './end-user/end-user.module';
 import { PayinModule } from './payin/payin.module';
 import { TransactionUpdatesModule } from './transaction-updates/transaction-updates.module';
 import { SocketModule } from './socket/socket.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -60,7 +61,6 @@ import { SocketModule } from './socket/socket.module';
     ExportModule,
     SystemConfigModule,
     RolesModule,
-    UploadModule,
     AgentModule,
     AgentReferralModule,
     MemberReferralModule,
@@ -72,6 +72,7 @@ import { SocketModule } from './socket/socket.module';
     PayinModule,
     TransactionUpdatesModule,
     SocketModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [

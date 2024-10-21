@@ -47,7 +47,7 @@ export class Payin {
   })
   callbackStatus: CallBackStatus;
 
-  @Column({ type: 'enum', enum: PaymentMadeOn, nullable: true })
+  @Column({ type: 'enum', enum: PaymentMadeOn, nullable: true, default: null })
   payinMadeOn: PaymentMadeOn;
 
   @Column({ nullable: true, type: 'enum', enum: GatewayName })
@@ -61,12 +61,6 @@ export class Payin {
 
   @Column({ type: 'float', nullable: true })
   gatewayServiceRate: number;
-
-  @Column({ type: 'float' })
-  merchantCharge: number;
-
-  @Column({ type: 'float' })
-  systemProfit: number;
 
   @Column({ nullable: true })
   transactionId: string;

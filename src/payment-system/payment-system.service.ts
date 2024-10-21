@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CreatePaymentSystemDto } from './dto/create-payment-system.dto';
-import { UpdatePaymentSystemDto } from './dto/update-payment-system.dto';
+
 import { PhonepeService } from './phonepe/phonepe.service';
 import { RazorpayService } from './razorpay/razorpay.service';
 
@@ -13,5 +12,10 @@ export class PaymentSystemService {
 
   async getPayPage(userId: string, amount: string) {
     return await this.razorpayService.getPayPage();
+    // return await this.phonepeService.getPayPage();
+  }
+
+  async getOrderDetails(orderId) {
+    return await this.razorpayService.razorpayPaymentStatus(orderId);
   }
 }

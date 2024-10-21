@@ -614,8 +614,8 @@ export class MerchantService {
       balance: merchant.balance + amount,
     });
 
-    const transactionUpdateEntries =
-      await this.transactionUpdateRepository.find({
+    const transactionUpdateMerchant =
+      await this.transactionUpdateRepository.findOne({
         where: {
           user: { id: identityId },
           pending: true,
@@ -623,19 +623,15 @@ export class MerchantService {
         relations: ['user'],
       });
 
-    for (const entry of transactionUpdateEntries) {
-      let beforeValue = merchant.balance;
-      let afterValue = 0;
+    let beforeValue = merchant.balance;
+    let afterValue = failed ? merchant.balance : amount + beforeValue;
 
-      if (entry.userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE)
-        afterValue = merchant.balance + amount;
-
-      if (failed) afterValue = merchant.balance;
-
-      await this.transactionUpdateRepository.update(entry.user?.id, {
+    await this.transactionUpdateRepository.update(
+      transactionUpdateMerchant.id,
+      {
         before: beforeValue,
         after: afterValue,
-      });
-    }
+      },
+    );
   }
 }

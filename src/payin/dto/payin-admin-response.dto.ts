@@ -24,6 +24,12 @@ export class PayinAdminResponseDto {
   amount: number;
 
   @Expose()
+  createdAt: Date;
+
+  @Expose()
+  updatedAt: Date;
+
+  @Expose()
   @Transform(({ value }) => value?.toLowerCase(), { toClassOnly: true })
   status: string;
 
@@ -45,7 +51,9 @@ export class PayinAdminResponseDto {
   merchant: string;
 
   @Expose()
-  @Transform(({ value }) => value?.toLowerCase(), { toClassOnly: true })
+  @Transform(({ value }) => (value ? value.toLowerCase() : null), {
+    toClassOnly: true,
+  })
   payinMadeOn: PaymentMadeOn;
 
   @Expose()
@@ -117,8 +125,10 @@ export class PayinDetailsAdminResDto {
   merchant: {};
 
   @Expose()
-  @Transform(({ value }) => value?.toLowerCase(), { toClassOnly: true })
-  payinMadeOn: PaymentMadeOn;
+  @Transform(({ value }) => (value ? value.toLowerCase() : null), {
+    toClassOnly: true,
+  })
+  payinMadeOn: PaymentMadeOn | null;
 
   @Expose()
   @Transform(
@@ -233,13 +243,20 @@ function TransformBalancesAndProfit() {
       const merchantEntry = filteredValues.find(
         (entry) => entry.role === 'merchant',
       );
+      const gatewayEntry = filteredValues.find(
+        (entry) => entry.role === 'gateway',
+      );
       const otherEntries = filteredValues.filter(
-        (entry) => entry.role !== 'system' && entry.role !== 'merchant',
+        (entry) =>
+          entry.role !== 'system' &&
+          entry.role !== 'merchant' &&
+          entry.role !== 'gateway',
       );
 
       return [
         merchantEntry,
         ...otherEntries.reverse(),
+        gatewayEntry,
         systemProfitEntry,
       ].filter(Boolean);
     },

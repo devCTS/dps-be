@@ -15,7 +15,7 @@ export class Admin {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @OneToOne(() => Identity, (identity) => identity.admins)
+  @OneToOne(() => Identity, (identity) => identity.admin)
   @JoinColumn({ name: 'identity_id' })
   identity: Identity;
 

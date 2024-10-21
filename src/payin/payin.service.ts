@@ -1,6 +1,7 @@
 import {
   HttpStatus,
   Injectable,
+  InternalServerErrorException,
   NotAcceptableException,
   NotFoundException,
 } from '@nestjs/common';
@@ -19,7 +20,6 @@ import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { SystemConfigService } from 'src/system-config/system-config.service';
 import { Member } from 'src/member/entities/member.entity';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
-import { Agent } from 'src/agent/entities/agent.entity';
 import { MemberService } from 'src/member/member.service';
 import { MerchantService } from 'src/merchant/merchant.service';
 import { AgentService } from 'src/agent/agent.service';
@@ -50,23 +50,18 @@ export class PayinService {
     const endUser = await this.endUserService.create({
       ...user,
     });
+    if (!endUser)
+      throw new InternalServerErrorException('Unable to create end-user!');
 
     const merchant = await this.merchantRepository.findOneBy({
       id: merchantId,
     });
-
-    const systemConfig = await this.systemConfigService.findLatest(false);
-
-    const merchantCharge =
-      (payinDetails.amount / 100) * merchant.payinServiceRate;
-
-    const systemProfit = merchantCharge + systemConfig.systemProfit;
+    if (!merchant)
+      throw new InternalServerErrorException('Merchant not found!');
 
     const payin = await this.payinRepository.save({
       ...payinDetails,
       user: endUser,
-      merchantCharge,
-      systemProfit,
       merchant,
     });
 
@@ -87,22 +82,21 @@ export class PayinService {
       memberId,
       gatewayServiceRate,
       memberPaymentDetails,
+      gatewayName,
       gatewayPaymentDetails,
     } = body;
 
     if (
       paymentMode === PaymentMadeOn.GATEWAY &&
-      !gatewayServiceRate &&
-      !gatewayPaymentDetails
+      (!gatewayServiceRate || !gatewayPaymentDetails || !gatewayName)
     )
       throw new NotAcceptableException(
-        'gateway service rate or payment details missing!',
+        'gateway service rate or gateway payment details missing!',
       );
 
     if (
       paymentMode === PaymentMadeOn.MEMBER &&
-      !memberId &&
-      !memberPaymentDetails
+      (!memberId || !memberPaymentDetails)
     )
       throw new NotAcceptableException('memberId or payment details missing!');
 
@@ -112,11 +106,14 @@ export class PayinService {
     });
     if (!payinOrderDetails) throw new NotFoundException('Order not found');
 
+    if (payinOrderDetails.status !== OrderStatus.INITIATED)
+      throw new NotAcceptableException('order status is not initiated!');
+
     let member;
     if (paymentMode === PaymentMadeOn.MEMBER)
       member = await this.memberRepository.findOneBy({ id: memberId });
 
-    if (payinOrderDetails.payinMadeOn === PaymentMadeOn.MEMBER)
+    if (paymentMode === PaymentMadeOn.MEMBER)
       await this.transactionUpdateService.create({
         orderDetails: payinOrderDetails,
         userId: memberId,
@@ -124,7 +121,7 @@ export class PayinService {
         orderType: OrderType.PAYIN,
       });
 
-    if (payinOrderDetails.payinMadeOn === PaymentMadeOn.GATEWAY) {
+    if (paymentMode === PaymentMadeOn.GATEWAY) {
       await this.transactionUpdateRepository.save({
         orderType: OrderType.PAYIN,
         userType: UserTypeForTransactionUpdates.GATEWAY_FEE,
@@ -145,7 +142,7 @@ export class PayinService {
       status: OrderStatus.ASSIGNED,
       payinMadeOn: paymentMode,
       member: paymentMode === PaymentMadeOn.MEMBER ? member : null,
-      gatewayName: paymentMode === PaymentMadeOn.GATEWAY ? paymentMode : null,
+      gatewayName: paymentMode === PaymentMadeOn.GATEWAY ? gatewayName : null,
       gatewayServiceRate:
         paymentMode === PaymentMadeOn.GATEWAY ? gatewayServiceRate : null,
       transactionDetails:
@@ -166,6 +163,9 @@ export class PayinService {
 
     if (!payinOrderDetails) throw new NotFoundException('Order not found');
 
+    if (payinOrderDetails.status !== OrderStatus.ASSIGNED)
+      throw new NotAcceptableException('order status is not assigned!');
+
     await this.payinRepository.update(id, {
       status: OrderStatus.SUBMITTED,
       transactionId,
@@ -181,40 +181,41 @@ export class PayinService {
     const payinOrderDetails = await this.payinRepository.findOneBy({ id });
     if (!payinOrderDetails) throw new NotFoundException('Order not found');
 
+    if (payinOrderDetails.status !== OrderStatus.SUBMITTED)
+      throw new NotAcceptableException(
+        'order status is not submitted or already failed or completed!',
+      );
+
     const transactionUpdateEntries =
       await this.transactionUpdateRepository.find({
         where: {
-          payinOrder: id,
+          payinOrder: { id },
           pending: true,
         },
-        relations: ['user'],
+        relations: ['payinOrder', 'user'],
       });
 
     transactionUpdateEntries.forEach(async (entry) => {
       if (entry.userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE)
-        await this.merchantService.updateBalance(
-          entry.user.id,
-          entry.after,
-          true,
-        );
+        await this.merchantService.updateBalance(entry.user.id, 0, true);
 
       if (entry.userType === UserTypeForTransactionUpdates.MEMBER_BALANCE)
-        await this.memberService.updateBalance(
-          entry.user.id,
-          entry.after,
+        await this.memberService.updateBalance(entry.user.id, 0, true);
+
+      if (entry.userType === UserTypeForTransactionUpdates.MEMBER_QUOTA)
+        await this.memberService.updateQuota(entry.user.id, 0, true);
+
+      if (entry.userType === UserTypeForTransactionUpdates.AGENT_BALANCE)
+        await this.agentService.updateBalance(entry.user.id, 0, true);
+
+      if (entry.userType === UserTypeForTransactionUpdates.SYSTEM_PROFIT)
+        await this.systemConfigService.updateSystemProfit(
+          0,
+          payinOrderDetails.id,
           true,
         );
 
-      if (entry.userType === UserTypeForTransactionUpdates.MEMBER_QUOTA)
-        await this.memberService.updateQuota(entry.user.id, entry.after, false);
-
-      if (entry.userType === UserTypeForTransactionUpdates.AGENT_BALANCE)
-        await this.agentService.updateBalance(entry.user.id, entry.after, true);
-
-      if (entry.userType === UserTypeForTransactionUpdates.SYSTEM_PROFIT)
-        await this.systemConfigService.updateSystemProfit(0, true, id);
-
-      await this.transactionUpdateRepository.update(entry, {
+      await this.transactionUpdateRepository.update(entry.id, {
         pending: false,
       });
     });
@@ -229,13 +230,10 @@ export class PayinService {
     const payinOrderDetails = await this.payinRepository.findOneBy({ id });
     if (!payinOrderDetails) throw new NotFoundException('Order not found');
 
-    const transactionUpdate = await this.transactionUpdateRepository.findOne({
-      where: {
-        payinOrder: { id },
-        userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
-        pending: true,
-      },
-    });
+    if (payinOrderDetails.status !== OrderStatus.SUBMITTED)
+      throw new NotAcceptableException(
+        'order status is not submitted or already failed or completed!',
+      );
 
     const transactionUpdateEntries =
       await this.transactionUpdateRepository.find({
@@ -243,7 +241,7 @@ export class PayinService {
           payinOrder: { id },
           pending: true,
         },
-        relations: ['user'],
+        relations: ['user', 'payinOrder'],
       });
 
     transactionUpdateEntries.forEach(async (entry) => {
@@ -273,12 +271,12 @@ export class PayinService {
 
       if (entry.userType === UserTypeForTransactionUpdates.SYSTEM_PROFIT)
         await this.systemConfigService.updateSystemProfit(
-          transactionUpdate.amount,
-          false,
+          entry.amount,
           id,
+          false,
         );
 
-      await this.transactionUpdateRepository.update(entry, {
+      await this.transactionUpdateRepository.update(entry.id, {
         pending: false,
       });
     });
@@ -290,8 +288,10 @@ export class PayinService {
     return HttpStatus.OK;
   }
 
-  findAll() {
-    return `This action returns all payout`;
+  async findAll() {
+    const payins = await this.payinRepository.find();
+
+    return payins;
   }
 
   findOne(id: number) {
