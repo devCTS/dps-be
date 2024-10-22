@@ -93,4 +93,7 @@ export class Member {
 
   @Column({ type: 'float', default: 0 })
   balance: number;
+
+  @Column({ default: false })
+  isOnline: boolean;
 }

@@ -213,7 +213,7 @@ export class AgentService {
     });
 
     // Adding all the channels
-    if (channelProfile.upi && channelProfile.upi.length > 0) {
+    if (channelProfile?.upi && channelProfile.upi.length > 0) {
       for (const element of channelProfile.upi) {
         await this.upiRepository.save({
           ...element,
