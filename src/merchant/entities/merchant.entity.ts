@@ -46,7 +46,7 @@ export class Merchant {
   @Column()
   withdrawalPassword: string;
 
-  @Column()
+  @Column({ unique: true })
   integrationId: string;
 
   @Column()

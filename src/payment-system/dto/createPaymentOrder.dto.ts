@@ -6,11 +6,12 @@ import {
   IsNumber,
   IsString,
 } from 'class-validator';
+import { ChannelName } from 'src/utils/enum/enum';
 
 export class CreatePaymentOrderDto {
   @IsNumber()
   @IsNotEmpty()
-  amount: string;
+  amount: number;
 
   @IsAlphanumeric()
   @IsNotEmpty()
@@ -23,6 +24,10 @@ export class CreatePaymentOrderDto {
   @IsNotEmpty()
   userEmail: string;
 
+  @IsString()
+  @IsNotEmpty()
+  userName: string;
+
   @IsNotEmpty()
   userMobileNumber: string;
 
@@ -30,8 +35,8 @@ export class CreatePaymentOrderDto {
   @IsNotEmpty()
   integrationId: string;
 
-  @IsEnum(['upi', 'netbanking', 'e-wallet'])
-  channel: 'upi' | 'netbanking' | 'e-wallet';
+  @IsEnum(ChannelName)
+  channel: ChannelName;
 
   @IsEnum(['sandbox', 'live'])
   environment: 'sandbox' | 'live';

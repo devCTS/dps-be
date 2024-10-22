@@ -29,11 +29,10 @@ import {
 import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 import { AgentReferralService } from 'src/agent-referral/agent-referral.service';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
-import { OrderType, UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
-import { userInfo } from 'os';
 import { Upi } from 'src/channel/entity/upi.entity';
 import { NetBanking } from 'src/channel/entity/net-banking.entity';
 import { EWallet } from 'src/channel/entity/e-wallet.entity';
+import uniqid from 'uniqid';
 
 @Injectable()
 export class MerchantService {
@@ -142,7 +141,7 @@ export class MerchantService {
       phone,
       referralCode,
       payinMode,
-      integrationId: '11',
+      integrationId: uniqid(),
       withdrawalPassword: hashedWithdrawalPassword,
       payinChannels,
       payoutChannels,

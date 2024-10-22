@@ -25,7 +25,7 @@ export class Payin {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ unique: true })
   systemOrderId: string;
 
   @Column()
@@ -47,17 +47,11 @@ export class Payin {
   })
   callbackStatus: CallBackStatus;
 
-  @Column({ type: 'enum', enum: PaymentMadeOn, nullable: true, default: null })
+  @Column({ type: 'enum', enum: PaymentMadeOn, nullable: true })
   payinMadeOn: PaymentMadeOn;
 
   @Column({ nullable: true, type: 'enum', enum: GatewayName })
   gatewayName: GatewayName;
-
-  @CreateDateColumn()
-  createdDate: Date;
-
-  @UpdateDateColumn()
-  updatedDate: Date;
 
   @Column({ type: 'float', nullable: true })
   gatewayServiceRate: number;

@@ -1,3 +1,4 @@
+import { systemConfigData } from './../system-config/data/system-config.data';
 import {
   HttpStatus,
   Injectable,
@@ -7,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import uniqid from 'uniqid';
 import { Payin } from './entities/payin.entity';
 import {
   OrderStatus,
@@ -23,6 +25,7 @@ import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-
 import { MemberService } from 'src/member/member.service';
 import { MerchantService } from 'src/merchant/merchant.service';
 import { AgentService } from 'src/agent/agent.service';
+import { CreatePaymentOrderDto } from 'src/payment-system/dto/createPaymentOrder.dto';
 
 @Injectable()
 export class PayinService {
@@ -44,32 +47,52 @@ export class PayinService {
     private readonly agentService: AgentService,
   ) {}
 
-  async create(payinDetails) {
-    const { user, merchantId } = payinDetails;
+  async create(payinDetails: CreatePaymentOrderDto) {
+    const {
+      userId,
+      userEmail,
+      userName,
+      userMobileNumber,
+      channel,
+      integrationId,
+      orderId,
+      amount,
+    } = payinDetails;
 
-    const endUser = await this.endUserService.create({
-      ...user,
-    });
-    if (!endUser)
-      throw new InternalServerErrorException('Unable to create end-user!');
+    if (!userId) {
+      const endUser = await this.endUserService.create({
+        email: userEmail,
+        mobile: userMobileNumber,
+        name: userName,
+        channel,
+      });
+      if (!endUser)
+        throw new InternalServerErrorException('Unable to create end-user!');
+    }
+
+    const endUser = await this.endUserService.findOne(userId);
 
     const merchant = await this.merchantRepository.findOneBy({
-      id: merchantId,
+      integrationId,
     });
     if (!merchant)
       throw new InternalServerErrorException('Merchant not found!');
 
     const payin = await this.payinRepository.save({
-      ...payinDetails,
+      merchantOrderId: orderId,
       user: endUser,
+      systemOrderId: uniqid(),
       merchant,
+      amount,
+      channel,
     });
 
     if (payin)
       await this.transactionUpdateService.create({
         orderDetails: payin,
         orderType: OrderType.PAYIN,
-        userId: merchantId,
+        systemOrderId: payin.systemOrderId,
+        userId: merchant.id,
       });
 
     return HttpStatus.CREATED;
@@ -101,7 +124,7 @@ export class PayinService {
       throw new NotAcceptableException('memberId or payment details missing!');
 
     const payinOrderDetails = await this.payinRepository.findOne({
-      where: { id },
+      where: { systemOrderId: id },
       relations: ['merchant', 'member'],
     });
     if (!payinOrderDetails) throw new NotFoundException('Order not found');
@@ -119,6 +142,7 @@ export class PayinService {
         userId: memberId,
         forMember: true,
         orderType: OrderType.PAYIN,
+        systemOrderId: payinOrderDetails.systemOrderId,
       });
 
     if (paymentMode === PaymentMadeOn.GATEWAY) {
@@ -135,21 +159,25 @@ export class PayinService {
       await this.transactionUpdateService.addSystemProfit(
         payinOrderDetails,
         OrderType.PAYIN,
+        payinOrderDetails.systemOrderId,
       );
     }
 
-    await this.payinRepository.update(id, {
-      status: OrderStatus.ASSIGNED,
-      payinMadeOn: paymentMode,
-      member: paymentMode === PaymentMadeOn.MEMBER ? member : null,
-      gatewayName: paymentMode === PaymentMadeOn.GATEWAY ? gatewayName : null,
-      gatewayServiceRate:
-        paymentMode === PaymentMadeOn.GATEWAY ? gatewayServiceRate : null,
-      transactionDetails:
-        paymentMode === PaymentMadeOn.GATEWAY
-          ? JSON.stringify(gatewayPaymentDetails)
-          : JSON.stringify(memberPaymentDetails),
-    });
+    await this.payinRepository.update(
+      { systemOrderId: id },
+      {
+        status: OrderStatus.ASSIGNED,
+        payinMadeOn: paymentMode,
+        member: paymentMode === PaymentMadeOn.MEMBER ? member : null,
+        gatewayName: paymentMode === PaymentMadeOn.GATEWAY ? gatewayName : null,
+        gatewayServiceRate:
+          paymentMode === PaymentMadeOn.GATEWAY ? gatewayServiceRate : null,
+        transactionDetails:
+          paymentMode === PaymentMadeOn.GATEWAY
+            ? JSON.stringify(gatewayPaymentDetails)
+            : JSON.stringify(memberPaymentDetails),
+      },
+    );
     return HttpStatus.OK;
   }
 
@@ -159,18 +187,23 @@ export class PayinService {
     if (!transactionId && !transactionReceipt)
       throw new NotAcceptableException('Transaction ID or receipt missing!');
 
-    const payinOrderDetails = await this.payinRepository.findOneBy({ id });
+    const payinOrderDetails = await this.payinRepository.findOneBy({
+      systemOrderId: id,
+    });
 
     if (!payinOrderDetails) throw new NotFoundException('Order not found');
 
     if (payinOrderDetails.status !== OrderStatus.ASSIGNED)
       throw new NotAcceptableException('order status is not assigned!');
 
-    await this.payinRepository.update(id, {
-      status: OrderStatus.SUBMITTED,
-      transactionId,
-      transactionReceipt,
-    });
+    await this.payinRepository.update(
+      { systemOrderId: id },
+      {
+        status: OrderStatus.SUBMITTED,
+        transactionId,
+        transactionReceipt,
+      },
+    );
 
     return HttpStatus.OK;
   }
@@ -178,7 +211,9 @@ export class PayinService {
   async updatePayinStatusToFailed(body) {
     const { id } = body;
 
-    const payinOrderDetails = await this.payinRepository.findOneBy({ id });
+    const payinOrderDetails = await this.payinRepository.findOneBy({
+      systemOrderId: id,
+    });
     if (!payinOrderDetails) throw new NotFoundException('Order not found');
 
     if (payinOrderDetails.status !== OrderStatus.SUBMITTED)
@@ -227,7 +262,9 @@ export class PayinService {
 
   async updatePayinStatusToComplete(body) {
     const { id } = body;
-    const payinOrderDetails = await this.payinRepository.findOneBy({ id });
+    const payinOrderDetails = await this.payinRepository.findOneBy({
+      systemOrderId: id,
+    });
     if (!payinOrderDetails) throw new NotFoundException('Order not found');
 
     if (payinOrderDetails.status !== OrderStatus.SUBMITTED)
@@ -281,9 +318,12 @@ export class PayinService {
       });
     });
 
-    await this.payinRepository.update(id, {
-      status: OrderStatus.COMPLETE,
-    });
+    await this.payinRepository.update(
+      { systemOrderId: id },
+      {
+        status: OrderStatus.COMPLETE,
+      },
+    );
 
     return HttpStatus.OK;
   }

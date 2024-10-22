@@ -22,6 +22,9 @@ export class TransactionUpdate {
   userType: UserTypeForTransactionUpdates;
 
   @Column({ nullable: true })
+  systemOrderId: string;
+
+  @Column({ nullable: true })
   name: string;
 
   @Column({ nullable: true })

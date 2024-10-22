@@ -71,7 +71,7 @@ export class PayinAdminService {
       rows.map(async (row) => {
         const merchantRow = await this.transactionUpdateRepository.findOne({
           where: {
-            payinOrder: { id: row.id },
+            systemOrderId: row.systemOrderId,
             user: { id: row.merchant?.identity?.id },
             userType: UserTypeForTransactionUpdates.MERCHANT_BALANCE,
           },
@@ -80,7 +80,7 @@ export class PayinAdminService {
 
         const systemProfitRow = await this.transactionUpdateRepository.findOne({
           where: {
-            payinOrder: { id: row.id },
+            systemOrderId: row.systemOrderId,
             userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
           },
           relations: ['payinOrder'],
@@ -107,9 +107,9 @@ export class PayinAdminService {
     };
   }
 
-  async getPayinDetails(id: number) {
+  async getPayinDetails(id: string) {
     const payin = await this.payinRepository.findOne({
-      where: { id },
+      where: { systemOrderId: id },
       relations: ['user', 'merchant', 'member'],
     });
     if (!payin) throw new NotFoundException('Order not found!');
@@ -117,7 +117,7 @@ export class PayinAdminService {
     const transactionUpdateEntries =
       await this.transactionUpdateRepository.find({
         where: {
-          payinOrder: { id },
+          systemOrderId: id,
         },
         relations: ['payinOrder', 'user'],
       });

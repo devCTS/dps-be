@@ -45,6 +45,11 @@ import { AgentModule } from 'src/agent/agent.module';
     PayinMerchantService,
     PayinService,
   ],
-  exports: [PayinAdminService, PayinMemberService, PayinMerchantService],
+  exports: [
+    PayinAdminService,
+    PayinMemberService,
+    PayinMerchantService,
+    PayinService,
+  ],
 })
 export class PayinModule {}

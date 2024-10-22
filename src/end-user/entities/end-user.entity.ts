@@ -19,7 +19,7 @@ export class EndUser {
   @Column()
   channel: string;
 
-  @Column()
+  @Column({ nullable: true })
   channelDetails: string;
 
   @OneToMany(() => Payin, (payin) => payin.user, { nullable: true })

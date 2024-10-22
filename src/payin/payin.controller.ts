@@ -47,17 +47,17 @@ export class PayinController {
   }
 
   @Get('admin/:id')
-  getPayinOrderDetailsAdmin(@Param('id', ParseIntPipe) id: number) {
+  getPayinOrderDetailsAdmin(@Param('id', ParseIntPipe) id: string) {
     return this.payinAdminService.getPayinDetails(id);
   }
 
   @Get('merchant/:id')
-  getPayinOrderDetailsMerchant(@Param('id', ParseIntPipe) id: number) {
+  getPayinOrderDetailsMerchant(@Param('id', ParseIntPipe) id: string) {
     return this.payinMerchantService.getPayinDetails(id);
   }
 
   @Get('member/:id')
-  getPayinOrderDetailsMember(@Param('id', ParseIntPipe) id: number) {
+  getPayinOrderDetailsMember(@Param('id', ParseIntPipe) id: string) {
     return this.payinMemberService.getPayinDetails(id);
   }
 

@@ -41,6 +41,7 @@ export class PayoutService {
         orderDetails: payout,
         orderType: OrderType.PAYOUT,
         userId: merchantId,
+        systemOrderId: payout.systemOrderId,
       });
 
     return HttpStatus.CREATED;
@@ -67,6 +68,7 @@ export class PayoutService {
         userId: memberId,
         forMember: true,
         orderType: OrderType.PAYOUT,
+        systemOrderId: payoutOrderDetails.systemOrderId,
       });
 
     return HttpStatus.OK;

@@ -1,15 +1,9 @@
-import { SystemConfig } from './../system-config/entities/system-config.entity';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { CreateTransactionUpdateDto } from './dto/create-transaction-update.dto';
 import { UpdateTransactionUpdateDto } from './dto/update-transaction-update.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import {
-  OrderStatus,
-  OrderType,
-  UserTypeForTransactionUpdates,
-} from 'src/utils/enum/enum';
+import { OrderType, UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
 import { AgentReferralService } from 'src/agent-referral/agent-referral.service';
 import { Identity } from 'src/identity/entities/identity.entity';
 import { MemberReferralService } from 'src/member-referral/member-referral.service';
@@ -32,6 +26,7 @@ export class TransactionUpdatesService {
     orderType,
     orderAmount,
     orderDetails,
+    systemOrderId,
     forMember,
   ) {
     let userType = UserTypeForTransactionUpdates.MERCHANT_BALANCE;
@@ -115,6 +110,7 @@ export class TransactionUpdatesService {
           ? `${referral.children[0]?.firstName} ${referral.children[0]?.lastName}`
           : null,
       payinOrder: orderDetails,
+      systemOrderId,
       user: identity,
     };
 
@@ -126,15 +122,16 @@ export class TransactionUpdatesService {
         orderType,
         orderAmount,
         orderDetails,
+        systemOrderId,
         forMember,
       );
   }
 
-  async addSystemProfit(orderDetails, orderType) {
+  async addSystemProfit(orderDetails, orderType, systemOrderId) {
     const systemProfitExists = await this.transactionUpdateRepository.findOne({
       where: {
         userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
-        payinOrder: { id: orderDetails.id },
+        systemOrderId,
       },
       relations: ['payinOrder'],
     });
@@ -144,7 +141,7 @@ export class TransactionUpdatesService {
     const transactionUpdateEntries =
       await this.transactionUpdateRepository.find({
         where: {
-          payinOrder: { id: orderDetails.id },
+          systemOrderId,
           pending: true,
         },
         relations: ['payinOrder'],
@@ -188,10 +185,17 @@ export class TransactionUpdatesService {
       amount: afterProfit - beforeProfit,
       after: afterProfit,
       payinOrder: orderDetails,
+      systemOrderId,
     });
   }
 
-  async create({ orderDetails, orderType, userId, forMember = false }) {
+  async create({
+    orderDetails,
+    orderType,
+    userId,
+    systemOrderId,
+    forMember = false,
+  }) {
     const { amount } = orderDetails;
 
     const referrals = forMember
@@ -204,9 +208,10 @@ export class TransactionUpdatesService {
         orderType,
         amount,
         orderDetails,
+        systemOrderId,
         forMember,
       );
-      this.addSystemProfit(orderDetails, orderType);
+      this.addSystemProfit(orderDetails, orderType, systemOrderId);
     }
 
     return HttpStatus.CREATED;

@@ -1,4 +1,4 @@
-import { IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class CreateEndUserDto {
   @IsString()
@@ -8,11 +8,12 @@ export class CreateEndUserDto {
   email: string;
 
   @IsString()
-  phone: string;
+  mobile: string;
 
   @IsString()
   channel: string;
 
   @IsString()
-  channelDetails: string;
+  @IsOptional()
+  channelDetails?: string;
 }

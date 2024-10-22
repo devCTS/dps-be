@@ -81,10 +81,6 @@ export class CreateMerchantDto {
   @IsValidPassword()
   withdrawalPassword: string;
 
-  // @IsString()
-  // @IsNotEmpty()
-  // integrationId: string;
-
   @IsString()
   @IsNotEmpty()
   businessUrl: string;
