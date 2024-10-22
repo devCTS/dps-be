@@ -11,6 +11,8 @@ import {
   NotFoundException,
   ParseIntPipe,
   HttpStatus,
+  Req,
+  Res,
 } from '@nestjs/common';
 import { PaymentSystemService } from './payment-system.service';
 import * as QRCode from 'qrcode';
@@ -21,6 +23,16 @@ import { SubmitPaymentOrderDto } from './dto/submitPayment.dto';
 @Controller('payment-system')
 export class PaymentSystemController {
   constructor(private readonly service: PaymentSystemService) {}
+
+  @Get('check-status/:transactionId/:userId')
+  checkStatus(
+    @Req() req: Request,
+    @Res() res,
+    @Param('transactionId') transactionId: string,
+    @Param('userId') userId: string,
+  ) {
+    return this.service.phonepeCheckStatus(res, transactionId, userId);
+  }
 
   @Get('checkout/:integrationId')
   getCheckout(@Param('integrationId') integrationId: string) {
@@ -122,7 +134,7 @@ export class PaymentSystemController {
     return HttpStatus.OK;
   }
 
-  @Get()
+  @Post()
   getPayPage(@Body() body: { userId: string; amount: string }) {
     return this.service.getPayPage(body.userId, body.amount);
   }
