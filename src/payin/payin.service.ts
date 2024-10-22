@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import uniqid from 'uniqid';
+import * as uniqid from 'uniqid';
 import { Payin } from './entities/payin.entity';
 import {
   OrderStatus,
@@ -26,6 +26,7 @@ import { MemberService } from 'src/member/member.service';
 import { MerchantService } from 'src/merchant/merchant.service';
 import { AgentService } from 'src/agent/agent.service';
 import { CreatePaymentOrderDto } from 'src/payment-system/dto/createPaymentOrder.dto';
+import { EndUser } from 'src/end-user/entities/end-user.entity';
 
 @Injectable()
 export class PayinService {
@@ -36,6 +37,8 @@ export class PayinService {
     private readonly merchantRepository: Repository<Merchant>,
     @InjectRepository(Member)
     private readonly memberRepository: Repository<Member>,
+    @InjectRepository(EndUser)
+    private readonly endUserRepository: Repository<EndUser>,
     @InjectRepository(TransactionUpdate)
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
 
@@ -59,18 +62,23 @@ export class PayinService {
       amount,
     } = payinDetails;
 
-    if (!userId) {
-      const endUser = await this.endUserService.create({
-        email: userEmail,
-        mobile: userMobileNumber,
-        name: userName,
-        channel,
-      });
-      if (!endUser)
-        throw new InternalServerErrorException('Unable to create end-user!');
-    }
+    let endUser = await this.endUserRepository.findOneBy({ userId });
 
-    const endUser = await this.endUserService.findOne(userId);
+    if (!endUser) {
+      try {
+        endUser = await this.endUserService.create({
+          email: userEmail,
+          mobile: userMobileNumber,
+          name: userName,
+          channel,
+          userId,
+        });
+        if (!endUser)
+          throw new InternalServerErrorException('Unable to create end-user!');
+      } catch (e) {
+        console.log(e.toString());
+      }
+    }
 
     const merchant = await this.merchantRepository.findOneBy({
       integrationId,
@@ -95,7 +103,7 @@ export class PayinService {
         userId: merchant.id,
       });
 
-    return HttpStatus.CREATED;
+    return payin;
   }
 
   async updatePayinStatusToAssigned(body) {

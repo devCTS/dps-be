@@ -16,6 +16,7 @@ import {
   parseEndDate,
   parseStartDate,
 } from 'src/utils/dtos/paginate.dto';
+import { Merchant } from 'src/merchant/entities/merchant.entity';
 
 @Injectable()
 export class AgentReferralService {
@@ -24,6 +25,8 @@ export class AgentReferralService {
     private readonly agentReferralRepository: Repository<AgentReferral>,
     @InjectRepository(Agent)
     private readonly agentRepository: Repository<Agent>,
+    @InjectRepository(Merchant)
+    private readonly merchantRepository: Repository<Merchant>,
   ) {}
 
   async create(createAgentReferralDto: CreateAgentReferralDto) {
@@ -228,7 +231,7 @@ export class AgentReferralService {
       relations: ['agent', 'agent.identity'],
     });
 
-    if (!rootReferral) throw new NotFoundException('No root agent found');
+    if (!rootReferral) return null;
 
     const rootAgent = rootReferral.agent;
     return this.buildTree(rootAgent);
@@ -301,6 +304,26 @@ export class AgentReferralService {
 
   async getReferralTreeOfUser(userId: number) {
     const referralTree = await this.getReferralTree();
+    if (!referralTree) {
+      const merchant = await this.merchantRepository.findOne({
+        where: { id: userId },
+        relations: ['identity'],
+      });
+      if (!merchant) return null;
+
+      return {
+        id: merchant.id,
+        firstName: merchant.firstName,
+        lastName: merchant.lastName,
+        referralCode: merchant.referralCode,
+        email: merchant.identity.email,
+        agentType: 'merchant',
+        balance: merchant.balance,
+        merchantPayinServiceRate: merchant.payinServiceRate,
+        merchantPayoutServiceRate: merchant.payoutServiceRate,
+        children: [],
+      };
+    }
     return this.trimTreeToUser(referralTree, userId);
   }
 

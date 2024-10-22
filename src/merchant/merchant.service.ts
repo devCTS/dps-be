@@ -32,7 +32,7 @@ import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-
 import { Upi } from 'src/channel/entity/upi.entity';
 import { NetBanking } from 'src/channel/entity/net-banking.entity';
 import { EWallet } from 'src/channel/entity/e-wallet.entity';
-import uniqid from 'uniqid';
+import * as uniqid from 'uniqid';
 
 @Injectable()
 export class MerchantService {

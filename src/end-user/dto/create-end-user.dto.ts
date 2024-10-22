@@ -5,6 +5,9 @@ export class CreateEndUserDto {
   name: string;
 
   @IsString()
+  userId: string;
+
+  @IsString()
   email: string;
 
   @IsString()

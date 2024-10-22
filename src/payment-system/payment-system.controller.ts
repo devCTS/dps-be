@@ -10,7 +10,9 @@ import {
   HttpStatus,
   Req,
   UnauthorizedException,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { PaymentSystemService } from './payment-system.service';
 import * as QRCode from 'qrcode';
 import { CreatePaymentOrderDto } from './dto/createPaymentOrder.dto';
@@ -59,101 +61,32 @@ export class PaymentSystemController {
         'Authorization Error. Business Url validation failed.',
       );
 
-    if (merchant.payinChannels) {
-      const channels = JSON.parse(merchant.payinChannels);
+    // if (merchant.payinChannels) {
+    //   const channels = JSON.parse(merchant.payinChannels);
 
-      const enabledChannels = await Promise.all(
-        channels.map((channel) =>
-          this.configRepository.findBy({ incoming: true, name: channel }),
-        ),
-      );
+    //   const enabledChannels = await Promise.all(
+    //     channels.map((channel) =>
+    //       this.configRepository.findBy({ incoming: true, name: channel }),
+    //     ),
+    //   );
 
-      if (enabledChannels.length <= 0)
-        throw new BadRequestException('All channels are disabled!');
-    }
+    //   if (enabledChannels.length <= 0)
+    //     throw new BadRequestException('All channels are disabled!');
+    // }
 
     return {
       businessName: merchant.businessName,
-      channels: JSON.parse(merchant.payinChannels),
+      channels: ['upi', 'netbanking'],
+      // channels: JSON.parse(merchant.payinChannels),
     };
   }
 
   @Post('create-payment-order')
   async createPaymentOrder(
     @Body() createPaymentOrderDto: CreatePaymentOrderDto,
+    @Res() response: Response,
   ) {
-    // 1. create payin order
-    // 2. Check payin mode of merchant
-    // if payin mode is default
-    // 3.a. check if merchant has disabled member channels or gateways
-    // 3.b. if member channels are disabled no timeout simply fetch payin gateway
-    // 3.c. if gateways are disabled search for member channels without any timeout
-    // d. if both are enabled, search for member channels within a timeout expires, fetch the gateway.
-    // if payin mode is amount range
-    // 4.a. fetch the associated gateway/member according to the amount, without any timeout.
-
-    // if payin mode is proportional mode -
-    // 5.a. (60 % + sum of ratios)
-    // 6. After member/gateway selected update the payin order (assigned status with the details)
-
-    const merchant = await this.merchantRepository.findOne({
-      where: {
-        integrationId: createPaymentOrderDto.integrationId,
-      },
-      relations: [
-        'payinModeDetails',
-        'payinModeDetails.proportionalRange',
-        'payinModeDetails.amountRangeRange',
-      ],
-    });
-    if (!merchant) throw new NotFoundException('Merchant not found!');
-
-    const createdPayin = await this.payinService.create(createPaymentOrderDto);
-
-    if (merchant.payinMode === 'DEFAULT') {
-      // Both enabled
-      if (merchant.allowMemberChannelsPayin && merchant.allowPgBackupForPayin) {
-        // fetch member channels within a timeout
-        // else fetch gateway
-      }
-
-      // memer channels disabled
-      if (!merchant.allowMemberChannelsPayin) {
-        // fetch payin gateway
-      }
-
-      // gateway disabled
-      if (!merchant.allowPgBackupForPayin) {
-        // search for member channels without timeout
-      }
-    }
-
-    if (merchant.payinMode === 'AMOUNT RANGE') {
-      const amountRanges = merchant.payinModeDetails.filter(
-        (el) => el.amountRangeRange.length > 0,
-      );
-
-      amountRanges.forEach((range) => {
-        console.log(range);
-      });
-    }
-
-    if (merchant.payinMode === 'PROPORTIONAL') {
-      const amountRatios = merchant.payinModeDetails.filter(
-        (el) => el.proportionalRange.length > 0,
-      );
-
-      amountRatios.forEach((ratio) => {
-        console.log(ratio);
-      });
-    }
-
-    await this.payinService.updatePayinStatusToAssigned({});
-
-    return {
-      url: 'http://localhost:5173/payment/1234',
-      orderId: '1234',
-    };
+    return this.service.createPaymentOrder(createPaymentOrderDto, response);
   }
 
   @Get('member-channel/:payinOrderId')
@@ -165,7 +98,7 @@ export class PaymentSystemController {
         'member.identity',
         'member.identity.upi',
         'member.identity.netBanking',
-        'member.identity.ewallet',
+        'member.identity.eWallet',
       ],
     });
     if (!payin) throw new NotFoundException('Payin order not found!');

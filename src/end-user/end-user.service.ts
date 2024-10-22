@@ -26,7 +26,7 @@ export class EndUserService {
 
   async findOne(id) {
     const endUser = await this.endUserRepository.findOne({
-      where: id,
+      where: { id },
       relations: [],
     });
 

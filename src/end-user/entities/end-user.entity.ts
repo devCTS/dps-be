@@ -8,6 +8,9 @@ export class EndUser {
   id: number;
 
   @Column()
+  userId: string;
+
+  @Column()
   name: string;
 
   @Column()

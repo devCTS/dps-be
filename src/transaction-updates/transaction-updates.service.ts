@@ -31,7 +31,7 @@ export class TransactionUpdatesService {
   ) {
     let userType = UserTypeForTransactionUpdates.MERCHANT_BALANCE;
     let before = 0,
-      rate = 0.5, // service rate / commission rates
+      rate = 0, // service rate / commission rates
       amount = 0, // total service fee / commissions
       after = 0;
 
@@ -202,17 +202,16 @@ export class TransactionUpdatesService {
       ? await this.memberReferralService.getReferralTreeOfUser(userId)
       : await this.agentReferralService.getReferralTreeOfUser(userId);
 
-    if (referrals) {
-      await this.processReferral(
-        referrals,
-        orderType,
-        amount,
-        orderDetails,
-        systemOrderId,
-        forMember,
-      );
-      this.addSystemProfit(orderDetails, orderType, systemOrderId);
-    }
+    await this.processReferral(
+      referrals,
+      orderType,
+      amount,
+      orderDetails,
+      systemOrderId,
+      forMember,
+    );
+
+    this.addSystemProfit(orderDetails, orderType, systemOrderId);
 
     return HttpStatus.CREATED;
   }

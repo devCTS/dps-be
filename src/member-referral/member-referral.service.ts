@@ -300,6 +300,7 @@ export class MemberReferralService {
 
   async getReferralTreeOfUser(userId: number) {
     const referralTree = await this.getReferralTree();
+    if (!referralTree) return null;
     return this.trimTreeToUser(referralTree, userId);
   }
 
