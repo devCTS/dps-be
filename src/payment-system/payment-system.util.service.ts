@@ -1,3 +1,4 @@
+import { identity } from 'rxjs';
 import { Phonepe } from './../gateway/entities/phonepe.entity';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -177,21 +178,12 @@ export class PaymentSystemUtilService {
     });
     if (!onlineMembers || !onlineMembers.length) return null;
 
-    const channelMap = {
-      UPI: 'UPI',
-      NetBanking: 'NET_BANKING',
-      eWallet: 'E_WALLET',
-    };
-
-    const channelKey = channelMap[channelName];
-
     const membersWithSameChannel = onlineMembers.filter((member) => {
       return (
-        member.identity[channelKey] && member.identity[channelKey].length > 0
+        member.identity[channelName] && member.identity[channelName].length > 0
       );
     });
     if (!membersWithSameChannel || !membersWithSameChannel.length) return null;
-
     const memberWithLeastPayinCount = membersWithSameChannel.reduce(
       (prev, curr) => {
         if (!prev) return curr;

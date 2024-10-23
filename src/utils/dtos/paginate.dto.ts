@@ -7,6 +7,7 @@ import {
   Matches,
   IsNumber,
   IsEnum,
+  IsBoolean,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { BadRequestException } from '@nestjs/common';
@@ -72,4 +73,8 @@ export class PaginateRequestDto {
   @IsOptional()
   @IsEnum(SortedBy)
   sortBy?: SortedBy;
+
+  @IsOptional()
+  @IsBoolean()
+  forBulletin?: boolean;
 }

@@ -17,6 +17,7 @@ import {
   PayinMemberResponseDto,
 } from './dto/payin-member-response.dto';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
+import { OrderStatus } from 'src/utils/enum/enum';
 
 @Injectable()
 export class PayinMemberService {
@@ -28,8 +29,16 @@ export class PayinMemberService {
   ) {}
 
   async paginatePayins(paginateRequestDto: PaginateRequestDto) {
-    const { search, pageSize, pageNumber, startDate, endDate, sortBy, userId } =
-      paginateRequestDto;
+    const {
+      search,
+      pageSize,
+      pageNumber,
+      startDate,
+      endDate,
+      sortBy,
+      userId,
+      forBulletin,
+    } = paginateRequestDto;
 
     const skip = (pageNumber - 1) * pageSize;
     const take = pageSize;
@@ -44,6 +53,11 @@ export class PayinMemberService {
       .take(take);
 
     if (userId) queryBuilder.andWhere('member.id = :userId', { userId });
+
+    if (forBulletin)
+      queryBuilder.andWhere('payin.status = :status', {
+        status: OrderStatus.SUBMITTED,
+      });
 
     if (search)
       queryBuilder.andWhere(`CONCAT(payin.merchant) ILIKE :search`, {

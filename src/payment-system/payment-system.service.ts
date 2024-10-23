@@ -9,7 +9,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { PayinService } from 'src/payin/payin.service';
 import { Response } from 'express';
 import { PaymentSystemUtilService } from './payment-system.util.service';
-import { Member } from 'src/member/entities/member.entity';
 import { PaymentMadeOn, PaymentType } from 'src/utils/enum/enum';
 import { ChannelSettings } from 'src/gateway/entities/channel-settings.entity';
 
@@ -54,19 +53,25 @@ export class PaymentSystemService {
     const createdPayin = await this.payinService.create(createPaymentOrderDto);
 
     let selectedPaymentMode;
+    let channelNameMap = {
+      UPI: 'upi',
+      NET_BANKING: 'netBanking',
+      E_WALLEt: 'eWallet',
+    };
+    let channelName = channelNameMap[createdPayin.channel];
 
     switch (merchant.payinMode) {
       case 'DEFAULT':
         selectedPaymentMode = await this.utilService.fetchForDefault(
           merchant,
-          createdPayin.channel,
+          channelName,
         );
         break;
 
       case 'AMOUNT RANGE':
         selectedPaymentMode = await this.utilService.fetchForAmountRange(
           merchant,
-          createdPayin.channel,
+          channelName,
           createdPayin.amount,
         );
         break;
@@ -74,7 +79,7 @@ export class PaymentSystemService {
       case 'PROPORTIONAL':
         selectedPaymentMode = await this.utilService.fetchForProportional(
           merchant,
-          createdPayin.channel,
+          channelName,
         );
         break;
 
@@ -84,16 +89,15 @@ export class PaymentSystemService {
 
     const isMember = selectedPaymentMode?.id ? true : false;
     let paymentDetails;
-    const channelKey = createdPayin.channel;
 
     if (isMember) {
-      paymentDetails = selectedPaymentMode.identity[channelKey];
+      paymentDetails = selectedPaymentMode.identity[channelName];
     } else {
       paymentDetails = await this.channelSettingsRepository.findOne({
         where: {
           gatewayName: selectedPaymentMode,
           type: PaymentType.INCOMING,
-          channelName: channelKey,
+          channelName,
         },
       });
     }
@@ -108,10 +112,10 @@ export class PaymentSystemService {
     };
     await this.payinService.updatePayinStatusToAssigned(body);
 
-    return {
+    response.send({
       url: `http://localhost:5173/payment/${createdPayin.systemOrderId}`,
       orderId: createdPayin.systemOrderId,
-    };
+    });
   }
 
   async phonepeCheckStatus(

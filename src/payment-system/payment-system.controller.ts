@@ -169,10 +169,9 @@ export class PaymentSystemController {
 
     let status = 'PENDING';
 
-    if (payinOrder.status === OrderStatus.COMPLETE)
-      status = OrderStatus.COMPLETE;
+    if (payinOrder.status === OrderStatus.COMPLETE) status = 'SUCCESS';
 
-    if (payinOrder.status === OrderStatus.FAILED) status = OrderStatus.FAILED;
+    if (payinOrder.status === OrderStatus.FAILED) status = 'FAILED';
 
     return { status };
   }

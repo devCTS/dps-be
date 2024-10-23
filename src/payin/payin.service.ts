@@ -231,7 +231,7 @@ export class PayinService {
     const transactionUpdateEntries =
       await this.transactionUpdateRepository.find({
         where: {
-          payinOrder: { id },
+          systemOrderId: id,
           pending: true,
         },
         relations: ['payinOrder', 'user'],
@@ -262,7 +262,10 @@ export class PayinService {
       });
     });
 
-    await this.payinRepository.update(id, { status: OrderStatus.FAILED });
+    await this.payinRepository.update(
+      { systemOrderId: id },
+      { status: OrderStatus.FAILED },
+    );
 
     return HttpStatus.OK;
   }
