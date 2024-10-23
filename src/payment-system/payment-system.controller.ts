@@ -199,4 +199,9 @@ export class PaymentSystemController {
   getRazorPayOrderDetails(@Param('orderId') orderId: string) {
     return this.service.getOrderDetails(orderId);
   }
+
+  @Post('razorpay-payment/verification')
+  razorpayPaymentVerification(@Body() paymentData: any) {
+    return this.service.razorpayPaymentVerification(paymentData);
+  }
 }
