@@ -202,6 +202,6 @@ export class PaymentSystemController {
 
   @Post('razorpay-payment/verification')
   razorpayPaymentVerification(@Body() paymentData: any) {
-    return this.service.razorpayPaymentVerification(paymentData);
+    return this.service.paymentVerification(paymentData);
   }
 }
