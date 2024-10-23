@@ -10,12 +10,16 @@ import { PayinService } from 'src/payin/payin.service';
 import { Response } from 'express';
 import { PaymentSystemUtilService } from './payment-system.util.service';
 import { Member } from 'src/member/entities/member.entity';
+import { PaymentMadeOn, PaymentType } from 'src/utils/enum/enum';
+import { ChannelSettings } from 'src/gateway/entities/channel-settings.entity';
 
 @Injectable()
 export class PaymentSystemService {
   constructor(
     @InjectRepository(Merchant)
     private readonly merchantRepository: Repository<Merchant>,
+    @InjectRepository(ChannelSettings)
+    private readonly channelSettingsRepository: Repository<ChannelSettings>,
     private readonly phonepeService: PhonepeService,
     private readonly razorpayService: RazorpayService,
     private readonly payinService: PayinService,
@@ -35,19 +39,6 @@ export class PaymentSystemService {
     createPaymentOrderDto: CreatePaymentOrderDto,
     response: Response,
   ) {
-    // 1. create payin order
-    // 2. Check payin mode of merchant
-    // if payin mode is default
-    // 3.a. check if merchant has disabled member channels or gateways
-    // 3.b. if member channels are disabled no timeout simply fetch payin gateway
-    // 3.c. if gateways are disabled search for member channels without any timeout
-    // d. if both are enabled, search for member channels within a timeout expires, fetch the gateway.
-    // if payin mode is amount range
-    // 4.a. fetch the associated gateway/member according to the amount, without any timeout.
-
-    // if payin mode is proportional mode -
-    // 5.a. (60 % + sum of ratios)
-    // 6. After member/gateway selected update the payin order (assigned status with the details)
     const merchant = await this.merchantRepository.findOne({
       where: {
         integrationId: createPaymentOrderDto.integrationId,
@@ -62,24 +53,60 @@ export class PaymentSystemService {
 
     const createdPayin = await this.payinService.create(createPaymentOrderDto);
 
+    let selectedPaymentMode;
+
     switch (merchant.payinMode) {
       case 'DEFAULT':
-        await this.utilService.fetchForDefault(merchant, createdPayin.channel);
+        selectedPaymentMode = await this.utilService.fetchForDefault(
+          merchant,
+          createdPayin.channel,
+        );
         break;
 
       case 'AMOUNT RANGE':
-        await this.utilService.fetchForAmountRange(merchant);
+        selectedPaymentMode = await this.utilService.fetchForAmountRange(
+          merchant,
+          createdPayin.channel,
+          createdPayin.amount,
+        );
         break;
 
       case 'PROPORTIONAL':
-        await this.utilService.fetchForProportional(merchant);
+        selectedPaymentMode = await this.utilService.fetchForProportional(
+          merchant,
+          createdPayin.channel,
+        );
         break;
 
       default:
         break;
     }
 
-    await this.payinService.updatePayinStatusToAssigned({});
+    const isMember = selectedPaymentMode?.id ? true : false;
+    let paymentDetails;
+    const channelKey = createdPayin.channel;
+
+    if (isMember) {
+      paymentDetails = selectedPaymentMode.identity[channelKey];
+    } else {
+      paymentDetails = await this.channelSettingsRepository.findOne({
+        where: {
+          gatewayName: selectedPaymentMode,
+          type: PaymentType.INCOMING,
+          channelName: channelKey,
+        },
+      });
+    }
+
+    const body = {
+      id: createdPayin.systemOrderId,
+      paymentMode: isMember ? PaymentMadeOn.MEMBER : PaymentMadeOn.GATEWAY,
+      memberId: isMember && selectedPaymentMode.id,
+      gatewayServiceRate: !isMember ? paymentDetails.upstreamFee : null,
+      memberPaymentDetails: isMember ? paymentDetails[0] : null,
+      gatewayName: !isMember ? selectedPaymentMode : null,
+    };
+    await this.payinService.updatePayinStatusToAssigned(body);
 
     return {
       url: `http://localhost:5173/payment/${createdPayin.systemOrderId}`,

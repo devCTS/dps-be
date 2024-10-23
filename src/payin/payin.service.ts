@@ -114,12 +114,11 @@ export class PayinService {
       gatewayServiceRate,
       memberPaymentDetails,
       gatewayName,
-      gatewayPaymentDetails,
     } = body;
 
     if (
       paymentMode === PaymentMadeOn.GATEWAY &&
-      (!gatewayServiceRate || !gatewayPaymentDetails || !gatewayName)
+      (!gatewayServiceRate || !gatewayName)
     )
       throw new NotAcceptableException(
         'gateway service rate or gateway payment details missing!',
@@ -181,9 +180,9 @@ export class PayinService {
         gatewayServiceRate:
           paymentMode === PaymentMadeOn.GATEWAY ? gatewayServiceRate : null,
         transactionDetails:
-          paymentMode === PaymentMadeOn.GATEWAY
-            ? JSON.stringify(gatewayPaymentDetails)
-            : JSON.stringify(memberPaymentDetails),
+          paymentMode === PaymentMadeOn.MEMBER
+            ? JSON.stringify(memberPaymentDetails)
+            : null,
       },
     );
     return HttpStatus.OK;

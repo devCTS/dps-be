@@ -39,15 +39,16 @@ export class TransactionUpdatesService {
       // Member Quota - member selected for payment
       if (!referral.children || referral.children.length <= 0) {
         userType = UserTypeForTransactionUpdates.MEMBER_QUOTA;
-        // rate =
-        //   orderType === OrderType.PAYIN
-        //     ? referral.payinCommission
-        //     : referral.payoutCommission;
-        // amount = (orderAmount / 100) * rate;
-        amount = referral.amount;
+        rate =
+          orderType === OrderType.PAYIN
+            ? referral.payinCommission
+            : referral.payoutCommission;
+        amount = (orderAmount / 100) * rate;
         before = referral.quota;
         after =
-          orderType === OrderType.PAYIN ? before - amount : before + amount;
+          orderType === OrderType.PAYIN
+            ? before - orderAmount + amount
+            : before + orderAmount + amount;
       } else {
         // agent members
         userType = UserTypeForTransactionUpdates.MEMBER_BALANCE;

@@ -107,10 +107,10 @@ export class Merchant {
   agentReferral: AgentReferral;
 
   @OneToMany(() => Payin, (payin) => payin.merchant)
-  payin: Payout;
+  payin: Payin[];
 
   @OneToMany(() => Payout, (payout) => payout.merchant)
-  payout: Payout;
+  payout: Payout[];
 
   @Column({ type: 'float', default: 0 })
   balance: number;

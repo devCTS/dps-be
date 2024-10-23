@@ -14,6 +14,9 @@ import { Member } from 'src/member/entities/member.entity';
 import { SystemConfigModule } from 'src/system-config/system-config.module';
 import { Razorpay } from 'src/gateway/entities/razorpay.entity';
 import { Phonepe } from 'src/gateway/entities/phonepe.entity';
+import { ChannelSettings } from 'src/gateway/entities/channel-settings.entity';
+import { AmountRangePayinMode } from 'src/merchant/entities/amountRangePayinMode.entity';
+import { ProportionalPayinMode } from 'src/merchant/entities/proportionalPayinMode.entity';
 
 @Module({
   imports: [
@@ -24,6 +27,9 @@ import { Phonepe } from 'src/gateway/entities/phonepe.entity';
       Member,
       Razorpay,
       Phonepe,
+      ChannelSettings,
+      AmountRangePayinMode,
+      ProportionalPayinMode,
     ]),
     PhonePeModule,
     RazorpayModule,
