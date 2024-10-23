@@ -118,6 +118,9 @@ export class SystemConfigService {
 
     if (!latestResult) {
       await this.systemConfigRepository.save({
+        defaultPayinGateway,
+        defaultPayoutGateway,
+        defaultWithdrawalGateway,
         payinTimeout,
         payoutTimeout,
       });
@@ -127,6 +130,9 @@ export class SystemConfigService {
 
     delete latestResult.payinTimeout;
     delete latestResult.payoutTimeout;
+    delete latestResult.defaultPayinGateway;
+    delete latestResult.defaultPayoutGateway;
+    delete latestResult.defaultWithdrawalGateway;
     delete latestResult.id;
     delete latestResult.createdAt;
     delete latestResult.updatedAt;

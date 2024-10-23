@@ -121,4 +121,8 @@ export class PaymentSystemService {
   ) {
     return await this.phonepeService.checkStatus(res, transactionId, userId);
   }
+
+  async paymentVerification(paymentData: any) {
+    return await this.razorpayService.getRazorpayPayementStatus(paymentData);
+  }
 }

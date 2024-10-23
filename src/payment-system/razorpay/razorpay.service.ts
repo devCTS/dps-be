@@ -55,4 +55,22 @@ export class RazorpayService {
       paymentLinkDetails?.order_id,
     );
   }
+
+  getRazorpayPayementStatus(paymentData) {
+    let paymentStatus = 'pending';
+
+    const failed = 'payment.failed';
+    const paid = 'payment_link.paid';
+    const expired = 'payment_link.expired';
+
+    if (paymentData.event === failed || paymentData.event === expired) {
+      paymentStatus = 'failed';
+    }
+
+    if (paymentData.event === paid) {
+      paymentStatus = 'success';
+    }
+
+    return paymentStatus;
+  }
 }
