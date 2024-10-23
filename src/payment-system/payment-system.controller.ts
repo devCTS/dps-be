@@ -1,4 +1,3 @@
-import { AmountRangePayinMode } from './../merchant/entities/amountRangePayinMode.entity';
 import {
   Controller,
   Get,
@@ -8,9 +7,7 @@ import {
   BadRequestException,
   NotFoundException,
   HttpStatus,
-  Req,
   UnauthorizedException,
-  Res,
   Req,
   Res,
 } from '@nestjs/common';
@@ -73,23 +70,22 @@ export class PaymentSystemController {
         'Authorization Error. Business Url validation failed.',
       );
 
-    // if (merchant.payinChannels) {
-    //   const channels = JSON.parse(merchant.payinChannels);
+    if (merchant.payinChannels) {
+      const channels = JSON.parse(merchant.payinChannels);
 
-    //   const enabledChannels = await Promise.all(
-    //     channels.map((channel) =>
-    //       this.configRepository.findBy({ incoming: true, name: channel }),
-    //     ),
-    //   );
+      const enabledChannels = await Promise.all(
+        channels.map((channel) =>
+          this.configRepository.findBy({ incoming: true, name: channel }),
+        ),
+      );
 
-    //   if (enabledChannels.length <= 0)
-    //     throw new BadRequestException('All channels are disabled!');
-    // }
+      if (enabledChannels.length <= 0)
+        throw new BadRequestException('All channels are disabled!');
+    }
 
     return {
       businessName: merchant.businessName,
-      channels: ['upi', 'netbanking'],
-      // channels: JSON.parse(merchant.payinChannels),
+      channels: JSON.parse(merchant.payinChannels),
     };
   }
 

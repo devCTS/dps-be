@@ -1,11 +1,8 @@
+import { GatewayName } from 'src/utils/enum/enum';
 import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
-  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -23,6 +20,15 @@ export class SystemConfig {
 
   @Column({ nullable: true })
   currency: string;
+
+  @Column({ nullable: true, default: GatewayName.RAZORPAY })
+  defaultPayinGateway: GatewayName;
+
+  @Column({ nullable: true, default: GatewayName.RAZORPAY })
+  defaultWithdrawalGateway: GatewayName;
+
+  @Column({ nullable: true, default: GatewayName.RAZORPAY })
+  defaultPayoutGateway: GatewayName;
 
   // Topup Configurations
   @Column({ nullable: true })

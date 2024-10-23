@@ -8,7 +8,8 @@ import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PayinService } from 'src/payin/payin.service';
 import { Response } from 'express';
-import { Response } from 'express';
+import { PaymentSystemUtilService } from './payment-system.util.service';
+import { Member } from 'src/member/entities/member.entity';
 
 @Injectable()
 export class PaymentSystemService {
@@ -18,6 +19,7 @@ export class PaymentSystemService {
     private readonly phonepeService: PhonepeService,
     private readonly razorpayService: RazorpayService,
     private readonly payinService: PayinService,
+    private readonly utilService: PaymentSystemUtilService,
   ) {}
 
   async getPayPage(userId: string, amount: string) {
@@ -59,6 +61,25 @@ export class PaymentSystemService {
     if (!merchant) throw new NotFoundException('Merchant not found!');
 
     const createdPayin = await this.payinService.create(createPaymentOrderDto);
+
+    switch (merchant.payinMode) {
+      case 'DEFAULT':
+        await this.utilService.fetchForDefault(merchant, createdPayin.channel);
+        break;
+
+      case 'AMOUNT RANGE':
+        await this.utilService.fetchForAmountRange(merchant);
+        break;
+
+      case 'PROPORTIONAL':
+        await this.utilService.fetchForProportional(merchant);
+        break;
+
+      default:
+        break;
+    }
+
+    await this.payinService.updatePayinStatusToAssigned({});
 
     return {
       url: `http://localhost:5173/payment/${createdPayin.systemOrderId}`,

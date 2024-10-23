@@ -83,10 +83,10 @@ export class Member {
   memberReferral: MemberReferral;
 
   @OneToMany(() => Payin, (payin) => payin.member)
-  payin: Payin;
+  payin: Payin[];
 
   @OneToMany(() => Payout, (payout) => payout.member)
-  payout: Payout;
+  payout: Payout[];
 
   @Column({ type: 'float', default: 0 })
   quota: number;

@@ -254,7 +254,7 @@ export class PayinService {
       if (entry.userType === UserTypeForTransactionUpdates.SYSTEM_PROFIT)
         await this.systemConfigService.updateSystemProfit(
           0,
-          payinOrderDetails.id,
+          payinOrderDetails.systemOrderId,
           true,
         );
 
@@ -275,18 +275,18 @@ export class PayinService {
     });
     if (!payinOrderDetails) throw new NotFoundException('Order not found');
 
-    if (payinOrderDetails.status !== OrderStatus.SUBMITTED)
-      throw new NotAcceptableException(
-        'order status is not submitted or already failed or completed!',
-      );
+    // if (payinOrderDetails.status !== OrderStatus.SUBMITTED)
+    //   throw new NotAcceptableException(
+    //     'order status is not submitted or already failed or completed!',
+    //   );
 
     const transactionUpdateEntries =
       await this.transactionUpdateRepository.find({
         where: {
-          payinOrder: { id },
+          systemOrderId: id,
           pending: true,
         },
-        relations: ['user', 'payinOrder'],
+        relations: ['user'],
       });
 
     transactionUpdateEntries.forEach(async (entry) => {
@@ -317,7 +317,7 @@ export class PayinService {
       if (entry.userType === UserTypeForTransactionUpdates.SYSTEM_PROFIT)
         await this.systemConfigService.updateSystemProfit(
           entry.amount,
-          id,
+          entry.systemOrderId,
           false,
         );
 

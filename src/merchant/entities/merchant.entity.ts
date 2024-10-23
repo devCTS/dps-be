@@ -120,4 +120,7 @@ export class Merchant {
 
   @Column()
   payoutChannels: string;
+
+  @Column({ default: false })
+  isOnline: boolean;
 }

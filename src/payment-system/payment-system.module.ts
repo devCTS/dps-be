@@ -6,20 +6,32 @@ import { RazorpayModule } from './razorpay/razorpay.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { HttpModule } from '@nestjs/axios';
-import { PayinService } from 'src/payin/payin.service';
 import { Payin } from 'src/payin/entities/payin.entity';
 import { PayinModule } from 'src/payin/payin.module';
 import { Config } from 'src/channel/entity/config.entity';
+import { PaymentSystemUtilService } from './payment-system.util.service';
+import { Member } from 'src/member/entities/member.entity';
+import { SystemConfigModule } from 'src/system-config/system-config.module';
+import { Razorpay } from 'src/gateway/entities/razorpay.entity';
+import { Phonepe } from 'src/gateway/entities/phonepe.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Merchant, Payin, Config]),
+    TypeOrmModule.forFeature([
+      Merchant,
+      Payin,
+      Config,
+      Member,
+      Razorpay,
+      Phonepe,
+    ]),
     PhonePeModule,
     RazorpayModule,
     HttpModule,
     PayinModule,
+    SystemConfigModule,
   ],
   controllers: [PaymentSystemController],
-  providers: [PaymentSystemService],
+  providers: [PaymentSystemService, PaymentSystemUtilService],
 })
 export class PaymentSystemModule {}

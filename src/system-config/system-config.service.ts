@@ -311,7 +311,7 @@ export class SystemConfigService {
     return HttpStatus.OK;
   }
 
-  async updateSystemProfit(amount, orderId: number, failed) {
+  async updateSystemProfit(amount, orderId: string, failed) {
     const systemConfig = await this.findLatest();
 
     if (!systemConfig) throw new NotFoundException('SystemConfig not found!');
@@ -320,7 +320,7 @@ export class SystemConfigService {
       where: {
         userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
         pending: true,
-        payinOrder: { id: orderId },
+        systemOrderId: orderId,
       },
       relations: ['payinOrder'],
     });

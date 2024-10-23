@@ -236,7 +236,7 @@ export class MemberReferralService {
       relations: ['member', 'member.identity'],
     });
 
-    if (!rootReferral) throw new NotFoundException('No root member found');
+    if (!rootReferral) return null;
 
     const rootMember = rootReferral.member;
     return this.buildTree(rootMember);
@@ -300,7 +300,27 @@ export class MemberReferralService {
 
   async getReferralTreeOfUser(userId: number) {
     const referralTree = await this.getReferralTree();
-    if (!referralTree) return null;
+    if (!referralTree) {
+      const member = await this.memberRepository.findOne({
+        where: { id: userId },
+        relations: ['identity'],
+      });
+      if (!member) return null;
+
+      return {
+        id: member.id,
+        firstName: member.firstName,
+        lastName: member.lastName,
+        referralCode: member.referralCode,
+        email: member.identity.email,
+        balance: member.balance,
+        quota: member.quota,
+        payinCommission: member.payinCommissionRate,
+        payoutCommission: member.payoutCommissionRate,
+        topupCommission: member.topupCommissionRate,
+        children: [],
+      };
+    }
     return this.trimTreeToUser(referralTree, userId);
   }
 
