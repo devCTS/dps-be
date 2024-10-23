@@ -3,6 +3,7 @@ import { ConflictException, Injectable } from '@nestjs/common';
 import * as uniqid from 'uniqid';
 import * as sha256 from 'sha256';
 import { firstValueFrom } from 'rxjs';
+import { Response } from 'express';
 
 @Injectable()
 export class PhonepeService {
@@ -21,7 +22,7 @@ export class PhonepeService {
     this.redirect_url = `${process.env.APP_URL}/phonepe/check-status`;
   }
 
-  async getPayPage(userId: string = 'U111', amount: string = '1') {
+  async getPayPage(userId, amount) {
     // transaction amount
     const amountInPaise = parseFloat(amount) * 100;
 
@@ -77,6 +78,54 @@ export class PhonepeService {
     } catch (error) {
       console.log(error.response);
       throw new ConflictException(error.response?.data || error.toString());
+    }
+  }
+
+  async checkStatus(
+    responseObj: Response,
+    transactionId: string,
+    userId: string,
+  ) {
+    if (transactionId) {
+      // generate checksum
+      const string =
+        `/pg/v1/status/${this.merchant_id}/` + transactionId + this.salt_key;
+      const sha256_val = sha256(string);
+      const xVerifyCheckSum = sha256_val + '###' + this.salt_index;
+
+      const options = {
+        headers: {
+          'Content-Typpe': 'application/json',
+          'X-VERIFY': xVerifyCheckSum,
+          'X-MERCHANT-ID': this.merchant_id,
+          accept: 'application/json',
+        },
+      };
+
+      try {
+        const request_url =
+          this.api_url +
+          '/pg/v1/status/' +
+          this.merchant_id +
+          '/' +
+          transactionId;
+
+        const observable = this.httpService.get(
+          request_url,
+
+          options,
+        );
+
+        const response = await firstValueFrom<any>(observable);
+        //send data to merchant
+
+        responseObj.send(response.data);
+
+        // responseObj.redirect('https://ginrummy.asia/redirect.html');
+      } catch (error) {
+        console.log(error.response);
+        throw new ConflictException(error.response?.data || error.toString());
+      }
     }
   }
 }

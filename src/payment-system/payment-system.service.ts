@@ -8,6 +8,7 @@ import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PayinService } from 'src/payin/payin.service';
 import { Response } from 'express';
+import { Response } from 'express';
 
 @Injectable()
 export class PaymentSystemService {
@@ -20,11 +21,11 @@ export class PaymentSystemService {
   ) {}
 
   async getPayPage(userId: string, amount: string) {
-    return await this.razorpayService.getPayPage();
-    // return await this.phonepeService.getPayPage();
+    // return await this.razorpayService.getPayPage();
+    return await this.phonepeService.getPayPage(userId, amount);
   }
 
-  async getOrderDetails(orderId) {
+  async getOrderDetails(orderId: string) {
     return await this.razorpayService.razorpayPaymentStatus(orderId);
   }
 
@@ -63,5 +64,13 @@ export class PaymentSystemService {
       url: `http://localhost:5173/payment/${createdPayin.systemOrderId}`,
       orderId: createdPayin.systemOrderId,
     };
+  }
+
+  async phonepeCheckStatus(
+    res: Response,
+    transactionId: string,
+    userId: string,
+  ) {
+    return await this.phonepeService.checkStatus(res, transactionId, userId);
   }
 }

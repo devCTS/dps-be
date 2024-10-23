@@ -11,6 +11,8 @@ import {
   Req,
   UnauthorizedException,
   Res,
+  Req,
+  Res,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { PaymentSystemService } from './payment-system.service';
@@ -37,6 +39,16 @@ export class PaymentSystemController {
     private readonly service: PaymentSystemService,
     private readonly payinService: PayinService,
   ) {}
+
+  @Get('check-status/:transactionId/:userId')
+  checkStatus(
+    @Req() req: Request,
+    @Res() res,
+    @Param('transactionId') transactionId: string,
+    @Param('userId') userId: string,
+  ) {
+    return this.service.phonepeCheckStatus(res, transactionId, userId);
+  }
 
   @Post('checkout/:integrationId')
   async getCheckout(
@@ -182,7 +194,7 @@ export class PaymentSystemController {
     return HttpStatus.OK;
   }
 
-  @Get()
+  @Post()
   getPayPage(@Body() body: { userId: string; amount: string }) {
     return this.service.getPayPage(body.userId, body.amount);
   }
