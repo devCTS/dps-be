@@ -36,6 +36,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private async leaveRoom(socket: Socket) {
     const roomId = this.userRooms.get(socket.id);
+    console.log('user disconnect');
     if (roomId) {
       socket.leave(roomId);
       this.userRooms.delete(socket.id);
@@ -50,8 +51,11 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('joinRoom')
   async handleJoinRoom(socket: Socket, userId: number) {
     const memberData = await this.memberService.findOne(userId);
-    if (!memberData) throw new NotFoundException();
 
+    await this.memberService.update(userId, {
+      isOnline: true,
+      updateLoginCredentials: false,
+    });
     this.memberId = userId;
     const roomId = `room_${userId}`;
     socket.join(roomId);
