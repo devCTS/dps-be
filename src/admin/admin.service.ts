@@ -46,6 +46,8 @@ export class AdminService {
       permissionHandleWithdrawals,
       permissionUsers,
       permissionVerifyOrders,
+      permissionSystemConfig,
+      permissionChannelsAndGateways,
     } = createAdminDto;
 
     const identity = await this.identityService.create(email, password, role);
@@ -63,6 +65,8 @@ export class AdminService {
       permissionHandleWithdrawals,
       permissionUsers,
       permissionVerifyOrders,
+      permissionSystemConfig,
+      permissionChannelsAndGateways,
     });
 
     const created = await this.adminRepository.save(admin);
