@@ -24,12 +24,12 @@ export class PhonepeService {
   }
 
   async getPayPage(getPayPageDto: GetPayPageDto) {
-    const { userId, amount } = getPayPageDto;
+    const { userId, amount, orderId } = getPayPageDto;
     // transaction amount
     const amountInPaise = parseFloat(amount) * 100;
 
     // Generate a unique merchant transaction ID for each transaction
-    const merchantTransactionId = uniqid();
+    const merchantTransactionId = orderId;
 
     const payload = {
       merchantId: this.merchant_id,

@@ -2,11 +2,20 @@ import { HttpService } from '@nestjs/axios';
 import { ConflictException, Injectable } from '@nestjs/common';
 //@ts-ignore
 import * as Razorpay from 'razorpay';
+import { GetPayPageDto } from '../dto/getPayPage.dto';
+import { get } from 'http';
+import { InjectRepository } from '@nestjs/typeorm';
+import { EndUser } from 'src/end-user/entities/end-user.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class RazorpayService {
   razorpayClient: any = null;
-  public constructor(private readonly httpService: HttpService) {
+  public constructor(
+    @InjectRepository(EndUser)
+    private readonly endUserRepository: Repository<EndUser>,
+    private readonly httpService: HttpService,
+  ) {
     this.razorpayClient = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID,
       key_secret: process.env.RAZORPAY_KEY_SECRET,
@@ -14,15 +23,19 @@ export class RazorpayService {
   }
 
   //   razorpay payment
-  async getPayPage(userId: string = 'U111', amount: string = '1') {
+  async getPayPage(getPayPageDto: GetPayPageDto) {
+    const { userId, amount } = getPayPageDto;
+
+    const endUser = await this.endUserRepository.findOneBy({ userId });
+
     // transaction amount
     const amountInPaise = parseFloat(amount) * 100;
     const options = {
       amount: amountInPaise,
       customer: {
-        name: 'Kartik Sahrma',
-        email: 'kartik.sharma@catalyst.sh',
-        contact: '9816127247',
+        name: endUser.name,
+        email: endUser.email,
+        contact: endUser.mobile,
       },
       currency: 'INR',
       options: {

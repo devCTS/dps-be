@@ -19,6 +19,8 @@ import { AmountRangePayinMode } from 'src/merchant/entities/amountRangePayinMode
 import { ProportionalPayinMode } from 'src/merchant/entities/proportionalPayinMode.entity';
 import { RazorpayService } from './razorpay/razorpay.service';
 import { PhonepeService } from 'src/upstream-gateway/phonepe/phonepe.service';
+import { EndUser } from 'src/end-user/entities/end-user.entity';
+import { EndUserModule } from 'src/end-user/end-user.module';
 
 @Module({
   imports: [
@@ -32,12 +34,14 @@ import { PhonepeService } from 'src/upstream-gateway/phonepe/phonepe.service';
       ChannelSettings,
       AmountRangePayinMode,
       ProportionalPayinMode,
+      EndUser,
     ]),
     PhonePeModule,
     RazorpayModule,
     HttpModule,
     PayinModule,
     SystemConfigModule,
+    EndUserModule,
   ],
   controllers: [PaymentSystemController],
   providers: [

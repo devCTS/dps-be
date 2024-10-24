@@ -33,7 +33,7 @@ export class PaymentSystemService {
       return await this.phonepeService.getPayPage(getPayPageDto);
 
     if (gateway === GatewayName.RAZORPAY)
-      return await this.razorpayService.getPayPage();
+      return await this.razorpayService.getPayPage(getPayPageDto);
   }
 
   async getOrderDetails(orderId: string) {
@@ -122,20 +122,24 @@ export class PaymentSystemService {
     if (isMember)
       url = `http://localhost:5173/payment/${createdPayin.systemOrderId}`;
 
-    if (selectedPaymentMode === GatewayName.PHONEPE) {
-      // const res = await this.phonepeService.getPayPage(
-      //   createdPayin.merchant.id,
-      //   createdPayin.amount,
-      // );
-      url = 'www.google.com';
+    if (selectedPaymentMode) {
+      const res = await this.getPayPage({
+        userId: createdPayin.user?.userId,
+        amount: createdPayin.amount.toString(),
+        orderId: createdPayin.systemOrderId,
+        gateway: GatewayName.PHONEPE,
+      });
+      url = res.url;
     }
 
     if (selectedPaymentMode === GatewayName.RAZORPAY) {
-      // const res = await this.razorpayService.getPayPage(
-      //   createdPayin.merchant.id.toString(),
-      //   createdPayin.amount.toString(),
-      // );
-      url = 'www.yahoo.com';
+      const res = await this.getPayPage({
+        userId: createdPayin.user?.userId,
+        amount: createdPayin.amount.toString(),
+        orderId: createdPayin.systemOrderId,
+        gateway: GatewayName.RAZORPAY,
+      });
+      url = res.url;
     }
 
     response.send({
