@@ -4,6 +4,7 @@ import * as uniqid from 'uniqid';
 import * as sha256 from 'sha256';
 import { firstValueFrom } from 'rxjs';
 import { Response } from 'express';
+import { GetPayPageDto } from '../dto/getPayPage.dto';
 
 @Injectable()
 export class PhonepeService {
@@ -22,7 +23,8 @@ export class PhonepeService {
     this.redirect_url = `${process.env.APP_URL}/phonepe/check-status`;
   }
 
-  async getPayPage(userId, amount) {
+  async getPayPage(getPayPageDto: GetPayPageDto) {
+    const { userId, amount } = getPayPageDto;
     // transaction amount
     const amountInPaise = parseFloat(amount) * 100;
 

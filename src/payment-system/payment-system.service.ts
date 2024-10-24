@@ -11,6 +11,7 @@ import { Response } from 'express';
 import { PaymentSystemUtilService } from './payment-system.util.service';
 import { GatewayName, PaymentMadeOn, PaymentType } from 'src/utils/enum/enum';
 import { ChannelSettings } from 'src/gateway/entities/channel-settings.entity';
+import { GetPayPageDto } from './dto/getPayPage.dto';
 
 @Injectable()
 export class PaymentSystemService {
@@ -25,9 +26,14 @@ export class PaymentSystemService {
     private readonly utilService: PaymentSystemUtilService,
   ) {}
 
-  async getPayPage(userId: string, amount: string) {
-    // return await this.razorpayService.getPayPage();
-    return await this.phonepeService.getPayPage(userId, amount);
+  async getPayPage(getPayPageDto: GetPayPageDto) {
+    const { gateway } = getPayPageDto;
+
+    if (gateway === GatewayName.PHONEPE)
+      return await this.phonepeService.getPayPage(getPayPageDto);
+
+    if (gateway === GatewayName.RAZORPAY)
+      return await this.razorpayService.getPayPage();
   }
 
   async getOrderDetails(orderId: string) {

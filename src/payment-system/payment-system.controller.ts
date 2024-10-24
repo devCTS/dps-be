@@ -23,6 +23,7 @@ import { PayinService } from 'src/payin/payin.service';
 import { Payin } from 'src/payin/entities/payin.entity';
 import { ChannelName, OrderStatus } from 'src/utils/enum/enum';
 import { Config } from 'src/channel/entity/config.entity';
+import { GetPayPageDto } from './dto/getPayPage.dto';
 
 @Controller('payment-system')
 export class PaymentSystemController {
@@ -190,8 +191,8 @@ export class PaymentSystemController {
   }
 
   @Post()
-  getPayPage(@Body() body: { userId: string; amount: string }) {
-    return this.service.getPayPage(body.userId, body.amount);
+  getPayPage(@Body() getPayPageDto: GetPayPageDto) {
+    return this.service.getPayPage(getPayPageDto);
   }
 
   @Post('razorpay/:orderId')
