@@ -48,7 +48,6 @@ export class PaymentSystemUtilService {
 
       if (!selectedMember)
         selectedMember = await this.getGatewayForPayin(channelName);
-
       return selectedMember;
     }
 
@@ -197,7 +196,7 @@ export class PaymentSystemUtilService {
   }
 
   async getGatewayForPayin(
-    channelName: ChannelName,
+    channelName: string,
     priority: GatewayName | null = null,
   ) {
     let selectedGateway =
@@ -235,7 +234,7 @@ export class PaymentSystemUtilService {
 
   checkGatewayAndChannelEnabled = async (
     gatewayName: GatewayName,
-    channelName: ChannelName,
+    channelName: string,
   ) => {
     const gateway = await (
       gatewayName === GatewayName.RAZORPAY
@@ -245,11 +244,17 @@ export class PaymentSystemUtilService {
       where: { incoming: true },
     });
 
+    const channelMap = {
+      upi: ChannelName.UPI,
+      netBanking: ChannelName.BANKING,
+      eWallet: ChannelName.E_WALLET,
+    };
+
     const channelEnabled = await this.channelSettingsRepository.findOne({
       where: {
         gatewayName,
         enabled: true,
-        channelName,
+        channelName: channelMap[channelName],
       },
     });
 

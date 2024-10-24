@@ -9,7 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { PayinService } from 'src/payin/payin.service';
 import { Response } from 'express';
 import { PaymentSystemUtilService } from './payment-system.util.service';
-import { PaymentMadeOn, PaymentType } from 'src/utils/enum/enum';
+import { GatewayName, PaymentMadeOn, PaymentType } from 'src/utils/enum/enum';
 import { ChannelSettings } from 'src/gateway/entities/channel-settings.entity';
 
 @Injectable()
@@ -97,7 +97,7 @@ export class PaymentSystemService {
         where: {
           gatewayName: selectedPaymentMode,
           type: PaymentType.INCOMING,
-          channelName,
+          channelName: createdPayin.channel,
         },
       });
     }
@@ -112,8 +112,28 @@ export class PaymentSystemService {
     };
     await this.payinService.updatePayinStatusToAssigned(body);
 
+    let url = '';
+    if (isMember)
+      url = `http://localhost:5173/payment/${createdPayin.systemOrderId}`;
+
+    if (selectedPaymentMode === GatewayName.PHONEPE) {
+      // const res = await this.phonepeService.getPayPage(
+      //   createdPayin.merchant.id,
+      //   createdPayin.amount,
+      // );
+      url = 'www.google.com';
+    }
+
+    if (selectedPaymentMode === GatewayName.RAZORPAY) {
+      // const res = await this.razorpayService.getPayPage(
+      //   createdPayin.merchant.id.toString(),
+      //   createdPayin.amount.toString(),
+      // );
+      url = 'www.yahoo.com';
+    }
+
     response.send({
-      url: `http://localhost:5173/payment/${createdPayin.systemOrderId}`,
+      url,
       orderId: createdPayin.systemOrderId,
     });
   }

@@ -7,7 +7,7 @@ import { CleanRequestInterceptor } from './utils/interceptor/clean-request.inter
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors();
-  app.setGlobalPrefix('api');
+  // app.setGlobalPrefix('api');
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

@@ -17,6 +17,8 @@ import { Phonepe } from 'src/gateway/entities/phonepe.entity';
 import { ChannelSettings } from 'src/gateway/entities/channel-settings.entity';
 import { AmountRangePayinMode } from 'src/merchant/entities/amountRangePayinMode.entity';
 import { ProportionalPayinMode } from 'src/merchant/entities/proportionalPayinMode.entity';
+import { RazorpayService } from './razorpay/razorpay.service';
+import { PhonepeService } from 'src/upstream-gateway/phonepe/phonepe.service';
 
 @Module({
   imports: [
@@ -38,6 +40,11 @@ import { ProportionalPayinMode } from 'src/merchant/entities/proportionalPayinMo
     SystemConfigModule,
   ],
   controllers: [PaymentSystemController],
-  providers: [PaymentSystemService, PaymentSystemUtilService],
+  providers: [
+    PaymentSystemService,
+    PaymentSystemUtilService,
+    RazorpayService,
+    PhonepeService,
+  ],
 })
 export class PaymentSystemModule {}
