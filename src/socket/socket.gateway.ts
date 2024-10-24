@@ -1,5 +1,6 @@
 // online-status.gateway.ts
 import { NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import {
   WebSocketGateway,
   WebSocketServer,
@@ -8,7 +9,9 @@ import {
   SubscribeMessage,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { Member } from 'src/member/entities/member.entity';
 import { MemberService } from 'src/member/member.service';
+import { Repository } from 'typeorm';
 
 @WebSocketGateway({
   cors: {
@@ -20,7 +23,10 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
-  constructor(private readonly memberService: MemberService) {}
+  constructor(
+    @InjectRepository(Member)
+    private readonly memberService: Repository<Member>,
+  ) {}
   memberId = null;
 
   private userRooms: Map<string, string> = new Map();
@@ -42,7 +48,6 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.userRooms.delete(socket.id);
       await this.memberService.update(this.memberId, {
         isOnline: false,
-        updateLoginCredentials: false,
       });
       this.server.to(roomId).emit('userLeft', socket.id);
     }
@@ -50,11 +55,8 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('joinRoom')
   async handleJoinRoom(socket: Socket, userId: number) {
-    const memberData = await this.memberService.findOne(userId);
-
     await this.memberService.update(userId, {
       isOnline: true,
-      updateLoginCredentials: false,
     });
     this.memberId = userId;
     const roomId = `room_${userId}`;
@@ -70,7 +72,6 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (roomId) {
       await this.memberService.update(this.memberId, {
         isOnline: status,
-        updateLoginCredentials: false,
       });
 
       socket.emit('statusUpdate', { userId: socket.id, status: status });
