@@ -12,7 +12,8 @@ import { PaymentSystemUtilService } from './payment-system.util.service';
 import { GatewayName, PaymentMadeOn, PaymentType } from 'src/utils/enum/enum';
 import { ChannelSettings } from 'src/gateway/entities/channel-settings.entity';
 import { GetPayPageDto } from './dto/getPayPage.dto';
-
+const paymentPageBaseUrl =
+  'http://www.kingsgate-payments.com.s3-website-ap-southeast-1.amazonaws.com';
 @Injectable()
 export class PaymentSystemService {
   constructor(
@@ -119,8 +120,7 @@ export class PaymentSystemService {
     await this.payinService.updatePayinStatusToAssigned(body);
 
     let url = '';
-    if (isMember)
-      url = `http://localhost:5173/payment/${createdPayin.systemOrderId}`;
+    if (isMember) url = `${paymentPageBaseUrl}/${createdPayin.systemOrderId}`;
 
     if (selectedPaymentMode) {
       const res = await this.getPayPage({
