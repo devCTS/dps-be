@@ -120,7 +120,8 @@ export class PaymentSystemService {
     await this.payinService.updatePayinStatusToAssigned(body);
 
     let url = '';
-    if (isMember) url = `${paymentPageBaseUrl}/${createdPayin.systemOrderId}`;
+    if (isMember)
+      url = `${paymentPageBaseUrl}/payment/${createdPayin.systemOrderId}`;
 
     if (selectedPaymentMode === GatewayName.PHONEPE) {
       const res = await this.getPayPage({
