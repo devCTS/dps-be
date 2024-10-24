@@ -122,7 +122,7 @@ export class PaymentSystemService {
     if (isMember)
       url = `http://localhost:5173/payment/${createdPayin.systemOrderId}`;
 
-    if (selectedPaymentMode) {
+    if (selectedPaymentMode === GatewayName.PHONEPE) {
       const res = await this.getPayPage({
         userId: createdPayin.user?.userId,
         amount: createdPayin.amount.toString(),
