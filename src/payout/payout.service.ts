@@ -1,4 +1,9 @@
-import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  HttpStatus,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { UpdatePayoutDto } from './dto/update-payout.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Payout } from './entities/payout.entity';
@@ -7,24 +12,40 @@ import { TransactionUpdatesService } from 'src/transaction-updates/transaction-u
 import { OrderStatus, OrderType, PaymentMadeOn } from 'src/utils/enum/enum';
 import { EndUserService } from 'src/end-user/end-user.service';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
+import { EndUser } from 'src/end-user/entities/end-user.entity';
+import * as uniqid from 'uniqid';
+import { CreatePayoutDto } from './dto/create-payout.dto';
+import { TransactionUpdatesPayoutService } from 'src/transaction-updates/transaction-upadates-payout.service';
 
 @Injectable()
 export class PayoutService {
   constructor(
     @InjectRepository(Payout)
     private readonly payoutRepository: Repository<Payout>,
+    @InjectRepository(EndUser)
+    private readonly endUserRepository: Repository<EndUser>,
     @InjectRepository(Payout)
     private readonly merchantRepository: Repository<Merchant>,
-    private readonly transactionUpdateService: TransactionUpdatesService,
+    private readonly transactionUpdatePayouService: TransactionUpdatesPayoutService,
     private readonly endUserService: EndUserService,
   ) {}
 
-  async create(payoutDetails) {
-    const { user, merchantId } = payoutDetails;
+  async create(payoutDetails: CreatePayoutDto) {
+    const { name, email, merchantId, channelDetails, channel, mobile } =
+      payoutDetails;
 
-    const endUser = await this.endUserService.create({
-      ...user,
-    });
+    let endUserData = await this.endUserRepository.findOneBy({ email });
+
+    if (!endUserData) {
+      endUserData = await this.endUserService.create({
+        email,
+        channelDetails,
+        channel,
+        mobile,
+        name,
+        userId: uniqid(),
+      });
+    }
 
     const merchant = await this.merchantRepository.findOneBy({
       id: merchantId,
@@ -32,12 +53,15 @@ export class PayoutService {
 
     const payout = await this.payoutRepository.save({
       ...payoutDetails,
-      user: endUser,
+      user: endUserData,
       merchant,
+      systemOrderId: uniqid(),
     });
 
+    if (!payout) throw new InternalServerErrorException('Payout error');
+
     if (payout)
-      await this.transactionUpdateService.create({
+      await this.transactionUpdatePayouService.create({
         orderDetails: payout,
         orderType: OrderType.PAYOUT,
         userId: merchantId,
@@ -63,7 +87,7 @@ export class PayoutService {
     });
 
     if (payoutOrderDetails.payoutMadeVia === PaymentMadeOn.MEMBER)
-      await this.transactionUpdateService.create({
+      await this.transactionUpdatePayouService.create({
         orderDetails: payoutOrderDetails,
         userId: memberId,
         forMember: true,

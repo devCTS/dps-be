@@ -8,10 +8,11 @@ import { PayoutMemberService } from './payout-member.service';
 import { PayoutMerchantService } from './payout-merchant.service';
 import { TransactionUpdatesModule } from 'src/transaction-updates/transaction-updates.module';
 import { EndUserModule } from 'src/end-user/end-user.module';
+import { EndUser } from 'src/end-user/entities/end-user.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Payout]),
+    TypeOrmModule.forFeature([Payout, EndUser]),
     TransactionUpdatesModule,
     EndUserModule,
   ],

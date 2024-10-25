@@ -11,56 +11,43 @@ import {
   GatewayName,
   NotificationStatus,
   OrderStatus,
+  PaymentMadeOn,
 } from 'src/utils/enum/enum';
 
 export class CreatePayoutDto {
   @IsNotEmpty()
   @IsString()
-  systemOrderId: string;
+  name: string;
 
   @IsNotEmpty()
   @IsNumber()
   amount: number;
 
-  @IsEnum(OrderStatus)
-  @IsOptional()
-  status?: OrderStatus = OrderStatus.INITIATED;
-
-  @IsEnum(ChannelName)
   @IsNotEmpty()
+  @IsEnum(ChannelName)
   channel: ChannelName;
 
-  @IsEnum(NotificationStatus)
-  @IsOptional()
-  notificationStatus?: NotificationStatus = NotificationStatus.PENDING;
+  @IsNotEmpty()
+  @IsString()
+  channelDetails: string;
+
+  @IsNotEmpty()
+  @IsEnum(PaymentMadeOn)
+  payoutMadeVia: PaymentMadeOn;
 
   @IsNotEmpty()
   @IsString()
-  payoutMadeVia: string;
+  email: string;
 
-  @IsEnum(GatewayName)
-  @IsOptional()
-  gatewayName?: GatewayName;
-
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  transactionId?: string;
+  mobile: string;
 
-  @IsOptional()
-  @IsString()
-  receipt?: string;
-
-  @IsOptional()
-  @IsPositive()
+  @IsNotEmpty()
   @IsNumber()
-  gatewayServiceRate?: number;
-
-  @IsNotEmpty()
-  userId: number;
-
-  @IsNotEmpty()
   merchantId: number;
 
   @IsOptional()
+  @IsNumber()
   memberId?: number;
 }

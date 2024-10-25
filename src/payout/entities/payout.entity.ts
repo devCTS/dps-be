@@ -35,7 +35,7 @@ export class Payout {
   status: OrderStatus;
 
   @Column({ type: 'enum', enum: ChannelName })
-  channel: string;
+  channel: ChannelName;
 
   @Column({
     type: 'enum',
@@ -44,8 +44,8 @@ export class Payout {
   })
   notificationStatus: string;
 
-  @Column({ type: 'enum', enum: PaymentMadeOn })
-  payoutMadeVia: string;
+  @Column({ type: 'enum', enum: PaymentMadeOn, nullable: true })
+  payoutMadeVia: PaymentMadeOn;
 
   @Column({ type: 'enum', enum: GatewayName, nullable: true })
   gatewayName: string;
