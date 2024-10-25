@@ -10,10 +10,18 @@ import { TransactionUpdatesModule } from 'src/transaction-updates/transaction-up
 import { EndUserModule } from 'src/end-user/end-user.module';
 import { EndUser } from 'src/end-user/entities/end-user.entity';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
+import { Member } from 'src/member/entities/member.entity';
+import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Payout, EndUser, Merchant]),
+    TypeOrmModule.forFeature([
+      Payout,
+      EndUser,
+      Merchant,
+      Member,
+      TransactionUpdate,
+    ]),
     TransactionUpdatesModule,
     EndUserModule,
   ],

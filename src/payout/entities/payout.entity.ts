@@ -54,6 +54,9 @@ export class Payout {
   transactionId: string;
 
   @Column({ nullable: true })
+  transactionDetails: string;
+
+  @Column({ nullable: true })
   receipt: string;
 
   @CreateDateColumn({ type: 'timestamp' })

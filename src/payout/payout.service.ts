@@ -2,6 +2,7 @@ import {
   HttpStatus,
   Injectable,
   InternalServerErrorException,
+  NotAcceptableException,
   NotFoundException,
 } from '@nestjs/common';
 import { UpdatePayoutDto } from './dto/update-payout.dto';
@@ -9,13 +10,20 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Payout } from './entities/payout.entity';
 import { Repository } from 'typeorm';
 
-import { OrderStatus, OrderType, PaymentMadeOn } from 'src/utils/enum/enum';
+import {
+  OrderStatus,
+  OrderType,
+  PaymentMadeOn,
+  UserTypeForTransactionUpdates,
+} from 'src/utils/enum/enum';
 import { EndUserService } from 'src/end-user/end-user.service';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { EndUser } from 'src/end-user/entities/end-user.entity';
 import * as uniqid from 'uniqid';
 import { CreatePayoutDto } from './dto/create-payout.dto';
 import { TransactionUpdatesPayoutService } from 'src/transaction-updates/transaction-updates-payout.service';
+import { Member } from 'src/member/entities/member.entity';
+import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 
 @Injectable()
 export class PayoutService {
@@ -24,8 +32,12 @@ export class PayoutService {
     private readonly payoutRepository: Repository<Payout>,
     @InjectRepository(EndUser)
     private readonly endUserRepository: Repository<EndUser>,
+    @InjectRepository(Member)
+    private readonly memberRepository: Repository<Member>,
     @InjectRepository(Merchant)
     private readonly merchantRepository: Repository<Merchant>,
+    @InjectRepository(TransactionUpdate)
+    private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
     private readonly transactionUpdatePayoutService: TransactionUpdatesPayoutService,
     private readonly endUserService: EndUserService,
   ) {}
@@ -72,21 +84,46 @@ export class PayoutService {
   }
 
   async updatePayoutStatusToAssigned(body) {
-    const { id, paymentMode, memberId } = body;
+    const {
+      id,
+      paymentMode,
+      memberId,
+      gatewayServiceRate,
+      memberPaymentDetails,
+      gatewayName,
+    } = body;
+
+    if (
+      paymentMode === PaymentMadeOn.GATEWAY &&
+      (!gatewayServiceRate || !gatewayName)
+    )
+      throw new NotAcceptableException(
+        'gateway service rate or gateway payment details missing!',
+      );
+
+    if (
+      paymentMode === PaymentMadeOn.MEMBER &&
+      (!memberId || !memberPaymentDetails)
+    )
+      throw new NotAcceptableException('memberId or payment details missing!');
 
     const payoutOrderDetails = await this.payoutRepository.findOne({
-      where: { id },
+      where: { systemOrderId: id },
       relations: ['merchant'],
     });
 
     if (!payoutOrderDetails) throw new NotFoundException('Order not found');
 
-    await this.payoutRepository.update(id, {
-      status: OrderStatus.ASSIGNED,
-      payoutMadeVia: paymentMode,
-    });
+    if (payoutOrderDetails.status !== OrderStatus.INITIATED)
+      throw new NotAcceptableException('order status is not initiated!');
 
-    if (payoutOrderDetails.payoutMadeVia === PaymentMadeOn.MEMBER)
+    let member;
+    if (paymentMode === PaymentMadeOn.MEMBER)
+      member = await this.memberRepository.findOneBy({ id: memberId });
+
+    // Check if member exists or not???
+
+    if (paymentMode === PaymentMadeOn.MEMBER)
       await this.transactionUpdatePayoutService.create({
         orderDetails: payoutOrderDetails,
         userId: memberId,
@@ -94,6 +131,43 @@ export class PayoutService {
         orderType: OrderType.PAYOUT,
         systemOrderId: payoutOrderDetails.systemOrderId,
       });
+
+    if (paymentMode === PaymentMadeOn.GATEWAY) {
+      await this.transactionUpdateRepository.save({
+        orderType: OrderType.PAYOUT,
+        userType: UserTypeForTransactionUpdates.GATEWAY_FEE,
+        name: paymentMode,
+        rate: gatewayServiceRate,
+        amount: (payoutOrderDetails.amount / 100) * gatewayServiceRate,
+        before: 0,
+        after: 0,
+        payoutOrder: payoutOrderDetails,
+      });
+
+      // System profit for member??
+
+      await this.transactionUpdatePayoutService.addSystemProfit(
+        payoutOrderDetails,
+        OrderType.PAYOUT,
+        payoutOrderDetails.systemOrderId,
+      );
+    }
+
+    await this.payoutRepository.update(
+      { systemOrderId: id },
+      {
+        status: OrderStatus.ASSIGNED,
+        payoutMadeVia: paymentMode,
+        member: paymentMode === PaymentMadeOn.MEMBER ? member : null,
+        gatewayName: paymentMode === PaymentMadeOn.GATEWAY ? gatewayName : null,
+        gatewayServiceRate:
+          paymentMode === PaymentMadeOn.GATEWAY ? gatewayServiceRate : null,
+        transactionDetails:
+          paymentMode === PaymentMadeOn.MEMBER
+            ? JSON.stringify(memberPaymentDetails)
+            : null,
+      },
+    );
 
     return HttpStatus.OK;
   }
