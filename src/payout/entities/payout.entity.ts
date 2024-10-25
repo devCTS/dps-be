@@ -86,4 +86,7 @@ export class Payout {
     { nullable: true },
   )
   transactionUpdate: TransactionUpdate[];
+
+  @Column({ nullable: true })
+  transactionReceipt: string;
 }

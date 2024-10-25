@@ -196,13 +196,28 @@ export class PayoutService {
   }
 
   async updatePayoutStatusToSubmitted(body) {
-    const { id } = body;
+    const { id, transactionId, transactionReceipt } = body;
 
-    const payinOrderDetails = await this.payoutRepository.findOneBy({ id });
+    if (!transactionId && !transactionReceipt)
+      throw new NotAcceptableException('Transaction ID or receipt missing!');
 
-    if (!payinOrderDetails) throw new NotFoundException('Order not found');
+    const payoutOrderDetails = await this.payoutRepository.findOneBy({
+      systemOrderId: id,
+    });
 
-    await this.payoutRepository.update(id, { status: OrderStatus.SUBMITTED });
+    if (!payoutOrderDetails) throw new NotFoundException('Order not found');
+
+    if (payoutOrderDetails.status !== OrderStatus.ASSIGNED)
+      throw new NotAcceptableException('order status is not assigned!');
+
+    await this.payoutRepository.update(
+      { systemOrderId: id },
+      {
+        status: OrderStatus.SUBMITTED,
+        transactionId,
+        transactionReceipt,
+      },
+    );
 
     return HttpStatus.OK;
   }
