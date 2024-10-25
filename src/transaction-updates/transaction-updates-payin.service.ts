@@ -1,16 +1,15 @@
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { UpdateTransactionUpdateDto } from './dto/update-transaction-update.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { OrderType, UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
+import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
 import { AgentReferralService } from 'src/agent-referral/agent-referral.service';
 import { Identity } from 'src/identity/entities/identity.entity';
 import { MemberReferralService } from 'src/member-referral/member-referral.service';
 import { SystemConfigService } from 'src/system-config/system-config.service';
 
 @Injectable()
-export class TransactionUpdatesService {
+export class TransactionUpdatesPayinService {
   constructor(
     @InjectRepository(TransactionUpdate)
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
@@ -39,23 +38,14 @@ export class TransactionUpdatesService {
       // Member Quota - member selected for payment
       if (!referral.children || referral.children.length <= 0) {
         userType = UserTypeForTransactionUpdates.MEMBER_QUOTA;
-        rate =
-          orderType === OrderType.PAYIN
-            ? referral.payinCommission
-            : referral.payoutCommission;
+        rate = referral.payinCommission;
         amount = (orderAmount / 100) * rate;
         before = referral.quota;
-        after =
-          orderType === OrderType.PAYIN
-            ? before - orderAmount + amount
-            : before + orderAmount + amount;
+        after = before - orderAmount + amount;
       } else {
         // agent members
         userType = UserTypeForTransactionUpdates.MEMBER_BALANCE;
-        rate =
-          orderType === OrderType.PAYIN
-            ? referral.payinCommission
-            : referral.payoutCommission;
+        rate = referral.payinCommission;
         amount = (orderAmount / 100) * rate;
         before = referral.balance;
         after = before + amount;
@@ -64,24 +54,15 @@ export class TransactionUpdatesService {
       switch (referral.agentType) {
         case 'merchant':
           userType = UserTypeForTransactionUpdates.MERCHANT_BALANCE;
-          rate =
-            orderType === OrderType.PAYIN
-              ? referral.merchantPayinServiceRate
-              : referral.merchantPayoutServiceRate;
+          rate = referral.merchantPayinServiceRate;
           amount = (orderAmount / 100) * rate;
           before = referral.balance;
-          after =
-            orderType === OrderType.PAYIN
-              ? before + orderAmount - amount
-              : before - orderAmount - amount;
+          after = before + orderAmount - amount;
           break;
 
         case 'agent':
           userType = UserTypeForTransactionUpdates.AGENT_BALANCE;
-          rate =
-            (orderType === OrderType.PAYIN
-              ? referral.payinCommission
-              : referral.payoutCommission) ?? 0.5;
+          rate = referral.payinCommission;
           amount = (orderAmount / 100) * rate;
           before = referral.balance;
           after = before + amount;
@@ -116,6 +97,7 @@ export class TransactionUpdatesService {
 
     await this.transactionUpdateRepository.save(transactionUpdate);
 
+    // Recursively call the same for rest of the children
     if (referral.children && referral.children.length > 0)
       await this.processReferral(
         referral.children[0],
@@ -214,21 +196,5 @@ export class TransactionUpdatesService {
     this.addSystemProfit(orderDetails, orderType, systemOrderId);
 
     return HttpStatus.CREATED;
-  }
-
-  findAll() {
-    return `This action returns all transactionUpdates`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} transactionUpdate`;
-  }
-
-  update(id: number, updateTransactionUpdateDto: UpdateTransactionUpdateDto) {
-    return `This action updates a #${id} transactionUpdate`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} transactionUpdate`;
   }
 }

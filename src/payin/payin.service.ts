@@ -1,4 +1,3 @@
-import { systemConfigData } from './../system-config/data/system-config.data';
 import {
   HttpStatus,
   Injectable,
@@ -16,7 +15,7 @@ import {
   PaymentMadeOn,
   UserTypeForTransactionUpdates,
 } from 'src/utils/enum/enum';
-import { TransactionUpdatesService } from 'src/transaction-updates/transaction-updates.service';
+import { TransactionUpdatesPayinService } from 'src/transaction-updates/transaction-updates-payin.service';
 import { EndUserService } from 'src/end-user/end-user.service';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { SystemConfigService } from 'src/system-config/system-config.service';
@@ -42,7 +41,7 @@ export class PayinService {
     @InjectRepository(TransactionUpdate)
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
 
-    private readonly transactionUpdateService: TransactionUpdatesService,
+    private readonly transactionUpdateService: TransactionUpdatesPayinService,
     private readonly endUserService: EndUserService,
     private readonly systemConfigService: SystemConfigService,
     private readonly memberService: MemberService,
