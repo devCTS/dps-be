@@ -8,14 +8,14 @@ import { UpdatePayoutDto } from './dto/update-payout.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Payout } from './entities/payout.entity';
 import { Repository } from 'typeorm';
-import { TransactionUpdatesService } from 'src/transaction-updates/transaction-updates-payin.service';
+
 import { OrderStatus, OrderType, PaymentMadeOn } from 'src/utils/enum/enum';
 import { EndUserService } from 'src/end-user/end-user.service';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { EndUser } from 'src/end-user/entities/end-user.entity';
 import * as uniqid from 'uniqid';
 import { CreatePayoutDto } from './dto/create-payout.dto';
-import { TransactionUpdatesPayoutService } from 'src/transaction-updates/transaction-upadates-payout.service';
+import { TransactionUpdatesPayoutService } from 'src/transaction-updates/transaction-updates-payout.service';
 
 @Injectable()
 export class PayoutService {
@@ -26,7 +26,7 @@ export class PayoutService {
     private readonly endUserRepository: Repository<EndUser>,
     @InjectRepository(Payout)
     private readonly merchantRepository: Repository<Merchant>,
-    private readonly transactionUpdatePayouService: TransactionUpdatesPayoutService,
+    private readonly transactionUpdatePayoutService: TransactionUpdatesPayoutService,
     private readonly endUserService: EndUserService,
   ) {}
 
@@ -61,7 +61,7 @@ export class PayoutService {
     if (!payout) throw new InternalServerErrorException('Payout error');
 
     if (payout)
-      await this.transactionUpdatePayouService.create({
+      await this.transactionUpdatePayoutService.create({
         orderDetails: payout,
         orderType: OrderType.PAYOUT,
         userId: merchantId,
@@ -87,7 +87,7 @@ export class PayoutService {
     });
 
     if (payoutOrderDetails.payoutMadeVia === PaymentMadeOn.MEMBER)
-      await this.transactionUpdatePayouService.create({
+      await this.transactionUpdatePayoutService.create({
         orderDetails: payoutOrderDetails,
         userId: memberId,
         forMember: true,

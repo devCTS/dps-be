@@ -8,7 +8,7 @@ import { IdentityModule } from 'src/identity/identity.module';
 import { Identity } from 'src/identity/entities/identity.entity';
 import { MemberReferralModule } from 'src/member-referral/member-referral.module';
 import { SystemConfigModule } from 'src/system-config/system-config.module';
-import { TransactionUpdatesPayoutService } from './transaction-upadates-payout.service';
+import { TransactionUpdatesPayoutService } from './transaction-updates-payout.service';
 
 @Module({
   imports: [
