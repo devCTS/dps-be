@@ -63,7 +63,6 @@ export class RazorpayService {
     const paymentLinkDetails =
       await this.razorpayClient.paymentLink.fetch(paymentLinkId);
 
-    console.log(paymentLinkDetails);
     return await this.razorpayClient.orders.fetchPayments(
       paymentLinkDetails?.order_id,
     );

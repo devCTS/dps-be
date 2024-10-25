@@ -32,10 +32,6 @@ export class CreatePayoutDto {
   channelDetails: string;
 
   @IsNotEmpty()
-  @IsEnum(PaymentMadeOn)
-  payoutMadeVia: PaymentMadeOn;
-
-  @IsNotEmpty()
   @IsString()
   email: string;
 

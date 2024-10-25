@@ -24,7 +24,7 @@ export class PayoutService {
     private readonly payoutRepository: Repository<Payout>,
     @InjectRepository(EndUser)
     private readonly endUserRepository: Repository<EndUser>,
-    @InjectRepository(Payout)
+    @InjectRepository(Merchant)
     private readonly merchantRepository: Repository<Merchant>,
     private readonly transactionUpdatePayoutService: TransactionUpdatesPayoutService,
     private readonly endUserService: EndUserService,

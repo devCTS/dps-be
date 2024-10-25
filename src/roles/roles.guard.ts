@@ -23,8 +23,6 @@ export class RolesGuard implements CanActivate {
 
     const data = JSON.stringify(verifiedToken);
 
-    console.log(JSON.parse(data).role);
-
     if (!token) {
       throw new UnauthorizedException('Unauthorized');
     }

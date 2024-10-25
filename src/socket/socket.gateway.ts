@@ -42,7 +42,6 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private async leaveRoom(socket: Socket) {
     const roomId = this.userRooms.get(socket.id);
-    console.log('user disconnect');
     if (roomId) {
       socket.leave(roomId);
       this.userRooms.delete(socket.id);
@@ -62,7 +61,6 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const roomId = `room_${userId}`;
     socket.join(roomId);
     this.userRooms.set(socket.id, roomId);
-    console.log(`User ${socket.id} joined room ${roomId}`);
     this.server.to(roomId).emit('userJoined', socket.id);
   }
 
