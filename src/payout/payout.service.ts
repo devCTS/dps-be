@@ -3,7 +3,7 @@ import { UpdatePayoutDto } from './dto/update-payout.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Payout } from './entities/payout.entity';
 import { Repository } from 'typeorm';
-import { TransactionUpdatesService } from 'src/transaction-updates/transaction-updates.service';
+import { TransactionUpdatesService } from 'src/transaction-updates/transaction-updates-payin.service';
 import { OrderStatus, OrderType, PaymentMadeOn } from 'src/utils/enum/enum';
 import { EndUserService } from 'src/end-user/end-user.service';
 import { Merchant } from 'src/merchant/entities/merchant.entity';

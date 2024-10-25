@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { TransactionUpdatesService } from './transaction-updates.service';
+import { TransactionUpdatesPayinService } from './transaction-updates-payin.service';
 import { TransactionUpdatesController } from './transaction-updates.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TransactionUpdate } from './entities/transaction-update.entity';
@@ -18,7 +18,7 @@ import { SystemConfigModule } from 'src/system-config/system-config.module';
     SystemConfigModule,
   ],
   controllers: [TransactionUpdatesController],
-  providers: [TransactionUpdatesService],
-  exports: [TransactionUpdatesService],
+  providers: [TransactionUpdatesPayinService],
+  exports: [TransactionUpdatesPayinService],
 })
 export class TransactionUpdatesModule {}
