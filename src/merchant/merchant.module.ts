@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { MerchantService } from './merchant.service';
 import { MerchantController } from './merchant.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -28,7 +28,7 @@ import { ChannelModule } from 'src/channel/channel.module';
     JwtModule,
     IdentityModule,
     AgentReferralModule,
-    PayoutModule,
+    forwardRef(() => PayoutModule),
     TransactionUpdatesModule,
     ChannelModule,
   ],

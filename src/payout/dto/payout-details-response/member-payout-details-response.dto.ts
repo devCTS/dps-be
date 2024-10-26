@@ -1,6 +1,8 @@
-import { Expose } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
 import { EndUser } from 'src/end-user/entities/end-user.entity';
+import { ChannelName } from 'src/utils/enum/enum';
 
+@Exclude()
 export class MemberPayoutDetailsResponseDto {
   @Expose()
   id: number;
@@ -12,10 +14,11 @@ export class MemberPayoutDetailsResponseDto {
   amount: number;
 
   @Expose()
+  @Transform(({ value }) => value?.toLowerCase(), { toClassOnly: true })
   status: string;
 
   @Expose()
-  channel: string;
+  channel: ChannelName;
 
   @Expose()
   createdAt: Date;
@@ -24,7 +27,15 @@ export class MemberPayoutDetailsResponseDto {
   updatedAt: Date;
 
   @Expose()
-  user: EndUser;
+  @Transform(
+    ({ value }) => ({
+      name: value?.name,
+      mobile: value?.mobile,
+      email: value?.email,
+    }),
+    { toClassOnly: true },
+  )
+  user: {};
 
   @Expose()
   paymentDetails: any;
@@ -33,5 +44,12 @@ export class MemberPayoutDetailsResponseDto {
   transactionDetails: any;
 
   @Expose()
-  quotaDetails: any;
+  @Transform(({ value }) => {
+    return {
+      commissionRate: value?.commissionRate,
+      commissionAmount: value?.commissionAmount,
+      quotaEarned: value?.quotaEarned,
+    };
+  })
+  quotaDetails: {};
 }

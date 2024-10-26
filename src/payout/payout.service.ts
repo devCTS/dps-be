@@ -1,5 +1,7 @@
 import {
+  forwardRef,
   HttpStatus,
+  Inject,
   Injectable,
   InternalServerErrorException,
   NotAcceptableException,
@@ -24,6 +26,10 @@ import { CreatePayoutDto } from './dto/create-payout.dto';
 import { TransactionUpdatesPayoutService } from 'src/transaction-updates/transaction-updates-payout.service';
 import { Member } from 'src/member/entities/member.entity';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
+import { MemberService } from 'src/member/member.service';
+import { MerchantService } from 'src/merchant/merchant.service';
+import { AgentService } from 'src/agent/agent.service';
+import { SystemConfigService } from 'src/system-config/system-config.service';
 
 @Injectable()
 export class PayoutService {
@@ -40,6 +46,10 @@ export class PayoutService {
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
     private readonly transactionUpdatePayoutService: TransactionUpdatesPayoutService,
     private readonly endUserService: EndUserService,
+    private readonly memberService: MemberService,
+    private readonly merchantService: MerchantService,
+    private readonly agentService: AgentService,
+    private readonly systemConfigService: SystemConfigService,
   ) {}
 
   async create(payoutDetails: CreatePayoutDto) {
@@ -121,8 +131,6 @@ export class PayoutService {
     if (paymentMode === PaymentMadeOn.MEMBER)
       member = await this.memberRepository.findOneBy({ id: memberId });
 
-    // Check if member exists or not???
-
     if (paymentMode === PaymentMadeOn.MEMBER)
       await this.transactionUpdatePayoutService.create({
         orderDetails: payoutOrderDetails,
@@ -143,8 +151,6 @@ export class PayoutService {
         after: 0,
         payoutOrder: payoutOrderDetails,
       });
-
-      // System profit for member??
 
       await this.transactionUpdatePayoutService.addSystemProfit(
         payoutOrderDetails,
@@ -174,11 +180,68 @@ export class PayoutService {
 
   async updatePayoutStatusToComplete(body) {
     const { id } = body;
-    const payinOrderDetails = await this.payoutRepository.findOneBy({ id });
+    const payoutOrderDetails = await this.payoutRepository.findOneBy({
+      systemOrderId: id,
+    });
+    if (!payoutOrderDetails) throw new NotFoundException('Order not found');
 
-    if (!payinOrderDetails) throw new NotFoundException('Order not found');
+    if (payoutOrderDetails.status !== OrderStatus.SUBMITTED)
+      throw new NotAcceptableException(
+        'order status is not submitted or already failed or completed!',
+      );
 
-    await this.payoutRepository.update(id, { status: OrderStatus.COMPLETE });
+    const transactionUpdateEntries =
+      await this.transactionUpdateRepository.find({
+        where: {
+          systemOrderId: id,
+          pending: true,
+        },
+        relations: ['user'],
+      });
+
+    transactionUpdateEntries.forEach(async (entry) => {
+      if (entry.userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE)
+        await this.merchantService.updateBalance(
+          entry.user.id,
+          entry.after,
+          false,
+        );
+
+      if (entry.userType === UserTypeForTransactionUpdates.MEMBER_BALANCE)
+        await this.memberService.updateBalance(
+          entry.user.id,
+          entry.after,
+          false,
+        );
+
+      if (entry.userType === UserTypeForTransactionUpdates.MEMBER_QUOTA)
+        await this.memberService.updateQuota(entry.user.id, entry.after, false);
+
+      if (entry.userType === UserTypeForTransactionUpdates.AGENT_BALANCE)
+        await this.agentService.updateBalance(
+          entry.user.id,
+          entry.after,
+          false,
+        );
+
+      if (entry.userType === UserTypeForTransactionUpdates.SYSTEM_PROFIT)
+        await this.systemConfigService.updateSystemProfit(
+          entry.amount,
+          entry.systemOrderId,
+          false,
+        );
+
+      await this.transactionUpdateRepository.update(entry.id, {
+        pending: false,
+      });
+    });
+
+    await this.payoutRepository.update(
+      { systemOrderId: id },
+      {
+        status: OrderStatus.COMPLETE,
+      },
+    );
 
     return HttpStatus.OK;
   }
@@ -186,11 +249,54 @@ export class PayoutService {
   async updatePayoutStatusToFailed(body) {
     const { id } = body;
 
-    const payinOrderDetails = await this.payoutRepository.findOneBy({ id });
+    const payoutOrderDetails = await this.payoutRepository.findOneBy({
+      systemOrderId: id,
+    });
+    if (!payoutOrderDetails) throw new NotFoundException('Order not found');
 
-    if (!payinOrderDetails) throw new NotFoundException('Order not found');
+    if (payoutOrderDetails.status !== OrderStatus.SUBMITTED)
+      throw new NotAcceptableException(
+        'order status is not submitted or already failed or completed!',
+      );
 
-    await this.payoutRepository.update(id, { status: OrderStatus.FAILED });
+    const transactionUpdateEntries =
+      await this.transactionUpdateRepository.find({
+        where: {
+          systemOrderId: id,
+          pending: true,
+        },
+        relations: ['payoutOrder', 'user'],
+      });
+
+    transactionUpdateEntries.forEach(async (entry) => {
+      if (entry.userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE)
+        await this.merchantService.updateBalance(entry.user.id, 0, true);
+
+      if (entry.userType === UserTypeForTransactionUpdates.MEMBER_BALANCE)
+        await this.memberService.updateBalance(entry.user.id, 0, true);
+
+      if (entry.userType === UserTypeForTransactionUpdates.MEMBER_QUOTA)
+        await this.memberService.updateQuota(entry.user.id, 0, true);
+
+      if (entry.userType === UserTypeForTransactionUpdates.AGENT_BALANCE)
+        await this.agentService.updateBalance(entry.user.id, 0, true);
+
+      if (entry.userType === UserTypeForTransactionUpdates.SYSTEM_PROFIT)
+        await this.systemConfigService.updateSystemProfit(
+          0,
+          payoutOrderDetails.systemOrderId,
+          true,
+        );
+
+      await this.transactionUpdateRepository.update(entry.id, {
+        pending: false,
+      });
+    });
+
+    await this.payoutRepository.update(
+      { systemOrderId: id },
+      { status: OrderStatus.FAILED },
+    );
 
     return HttpStatus.OK;
   }

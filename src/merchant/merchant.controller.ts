@@ -86,6 +86,6 @@ export class MerchantController {
 
   @Get('payout/:id')
   getPayoutDetails(@Param('id') id: string) {
-    return this.payoutMerchantService.getPayoutDetails(+id);
+    return this.payoutMerchantService.getPayoutDetails(id);
   }
 }

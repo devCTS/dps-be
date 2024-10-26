@@ -1,6 +1,7 @@
 import { Exclude, Expose, Transform } from 'class-transformer';
 
-export class MemberPayoutResponseDto {
+@Exclude()
+export class MemberAllPayoutResponseDto {
   @Expose()
   id: number;
 
@@ -11,6 +12,7 @@ export class MemberPayoutResponseDto {
   amount: string;
 
   @Expose()
+  @Transform(({ value }) => value.toLowerCase())
   status: string;
 
   @Expose()

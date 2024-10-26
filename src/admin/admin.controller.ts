@@ -85,6 +85,6 @@ export class AdminController {
 
   @Get('payout/:id')
   getPayoutDetails(@Param('id') id: string) {
-    return this.payoutAdminService.getPayoutDetails(+id);
+    return this.payoutAdminService.getPayoutDetails(id);
   }
 }

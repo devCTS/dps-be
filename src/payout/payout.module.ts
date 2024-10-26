@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { PayoutService } from './payout.service';
 import { PayoutController } from './payout.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -12,6 +12,11 @@ import { EndUser } from 'src/end-user/entities/end-user.entity';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { Member } from 'src/member/entities/member.entity';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
+import { MemberService } from 'src/member/member.service';
+import { MerchantModule } from 'src/merchant/merchant.module';
+import { MemberModule } from 'src/member/member.module';
+import { SystemConfigModule } from 'src/system-config/system-config.module';
+import { AgentModule } from 'src/agent/agent.module';
 
 @Module({
   imports: [
@@ -24,6 +29,10 @@ import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-
     ]),
     TransactionUpdatesModule,
     EndUserModule,
+    MerchantModule,
+    MemberModule,
+    AgentModule,
+    SystemConfigModule,
   ],
   controllers: [PayoutController],
   providers: [

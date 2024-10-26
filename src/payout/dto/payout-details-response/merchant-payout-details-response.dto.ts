@@ -1,7 +1,14 @@
-import { Expose } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
 import { EndUser } from 'src/end-user/entities/end-user.entity';
 import { Member } from 'src/member/entities/member.entity';
+import {
+  ChannelName,
+  GatewayName,
+  OrderStatus,
+  PaymentMadeOn,
+} from 'src/utils/enum/enum';
 
+@Exclude()
 export class MerchantPayoutDetailsResponseDto {
   @Expose()
   id: number;
@@ -13,10 +20,11 @@ export class MerchantPayoutDetailsResponseDto {
   amount: number;
 
   @Expose()
-  status: string;
+  @Transform(({ value }) => value?.toLowerCase(), { toClassOnly: true })
+  status: OrderStatus;
 
   @Expose()
-  channel: string;
+  channel: ChannelName;
 
   @Expose()
   createdAt: Date;
@@ -25,7 +33,15 @@ export class MerchantPayoutDetailsResponseDto {
   updatedAt: Date;
 
   @Expose()
-  user: EndUser;
+  @Transform(
+    ({ value }) => ({
+      name: value?.name,
+      mobile: value?.mobile,
+      email: value?.email,
+    }),
+    { toClassOnly: true },
+  )
+  user: {};
 
   @Expose()
   paymentDetails: any;
@@ -38,15 +54,25 @@ export class MerchantPayoutDetailsResponseDto {
 
   @Expose()
   notificationStatus: string;
+  @Expose()
+  @Transform(({ value }) => (value ? value.toLowerCase() : null), {
+    toClassOnly: true,
+  })
+  payoutMadeVia: PaymentMadeOn;
 
   @Expose()
-  payoutMadeVia: string;
+  @Transform(
+    ({ value }) => ({
+      id: value?.id,
+      name: value?.firstName + ' ' + value?.lastName,
+    }),
+    { toClassOnly: true },
+  )
+  merchant: {};
 
   @Expose()
-  member: Member;
-
-  @Expose()
-  gatewayName: string;
+  @Transform(({ value }) => value?.toLowerCase(), { toClassOnly: true })
+  gatewayName: GatewayName | null;
 
   @Expose()
   balanceDetails: any;
