@@ -54,6 +54,16 @@ export class PayoutController {
     return this.payoutAdminService.paginate(paginateRequestDto);
   }
 
+  // @Post('merchant/paginate')
+  // merchantPayins(@Body() paginateRequestDto: PaginateRequestDto) {
+  //   return this.payinMerchantService.paginatePayins(paginateRequestDto);
+  // }
+
+  @Post('member/paginate')
+  memberPayins(@Body() paginateRequestDto: PaginateRequestDto) {
+    return this.payoutMemberService.paginate(paginateRequestDto);
+  }
+
   @Get('admin/:id')
   getPayinOrderDetailsAdmin(@Param('id') id: string) {
     return this.payoutAdminService.getPayoutDetails(id);

@@ -265,7 +265,7 @@ export class PayoutService {
           systemOrderId: id,
           pending: true,
         },
-        relations: ['payinOrder', 'user'],
+        relations: ['payoutOrder', 'user'],
       });
 
     transactionUpdateEntries.forEach(async (entry) => {
