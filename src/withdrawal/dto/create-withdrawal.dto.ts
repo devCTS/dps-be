@@ -10,4 +10,7 @@ export class CreateWithdrawalDto {
 
   @IsNumber()
   withdrawalAmount: number;
+
+  @IsString()
+  email: string;
 }

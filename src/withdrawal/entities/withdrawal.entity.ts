@@ -10,10 +10,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Identity } from 'src/identity/entities/identity.entity';
 
 @Entity()
 export class Withdrawal {
@@ -67,4 +70,8 @@ export class Withdrawal {
     { nullable: true },
   )
   transactionUpdate: TransactionUpdate[];
+
+  @ManyToOne(() => Identity, (identity) => identity.id)
+  @JoinColumn({ name: 'identity_id' })
+  user: Identity;
 }

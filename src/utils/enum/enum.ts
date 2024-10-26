@@ -50,6 +50,11 @@ export enum NotificationStatus {
   PENDING = 'PENDING',
 }
 
+export enum WithdrawalMadeOn {
+  OFFLINE_REMITTANCE = 'OFFLINE_REMITTANCE',
+  GATEWAy_API = 'GATEWAY_API',
+}
+
 export enum OrderType {
   PAYIN = 'Payin',
   PAYOUT = 'Payout',

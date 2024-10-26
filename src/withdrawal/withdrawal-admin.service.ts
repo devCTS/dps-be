@@ -7,6 +7,8 @@ import {
   parseEndDate,
   parseStartDate,
 } from 'src/utils/dtos/paginate.dto';
+import { plainToInstance } from 'class-transformer';
+import { WithdrawalAdminResponseDto } from './dto/withdrawal-admin-response.dto';
 
 @Injectable()
 export class WithdrawalAdminService {
@@ -24,6 +26,8 @@ export class WithdrawalAdminService {
 
     const queryBuilder = this.withdrawalRepository
       .createQueryBuilder('withdrawal')
+      .leftJoinAndSelect('withdrawal.user', 'user')
+      .leftJoinAndSelect('user.member', 'member')
       .skip(skip)
       .take(take);
 
@@ -53,6 +57,22 @@ export class WithdrawalAdminService {
     const startRecord = skip + 1;
     const endRecord = Math.min(skip + pageSize, total);
 
+    const dtos = await Promise.all(
+      rows.map(async (row) => {
+        const response = {
+          ...row,
+          userRole: row.user?.userType,
+          user: row.user[row.user?.userType.toLowerCase()],
+          systemProfit: null,
+          merchantFee: null,
+          merchantCharge: null,
+          date: row.createdAt,
+        };
+
+        return plainToInstance(WithdrawalAdminResponseDto, response);
+      }),
+    );
+
     return {
       total,
       page: pageNumber,
@@ -60,7 +80,7 @@ export class WithdrawalAdminService {
       totalPages: Math.ceil(total / pageSize),
       startRecord,
       endRecord,
-      data: sortBy === 'latest' ? rows.reverse() : rows,
+      data: sortBy === 'latest' ? dtos.reverse() : dtos,
     };
   }
 }

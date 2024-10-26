@@ -17,6 +17,7 @@ import { NetBanking } from 'src/channel/entity/net-banking.entity';
 import { EWallet } from 'src/channel/entity/e-wallet.entity';
 import { Upi } from 'src/channel/entity/upi.entity';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
+import { Withdrawal } from 'src/withdrawal/entities/withdrawal.entity';
 
 @Entity()
 export class Identity {
@@ -86,4 +87,9 @@ export class Identity {
     { nullable: true },
   )
   transactionUpdate: TransactionUpdate[];
+
+  @OneToMany(() => Withdrawal, (withdrawal) => withdrawal.user, {
+    nullable: true,
+  })
+  withdrawal: Withdrawal[];
 }

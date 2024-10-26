@@ -10,22 +10,32 @@ import { Withdrawal } from './entities/withdrawal.entity';
 import { Repository } from 'typeorm';
 import * as uniqid from 'uniqid';
 import { WithdrawalOrderStatus } from 'src/utils/enum/enum';
+import { Identity } from 'src/identity/entities/identity.entity';
 
 @Injectable()
 export class WithdrawalService {
   constructor(
     @InjectRepository(Withdrawal)
     private readonly withdrawalRepository: Repository<Withdrawal>,
+    @InjectRepository(Identity)
+    private readonly identityRepository: Repository<Identity>,
   ) {}
 
   async create(createWithdrawalDto: CreateWithdrawalDto) {
-    const { channel, channelDetails, withdrawalAmount } = createWithdrawalDto;
+    const { channel, channelDetails, withdrawalAmount, email } =
+      createWithdrawalDto;
+
+    const user = await this.identityRepository.findOneBy({
+      email,
+    });
+    if (!user) throw new NotFoundException('User not found!');
 
     const createWithdrawalOrder = await this.withdrawalRepository.save({
       channel,
       channelDetails,
       amount: withdrawalAmount,
       systemOrderId: uniqid(),
+      user,
     });
     if (!createWithdrawalOrder)
       throw new InternalServerErrorException('Failed to create order!');

@@ -10,9 +10,12 @@ import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { WithdrawalAgentService } from './withdrawal-agent.service';
 import { WithdrawalAdminService } from './withdrawal-admin.service';
 import { WithdrawalMerchantService } from './withdrawal-merchant.service';
+import { Identity } from 'src/identity/entities/identity.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Withdrawal, Member, Agent, Merchant])],
+  imports: [
+    TypeOrmModule.forFeature([Withdrawal, Member, Agent, Merchant, Identity]),
+  ],
   controllers: [WithdrawalController],
   providers: [
     WithdrawalService,
