@@ -1,5 +1,5 @@
 import { PayoutMemberService } from './../payout/payout-member.service';
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { MemberService } from './member.service';
 import { MemberController } from './member.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -18,7 +18,7 @@ import { ChannelModule } from 'src/channel/channel.module';
     IdentityModule,
     JwtModule,
     MemberReferralModule,
-    PayoutModule,
+    forwardRef(() => PayoutModule),
     TransactionUpdatesModule,
     ChannelModule,
   ],

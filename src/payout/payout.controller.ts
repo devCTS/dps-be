@@ -46,7 +46,7 @@ export class PayoutController {
     return this.payoutService.updatePayoutStatusToAssigned(body);
   }
 
-  @Post('update-status-completed')
+  @Post('update-status-complete')
   updatePayinStatusToCompleted(@Body() body) {
     return this.payoutService.updatePayoutStatusToComplete(body);
   }
