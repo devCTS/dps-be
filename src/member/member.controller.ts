@@ -88,6 +88,6 @@ export class MemberController {
 
   @Get('payout/:id')
   getPayoutDetails(@Param('id') id: string) {
-    return this.payoutMemberService.getPayoutDetails(+id);
+    return this.payoutMemberService.getPayoutDetails(id);
   }
 }
