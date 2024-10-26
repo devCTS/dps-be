@@ -13,6 +13,7 @@ import { UpdatePayoutDto } from './dto/update-payout.dto';
 import { PayoutAdminService } from './payout-admin.service';
 import { PayoutMemberService } from './payout-member.service';
 import { PayoutMerchantService } from './payout-merchant.service';
+import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
 
 @Controller('payout')
 export class PayoutController {
@@ -46,6 +47,11 @@ export class PayoutController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.payoutService.remove(+id);
+  }
+
+  @Post('admin/paginate')
+  adminPayins(@Body() paginateRequestDto: PaginateRequestDto) {
+    return this.payoutAdminService.paginate(paginateRequestDto);
   }
 
   @Get('admin/:id')

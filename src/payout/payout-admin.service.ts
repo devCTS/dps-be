@@ -4,9 +4,14 @@ import { Repository } from 'typeorm';
 import { Payout } from './entities/payout.entity';
 import { plainToInstance } from 'class-transformer';
 import { AdminPayoutDetailsResponseDto } from './dto/payout-details-response/admin-payout-details-response.dto';
-import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
-import { AdminPayoutResponseDto } from './dto/paginate-response/admin-payout-response.dto';
+import {
+  PaginateRequestDto,
+  parseEndDate,
+  parseStartDate,
+} from 'src/utils/dtos/paginate.dto';
+import { AdminAllPayoutResponseDto } from './dto/paginate-response/admin-payout-response.dto';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
+import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
 
 @Injectable()
 export class PayoutAdminService {
@@ -18,29 +23,88 @@ export class PayoutAdminService {
   ) {}
 
   async paginate(paginateRequestDto: PaginateRequestDto, showPending = false) {
-    const { search, pageSize, pageNumber, startDate, endDate, userId } =
+    const { search, pageSize, pageNumber, startDate, endDate, sortBy } =
       paginateRequestDto;
 
     const skip = (pageNumber - 1) * pageSize;
     const take = pageSize;
 
-    const [rows, total] = await this.payoutRepository.findAndCount({
-      relations: [],
-      skip,
-      take,
-    });
+    const queryBuilder = this.payoutRepository
+      .createQueryBuilder('payout')
+      .leftJoinAndSelect('payout.merchant', 'merchant')
+      .leftJoinAndSelect('merchant.identity', 'identity')
+      .leftJoinAndSelect('payout.user', 'user')
+      .leftJoinAndSelect('payout.member', 'member')
+      .skip(skip)
+      .take(take);
+
+    if (search)
+      queryBuilder.andWhere(
+        `CONCAT(payout.id, ' ', payout.merchant) ILIKE :search`,
+        {
+          search: `%${search}%`,
+        },
+      );
+
+    if (startDate && endDate) {
+      const parsedStartDate = parseStartDate(startDate);
+      const parsedEndDate = parseEndDate(endDate);
+
+      queryBuilder.andWhere(
+        'payout.created_at BETWEEN :startDate AND :endDate',
+        {
+          startDate: parsedStartDate,
+          endDate: parsedEndDate,
+        },
+      );
+    }
+
+    const [rows, total] = await queryBuilder.getManyAndCount();
 
     const startRecord = skip + 1;
     const endRecord = Math.min(skip + pageSize, total);
 
+    // fetch merchantCharge and systemProfit from transactionUpdate entity
+    const dtos = await Promise.all(
+      rows.map(async (row) => {
+        const merchantRow = await this.transactionUpdateRepository.findOne({
+          where: {
+            systemOrderId: row.systemOrderId,
+            user: { id: row.merchant?.identity?.id },
+            userType: UserTypeForTransactionUpdates.MERCHANT_BALANCE,
+          },
+          relations: ['payoutOrder', 'user', 'user.merchant'],
+        });
+
+        const systemProfitRow = await this.transactionUpdateRepository.findOne({
+          where: {
+            systemOrderId: row.systemOrderId,
+            userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
+          },
+          relations: ['payoutOrder'],
+        });
+
+        const response = {
+          ...row,
+          merchantCharge: merchantRow?.amount * merchantRow?.rate,
+          systemProfit: systemProfitRow?.after,
+          callbackStatus: row?.notificationStatus,
+          merchantFee:
+            merchantRow?.amount - merchantRow?.amount * merchantRow?.rate,
+        };
+
+        return plainToInstance(AdminAllPayoutResponseDto, response);
+      }),
+    );
+
     return {
-      data: plainToInstance(AdminPayoutResponseDto, rows),
       total,
       page: pageNumber,
       pageSize,
       totalPages: Math.ceil(total / pageSize),
       startRecord,
       endRecord,
+      data: sortBy === 'latest' ? dtos.reverse() : dtos,
     };
   }
 

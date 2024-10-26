@@ -1,6 +1,7 @@
 import { Exclude, Expose, Transform } from 'class-transformer';
 
-export class AdminPayoutResponseDto {
+@Exclude()
+export class AdminAllPayoutResponseDto {
   @Expose()
   id: number;
 
@@ -11,13 +12,14 @@ export class AdminPayoutResponseDto {
   amount: string;
 
   @Expose()
+  @Transform(({ value }) => value.toLowerCase())
   status: string;
 
   @Expose()
   channel: string;
 
   @Expose()
-  @Transform(({ value }) => (value ? value.name : null))
+  @Transform(({ value }) => (value?.name ? value?.name : null))
   user: string;
 
   @Expose()
@@ -25,7 +27,7 @@ export class AdminPayoutResponseDto {
   merchant: string;
 
   @Expose()
-  payoutModeVia: string;
+  payoutMadeVia: string;
 
   @Expose()
   @Transform(({ value }) => (value ? value.firstName : null))
@@ -42,4 +44,8 @@ export class AdminPayoutResponseDto {
 
   @Expose()
   systemProfit: number;
+
+  @Expose()
+  @Transform(({ value }) => value?.toLowerCase())
+  callbackStatus: string;
 }
