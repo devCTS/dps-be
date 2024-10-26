@@ -10,11 +10,14 @@ import {
 import { PayoutService } from './payout.service';
 import { CreatePayoutDto } from './dto/create-payout.dto';
 import { UpdatePayoutDto } from './dto/update-payout.dto';
-import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
+import { PayoutAdminService } from './payout-admin.service';
 
 @Controller('payout')
 export class PayoutController {
-  constructor(private readonly payoutService: PayoutService) {}
+  constructor(
+    private readonly payoutService: PayoutService,
+    private readonly payoutAdminService: PayoutAdminService,
+  ) {}
 
   @Post()
   create(@Body() createPayoutDto: CreatePayoutDto) {
@@ -40,6 +43,21 @@ export class PayoutController {
   remove(@Param('id') id: string) {
     return this.payoutService.remove(+id);
   }
+
+  @Get('admin/:id')
+  getPayinOrderDetailsAdmin(@Param('id') id: string) {
+    return this.payoutAdminService.getPayoutDetails(id);
+  }
+
+  // @Get('merchant/:id')
+  // getPayinOrderDetailsMerchant(@Param('id') id: string) {
+  //   return this.payinMerchantService.getPayinDetails(id);
+  // }
+
+  // @Get('member/:id')
+  // getPayinOrderDetailsMember(@Param('id') id: string) {
+  //   return this.payinMemberService.getPayinDetails(id);
+  // }
 
   @Post('update-status-assigned')
   updatePayinStatusToAssigned(@Body() body) {
