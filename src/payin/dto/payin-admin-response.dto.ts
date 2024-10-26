@@ -197,7 +197,7 @@ function TransformBalancesAndProfit() {
               name: item.name,
               commissionRate: item.rate,
               commissionAmount: item.amount,
-              quotaDeducted: item.after - item.before,
+              quotaDeducted: item.after - item.before, // verify
               quotaBefore: item.before,
               quotaAfter: item.after,
             };

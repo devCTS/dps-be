@@ -28,6 +28,7 @@ import { PayinModule } from './payin/payin.module';
 import { TransactionUpdatesModule } from './transaction-updates/transaction-updates.module';
 import { SocketModule } from './socket/socket.module';
 import { UploadModule } from './upload/upload.module';
+import { WithdrawalModule } from './withdrawal/withdrawal.module';
 
 @Module({
   imports: [
@@ -73,6 +74,7 @@ import { UploadModule } from './upload/upload.module';
     TransactionUpdatesModule,
     SocketModule,
     UploadModule,
+    WithdrawalModule,
   ],
   controllers: [AppController],
   providers: [

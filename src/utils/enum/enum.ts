@@ -1,3 +1,4 @@
+import { Withdrawal } from './../../withdrawal/entities/withdrawal.entity';
 export enum ChannelName {
   UPI = 'UPI',
   BANKING = 'NET_BANKING',
@@ -20,6 +21,13 @@ export enum OrderStatus {
   SUBMITTED = 'SUBMITTED',
   INITIATED = 'INITIATED',
   ASSIGNED = 'ASSIGNED',
+}
+
+export enum WithdrawalOrderStatus {
+  PENDING = 'PENDING',
+  FAILED = 'FAILED',
+  COMPLETE = 'COMPLETE',
+  REJECTED = 'REJECTED',
 }
 
 export enum CallBackStatus {

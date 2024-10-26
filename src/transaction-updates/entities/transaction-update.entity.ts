@@ -1,3 +1,4 @@
+import { Withdrawal } from './../../withdrawal/entities/withdrawal.entity';
 import { Payin } from 'src/payin/entities/payin.entity';
 import { Identity } from './../../identity/entities/identity.entity';
 import { OrderType, UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
@@ -62,4 +63,10 @@ export class TransactionUpdate {
   })
   @JoinColumn({ name: 'payout_order_id' })
   payoutOrder: Payout;
+
+  @ManyToOne(() => Withdrawal, (withdrawal) => withdrawal.id, {
+    nullable: true,
+  })
+  @JoinColumn({ name: 'withdrawal_order_id' })
+  withdrawalOrder: Withdrawal;
 }
