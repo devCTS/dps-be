@@ -44,5 +44,12 @@ export class MemberPayoutDetailsResponseDto {
   transactionDetails: any;
 
   @Expose()
+  @Transform(({ value }) => {
+    return {
+      commissionRate: value?.commissionRate,
+      commissionAmount: value?.commissionAmount,
+      quotaEarned: value?.quotaEarned,
+    };
+  })
   quotaDetails: {};
 }

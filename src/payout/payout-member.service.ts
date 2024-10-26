@@ -79,11 +79,7 @@ export class PayoutMemberService {
         quotaDetails: {
           commissionRate: transactionUpdate?.rate,
           commissionAmount: transactionUpdate.amount,
-          quotaDeducted: transactionUpdate.after - transactionUpdate.before,
-          withHeldAmount:
-            (orderDetails.amount / 100) * orderDetails.member?.withdrawalRate ||
-            0,
-          withHeldRate: orderDetails.member?.withdrawalRate || 0,
+          quotaEarned: transactionUpdate.after - transactionUpdate.before,
         },
       };
 
