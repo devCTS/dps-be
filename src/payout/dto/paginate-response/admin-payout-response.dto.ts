@@ -19,7 +19,7 @@ export class AdminAllPayoutResponseDto {
   channel: string;
 
   @Expose()
-  @Transform(({ value }) => (value?.name ? value?.name : null))
+  @Transform(({ value }) => (value ? value.name : null), { toClassOnly: true })
   user: string;
 
   @Expose()
@@ -27,6 +27,7 @@ export class AdminAllPayoutResponseDto {
   merchant: string;
 
   @Expose()
+  @Transform(({ value }) => value.toLowerCase())
   payoutMadeVia: string;
 
   @Expose()

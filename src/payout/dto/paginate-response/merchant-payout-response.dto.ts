@@ -23,7 +23,8 @@ export class MerchantAllPayoutResponseDto {
   user: {};
 
   @Expose()
-  payoutModeVia: string;
+  @Transform(({ value }) => value.toLowerCase())
+  payoutMadeVia: string;
 
   @Expose()
   gatewayName: string;
