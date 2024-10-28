@@ -44,7 +44,7 @@ export class WithdrawalService {
   }
 
   async updateStatusToComplete(body) {
-    const { id } = body;
+    const { id, transactionDetails, withdrawalMadeOn } = body;
 
     const orderDetails = await this.withdrawalRepository.findOneBy({
       systemOrderId: id,
@@ -53,6 +53,8 @@ export class WithdrawalService {
 
     await this.withdrawalRepository.update(orderDetails.id, {
       status: WithdrawalOrderStatus.COMPLETE,
+      transactionDetails: JSON.stringify(transactionDetails),
+      withdrawalMadeOn,
     });
 
     return HttpStatus.OK;

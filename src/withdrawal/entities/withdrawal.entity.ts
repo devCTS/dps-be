@@ -4,6 +4,7 @@ import {
   GatewayName,
   NotificationStatus,
   PaymentMadeOn,
+  WithdrawalMadeOn,
   WithdrawalOrderStatus,
 } from './../../utils/enum/enum';
 import {
@@ -49,8 +50,8 @@ export class Withdrawal {
   @Column()
   channelDetails: string;
 
-  @Column({ type: 'enum', enum: PaymentMadeOn, nullable: true })
-  withdrawalMadeOn: PaymentMadeOn;
+  @Column({ type: 'enum', enum: WithdrawalMadeOn, nullable: true })
+  withdrawalMadeOn: WithdrawalMadeOn;
 
   @Column({ type: 'enum', enum: GatewayName, nullable: true })
   gatewayName: GatewayName;
