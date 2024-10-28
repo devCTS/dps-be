@@ -54,10 +54,10 @@ export class PayoutController {
     return this.payoutAdminService.paginate(paginateRequestDto);
   }
 
-  // @Post('merchant/paginate')
-  // merchantPayins(@Body() paginateRequestDto: PaginateRequestDto) {
-  //   return this.payinMerchantService.paginatePayins(paginateRequestDto);
-  // }
+  @Post('merchant/paginate')
+  merchantPayins(@Body() paginateRequestDto: PaginateRequestDto) {
+    return this.payoutMerchantService.paginate(paginateRequestDto);
+  }
 
   @Post('member/paginate')
   memberPayins(@Body() paginateRequestDto: PaginateRequestDto) {

@@ -8,10 +8,17 @@ import { Repository } from 'typeorm';
 import { Payout } from './entities/payout.entity';
 import { plainToInstance } from 'class-transformer';
 import { MerchantPayoutDetailsResponseDto } from './dto/payout-details-response/merchant-payout-details-response.dto';
-import { MerchantPayoutResponseDto } from './dto/paginate-response/merchant-payout-response.dto';
-import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
+import { MerchantAllPayoutResponseDto } from './dto/paginate-response/merchant-payout-response.dto';
+import {
+  PaginateRequestDto,
+  parseEndDate,
+  parseStartDate,
+} from 'src/utils/dtos/paginate.dto';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
-import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
+import {
+  OrderStatus,
+  UserTypeForTransactionUpdates,
+} from 'src/utils/enum/enum';
 
 @Injectable()
 export class PayoutMerchantService {
@@ -23,29 +30,90 @@ export class PayoutMerchantService {
   ) {}
 
   async paginate(paginateRequestDto: PaginateRequestDto, showPending = false) {
-    const { search, pageSize, pageNumber, startDate, endDate, userId } =
-      paginateRequestDto;
+    const {
+      search,
+      pageSize,
+      pageNumber,
+      startDate,
+      endDate,
+      sortBy,
+      userId,
+      forBulletin,
+    } = paginateRequestDto;
 
     const skip = (pageNumber - 1) * pageSize;
     const take = pageSize;
 
-    const [rows, total] = await this.payoutRepository.findAndCount({
-      relations: [],
-      skip,
-      take,
-    });
+    const queryBuilder = this.payoutRepository
+      .createQueryBuilder('payout')
+      .leftJoinAndSelect('payout.merchant', 'merchant')
+      .leftJoinAndSelect('payout.user', 'user')
+      .leftJoinAndSelect('payout.member', 'member')
+      .leftJoinAndSelect('member.identity', 'identity')
+      .skip(skip)
+      .take(take);
+
+    if (userId) queryBuilder.andWhere('merchant.id = :userId', { userId });
+
+    if (forBulletin)
+      queryBuilder.andWhere('payout.status = :status', {
+        status: OrderStatus.SUBMITTED,
+      });
+
+    if (search)
+      queryBuilder.andWhere(`CONCAT(payout.merchant) ILIKE :search`, {
+        search: `%${search}%`,
+      });
+
+    if (startDate && endDate) {
+      const parsedStartDate = parseStartDate(startDate);
+      const parsedEndDate = parseEndDate(endDate);
+
+      queryBuilder.andWhere(
+        'payout.created_at BETWEEN :startDate AND :endDate',
+        {
+          startDate: parsedStartDate,
+          endDate: parsedEndDate,
+        },
+      );
+    }
+
+    const [rows, total] = await queryBuilder.getManyAndCount();
+
+    // return rows;
 
     const startRecord = skip + 1;
     const endRecord = Math.min(skip + pageSize, total);
 
+    const dtos = await Promise.all(
+      rows.map(async (row) => {
+        const transactionUpdate =
+          await this.transactionUpdateRepository.findOne({
+            where: {
+              systemOrderId: row.systemOrderId,
+              user: { id: row.member?.identity?.id },
+            },
+            relations: ['payoutOrder', 'user', 'user.member'],
+          });
+
+        return {
+          ...plainToInstance(MerchantAllPayoutResponseDto, row),
+          payoutModeVia: row.payoutMadeVia,
+          serviceFee: (row.amount * row.merchant.payoutServiceRate) / 100,
+          balanceDebit:
+            row.amount + (row.amount * row.merchant.payoutServiceRate) / 100,
+        };
+      }),
+    );
+
     return {
-      data: plainToInstance(MerchantPayoutResponseDto, rows),
       total,
       page: pageNumber,
       pageSize,
       totalPages: Math.ceil(total / pageSize),
       startRecord,
       endRecord,
+      data: sortBy === 'latest' ? dtos.reverse() : dtos,
     };
   }
 
