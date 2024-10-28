@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Withdrawal } from './entities/withdrawal.entity';
 import { Repository } from 'typeorm';
@@ -8,7 +8,12 @@ import {
   parseStartDate,
 } from 'src/utils/dtos/paginate.dto';
 import { plainToInstance } from 'class-transformer';
-import { WithdrawalAdminResponseDto } from './dto/withdrawal-admin-response.dto';
+import {
+  WithdrawalAdminResponseDto,
+  WithdrawalDetailsAdminResDto,
+} from './dto/withdrawal-admin-response.dto';
+import { WithdrawalOrderStatus } from 'src/utils/enum/enum';
+import { WithdrawalDefaultsDto } from 'src/system-config/dto/update-withdrawal-default.dto';
 
 @Injectable()
 export class WithdrawalAdminService {
@@ -18,8 +23,15 @@ export class WithdrawalAdminService {
   ) {}
 
   async paginateWithdrawals(paginateRequestDto: PaginateRequestDto) {
-    const { search, pageSize, pageNumber, startDate, endDate, sortBy } =
-      paginateRequestDto;
+    const {
+      search,
+      pageSize,
+      pageNumber,
+      startDate,
+      endDate,
+      sortBy,
+      forBulletin,
+    } = paginateRequestDto;
 
     const skip = (pageNumber - 1) * pageSize;
     const take = pageSize;
@@ -30,6 +42,11 @@ export class WithdrawalAdminService {
       .leftJoinAndSelect('user.member', 'member')
       .skip(skip)
       .take(take);
+
+    if (forBulletin)
+      queryBuilder.andWhere('withdrawal.status = :status', {
+        status: WithdrawalOrderStatus.PENDING,
+      });
 
     if (search)
       queryBuilder.andWhere(
@@ -82,5 +99,32 @@ export class WithdrawalAdminService {
       endRecord,
       data: sortBy === 'latest' ? dtos.reverse() : dtos,
     };
+  }
+
+  async getOrderDetails(id: string) {
+    const orderDetails = await this.withdrawalRepository.findOne({
+      where: { systemOrderId: id },
+      relations: ['user', 'user.member', 'user.agent', 'user.merchant'],
+    });
+    if (!orderDetails) throw new NotFoundException('Order not found!');
+
+    const userRole = orderDetails.user.userType.toLowerCase();
+
+    const data = {
+      ...orderDetails,
+      user: {
+        role: userRole,
+        name:
+          orderDetails.user[userRole]?.firstName +
+          ' ' +
+          orderDetails.user[userRole]?.lastName,
+        id: orderDetails.user[userRole]?.id,
+      },
+      balancesAndProfit: null,
+      userChannel: JSON.parse(orderDetails.channelDetails),
+      transactionDetails: JSON.parse(orderDetails.transactionDetails),
+    };
+
+    return plainToInstance(WithdrawalDetailsAdminResDto, data);
   }
 }

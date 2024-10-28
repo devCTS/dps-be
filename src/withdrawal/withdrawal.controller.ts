@@ -27,6 +27,11 @@ export class WithdrawalController {
     return this.withdrawalAdminService.paginateWithdrawals(paginateRequestDto);
   }
 
+  @Get('admin/:id')
+  getOrderDetailsForAdmin(@Param('id') id: string) {
+    return this.withdrawalAdminService.getOrderDetails(id);
+  }
+
   @Get('member/:id')
   getChannelProfileDetailsForMember(@Param('id') id: string) {
     return this.withdrawalMemberService.getChannelProfileDetails(+id);
@@ -40,5 +45,20 @@ export class WithdrawalController {
   @Get('agent/:id')
   getChannelProfileDetailsForAgent(@Param('id') id: string) {
     return this.withdrawalAgentService.getChannelProfileDetails(+id);
+  }
+
+  @Post('update-status-complete')
+  updateStatusToComplete(@Body() body) {
+    return this.withdrawalService.updateStatusToComplete(body);
+  }
+
+  @Post('update-status-rejected')
+  updateStatusToRejected(@Body() body) {
+    return this.withdrawalService.updateStatusToRejected(body);
+  }
+
+  @Post('update-status-failed')
+  updateStatusToFailed(@Body() body) {
+    return this.withdrawalService.updateStatusToFailed(body);
   }
 }

@@ -9,6 +9,7 @@ import {
   PaymentMadeOn,
   UserTypeForTransactionUpdates,
   WithdrawalMadeOn,
+  WithdrawalOrderStatus,
 } from 'src/utils/enum/enum';
 
 @Exclude()
@@ -93,10 +94,13 @@ export class WithdrawalDetailsAdminResDto {
 
   @Expose()
   @Transform(({ value }) => value?.toLowerCase(), { toClassOnly: true })
-  status: OrderStatus;
+  status: WithdrawalOrderStatus;
 
   @Expose()
   channel: ChannelName;
+
+  @Expose()
+  userChannel: JSON;
 
   @Expose()
   createdAt: Date;
@@ -106,44 +110,24 @@ export class WithdrawalDetailsAdminResDto {
 
   @Expose()
   @Transform(({ value }) => value?.toLowerCase(), { toClassOnly: true })
-  callbackStatus: CallBackStatus;
+  notificationStatus: NotificationStatus;
 
   @Expose()
   @Transform(
     ({ value }) => ({
       name: value?.name,
-      mobile: value?.mobile,
-      email: value?.email,
+      role: value?.role,
+      id: value?.id,
     }),
     { toClassOnly: true },
   )
   user: {};
 
   @Expose()
-  @Transform(
-    ({ value }) => ({
-      id: value?.id,
-      name: value?.firstName + value?.lastName,
-    }),
-    { toClassOnly: true },
-  )
-  merchant: {};
-
-  @Expose()
   @Transform(({ value }) => (value ? value.toLowerCase() : null), {
     toClassOnly: true,
   })
-  payinMadeOn: PaymentMadeOn | null;
-
-  @Expose()
-  @Transform(
-    ({ value }) => ({
-      id: value?.id,
-      name: value?.firstName + value?.lastName,
-    }),
-    { toClassOnly: true },
-  )
-  member: {} | null;
+  withdrawalMadeOn: WithdrawalMadeOn | null;
 
   @Expose()
   @Transform(({ value }) => value?.toLowerCase(), { toClassOnly: true })
@@ -153,14 +137,14 @@ export class WithdrawalDetailsAdminResDto {
   transactionDetails: {};
 
   @Expose()
-  @TransformBalancesAndProfit()
-  balancesAndProfit: [];
+  // @TransformBalancesAndProfit()
+  balancesAndProfit: [] | null;
 }
 
 function TransformBalancesAndProfit() {
   return Transform(
     ({ value }) => {
-      const mappedValues = value.map((item) => {
+      const mappedValues = value?.map((item) => {
         const roleMapping = {
           agent_balance: 'agent',
           merchant_balance: 'merchant',
@@ -241,17 +225,17 @@ function TransformBalancesAndProfit() {
         }
       });
 
-      const filteredValues = mappedValues.filter(Boolean);
-      const systemProfitEntry = filteredValues.find(
+      const filteredValues = mappedValues?.filter(Boolean);
+      const systemProfitEntry = filteredValues?.find(
         (entry) => entry.role === 'system',
       );
-      const merchantEntry = filteredValues.find(
+      const merchantEntry = filteredValues?.find(
         (entry) => entry.role === 'merchant',
       );
-      const gatewayEntry = filteredValues.find(
+      const gatewayEntry = filteredValues?.find(
         (entry) => entry.role === 'gateway',
       );
-      const otherEntries = filteredValues.filter(
+      const otherEntries = filteredValues?.filter(
         (entry) =>
           entry.role !== 'system' &&
           entry.role !== 'merchant' &&
@@ -260,10 +244,10 @@ function TransformBalancesAndProfit() {
 
       return [
         merchantEntry,
-        ...otherEntries.reverse(),
+        ...otherEntries?.reverse(),
         gatewayEntry,
         systemProfitEntry,
-      ].filter(Boolean);
+      ]?.filter(Boolean);
     },
     { toClassOnly: true },
   );

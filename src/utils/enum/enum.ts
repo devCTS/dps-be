@@ -51,8 +51,8 @@ export enum NotificationStatus {
 }
 
 export enum WithdrawalMadeOn {
-  OFFLINE_REMITTANCE = 'OFFLINE_REMITTANCE',
-  GATEWAy_API = 'GATEWAY_API',
+  ADMIN = 'ADMIN',
+  GATEWAY = 'GATEWAY',
 }
 
 export enum OrderType {
