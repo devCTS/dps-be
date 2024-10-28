@@ -126,26 +126,7 @@ export class PayoutMemberService {
         relations: ['payoutOrder', 'user', 'user.member'],
       });
 
-      const res = {
-        ...orderDetails,
-        transactionDetails: {
-          transactionId: orderDetails.transactionId,
-          receipt: orderDetails.transactionReceipt,
-          member: orderDetails.member
-            ? JSON.parse(orderDetails.transactionDetails)
-            : null,
-          gateway: orderDetails.gatewayName
-            ? JSON.parse(orderDetails.transactionDetails)
-            : null,
-        },
-        quotaDetails: {
-          commissionRate: transactionUpdate?.rate,
-          commissionAmount: transactionUpdate.amount,
-          quotaEarned: transactionUpdate.after - transactionUpdate.before,
-        },
-      };
-
-      return plainToInstance(MemberPayoutDetailsResponseDto, res);
+      return plainToInstance(MemberPayoutDetailsResponseDto, transactionUpdate);
     } catch (error) {
       throw new InternalServerErrorException();
     }

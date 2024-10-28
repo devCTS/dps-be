@@ -37,9 +37,6 @@ export class AdminAllPayoutResponseDto {
   gatewayName: string;
 
   @Expose()
-  merchantFee: number;
-
-  @Expose()
   merchantCharge: number;
 
   @Expose()

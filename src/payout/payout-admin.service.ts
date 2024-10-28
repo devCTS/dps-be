@@ -86,11 +86,9 @@ export class PayoutAdminService {
 
         const response = {
           ...row,
-          merchantCharge: merchantRow?.amount * merchantRow?.rate,
+          merchantCharge: merchantRow?.amount,
           systemProfit: systemProfitRow?.after,
           callbackStatus: row?.notificationStatus,
-          merchantFee:
-            merchantRow?.amount - merchantRow?.amount * merchantRow?.rate,
         };
 
         return plainToInstance(AdminAllPayoutResponseDto, response);
