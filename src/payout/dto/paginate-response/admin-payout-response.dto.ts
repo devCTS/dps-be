@@ -19,14 +19,18 @@ export class AdminAllPayoutResponseDto {
   channel: string;
 
   @Expose()
-  @Transform(({ value }) => (value?.name ? value?.name : null))
+  @Transform(({ value }) => (value ? value.name : null), { toClassOnly: true })
   user: string;
 
   @Expose()
-  @Transform(({ value }) => (value ? value.fisrtName : null))
+  @Transform(
+    ({ value }) => (value ? `${value.firstName} ${value.lastName}` : null),
+    { toClassOnly: true },
+  )
   merchant: string;
 
   @Expose()
+  @Transform(({ value }) => (value ? value.toLowerCase() : null))
   payoutMadeVia: string;
 
   @Expose()

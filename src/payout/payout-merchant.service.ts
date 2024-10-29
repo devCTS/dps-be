@@ -80,8 +80,6 @@ export class PayoutMerchantService {
 
     const [rows, total] = await queryBuilder.getManyAndCount();
 
-    // return rows;
-
     const startRecord = skip + 1;
     const endRecord = Math.min(skip + pageSize, total);
 
@@ -102,6 +100,7 @@ export class PayoutMerchantService {
           serviceFee: (row.amount * row.merchant.payoutServiceRate) / 100,
           balanceDebit:
             row.amount + (row.amount * row.merchant.payoutServiceRate) / 100,
+          channelDetails: row.user.channelDetails,
         };
       }),
     );
@@ -153,6 +152,7 @@ export class PayoutMerchantService {
           balanceDeducted:
             transactionUpdateMerchant.before - transactionUpdateMerchant.after,
         },
+        channelDetails: orderDetails.user.channelDetails,
       };
 
       const details = plainToInstance(MerchantPayoutDetailsResponseDto, res);

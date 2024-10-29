@@ -27,14 +27,9 @@ export class MemberPayoutDetailsResponseDto {
   updatedAt: Date;
 
   @Expose()
-  @Transform(
-    ({ value }) => ({
-      name: value?.name,
-      mobile: value?.mobile,
-      email: value?.email,
-    }),
-    { toClassOnly: true },
-  )
+  @Transform(({ value }) => {
+    return value;
+  })
   user: {};
 
   @Expose()

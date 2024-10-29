@@ -132,6 +132,7 @@ export class PayoutAdminService {
           : null,
       },
       balancesAndProfit: transactionUpdateEntries,
+      channelDetails: payout.user?.channelDetails,
     };
 
     return plainToInstance(AdminPayoutDetailsResponseDto, response);

@@ -19,7 +19,14 @@ export class MemberAllPayoutResponseDto {
   channel: string;
 
   @Expose()
-  @Transform(({ value }) => (value ? value.name : null))
+  @Transform(
+    ({ value }) => ({
+      name: value.name,
+      email: value.email,
+      mobile: value.mobile,
+    }),
+    { toClassOnly: true },
+  )
   user: string;
 
   @Expose()
