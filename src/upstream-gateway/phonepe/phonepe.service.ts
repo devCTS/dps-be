@@ -54,8 +54,6 @@ export class PhonepeService {
 
   // Payment function
   async phonepePayement() {
-    console.log(process.env.SAMPLE_SALT_KEY);
-
     // console.log(
     //   createHash('sha256')
     //     .update(
@@ -65,7 +63,6 @@ export class PhonepeService {
     //     )
     //     .digest('hex'),
     // );
-
     // axios
     //   .request(this.options)
     //   .then(function (response) {

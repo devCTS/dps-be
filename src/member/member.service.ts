@@ -475,9 +475,13 @@ export class MemberService {
     let beforeValue = member.balance;
     let afterValue = failed ? member.balance : amount + beforeValue;
 
-    await this.transactionUpdateRepository.update(transactionUpdateMember.id, {
-      before: beforeValue,
-      after: afterValue,
-    });
+    if (transactionUpdateMember)
+      await this.transactionUpdateRepository.update(
+        transactionUpdateMember.id,
+        {
+          before: beforeValue,
+          after: afterValue,
+        },
+      );
   }
 }

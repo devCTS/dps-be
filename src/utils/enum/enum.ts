@@ -59,7 +59,7 @@ export enum OrderType {
   PAYIN = 'Payin',
   PAYOUT = 'Payout',
   TOPUP = 'Topup',
-  WITHDRAWAl = 'Withdrawal',
+  WITHDRAWAL = 'Withdrawal',
 }
 
 export enum UserTypeForTransactionUpdates {

@@ -1,3 +1,4 @@
+import { TransactionUpdatesWithdrawalService } from './../transaction-updates/transaction-updates-withdrawal.service';
 import {
   HttpStatus,
   Injectable,
@@ -9,8 +10,19 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Withdrawal } from './entities/withdrawal.entity';
 import { Repository } from 'typeorm';
 import * as uniqid from 'uniqid';
-import { WithdrawalOrderStatus } from 'src/utils/enum/enum';
+import {
+  OrderType,
+  UserTypeForTransactionUpdates,
+  WithdrawalMadeOn,
+  WithdrawalOrderStatus,
+} from 'src/utils/enum/enum';
 import { Identity } from 'src/identity/entities/identity.entity';
+import { IdentityService } from 'src/identity/identity.service';
+import { MemberService } from 'src/member/member.service';
+import { MerchantService } from 'src/merchant/merchant.service';
+import { AgentService } from 'src/agent/agent.service';
+import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
+import { SystemConfigService } from 'src/system-config/system-config.service';
 
 @Injectable()
 export class WithdrawalService {
@@ -19,6 +31,15 @@ export class WithdrawalService {
     private readonly withdrawalRepository: Repository<Withdrawal>,
     @InjectRepository(Identity)
     private readonly identityRepository: Repository<Identity>,
+    @InjectRepository(TransactionUpdate)
+    private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
+
+    private readonly identityService: IdentityService,
+    private readonly transactionUpdatesWithdrawalService: TransactionUpdatesWithdrawalService,
+    private readonly memberService: MemberService,
+    private readonly merchantService: MerchantService,
+    private readonly agentService: AgentService,
+    private readonly systemConfigService: SystemConfigService,
   ) {}
 
   async create(createWithdrawalDto: CreateWithdrawalDto) {
@@ -46,15 +67,70 @@ export class WithdrawalService {
   async updateStatusToComplete(body) {
     const { id, transactionDetails, withdrawalMadeOn } = body;
 
-    const orderDetails = await this.withdrawalRepository.findOneBy({
-      systemOrderId: id,
+    const orderDetails = await this.withdrawalRepository.findOne({
+      where: {
+        systemOrderId: id,
+      },
+      relations: ['user'],
     });
     if (!orderDetails) throw new NotFoundException('Order not found!');
+
+    const user = await this.identityService.getUser(
+      orderDetails.user.id,
+      orderDetails.user.userType,
+    );
+
+    await this.transactionUpdatesWithdrawalService.create({
+      orderDetails,
+      orderType: OrderType.WITHDRAWAL,
+      systemOrderId: orderDetails.systemOrderId,
+      userRole: orderDetails.user.userType,
+      withdrawalMadeOn: WithdrawalMadeOn.ADMIN,
+      user,
+    });
 
     await this.withdrawalRepository.update(orderDetails.id, {
       status: WithdrawalOrderStatus.COMPLETE,
       transactionDetails: JSON.stringify(transactionDetails),
       withdrawalMadeOn,
+    });
+
+    const transactionUpdateEntries =
+      await this.transactionUpdateRepository.find({
+        where: {
+          systemOrderId: id,
+        },
+        relations: ['user'],
+      });
+
+    transactionUpdateEntries.forEach(async (entry) => {
+      if (entry.userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE)
+        await this.merchantService.updateBalance(
+          entry.user.id,
+          -orderDetails.amount,
+          false,
+        );
+
+      if (entry.userType === UserTypeForTransactionUpdates.MEMBER_BALANCE)
+        await this.memberService.updateBalance(
+          entry.user.id,
+          -orderDetails.amount,
+          false,
+        );
+
+      if (entry.userType === UserTypeForTransactionUpdates.AGENT_BALANCE)
+        await this.agentService.updateBalance(
+          entry.user.id,
+          -orderDetails.amount,
+          false,
+        );
+
+      if (entry.userType === UserTypeForTransactionUpdates.SYSTEM_PROFIT)
+        await this.systemConfigService.updateSystemProfit(
+          entry.amount,
+          entry.systemOrderId,
+          false,
+        );
     });
 
     return HttpStatus.OK;

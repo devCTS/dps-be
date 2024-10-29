@@ -32,17 +32,49 @@ export class WithdrawalController {
     return this.withdrawalAdminService.getOrderDetails(id);
   }
 
+  @Post('member/paginate')
+  memberPayins(@Body() paginateRequestDto: PaginateRequestDto) {
+    return this.withdrawalMemberService.paginateWithdrawals(paginateRequestDto);
+  }
+
   @Get('member/:id')
+  getOrderDetailsForMember(@Param('id') id: string) {
+    return this.withdrawalMemberService.getOrderDetails(id);
+  }
+
+  @Post('merchant/paginate')
+  merchantPayins(@Body() paginateRequestDto: PaginateRequestDto) {
+    return this.withdrawalMerchantService.paginateWithdrawals(
+      paginateRequestDto,
+    );
+  }
+
+  @Get('merchant/:id')
+  getOrderDetailsForMerchant(@Param('id') id: string) {
+    return this.withdrawalMerchantService.getOrderDetails(id);
+  }
+
+  @Post('agent/paginate')
+  agentPayins(@Body() paginateRequestDto: PaginateRequestDto) {
+    return this.withdrawalAgentService.paginateWithdrawals(paginateRequestDto);
+  }
+
+  @Get('agent/:id')
+  getOrderDetailsForAgent(@Param('id') id: string) {
+    return this.withdrawalAgentService.getOrderDetails(id);
+  }
+
+  @Get('member-channel-details/:id')
   getChannelProfileDetailsForMember(@Param('id') id: string) {
     return this.withdrawalMemberService.getChannelProfileDetails(+id);
   }
 
-  @Get('merchant/:id')
+  @Get('merchant-channel-details/:id')
   getChannelProfileDetailsForMerchant(@Param('id') id: string) {
     return this.withdrawalMerchantService.getChannelProfileDetails(+id);
   }
 
-  @Get('agent/:id')
+  @Get('agent-channel-details/:id')
   getChannelProfileDetailsForAgent(@Param('id') id: string) {
     return this.withdrawalAgentService.getChannelProfileDetails(+id);
   }

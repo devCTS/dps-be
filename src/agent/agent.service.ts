@@ -410,9 +410,10 @@ export class AgentService {
     let beforeValue = agent.balance;
     let afterValue = failed ? agent.balance : amount + beforeValue;
 
-    await this.transactionUpdateRepository.update(transactionUpdateAgent.id, {
-      before: beforeValue,
-      after: afterValue,
-    });
+    if (transactionUpdateAgent)
+      await this.transactionUpdateRepository.update(transactionUpdateAgent.id, {
+        before: beforeValue,
+        after: afterValue,
+      });
   }
 }

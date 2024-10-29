@@ -137,7 +137,7 @@ export class WithdrawalDetailsAdminResDto {
   transactionDetails: {};
 
   @Expose()
-  // @TransformBalancesAndProfit()
+  @TransformBalancesAndProfit()
   balancesAndProfit: [] | null;
 }
 
@@ -148,22 +148,31 @@ function TransformBalancesAndProfit() {
         const roleMapping = {
           agent_balance: 'agent',
           merchant_balance: 'merchant',
-          member_balance: 'agent',
+          member_balance: 'member',
           system_profit: 'system',
-          member_quota: 'member',
           gateway_fee: 'gateway',
         };
 
         const role = roleMapping[item.userType] || item.userType;
-
         switch (item.userType) {
+          case UserTypeForTransactionUpdates.MEMBER_BALANCE:
+            return {
+              role,
+              name: item.name,
+              serviceRate: item.rate,
+              serviceFee: item.amount,
+              balanceDeducted: item.before - item.after,
+              balanceBefore: item.before,
+              balanceAfter: item.after,
+            };
+
           case UserTypeForTransactionUpdates.MERCHANT_BALANCE:
             return {
               role,
               name: item.name,
               serviceRate: item.rate,
               serviceFee: item.amount,
-              balanceEarned: item.after - item.before,
+              balanceDeducted: item.before - item.after,
               balanceBefore: item.before,
               balanceAfter: item.after,
             };
@@ -172,36 +181,11 @@ function TransformBalancesAndProfit() {
             return {
               role,
               name: item.name,
-              commissionRate: item.rate,
-              commissionAmount: item.amount,
-              balanceEarned: item.after - item.before,
+              serviceRate: item.rate,
+              serviceFee: item.amount,
+              balanceDeducted: item.before - item.after,
               balanceBefore: item.before,
               balanceAfter: item.after,
-              isAgentOf: item.isAgentOf,
-            };
-
-          case UserTypeForTransactionUpdates.MEMBER_QUOTA:
-            return {
-              role,
-              name: item.name,
-              commissionRate: item.rate,
-              commissionAmount: item.amount,
-              quotaDeducted: item.after - item.before, // verify
-              quotaBefore: item.before,
-              quotaAfter: item.after,
-            };
-
-          case UserTypeForTransactionUpdates.MEMBER_BALANCE:
-            return {
-              role,
-              name: item.name,
-              commissionRate: item.rate,
-              commissionAmount: item.amount,
-              balanceEarned: item.after - item.before,
-              balanceBefore: item.before,
-              balanceAfter: item.after,
-              isAgentOf: item.isAgentOf,
-              isMember: true,
             };
 
           case UserTypeForTransactionUpdates.SYSTEM_PROFIT:
