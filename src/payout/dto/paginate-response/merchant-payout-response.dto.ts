@@ -19,11 +19,18 @@ export class MerchantAllPayoutResponseDto {
   channel: string;
 
   @Expose()
-  @Transform(({ value }) => (value ? value.name : null))
+  @Transform(
+    ({ value }) => ({
+      name: value?.name,
+      mobile: value?.mobile,
+      email: value?.email,
+    }),
+    { toClassOnly: true },
+  )
   user: {};
 
   @Expose()
-  @Transform(({ value }) => value.toLowerCase())
+  @Transform(({ value }) => (value ? value.toLowerCase() : null))
   payoutMadeVia: string;
 
   @Expose()

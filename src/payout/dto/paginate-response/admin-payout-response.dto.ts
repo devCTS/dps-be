@@ -23,7 +23,10 @@ export class AdminAllPayoutResponseDto {
   user: string;
 
   @Expose()
-  @Transform(({ value }) => (value ? value.fisrtName : null))
+  @Transform(
+    ({ value }) => (value ? `${value.firstName} ${value.lastName}` : null),
+    { toClassOnly: true },
+  )
   merchant: string;
 
   @Expose()

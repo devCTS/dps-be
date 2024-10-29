@@ -76,4 +76,7 @@ export class MerchantPayoutDetailsResponseDto {
 
   @Expose()
   balanceDetails: any;
+
+  @Expose()
+  channelDetails: string;
 }
