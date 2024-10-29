@@ -30,7 +30,7 @@ export class AdminAllPayoutResponseDto {
   merchant: string;
 
   @Expose()
-  @Transform(({ value }) => value.toLowerCase())
+  @Transform(({ value }) => (value ? value.toLowerCase() : null))
   payoutMadeVia: string;
 
   @Expose()

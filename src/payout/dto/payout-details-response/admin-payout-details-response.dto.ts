@@ -12,6 +12,9 @@ export class AdminPayoutDetailsResponseDto {
   amount: number;
 
   @Expose()
+  @Transform(({ value }) => (value ? value.toLowerCase() : null), {
+    toClassOnly: true,
+  })
   status: string;
 
   @Expose()
@@ -73,6 +76,9 @@ export class AdminPayoutDetailsResponseDto {
   @Expose()
   @TransformBalancesAndProfit()
   balancesAndProfit: {};
+
+  @Expose()
+  channelDetails: string;
 }
 
 function TransformBalancesAndProfit() {

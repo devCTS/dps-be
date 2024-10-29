@@ -126,7 +126,13 @@ export class PayoutMemberService {
         relations: ['payoutOrder', 'user', 'user.member'],
       });
 
-      return plainToInstance(MemberPayoutDetailsResponseDto, transactionUpdate);
+      if (!transactionUpdate) throw new NotFoundException();
+
+      return {
+        ...plainToInstance(MemberPayoutDetailsResponseDto, orderDetails),
+        commission: transactionUpdate.amount,
+        quotaCredit: transactionUpdate.before - transactionUpdate.after,
+      };
     } catch (error) {
       throw new InternalServerErrorException();
     }
