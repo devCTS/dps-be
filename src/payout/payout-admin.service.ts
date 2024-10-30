@@ -23,7 +23,7 @@ export class PayoutAdminService {
   ) {}
 
   async paginate(paginateRequestDto: PaginateRequestDto, showPending = false) {
-    const { search, pageSize, pageNumber, startDate, endDate, sortBy } =
+    const { search, pageSize, pageNumber, startDate, endDate, sortBy, status } =
       paginateRequestDto;
 
     const skip = (pageNumber - 1) * pageSize;
@@ -45,6 +45,12 @@ export class PayoutAdminService {
           search: `%${search}%`,
         },
       );
+
+    if (status) {
+      queryBuilder.andWhere(`payout.status = :status`, {
+        status: status.toUpperCase(),
+      });
+    }
 
     if (startDate && endDate) {
       const parsedStartDate = parseStartDate(startDate);
@@ -73,7 +79,11 @@ export class PayoutAdminService {
             user: { id: row.merchant?.identity?.id },
             userType: UserTypeForTransactionUpdates.MERCHANT_BALANCE,
           },
-          relations: ['payoutOrder', 'user', 'user.merchant'],
+          relations: ['payoutOrder', 'user', 'user.merchant', 'user.member'],
+        });
+
+        const payoutDetails = await this.payoutRepository.findOneBy({
+          systemOrderId: merchantRow.systemOrderId,
         });
 
         const systemProfitRow = await this.transactionUpdateRepository.findOne({
@@ -89,6 +99,7 @@ export class PayoutAdminService {
           merchantCharge: merchantRow?.amount,
           systemProfit: systemProfitRow?.after,
           callbackStatus: row?.notificationStatus,
+          transactionId: payoutDetails.transactionId,
         };
 
         return plainToInstance(AdminAllPayoutResponseDto, response);
