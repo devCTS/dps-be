@@ -162,6 +162,7 @@ export class PayinService {
         after: 0,
         payinOrder: payinOrderDetails,
       });
+
       await this.transactionUpdateService.addSystemProfit(
         payinOrderDetails,
         OrderType.PAYIN,

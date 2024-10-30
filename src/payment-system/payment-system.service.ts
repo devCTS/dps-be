@@ -155,6 +155,8 @@ export class PaymentSystemService {
       url = res.url;
     }
 
+    console.log(selectedPaymentMode);
+
     response.send({
       url,
       orderId: createdPayin.systemOrderId,

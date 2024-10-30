@@ -321,15 +321,15 @@ export class MemberReferralService {
         children: [],
       };
     }
-    return this.trimTreeToUser(referralTree, userId);
+    return await this.trimTreeToUser(referralTree, userId);
   }
 
-  private trimTreeToUser(tree: any, userId: number): any {
+  private async trimTreeToUser(tree: any, userId: number): Promise<any> {
     if (tree.id === userId) return tree;
 
-    const trimmedChildren = tree.children
-      .map((child: any) => this.trimTreeToUser(child, userId))
-      .filter((child: any) => child !== null);
+    const trimmedChildren = await Promise.all(
+      tree.children.map((child: any) => this.trimTreeToUser(child, userId)),
+    );
 
     if (trimmedChildren.length > 0)
       return {
@@ -337,6 +337,24 @@ export class MemberReferralService {
         children: trimmedChildren,
       };
 
-    return null;
+    const member = await this.memberRepository.findOne({
+      where: { id: userId },
+      relations: ['identity'],
+    });
+    if (!member) return null;
+
+    return {
+      id: member.id,
+      firstName: member.firstName,
+      lastName: member.lastName,
+      referralCode: member.referralCode,
+      email: member.identity.email,
+      balance: member.balance,
+      quota: member.quota,
+      payinCommission: member.payinCommissionRate,
+      payoutCommission: member.payoutCommissionRate,
+      topupCommission: member.topupCommissionRate,
+      children: [],
+    };
   }
 }

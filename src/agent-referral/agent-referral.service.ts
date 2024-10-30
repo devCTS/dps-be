@@ -324,15 +324,15 @@ export class AgentReferralService {
         children: [],
       };
     }
-    return this.trimTreeToUser(referralTree, userId);
+    return await this.trimTreeToUser(referralTree, userId);
   }
 
-  private trimTreeToUser(tree: any, userId: number): any {
+  private async trimTreeToUser(tree: any, userId: number): Promise<any> {
     if (tree.id === userId) return tree;
 
-    const trimmedChildren = tree.children
-      .map((child: any) => this.trimTreeToUser(child, userId))
-      .filter((child: any) => child !== null);
+    const trimmedChildren = await Promise.all(
+      tree.children.map((child: any) => this.trimTreeToUser(child, userId)),
+    );
 
     if (trimmedChildren.length > 0)
       return {
@@ -340,6 +340,23 @@ export class AgentReferralService {
         children: trimmedChildren,
       };
 
-    return null;
+    const merchant = await this.merchantRepository.findOne({
+      where: { id: userId },
+      relations: ['identity'],
+    });
+    if (!merchant) return null;
+
+    return {
+      id: merchant.id,
+      firstName: merchant.firstName,
+      lastName: merchant.lastName,
+      referralCode: merchant.referralCode,
+      email: merchant.identity.email,
+      agentType: 'merchant',
+      balance: merchant.balance,
+      merchantPayinServiceRate: merchant.payinServiceRate,
+      merchantPayoutServiceRate: merchant.payoutServiceRate,
+      children: [],
+    };
   }
 }
