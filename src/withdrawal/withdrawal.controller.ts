@@ -93,4 +93,9 @@ export class WithdrawalController {
   updateStatusToFailed(@Body() body) {
     return this.withdrawalService.updateStatusToFailed(body);
   }
+
+  @Post('make-gateway-payout')
+  makeGatewayPayout(@Body() body) {
+    return this.withdrawalService.makeGatewayPayout(body);
+  }
 }

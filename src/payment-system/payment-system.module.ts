@@ -50,5 +50,6 @@ import { EndUserModule } from 'src/end-user/end-user.module';
     RazorpayService,
     PhonepeService,
   ],
+  exports: [PaymentSystemService],
 })
 export class PaymentSystemModule {}

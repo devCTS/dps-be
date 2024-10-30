@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { PhonepeService } from './phonepe/phonepe.service';
 import { RazorpayService } from './razorpay/razorpay.service';
@@ -9,9 +13,16 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { PayinService } from 'src/payin/payin.service';
 import { Response } from 'express';
 import { PaymentSystemUtilService } from './payment-system.util.service';
-import { GatewayName, PaymentMadeOn, PaymentType } from 'src/utils/enum/enum';
+import {
+  GatewayName,
+  OrderType,
+  PaymentMadeOn,
+  PaymentType,
+} from 'src/utils/enum/enum';
 import { ChannelSettings } from 'src/gateway/entities/channel-settings.entity';
 import { GetPayPageDto } from './dto/getPayPage.dto';
+import { SystemConfig } from 'src/system-config/entities/system-config.entity';
+import { SystemConfigService } from 'src/system-config/system-config.service';
 const paymentPageBaseUrl =
   'http://www.kingsgate-payments.com.s3-website-ap-southeast-1.amazonaws.com';
 @Injectable()
@@ -25,6 +36,7 @@ export class PaymentSystemService {
     private readonly razorpayService: RazorpayService,
     private readonly payinService: PayinService,
     private readonly utilService: PaymentSystemUtilService,
+    private readonly systemConfigService: SystemConfigService,
   ) {}
 
   async getPayPage(getPayPageDto: GetPayPageDto) {
@@ -159,5 +171,26 @@ export class PaymentSystemService {
 
   async paymentVerification(paymentData: any) {
     return await this.razorpayService.getRazorpayPayementStatus(paymentData);
+  }
+
+  async makeGatewayPayout(body): Promise<any> {
+    const { userId, orderId, amount, orderType } = body;
+
+    if (!orderType) throw new BadRequestException('Order Type Required!');
+
+    const systemConfig = await this.systemConfigService.findLatest();
+
+    let defaultGateway;
+    if (orderType === OrderType.WITHDRAWAL)
+      defaultGateway = systemConfig.defaultWithdrawalGateway;
+
+    if (orderType == OrderType.PAYOUT)
+      defaultGateway = systemConfig.defaultPayoutGateway;
+
+    if (defaultGateway === GatewayName.PHONEPE)
+      return await this.phonepeService.makePayoutPayment(body);
+
+    if (defaultGateway === GatewayName.RAZORPAY)
+      return await this.razorpayService.makePayoutPayment(body);
   }
 }

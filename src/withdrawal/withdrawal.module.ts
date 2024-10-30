@@ -18,6 +18,7 @@ import { MemberModule } from 'src/member/member.module';
 import { AgentModule } from 'src/agent/agent.module';
 import { MerchantModule } from 'src/merchant/merchant.module';
 import { SystemConfigModule } from 'src/system-config/system-config.module';
+import { PaymentSystemModule } from 'src/payment-system/payment-system.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { SystemConfigModule } from 'src/system-config/system-config.module';
     AgentModule,
     MerchantModule,
     SystemConfigModule,
+    PaymentSystemModule,
   ],
   controllers: [WithdrawalController],
   providers: [

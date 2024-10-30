@@ -36,7 +36,7 @@ export class TransactionUpdatesPayinService {
 
     if (forMember) {
       // Member Quota - member selected for payment
-      if (!referral.children || referral.children.length <= 0) {
+      if (!referral?.children || referral?.children?.length <= 0) {
         userType = UserTypeForTransactionUpdates.MEMBER_QUOTA;
         rate = referral.payinCommission;
         amount = (orderAmount / 100) * rate;
@@ -87,8 +87,8 @@ export class TransactionUpdatesPayinService {
       after,
       name: `${referral.firstName} ${referral.lastName}`,
       isAgentOf:
-        referral.children?.length > 0
-          ? `${referral.children[0]?.firstName} ${referral.children[0]?.lastName}`
+        referral?.children?.length > 0
+          ? `${referral?.children[0]?.firstName} ${referral?.children[0]?.lastName}`
           : null,
       payinOrder: orderDetails,
       systemOrderId,
@@ -98,9 +98,9 @@ export class TransactionUpdatesPayinService {
     await this.transactionUpdateRepository.save(transactionUpdate);
 
     // Recursively call the same for rest of the children
-    if (referral.children && referral.children.length > 0)
+    if (referral?.children && referral.children?.length > 0)
       await this.processReferral(
-        referral.children[0],
+        referral?.children[0],
         orderType,
         orderAmount,
         orderDetails,

@@ -23,6 +23,7 @@ import { MerchantService } from 'src/merchant/merchant.service';
 import { AgentService } from 'src/agent/agent.service';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { SystemConfigService } from 'src/system-config/system-config.service';
+import { PaymentSystemService } from 'src/payment-system/payment-system.service';
 
 @Injectable()
 export class WithdrawalService {
@@ -40,6 +41,7 @@ export class WithdrawalService {
     private readonly merchantService: MerchantService,
     private readonly agentService: AgentService,
     private readonly systemConfigService: SystemConfigService,
+    private readonly paymentSystemService: PaymentSystemService,
   ) {}
 
   async create(createWithdrawalDto: CreateWithdrawalDto) {
@@ -62,6 +64,19 @@ export class WithdrawalService {
       throw new InternalServerErrorException('Failed to create order!');
 
     return HttpStatus.CREATED;
+  }
+
+  async makeGatewayPayout(body) {
+    const res = await this.paymentSystemService.makeGatewayPayout(body);
+
+    console.log(res);
+
+    // if (res.status === 'success')
+    //   await this.updateStatusToComplete({
+    //     id: body.orderId,
+    //     transactionDetails: res.transactionDetails,
+    //     withdrawalMadeOn: WithdrawalMadeOn.GATEWAY,
+    //   });
   }
 
   async updateStatusToComplete(body) {

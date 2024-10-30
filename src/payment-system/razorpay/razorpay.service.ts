@@ -59,6 +59,22 @@ export class RazorpayService {
     };
   }
 
+  async makePayoutPayment({ userId, amount = 1000, orderId }) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          transactionId: 'TRXN123-ABC-156',
+          transactionReceipt: 'https://www.google.com',
+          paymentStatus: 'success',
+          transactionDetails: {
+            date: new Date(),
+            amount: amount,
+          },
+        });
+      }, 3000);
+    });
+  }
+
   async razorpayPaymentStatus(paymentLinkId: string) {
     const paymentLinkDetails =
       await this.razorpayClient.paymentLink.fetch(paymentLinkId);

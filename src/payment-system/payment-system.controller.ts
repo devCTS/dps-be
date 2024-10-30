@@ -204,4 +204,9 @@ export class PaymentSystemController {
   razorpayPaymentVerification(@Body() paymentData: any) {
     return this.service.paymentVerification(paymentData);
   }
+
+  @Post('make-gateway-payout')
+  makeGatewayPayout(@Body() body) {
+    return this.service.makeGatewayPayout(body);
+  }
 }
