@@ -9,6 +9,7 @@ import { Identity } from 'src/identity/entities/identity.entity';
 import { MemberReferralModule } from 'src/member-referral/member-referral.module';
 import { SystemConfigModule } from 'src/system-config/system-config.module';
 import { TransactionUpdatesPayoutService } from './transaction-updates-payout.service';
+import { TransactionUpdatesWithdrawalService } from './transaction-updates-withdrawal.service';
 
 @Module({
   imports: [
@@ -19,7 +20,15 @@ import { TransactionUpdatesPayoutService } from './transaction-updates-payout.se
     SystemConfigModule,
   ],
   controllers: [TransactionUpdatesController],
-  providers: [TransactionUpdatesPayinService, TransactionUpdatesPayoutService],
-  exports: [TransactionUpdatesPayinService, TransactionUpdatesPayoutService],
+  providers: [
+    TransactionUpdatesPayinService,
+    TransactionUpdatesPayoutService,
+    TransactionUpdatesWithdrawalService,
+  ],
+  exports: [
+    TransactionUpdatesPayinService,
+    TransactionUpdatesPayoutService,
+    TransactionUpdatesWithdrawalService,
+  ],
 })
 export class TransactionUpdatesModule {}

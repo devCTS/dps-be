@@ -14,12 +14,15 @@ import {
 } from './dto/withdrawal-admin-response.dto';
 import { WithdrawalOrderStatus } from 'src/utils/enum/enum';
 import { WithdrawalDefaultsDto } from 'src/system-config/dto/update-withdrawal-default.dto';
+import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 
 @Injectable()
 export class WithdrawalAdminService {
   constructor(
     @InjectRepository(Withdrawal)
     private readonly withdrawalRepository: Repository<Withdrawal>,
+    @InjectRepository(TransactionUpdate)
+    private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
   ) {}
 
   async paginateWithdrawals(paginateRequestDto: PaginateRequestDto) {
@@ -40,6 +43,8 @@ export class WithdrawalAdminService {
       .createQueryBuilder('withdrawal')
       .leftJoinAndSelect('withdrawal.user', 'user')
       .leftJoinAndSelect('user.member', 'member')
+      .leftJoinAndSelect('user.agent', 'agent')
+      .leftJoinAndSelect('user.merchant', 'merchant')
       .skip(skip)
       .take(take);
 
@@ -108,6 +113,15 @@ export class WithdrawalAdminService {
     });
     if (!orderDetails) throw new NotFoundException('Order not found!');
 
+    const transactionUpdateEntries =
+      await this.transactionUpdateRepository.find({
+        where: {
+          systemOrderId: id,
+          pending: false,
+        },
+        relations: ['withdrawalOrder'],
+      });
+
     const userRole = orderDetails.user.userType.toLowerCase();
 
     const data = {
@@ -120,9 +134,9 @@ export class WithdrawalAdminService {
           orderDetails.user[userRole]?.lastName,
         id: orderDetails.user[userRole]?.id,
       },
-      balancesAndProfit: null,
       userChannel: JSON.parse(orderDetails.channelDetails),
       transactionDetails: JSON.parse(orderDetails.transactionDetails),
+      balancesAndProfit: transactionUpdateEntries || null,
     };
 
     return plainToInstance(WithdrawalDetailsAdminResDto, data);
