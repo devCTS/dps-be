@@ -90,6 +90,37 @@ export class PayoutService {
         systemOrderId: payout.systemOrderId,
       });
 
+    // TODO: checkStatus
+
+    // let intervalId = setInterval(async () => {
+    //   try {
+    //     const response = await fetch('apiUrl');
+    //     const data = await response.json();
+
+    //     if (data.status === 'success') {
+    //       console.log('Status: Success');
+    //       await fetch('updateSuccessUrl', { method: 'POST' }); // Call to update status
+    //       clearInterval(intervalId); // Stop checking if status is success
+    //       clearTimeout(timeoutId); // Clear the timeout
+    //     } else if (data.status === 'pending') {
+    //       console.log('Status: Pending');
+    //     } else {
+    //       console.log('Unexpected status:', data.status);
+    //     }
+    //   } catch (error) {
+    //     console.error('Error fetching the API:', error);
+    //   }
+    // }, 500);
+
+    // const timeoutId = setTimeout(async () => {
+    //   clearInterval(intervalId);
+    //   console.log('Stopped checking after 6 seconds');
+
+    //   // Call to indicate failure
+    //   await fetch('updateFailureUrl', { method: 'POST' });
+    //   console.log('Status: Did not succeed');
+    // }, 6000);
+
     return HttpStatus.CREATED;
   }
 

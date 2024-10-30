@@ -77,4 +77,8 @@ export class PaginateRequestDto {
   @IsOptional()
   @IsBoolean()
   forBulletin?: boolean;
+
+  @IsOptional()
+  @IsString()
+  status: string;
 }

@@ -34,7 +34,10 @@ export class AdminAllPayoutResponseDto {
   payoutMadeVia: string;
 
   @Expose()
-  @Transform(({ value }) => (value ? value.firstName : null))
+  @Transform(
+    ({ value }) => (value ? `${value.firstName} ${value.lastName}` : null),
+    { toClassOnly: true },
+  )
   member: string;
 
   @Expose()
@@ -49,4 +52,7 @@ export class AdminAllPayoutResponseDto {
   @Expose()
   @Transform(({ value }) => value?.toLowerCase())
   callbackStatus: string;
+
+  @Expose()
+  transactionId: string;
 }
