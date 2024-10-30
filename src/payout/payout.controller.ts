@@ -36,7 +36,7 @@ export class PayoutController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.payoutService.findOne(+id);
+    return this.payoutService.findOne(id);
   }
 
   @Patch(':id')

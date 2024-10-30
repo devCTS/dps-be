@@ -13,6 +13,7 @@ import { Payout } from './entities/payout.entity';
 import { Repository } from 'typeorm';
 
 import {
+  GatewayName,
   OrderStatus,
   OrderType,
   PaymentMadeOn,
@@ -30,6 +31,7 @@ import { MemberService } from 'src/member/member.service';
 import { MerchantService } from 'src/merchant/merchant.service';
 import { AgentService } from 'src/agent/agent.service';
 import { SystemConfigService } from 'src/system-config/system-config.service';
+import { PaymentSystemService } from 'src/payment-system/payment-system.service';
 
 @Injectable()
 export class PayoutService {
@@ -50,6 +52,7 @@ export class PayoutService {
     private readonly merchantService: MerchantService,
     private readonly agentService: AgentService,
     private readonly systemConfigService: SystemConfigService,
+    private readonly paymentSystemService: PaymentSystemService,
   ) {}
 
   async create(payoutDetails: CreatePayoutDto) {
@@ -92,36 +95,40 @@ export class PayoutService {
 
     // TODO: checkStatus
 
-    // let intervalId = setInterval(async () => {
-    //   try {
-    //     const response = await fetch('apiUrl');
-    //     const data = await response.json();
+    let intervalId = setInterval(async () => {
+      try {
+        const response = await this.findOne(payout.systemOrderId);
 
-    //     if (data.status === 'success') {
-    //       console.log('Status: Success');
-    //       await fetch('updateSuccessUrl', { method: 'POST' }); // Call to update status
-    //       clearInterval(intervalId); // Stop checking if status is success
-    //       clearTimeout(timeoutId); // Clear the timeout
-    //     } else if (data.status === 'pending') {
-    //       console.log('Status: Pending');
-    //     } else {
-    //       console.log('Unexpected status:', data.status);
-    //     }
-    //   } catch (error) {
-    //     console.error('Error fetching the API:', error);
-    //   }
-    // }, 500);
+        if (response.status === OrderStatus.ASSIGNED) {
+          clearInterval(intervalId);
+          clearTimeout(timeoutId);
+          return HttpStatus.CREATED;
+        }
+      } catch (error) {
+        console.error('Error fetching the API:', error);
+      }
+    }, 500);
 
-    // const timeoutId = setTimeout(async () => {
-    //   clearInterval(intervalId);
-    //   console.log('Stopped checking after 6 seconds');
+    const timeoutId = setTimeout(async () => {
+      clearInterval(intervalId);
+      const result = await this.paymentSystemService.makeGatewayPayout({
+        userId: merchant.id,
+        orderId: payout.systemOrderId,
+        amount: payout.amount,
+        orderType: OrderType.PAYOUT,
+      });
 
-    //   // Call to indicate failure
-    //   await fetch('updateFailureUrl', { method: 'POST' });
-    //   console.log('Status: Did not succeed');
-    // }, 6000);
+      if (result.paymentStatus === 'success') {
+        await this.updatePayoutStatusToAssigned({
+          id: payout.systemOrderId,
+          paymentMode: PaymentMadeOn.GATEWAY,
+          gatewayServiceRate: payout.gatewayServiceRate || 0.3,
+          gatewayName: result.gatewayName,
+        });
+      }
 
-    return HttpStatus.CREATED;
+      return HttpStatus.CREATED;
+    }, 6000);
   }
 
   async updatePayoutStatusToAssigned(body) {
@@ -363,8 +370,8 @@ export class PayoutService {
     return `This action returns all payout`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} payout`;
+  async findOne(id: string) {
+    return await this.payoutRepository.findOneBy({ systemOrderId: id });
   }
 
   update(id: number, updatePayoutDto: UpdatePayoutDto) {
