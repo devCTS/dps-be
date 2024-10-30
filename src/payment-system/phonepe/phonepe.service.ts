@@ -87,6 +87,7 @@ export class PhonepeService {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({
+          gatewayName: 'PHONEPE',
           transactionId: 'TRXN123-ABC-156',
           transactionReceipt: 'https://www.google.com',
           paymentStatus: 'success',

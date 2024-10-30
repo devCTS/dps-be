@@ -3,6 +3,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
+  GatewayName,
   UserTypeForTransactionUpdates,
   WithdrawalMadeOn,
 } from 'src/utils/enum/enum';
@@ -77,11 +78,13 @@ export class TransactionUpdatesWithdrawalService {
     userRole,
     withdrawalMadeOn,
     user,
+    gatewayName = GatewayName.PHONEPE,
   }) {
     const mapUserType = {
       MEMBER: UserTypeForTransactionUpdates.MEMBER_BALANCE,
       MERCHANT: UserTypeForTransactionUpdates.MERCHANT_BALANCE,
       AGENT: UserTypeForTransactionUpdates.AGENT_BALANCE,
+      gateway_fee: UserTypeForTransactionUpdates.GATEWAY_FEE,
     };
 
     const rate =
@@ -105,7 +108,10 @@ export class TransactionUpdatesWithdrawalService {
       amount,
       before,
       after,
-      name: `${user.firstName} ${user.lastName}`,
+      name:
+        userRole === UserTypeForTransactionUpdates.GATEWAY_FEE
+          ? gatewayName
+          : `${user.firstName} ${user.lastName}`,
       withdrawalOrder: orderDetails,
       systemOrderId,
       user: orderDetails.user,

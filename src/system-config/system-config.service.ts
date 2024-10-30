@@ -338,10 +338,11 @@ export class SystemConfigService {
     let beforeValue = systemConfig.systemProfit;
     let afterValue = failed ? beforeValue : beforeValue + amount;
 
-    await this.transactionUpdateRepository.update(systemProfitRow.id, {
-      before: beforeValue,
-      after: afterValue,
-    });
+    if (systemProfitRow)
+      await this.transactionUpdateRepository.update(systemProfitRow.id, {
+        before: beforeValue,
+        after: afterValue,
+      });
   }
 
   async updateWithdrawalDefaults(

@@ -186,13 +186,46 @@ export class PaymentSystemService {
     if (orderType === OrderType.WITHDRAWAL)
       defaultGateway = systemConfig.defaultWithdrawalGateway;
 
-    if (orderType == OrderType.PAYOUT)
+    if (orderType === OrderType.PAYOUT)
       defaultGateway = systemConfig.defaultPayoutGateway;
 
-    if (defaultGateway === GatewayName.PHONEPE)
-      return await this.phonepeService.makePayoutPayment(body);
+    const isDefaultGatewayEnabled =
+      await this.channelSettingsRepository.findOne({
+        where: {
+          gatewayName: defaultGateway,
+          enabled: true,
+        },
+      });
 
-    if (defaultGateway === GatewayName.RAZORPAY)
-      return await this.razorpayService.makePayoutPayment(body);
+    if (!isDefaultGatewayEnabled) {
+      defaultGateway =
+        defaultGateway === GatewayName.PHONEPE
+          ? GatewayName.RAZORPAY
+          : GatewayName.PHONEPE;
+
+      const isFallbackGatewayEnabled =
+        await this.channelSettingsRepository.findOne({
+          where: {
+            gatewayName: defaultGateway,
+            enabled: true,
+          },
+        });
+
+      if (!isFallbackGatewayEnabled)
+        throw new BadRequestException('No enabled gateways available!');
+    }
+
+    return await this.processPaymentWithGateway(defaultGateway, body);
+  }
+
+  private async processPaymentWithGateway(gatewayName: string, body: any) {
+    switch (gatewayName) {
+      case GatewayName.PHONEPE:
+        return await this.phonepeService.makePayoutPayment(body);
+      case GatewayName.RAZORPAY:
+        return await this.razorpayService.makePayoutPayment(body);
+      default:
+        throw new BadRequestException('Unsupported gateway!');
+    }
   }
 }

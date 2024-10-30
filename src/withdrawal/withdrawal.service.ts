@@ -24,6 +24,7 @@ import { AgentService } from 'src/agent/agent.service';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { SystemConfigService } from 'src/system-config/system-config.service';
 import { PaymentSystemService } from 'src/payment-system/payment-system.service';
+import { ChannelSettings } from 'src/gateway/entities/channel-settings.entity';
 
 @Injectable()
 export class WithdrawalService {
@@ -67,20 +68,28 @@ export class WithdrawalService {
   }
 
   async makeGatewayPayout(body) {
-    const res = await this.paymentSystemService.makeGatewayPayout(body);
+    const res = await this.paymentSystemService.makeGatewayPayout({
+      ...body,
+      orderType: OrderType.WITHDRAWAL,
+    });
 
-    console.log(res);
+    if (res.paymentStatus === 'success')
+      await this.updateStatusToComplete({
+        id: body.orderId,
+        transactionDetails: {
+          transactionId: res.transactionId,
+          transactionReceipt: res.transactionReceipt,
+          gatewayDetails: res.transactionDetails,
+        },
+        withdrawalMadeOn: WithdrawalMadeOn.GATEWAY,
+        gatewayName: res.gatewayName,
+      });
 
-    // if (res.status === 'success')
-    //   await this.updateStatusToComplete({
-    //     id: body.orderId,
-    //     transactionDetails: res.transactionDetails,
-    //     withdrawalMadeOn: WithdrawalMadeOn.GATEWAY,
-    //   });
+    return HttpStatus.OK;
   }
 
   async updateStatusToComplete(body) {
-    const { id, transactionDetails, withdrawalMadeOn } = body;
+    const { id, transactionDetails, withdrawalMadeOn, gatewayName } = body;
 
     const orderDetails = await this.withdrawalRepository.findOne({
       where: {
@@ -95,19 +104,43 @@ export class WithdrawalService {
       orderDetails.user.userType,
     );
 
-    await this.transactionUpdatesWithdrawalService.create({
-      orderDetails,
-      orderType: OrderType.WITHDRAWAL,
-      systemOrderId: orderDetails.systemOrderId,
-      userRole: orderDetails.user.userType,
-      withdrawalMadeOn: WithdrawalMadeOn.ADMIN,
-      user,
-    });
+    if (withdrawalMadeOn === WithdrawalMadeOn.ADMIN)
+      await this.transactionUpdatesWithdrawalService.create({
+        orderDetails,
+        orderType: OrderType.WITHDRAWAL,
+        systemOrderId: orderDetails.systemOrderId,
+        userRole: orderDetails.user.userType,
+        withdrawalMadeOn: WithdrawalMadeOn.ADMIN,
+        user,
+      });
+
+    if (withdrawalMadeOn === WithdrawalMadeOn.GATEWAY) {
+      await this.transactionUpdatesWithdrawalService.create({
+        orderDetails,
+        orderType: OrderType.WITHDRAWAL,
+        systemOrderId: orderDetails.systemOrderId,
+        userRole: orderDetails.user.userType,
+        withdrawalMadeOn: WithdrawalMadeOn.GATEWAY,
+        user,
+      });
+
+      await this.transactionUpdatesWithdrawalService.create({
+        orderDetails,
+        orderType: OrderType.WITHDRAWAL,
+        systemOrderId: orderDetails.systemOrderId,
+        userRole: UserTypeForTransactionUpdates.GATEWAY_FEE,
+        withdrawalMadeOn: WithdrawalMadeOn.GATEWAY,
+        user,
+        gatewayName,
+      });
+    }
 
     await this.withdrawalRepository.update(orderDetails.id, {
       status: WithdrawalOrderStatus.COMPLETE,
       transactionDetails: JSON.stringify(transactionDetails),
       withdrawalMadeOn,
+      gatewayName:
+        withdrawalMadeOn === WithdrawalMadeOn.GATEWAY ? gatewayName : null,
     });
 
     const transactionUpdateEntries =

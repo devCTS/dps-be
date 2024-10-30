@@ -19,6 +19,7 @@ import { AgentModule } from 'src/agent/agent.module';
 import { MerchantModule } from 'src/merchant/merchant.module';
 import { SystemConfigModule } from 'src/system-config/system-config.module';
 import { PaymentSystemModule } from 'src/payment-system/payment-system.module';
+import { ChannelSettings } from 'src/gateway/entities/channel-settings.entity';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { PaymentSystemModule } from 'src/payment-system/payment-system.module';
       Merchant,
       Identity,
       TransactionUpdate,
+      ChannelSettings,
     ]),
     IdentityModule,
     TransactionUpdatesModule,

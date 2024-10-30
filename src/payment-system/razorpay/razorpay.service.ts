@@ -63,6 +63,7 @@ export class RazorpayService {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({
+          gatewayName: 'RAZORPAY',
           transactionId: 'TRXN123-ABC-156',
           transactionReceipt: 'https://www.google.com',
           paymentStatus: 'success',
