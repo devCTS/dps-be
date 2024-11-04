@@ -71,6 +71,10 @@ export class PaginateRequestDto {
   userId?: number;
 
   @IsOptional()
+  @IsString()
+  userEmail?: string;
+
+  @IsOptional()
   @IsEnum(SortedBy)
   sortBy?: SortedBy;
 

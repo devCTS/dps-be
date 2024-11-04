@@ -4,10 +4,12 @@ import { Identity } from './../../identity/entities/identity.entity';
 import { OrderType, UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
 import {
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { Payout } from 'src/payout/entities/payout.entity';
 
@@ -69,4 +71,10 @@ export class TransactionUpdate {
   })
   @JoinColumn({ name: 'withdrawal_order_id' })
   withdrawalOrder: Withdrawal;
+
+  @CreateDateColumn({ type: 'timestamp' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ type: 'timestamp' })
+  updatedAt: Date;
 }

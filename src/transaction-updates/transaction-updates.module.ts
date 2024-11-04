@@ -10,6 +10,7 @@ import { MemberReferralModule } from 'src/member-referral/member-referral.module
 import { SystemConfigModule } from 'src/system-config/system-config.module';
 import { TransactionUpdatesPayoutService } from './transaction-updates-payout.service';
 import { TransactionUpdatesWithdrawalService } from './transaction-updates-withdrawal.service';
+import { TransactionUpdatesService } from './transaction-updates.service';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { TransactionUpdatesWithdrawalService } from './transaction-updates-withd
     TransactionUpdatesPayinService,
     TransactionUpdatesPayoutService,
     TransactionUpdatesWithdrawalService,
+    TransactionUpdatesService,
   ],
   exports: [
     TransactionUpdatesPayinService,
