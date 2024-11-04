@@ -96,4 +96,7 @@ export class Member {
 
   @Column({ default: false })
   isOnline: boolean;
+
+  @Column({ default: 'abcd1234' })
+  withdrawalPassword: string;
 }

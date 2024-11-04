@@ -26,6 +26,7 @@ import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
 import { Upi } from 'src/channel/entity/upi.entity';
 import { NetBanking } from 'src/channel/entity/net-banking.entity';
 import { EWallet } from 'src/channel/entity/e-wallet.entity';
+import { VerifyWithdrawalPasswordDto } from './dto/verify-withdrawal-password.dto';
 
 @Injectable()
 export class MemberService {
@@ -69,7 +70,11 @@ export class MemberService {
       maxWithdrawalAmount,
       withdrawalRate,
       telegramId,
+      withdrawalPassword,
     } = createMemberDto;
+
+    const hashedWithdrawalPassword =
+      this.jwtService.getHashPassword(withdrawalPassword);
 
     if (referralCode) {
       const isCodeValid =
@@ -102,6 +107,7 @@ export class MemberService {
       minWithdrawalAmount,
       maxWithdrawalAmount,
       withdrawalRate,
+      withdrawalPassword: hashedWithdrawalPassword,
     });
 
     const createdMember = await this.memberRepository.save(member);
@@ -147,7 +153,10 @@ export class MemberService {
   }
 
   async registerViaSignup(registerDto: RegisterDto) {
-    const { referralCode } = registerDto;
+    const { referralCode, withDrawalPassword } = registerDto;
+
+    const hashedWithdrawalPassword =
+      this.jwtService.getHashPassword(withDrawalPassword);
 
     if (referralCode) {
       const isCodeValid =
@@ -179,6 +188,7 @@ export class MemberService {
         singlePayoutLowerLimit: 10,
         singlePayoutUpperLimit: 1000000,
         topupCommissionRate: 4,
+        withdrawalPassword: hashedWithdrawalPassword,
       });
 
       const createdMember = await this.memberRepository.save(member);
@@ -228,16 +238,33 @@ export class MemberService {
   }
 
   async update(id: number, updateDto: UpdateMemberDto): Promise<HttpStatus> {
+    const memberData = await this.memberRepository.findOneBy({ id });
+
+    if (!memberData) throw new NotFoundException('Member not found.');
+
     const channelProfile = updateDto.channelProfile;
     const email = updateDto.email;
     const password = updateDto.password;
     const updateLoginCredentials = updateDto.updateLoginCredentials;
+    const withdrawalPassword = updateDto.withdrawalPassword;
 
     delete updateDto.updateLoginCredentials;
     delete updateDto.channelProfile;
     delete updateDto.email;
     delete updateDto.password;
+    delete updateDto.withdrawalPassword;
     const result = await this.memberRepository.update({ id: id }, updateDto);
+
+    if (withdrawalPassword) {
+      const hashedWithdrawalPassword = await this.jwtService.getHashPassword(
+        updateDto.withdrawalPassword,
+      );
+
+      await this.memberRepository.update(id, {
+        ...memberData,
+        withdrawalPassword: hashedWithdrawalPassword,
+      });
+    }
 
     const member = await this.memberRepository.findOne({
       where: { id: id },
@@ -483,5 +510,20 @@ export class MemberService {
           after: afterValue,
         },
       );
+  }
+
+  async verifyWithdrawalPassword(
+    verifyWithdrawalPasswordDto: VerifyWithdrawalPasswordDto,
+  ) {
+    const { id, password } = verifyWithdrawalPasswordDto;
+
+    const merchant = await this.memberRepository.findOneBy({ id });
+
+    if (!merchant) throw new NotFoundException('Merchant not found.');
+
+    return this.jwtService.isHashedPasswordVerified(
+      password,
+      merchant.withdrawalPassword,
+    );
   }
 }
