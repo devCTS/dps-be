@@ -13,7 +13,7 @@ export class Upi {
   mobile: string;
 
   @Column({ default: false })
-  isBusiness: boolean;
+  isBusinessUpi: boolean;
 
   @ManyToOne(() => Identity, (identity) => identity.upi)
   identity: Identity;

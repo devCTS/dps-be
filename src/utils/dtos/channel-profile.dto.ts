@@ -29,7 +29,7 @@ export class UpiDto {
 
   @IsOptional()
   @IsBoolean()
-  isBusiness: boolean;
+  isBusinessUpi: boolean;
 }
 
 export class NetBankingDto {
