@@ -26,6 +26,7 @@ import { Upi } from 'src/channel/entity/upi.entity';
 import { NetBanking } from 'src/channel/entity/net-banking.entity';
 import { EWallet } from 'src/channel/entity/e-wallet.entity';
 import { identity } from 'rxjs';
+import { VerifyWithdrawalPasswordDto } from './dto/verify-withdrawal-password.dto';
 
 @Injectable()
 export class AgentService {
@@ -415,5 +416,20 @@ export class AgentService {
         before: beforeValue,
         after: afterValue,
       });
+  }
+
+  async verifyWithdrawalPassword(
+    verifyWithdrawalPasswordDto: VerifyWithdrawalPasswordDto,
+  ) {
+    const { id, password } = verifyWithdrawalPasswordDto;
+
+    const merchant = await this.agentRepository.findOneBy({ id });
+
+    if (!merchant) throw new NotFoundException('Agent not found.');
+
+    return this.jwtService.isHashedPasswordVerified(
+      password,
+      merchant.withdrawalPassword,
+    );
   }
 }

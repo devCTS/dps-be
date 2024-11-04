@@ -126,7 +126,7 @@ export class PayoutService {
       }
 
       return HttpStatus.CREATED;
-    }, 600000);
+    }, 6000);
   }
 
   async updatePayoutStatusToAssigned(body) {

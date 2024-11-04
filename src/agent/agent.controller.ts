@@ -16,6 +16,7 @@ import { UpdateAgentDto } from './dto/update-agent.dto';
 import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
 import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 import { IdentityService } from 'src/identity/identity.service';
+import { VerifyWithdrawalPasswordDto } from './dto/verify-withdrawal-password.dto';
 
 @Controller('agent')
 export class AgentController {
@@ -73,5 +74,14 @@ export class AgentController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     return this.agentService.changeWithdrawalPassword(changePasswordDto, id);
+  }
+
+  @Post('verify-withdrawal-password')
+  verifyWithdrawalPassword(
+    @Body() verifyWithdrawalPasswordDto: VerifyWithdrawalPasswordDto,
+  ) {
+    return this.agentService.verifyWithdrawalPassword(
+      verifyWithdrawalPasswordDto,
+    );
   }
 }

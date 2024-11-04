@@ -16,6 +16,7 @@ import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
 import { IdentityService } from 'src/identity/identity.service';
 import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 import { PayoutService } from 'src/payout/payout.service';
+import { VerifyWithdrawalPasswordDto } from './dto/verify-withdrawal-password.dto';
 
 @Controller('merchant')
 export class MerchantController {
@@ -87,5 +88,14 @@ export class MerchantController {
   @Get('payout/:id')
   getPayoutDetails(@Param('id') id: string) {
     return this.payoutMerchantService.getPayoutDetails(id);
+  }
+
+  @Post('verify-withdrawal-password')
+  verifyWithdrawalPassword(
+    @Body() verifyWithdrawalPasswordDto: VerifyWithdrawalPasswordDto,
+  ) {
+    return this.merchantService.verifyWithdrawalPassword(
+      verifyWithdrawalPasswordDto,
+    );
   }
 }
