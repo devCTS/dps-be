@@ -89,4 +89,8 @@ export class CreateMemberDto {
   @IsOptional()
   @IsBoolean()
   isOnline: boolean;
+
+  @IsNotEmpty()
+  @IsString()
+  withdrawalPassword: string;
 }

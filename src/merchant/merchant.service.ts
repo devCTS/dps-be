@@ -33,6 +33,7 @@ import { Upi } from 'src/channel/entity/upi.entity';
 import { NetBanking } from 'src/channel/entity/net-banking.entity';
 import { EWallet } from 'src/channel/entity/e-wallet.entity';
 import * as uniqid from 'uniqid';
+import { VerifyWithdrawalPasswordDto } from './dto/verify-withdrawal-password.dto';
 
 @Injectable()
 export class MerchantService {
@@ -633,5 +634,20 @@ export class MerchantService {
           after: afterValue,
         },
       );
+  }
+
+  async verifyWithdrawalPassword(
+    verifyWithdrawalPasswordDto: VerifyWithdrawalPasswordDto,
+  ) {
+    const { id, password } = verifyWithdrawalPasswordDto;
+
+    const merchant = await this.merchantRepository.findOneBy({ id });
+
+    if (!merchant) throw new NotFoundException('Merchant not found.');
+
+    return this.jwtService.isHashedPasswordVerified(
+      password,
+      merchant.withdrawalPassword,
+    );
   }
 }

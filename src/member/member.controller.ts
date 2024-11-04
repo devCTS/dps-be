@@ -22,6 +22,7 @@ import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 import { IdentityService } from 'src/identity/identity.service';
 import { PayoutService } from 'src/payout/payout.service';
 import { PayoutMemberService } from 'src/payout/payout-member.service';
+import { VerifyWithdrawalPasswordDto } from './dto/verify-withdrawal-password.dto';
 
 @Controller('member')
 export class MemberController {
@@ -89,5 +90,14 @@ export class MemberController {
   @Get('payout/:id')
   getPayoutDetails(@Param('id') id: string) {
     return this.payoutMemberService.getPayoutDetails(id);
+  }
+
+  @Post('verify-withdrawal-password')
+  verifyWithdrawalPassword(
+    @Body() verifyWithdrawalPasswordDto: VerifyWithdrawalPasswordDto,
+  ) {
+    return this.memberService.verifyWithdrawalPassword(
+      verifyWithdrawalPasswordDto,
+    );
   }
 }

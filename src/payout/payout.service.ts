@@ -93,8 +93,6 @@ export class PayoutService {
         systemOrderId: payout.systemOrderId,
       });
 
-    // TODO: checkStatus
-
     let intervalId = setInterval(async () => {
       try {
         const response = await this.findOne(payout.systemOrderId);
