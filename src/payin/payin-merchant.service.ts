@@ -82,7 +82,7 @@ export class PayinMerchantService {
 
         const response = {
           ...row,
-          serviceCharge: transactionUpdate.amount,
+          serviceCharge: transactionUpdate?.amount,
           balanceCredit: transactionUpdate.after - transactionUpdate.before,
         };
 
@@ -133,7 +133,7 @@ export class PayinMerchantService {
         },
         balanceDetails: {
           serviceRate: transactionUpdateMerchant.rate,
-          serviceFee: transactionUpdateMerchant.amount,
+          serviceFee: transactionUpdateMerchant?.amount,
           balanceEarned:
             transactionUpdateMerchant.after - transactionUpdateMerchant.before,
         },
