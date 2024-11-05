@@ -2,6 +2,7 @@ import { Identity } from 'src/identity/entities/identity.entity';
 import { MemberReferral } from 'src/member-referral/entities/member-referral.entity';
 import { Payin } from 'src/payin/entities/payin.entity';
 import { Payout } from 'src/payout/entities/payout.entity';
+import { Topup } from 'src/topup/entities/topup.entity';
 import {
   Entity,
   Column,
@@ -87,6 +88,9 @@ export class Member {
 
   @OneToMany(() => Payout, (payout) => payout.member)
   payout: Payout[];
+
+  @OneToMany(() => Topup, (topup) => topup.member)
+  topup: Topup[];
 
   @Column({ type: 'float', default: 0 })
   quota: number;

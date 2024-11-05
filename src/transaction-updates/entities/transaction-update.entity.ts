@@ -12,6 +12,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Payout } from 'src/payout/entities/payout.entity';
+import { Topup } from 'src/topup/entities/topup.entity';
 
 @Entity()
 export class TransactionUpdate {
@@ -71,6 +72,12 @@ export class TransactionUpdate {
   })
   @JoinColumn({ name: 'withdrawal_order_id' })
   withdrawalOrder: Withdrawal;
+
+  @ManyToOne(() => Topup, (topup) => topup.id, {
+    nullable: true,
+  })
+  @JoinColumn({ name: 'topup_order' })
+  topupOrder: Topup;
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;

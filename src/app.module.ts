@@ -29,6 +29,7 @@ import { TransactionUpdatesModule } from './transaction-updates/transaction-upda
 import { SocketModule } from './socket/socket.module';
 import { UploadModule } from './upload/upload.module';
 import { WithdrawalModule } from './withdrawal/withdrawal.module';
+import { TopupModule } from './topup/topup.module';
 
 @Module({
   imports: [
@@ -75,6 +76,7 @@ import { WithdrawalModule } from './withdrawal/withdrawal.module';
     SocketModule,
     UploadModule,
     WithdrawalModule,
+    TopupModule,
   ],
   controllers: [AppController],
   providers: [

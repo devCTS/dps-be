@@ -11,6 +11,7 @@ import { SystemConfigModule } from 'src/system-config/system-config.module';
 import { TransactionUpdatesPayoutService } from './transaction-updates-payout.service';
 import { TransactionUpdatesWithdrawalService } from './transaction-updates-withdrawal.service';
 import { TransactionUpdatesService } from './transaction-updates.service';
+import { TransactionUpdatesTopupService } from './transaction-updates-topup.service';
 
 @Module({
   imports: [
@@ -26,11 +27,13 @@ import { TransactionUpdatesService } from './transaction-updates.service';
     TransactionUpdatesPayoutService,
     TransactionUpdatesWithdrawalService,
     TransactionUpdatesService,
+    TransactionUpdatesTopupService,
   ],
   exports: [
     TransactionUpdatesPayinService,
     TransactionUpdatesPayoutService,
     TransactionUpdatesWithdrawalService,
+    TransactionUpdatesTopupService,
   ],
 })
 export class TransactionUpdatesModule {}
