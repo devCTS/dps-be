@@ -58,7 +58,7 @@ export class PayoutMemberService {
       });
 
     if (search)
-      queryBuilder.andWhere(`CONCAT(payout.merchant) ILIKE :search`, {
+      queryBuilder.andWhere(`CONCAT(payout.systemOrderId) ILIKE :search`, {
         search: `%${search}%`,
       });
 
@@ -74,6 +74,11 @@ export class PayoutMemberService {
         },
       );
     }
+
+    if (sortBy)
+      sortBy === 'latest'
+        ? queryBuilder.orderBy('payout.createdAt', 'DESC')
+        : queryBuilder.orderBy('payout.createdAt', 'ASC');
 
     const [rows, total] = await queryBuilder.getManyAndCount();
 
@@ -93,8 +98,8 @@ export class PayoutMemberService {
 
         return {
           ...plainToInstance(MemberAllPayoutResponseDto, row),
-          commission: transactionUpdate.amount,
-          quotaCredit: transactionUpdate.after - transactionUpdate.before,
+          commission: transactionUpdate?.amount,
+          quotaCredit: transactionUpdate?.after - transactionUpdate?.before,
         };
       }),
     );
@@ -106,7 +111,7 @@ export class PayoutMemberService {
       totalPages: Math.ceil(total / pageSize),
       startRecord,
       endRecord,
-      data: sortBy === 'latest' ? dtos.reverse() : dtos,
+      data: dtos,
     };
   }
 

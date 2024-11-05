@@ -60,9 +60,14 @@ export class PayinMemberService {
       });
 
     if (search)
-      queryBuilder.andWhere(`CONCAT(payin.merchant) ILIKE :search`, {
+      queryBuilder.andWhere(`CONCAT(payin.systemOrderId) ILIKE :search`, {
         search: `%${search}%`,
       });
+
+    if (sortBy)
+      sortBy === 'latest'
+        ? queryBuilder.orderBy('payin.createdAt', 'DESC')
+        : queryBuilder.orderBy('payin.createdAt', 'ASC');
 
     if (startDate && endDate) {
       const parsedStartDate = parseStartDate(startDate);
@@ -95,8 +100,8 @@ export class PayinMemberService {
 
         return {
           ...plainToInstance(PayinMemberResponseDto, row),
-          commission: transactionUpdate.amount,
-          quotaDebit: transactionUpdate.after - transactionUpdate.before,
+          commission: transactionUpdate?.amount,
+          quotaDebit: transactionUpdate?.after - transactionUpdate?.before,
         };
       }),
     );
@@ -108,7 +113,7 @@ export class PayinMemberService {
       totalPages: Math.ceil(total / pageSize),
       startRecord,
       endRecord,
-      data: sortBy === 'latest' ? dtos.reverse() : dtos,
+      data: dtos,
     };
   }
 

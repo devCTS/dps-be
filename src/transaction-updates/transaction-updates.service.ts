@@ -19,8 +19,15 @@ export class TransactionUpdatesService {
   ) {}
 
   async paginateCommissionsAndProfits(paginateRequestDto: PaginateRequestDto) {
-    const { startDate, endDate, search, pageNumber, pageSize, userEmail } =
-      paginateRequestDto;
+    const {
+      startDate,
+      endDate,
+      search,
+      pageNumber,
+      pageSize,
+      userEmail,
+      sortBy,
+    } = paginateRequestDto;
 
     const skip = (pageNumber - 1) * pageSize;
     const take = pageSize;
@@ -34,6 +41,13 @@ export class TransactionUpdatesService {
     if (userEmail)
       queryBuilder.andWhere('user.email = :userEmail', { userEmail });
 
+    if (search) {
+      queryBuilder.andWhere(
+        `CONCAT(transactionUpdate.systemOrderId) ILIKE :search`,
+        { search: `%${search}%` },
+      );
+    }
+
     if (startDate && endDate) {
       const parsedStartDate = parseStartDate(startDate);
       const parsedEndDate = parseEndDate(endDate);
@@ -46,6 +60,11 @@ export class TransactionUpdatesService {
         },
       );
     }
+
+    if (sortBy)
+      sortBy === 'latest'
+        ? queryBuilder.orderBy('transactionUpdate.createdAt', 'DESC')
+        : queryBuilder.orderBy('transactionUpdate.createdAt', 'ASC');
 
     queryBuilder.andWhere(
       'transactionUpdate.userType IN (:agentCommission, :memberCommission)',

@@ -150,6 +150,8 @@ export class AdminService {
     const search = paginateDto.search;
     const pageSize = paginateDto.pageSize;
     const pageNumber = paginateDto.pageNumber;
+    const sortBy = paginateDto.sortBy;
+
     // Handle search by first_name + " " + last_name
     if (search) {
       query.andWhere(
@@ -172,6 +174,11 @@ export class AdminService {
     if (paginateDto.userId) {
       query.andWhere('admin.id != :userId', { userId: paginateDto.userId });
     }
+
+    if (sortBy)
+      sortBy === 'latest'
+        ? query.orderBy('admin.createdAt', 'DESC')
+        : query.orderBy('admin.createdAt', 'ASC');
 
     // Handle pagination
     const skip = (pageNumber - 1) * pageSize;

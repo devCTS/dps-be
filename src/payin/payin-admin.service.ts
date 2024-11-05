@@ -6,7 +6,7 @@ import {
   parseStartDate,
 } from 'src/utils/dtos/paginate.dto';
 import { Payin } from './entities/payin.entity';
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import {
   PayinAdminResponseDto,
@@ -42,7 +42,7 @@ export class PayinAdminService {
 
     if (search)
       queryBuilder.andWhere(
-        `CONCAT(payin.id, ' ', payin.merchant) ILIKE :search`,
+        `CONCAT(payin.systemOrderId, ' ', payin.merchantOrderId) ILIKE :search`,
         {
           search: `%${search}%`,
         },
@@ -60,6 +60,11 @@ export class PayinAdminService {
         },
       );
     }
+
+    if (sortBy)
+      sortBy === 'latest'
+        ? queryBuilder.orderBy('payin.createdAt', 'DESC')
+        : queryBuilder.orderBy('payin.createdAt', 'ASC');
 
     const [rows, total] = await queryBuilder.getManyAndCount();
 
@@ -103,7 +108,7 @@ export class PayinAdminService {
       totalPages: Math.ceil(total / pageSize),
       startRecord,
       endRecord,
-      data: sortBy === 'latest' ? dtos.reverse() : dtos,
+      data: dtos,
     };
   }
 
@@ -136,5 +141,54 @@ export class PayinAdminService {
     };
 
     return plainToInstance(PayinDetailsAdminResDto, response);
+  }
+
+  async exportRecords(startDate: string, endDate: string) {
+    startDate = parseStartDate(startDate);
+    endDate = parseEndDate(endDate);
+
+    const parsedStartDate = new Date(startDate);
+    const parsedEndDate = new Date(endDate);
+
+    const [rows, total] = await this.payinRepository.findAndCount({
+      relations: ['user'],
+      where: {
+        createdAt: Between(parsedStartDate, parsedEndDate),
+      },
+    });
+
+    const dtos = await Promise.all(
+      rows.map(async (row) => {
+        const merchantRow = await this.transactionUpdateRepository.findOne({
+          where: {
+            systemOrderId: row.systemOrderId,
+            user: { id: row.merchant?.identity?.id },
+            userType: UserTypeForTransactionUpdates.MERCHANT_BALANCE,
+          },
+          relations: ['payinOrder', 'user', 'user.merchant'],
+        });
+
+        const systemProfitRow = await this.transactionUpdateRepository.findOne({
+          where: {
+            systemOrderId: row.systemOrderId,
+            userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
+          },
+          relations: ['payinOrder'],
+        });
+
+        const response = {
+          ...row,
+          merchantCharge: merchantRow?.amount,
+          systemProfit: systemProfitRow?.after,
+        };
+
+        return plainToInstance(PayinAdminResponseDto, response);
+      }),
+    );
+
+    return {
+      total,
+      data: dtos,
+    };
   }
 }

@@ -279,6 +279,8 @@ export class AgentService {
     const search = paginateDto.search;
     const pageSize = paginateDto.pageSize;
     const pageNumber = paginateDto.pageNumber;
+    const sortBy = paginateDto.sortBy;
+
     // Handle search by first_name + " " + last_name
     if (search) {
       query.andWhere(
@@ -297,6 +299,11 @@ export class AgentService {
         endDate,
       });
     }
+
+    if (sortBy)
+      sortBy === 'latest'
+        ? query.orderBy('agent.createdAt', 'DESC')
+        : query.orderBy('agent.createdAt', 'ASC');
 
     // Handle pagination
     const skip = (pageNumber - 1) * pageSize;

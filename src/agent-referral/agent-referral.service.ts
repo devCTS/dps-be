@@ -173,7 +173,7 @@ export class AgentReferralService {
   }
 
   async paginate(paginateDto: PaginateRequestDto, showUsedCodes = false) {
-    const { search, pageSize, pageNumber, startDate, endDate, userId } =
+    const { search, pageSize, pageNumber, startDate, endDate, userId, sortBy } =
       paginateDto;
 
     const whereConditions: any = {};
@@ -190,6 +190,14 @@ export class AgentReferralService {
       whereConditions.createdAt = Between(parsedStartDate, parsedEndDate);
     }
 
+    let orderConditions: any = {};
+    if (sortBy)
+      if (sortBy === 'latest') {
+        orderConditions['createdAt'] = 'DESC';
+      } else {
+        orderConditions['createdAt'] = 'ASC';
+      }
+
     const skip = (pageNumber - 1) * pageSize;
     const take = pageSize;
 
@@ -205,6 +213,7 @@ export class AgentReferralService {
       ],
       skip,
       take,
+      order: orderConditions,
     });
 
     const startRecord = skip + 1;

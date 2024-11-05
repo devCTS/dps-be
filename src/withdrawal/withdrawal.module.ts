@@ -48,5 +48,6 @@ import { ChannelSettings } from 'src/gateway/entities/channel-settings.entity';
     WithdrawalAdminService,
     WithdrawalMerchantService,
   ],
+  exports: [WithdrawalService, WithdrawalAdminService],
 })
 export class WithdrawalModule {}
