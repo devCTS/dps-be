@@ -357,6 +357,8 @@ export class MemberService {
     const search = paginateDto.search;
     const pageSize = paginateDto.pageSize;
     const pageNumber = paginateDto.pageNumber;
+    const sortBy = paginateDto.sortBy;
+
     // Handle search by first_name + " " + last_name
     if (search) {
       query.andWhere(
@@ -375,6 +377,11 @@ export class MemberService {
         endDate,
       });
     }
+
+    if (sortBy)
+      sortBy === 'latest'
+        ? query.orderBy('member.createdAt', 'DESC')
+        : query.orderBy('member.createdAt', 'ASC');
 
     // Handle pagination
     const skip = (pageNumber - 1) * pageSize;
