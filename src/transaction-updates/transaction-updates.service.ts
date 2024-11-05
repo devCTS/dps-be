@@ -61,8 +61,6 @@ export class TransactionUpdatesService {
 
     const [rows, total] = await queryBuilder.getManyAndCount();
 
-    console.log(rows);
-
     const startRecord = skip + 1;
     const endRecord = Math.min(skip + pageSize, total);
 

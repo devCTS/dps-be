@@ -1,3 +1,4 @@
+import { SortedBy } from './../utils/enum/enum';
 import {
   HttpStatus,
   Injectable,
@@ -506,6 +507,8 @@ export class MerchantService {
     const search = paginateDto.search;
     const pageSize = paginateDto.pageSize;
     const pageNumber = paginateDto.pageNumber;
+    const sortBy = paginateDto.sortBy;
+
     // Handle search by first_name + " " + last_name
     if (search) {
       query.andWhere(
@@ -524,6 +527,11 @@ export class MerchantService {
         endDate,
       });
     }
+
+    if (sortBy)
+      sortBy === 'latest'
+        ? query.orderBy('merchant.createdAt', 'DESC')
+        : query.orderBy('merchant.createdAt', 'ASC');
 
     // Handle pagination
     const skip = (pageNumber - 1) * pageSize;
