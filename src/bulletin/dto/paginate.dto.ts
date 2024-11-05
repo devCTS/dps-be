@@ -11,7 +11,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { BadRequestException } from '@nestjs/common';
-import { SortedBy } from '../enum/enum';
+import { SortedBy } from 'src/utils/enum/enum';
 
 // Helper function to convert DD/MM/YYYY to a valid Date object
 // Helper function to convert DD/MM/YYYY to a UTC Date object
@@ -84,5 +84,5 @@ export class PaginateRequestDto {
 
   @IsOptional()
   @IsString()
-  status?: string;
+  status: string;
 }

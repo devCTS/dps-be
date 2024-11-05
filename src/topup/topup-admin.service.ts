@@ -79,7 +79,9 @@ export class TopupAdminService {
 
         const response = {
           ...row,
-          memberCommission: (row.amount * row.member.topupCommissionRate) / 100,
+          memberCommission: row?.member?.topupCommissionRate
+            ? (row.amount * row.member.topupCommissionRate) / 100
+            : 0,
           totalAgentCommission: systemProfitRow?.amount || 0,
         };
 
@@ -118,7 +120,7 @@ export class TopupAdminService {
       transactionDetails: {
         transactionId: topup.transactionId,
         receipt: topup.transactionReceipt,
-        member: topup.member ? JSON.parse(topup.transactionDetails) : null,
+        member: topup.member ? JSON.parse(topup.transactionDetails) : {},
       },
       balancesAndProfit: transactionUpdateEntries,
     };
@@ -149,7 +151,9 @@ export class TopupAdminService {
 
         const response = {
           ...row,
-          memberCommission: (row.amount * row.member.topupCommissionRate) / 100,
+          memberCommission: row?.member?.topupCommissionRate
+            ? (row.amount * row.member.topupCommissionRate) / 100
+            : 0,
           totalAgentCommission: systemProfitRow?.amount || 0,
         };
 

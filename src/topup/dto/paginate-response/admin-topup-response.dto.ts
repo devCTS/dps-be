@@ -23,7 +23,8 @@ export class AdminAllTopupResponseDto {
 
   @Expose()
   @Transform(
-    ({ value }) => (value ? `${value.firstName} ${value.lastName}` : null),
+    ({ value }) =>
+      value ? `${value.firstName} ${value.lastName}` : 'member not assigned',
     { toClassOnly: true },
   )
   member: string;

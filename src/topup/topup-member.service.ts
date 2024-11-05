@@ -99,6 +99,7 @@ export class TopupMemberService {
           commission: transactionUpdate?.amount || null,
           quotaCredit:
             transactionUpdate?.after - transactionUpdate?.before || null,
+          orderType: 'Topup',
         };
       }),
     );

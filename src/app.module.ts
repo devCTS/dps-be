@@ -30,6 +30,7 @@ import { SocketModule } from './socket/socket.module';
 import { UploadModule } from './upload/upload.module';
 import { WithdrawalModule } from './withdrawal/withdrawal.module';
 import { TopupModule } from './topup/topup.module';
+import { BulletinModule } from './bulletin/bulletin.module';
 
 @Module({
   imports: [
@@ -77,6 +78,7 @@ import { TopupModule } from './topup/topup.module';
     UploadModule,
     WithdrawalModule,
     TopupModule,
+    BulletinModule,
   ],
   controllers: [AppController],
   providers: [

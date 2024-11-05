@@ -100,6 +100,7 @@ export class PayoutMemberService {
           ...plainToInstance(MemberAllPayoutResponseDto, row),
           commission: transactionUpdate?.amount,
           quotaCredit: transactionUpdate?.after - transactionUpdate?.before,
+          orderType: 'Payout',
         };
       }),
     );
