@@ -104,7 +104,7 @@ export class TopupAdminService {
   async getTopupDetails(id: string) {
     const topup = await this.topupRepository.findOne({
       where: { systemOrderId: id },
-      relations: ['user', 'merchant', 'member'],
+      relations: ['member', 'member.identity'],
     });
     if (!topup) throw new NotFoundException('Order not found!');
 

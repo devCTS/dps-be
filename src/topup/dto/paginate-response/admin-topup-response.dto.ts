@@ -27,24 +27,7 @@ export class AdminAllTopupResponseDto {
     ({ value }) => (value ? `${value.firstName} ${value.lastName}` : null),
     { toClassOnly: true },
   )
-  merchant: string;
-
-  @Expose()
-  @Transform(({ value }) => (value ? value.toLowerCase() : null))
-  payoutMadeVia: string;
-
-  @Expose()
-  @Transform(
-    ({ value }) => (value ? `${value.firstName} ${value.lastName}` : null),
-    { toClassOnly: true },
-  )
   member: string;
-
-  @Expose()
-  gatewayName: string;
-
-  @Expose()
-  merchantCharge: number;
 
   @Expose()
   systemProfit: number;
