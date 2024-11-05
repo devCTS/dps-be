@@ -61,9 +61,12 @@ export class PayoutMerchantService {
       });
 
     if (search)
-      queryBuilder.andWhere(`CONCAT(payout.merchant) ILIKE :search`, {
-        search: `%${search}%`,
-      });
+      queryBuilder.andWhere(
+        `CONCAT(payout.systemOrderId, ' ', user.name) ILIKE :search`,
+        {
+          search: `%${search}%`,
+        },
+      );
 
     if (startDate && endDate) {
       const parsedStartDate = parseStartDate(startDate);
@@ -77,6 +80,11 @@ export class PayoutMerchantService {
         },
       );
     }
+
+    if (sortBy)
+      sortBy === 'latest'
+        ? queryBuilder.orderBy('payout.createdAt', 'DESC')
+        : queryBuilder.orderBy('payout.createdAt', 'ASC');
 
     const [rows, total] = await queryBuilder.getManyAndCount();
 
@@ -112,7 +120,7 @@ export class PayoutMerchantService {
       totalPages: Math.ceil(total / pageSize),
       startRecord,
       endRecord,
-      data: sortBy === 'latest' ? dtos.reverse() : dtos,
+      data: dtos,
     };
   }
 

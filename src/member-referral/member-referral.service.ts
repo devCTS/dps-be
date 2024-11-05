@@ -16,6 +16,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { MemberReferral } from './entities/member-referral.entity';
 import { Between, ILike, Repository } from 'typeorm';
 import { Member } from 'src/member/entities/member.entity';
+import { OrderStatus } from 'src/utils/enum/enum';
 
 @Injectable()
 export class MemberReferralService {
@@ -180,7 +181,7 @@ export class MemberReferralService {
   }
 
   async paginate(paginateDto: PaginateRequestDto, showUsedCodes = false) {
-    const { search, pageSize, pageNumber, startDate, endDate, userId } =
+    const { search, pageSize, pageNumber, startDate, endDate, userId, sortBy } =
       paginateDto;
 
     const whereConditions: any = {};
@@ -197,6 +198,14 @@ export class MemberReferralService {
       whereConditions.createdAt = Between(parsedStartDate, parsedEndDate);
     }
 
+    let orderConditions: any = {};
+    if (sortBy)
+      if (sortBy === 'latest') {
+        orderConditions['createdAt'] = 'DESC';
+      } else {
+        orderConditions['createdAt'] = 'ASC';
+      }
+
     const skip = (pageNumber - 1) * pageSize;
     const take = pageSize;
 
@@ -210,6 +219,7 @@ export class MemberReferralService {
       ],
       skip,
       take,
+      order: orderConditions,
     });
 
     const startRecord = skip + 1;

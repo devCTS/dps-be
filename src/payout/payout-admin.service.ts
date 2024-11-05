@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { Payout } from './entities/payout.entity';
 import { plainToInstance } from 'class-transformer';
 import { AdminPayoutDetailsResponseDto } from './dto/payout-details-response/admin-payout-details-response.dto';
@@ -39,12 +39,9 @@ export class PayoutAdminService {
       .take(take);
 
     if (search)
-      queryBuilder.andWhere(
-        `CONCAT(payout.id, ' ', payout.merchant) ILIKE :search`,
-        {
-          search: `%${search}%`,
-        },
-      );
+      queryBuilder.andWhere(`CONCAT(payout.systemOrderId) ILIKE :search`, {
+        search: `%${search}%`,
+      });
 
     if (status) {
       queryBuilder.andWhere(`payout.status = :status`, {
@@ -65,6 +62,11 @@ export class PayoutAdminService {
       );
     }
 
+    if (sortBy)
+      sortBy === 'latest'
+        ? queryBuilder.orderBy('payout.createdAt', 'DESC')
+        : queryBuilder.orderBy('payout.createdAt', 'ASC');
+
     const [rows, total] = await queryBuilder.getManyAndCount();
 
     const startRecord = skip + 1;
@@ -75,7 +77,7 @@ export class PayoutAdminService {
       rows.map(async (row) => {
         const merchantRow = await this.transactionUpdateRepository.findOne({
           where: {
-            systemOrderId: row.systemOrderId,
+            systemOrderId: row?.systemOrderId,
             user: { id: row.merchant?.identity?.id },
             userType: UserTypeForTransactionUpdates.MERCHANT_BALANCE,
           },
@@ -83,12 +85,12 @@ export class PayoutAdminService {
         });
 
         const payoutDetails = await this.payoutRepository.findOneBy({
-          systemOrderId: merchantRow.systemOrderId,
+          systemOrderId: merchantRow?.systemOrderId,
         });
 
         const systemProfitRow = await this.transactionUpdateRepository.findOne({
           where: {
-            systemOrderId: row.systemOrderId,
+            systemOrderId: row?.systemOrderId,
             userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
           },
           relations: ['payoutOrder'],
@@ -113,7 +115,7 @@ export class PayoutAdminService {
       totalPages: Math.ceil(total / pageSize),
       startRecord,
       endRecord,
-      data: sortBy === 'latest' ? dtos.reverse() : dtos,
+      data: dtos,
     };
   }
 
@@ -147,5 +149,60 @@ export class PayoutAdminService {
     };
 
     return plainToInstance(AdminPayoutDetailsResponseDto, response);
+  }
+
+  async exportRecords(startDate: string, endDate: string) {
+    startDate = parseStartDate(startDate);
+    endDate = parseEndDate(endDate);
+
+    const parsedStartDate = new Date(startDate);
+    const parsedEndDate = new Date(endDate);
+
+    const [rows, total] = await this.payoutRepository.findAndCount({
+      relations: ['user'],
+      where: {
+        createdAt: Between(parsedStartDate, parsedEndDate),
+      },
+    });
+
+    const dtos = await Promise.all(
+      rows.map(async (row) => {
+        const merchantRow = await this.transactionUpdateRepository.findOne({
+          where: {
+            systemOrderId: row?.systemOrderId,
+            user: { id: row.merchant?.identity?.id },
+            userType: UserTypeForTransactionUpdates.MERCHANT_BALANCE,
+          },
+          relations: ['payoutOrder', 'user', 'user.merchant', 'user.member'],
+        });
+
+        const payoutDetails = await this.payoutRepository.findOneBy({
+          systemOrderId: merchantRow?.systemOrderId,
+        });
+
+        const systemProfitRow = await this.transactionUpdateRepository.findOne({
+          where: {
+            systemOrderId: row?.systemOrderId,
+            userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
+          },
+          relations: ['payoutOrder'],
+        });
+
+        const response = {
+          ...row,
+          merchantCharge: merchantRow?.amount,
+          systemProfit: systemProfitRow?.after,
+          callbackStatus: row?.notificationStatus,
+          transactionId: payoutDetails.transactionId,
+        };
+
+        return plainToInstance(AdminAllPayoutResponseDto, response);
+      }),
+    );
+
+    return {
+      total,
+      data: dtos,
+    };
   }
 }

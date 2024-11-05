@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Withdrawal } from './entities/withdrawal.entity';
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import {
   PaginateRequestDto,
   parseEndDate,
@@ -54,25 +54,27 @@ export class WithdrawalAdminService {
       });
 
     if (search)
-      queryBuilder.andWhere(
-        `CONCAT(payin.id, ' ', payin.merchant) ILIKE :search`,
-        {
-          search: `%${search}%`,
-        },
-      );
+      queryBuilder.andWhere(`CONCAT(withdrawal.systemOrderId) ILIKE :search`, {
+        search: `%${search}%`,
+      });
 
     if (startDate && endDate) {
       const parsedStartDate = parseStartDate(startDate);
       const parsedEndDate = parseEndDate(endDate);
 
       queryBuilder.andWhere(
-        'payin.created_at BETWEEN :startDate AND :endDate',
+        'withdrawal.created_at BETWEEN :startDate AND :endDate',
         {
           startDate: parsedStartDate,
           endDate: parsedEndDate,
         },
       );
     }
+
+    if (sortBy)
+      sortBy === 'latest'
+        ? queryBuilder.orderBy('withdrawal.createdAt', 'DESC')
+        : queryBuilder.orderBy('withdrawal.createdAt', 'ASC');
 
     const [rows, total] = await queryBuilder.getManyAndCount();
 
@@ -102,7 +104,7 @@ export class WithdrawalAdminService {
       totalPages: Math.ceil(total / pageSize),
       startRecord,
       endRecord,
-      data: sortBy === 'latest' ? dtos.reverse() : dtos,
+      data: dtos,
     };
   }
 
@@ -140,5 +142,41 @@ export class WithdrawalAdminService {
     };
 
     return plainToInstance(WithdrawalDetailsAdminResDto, data);
+  }
+
+  async exportRecords(startDate: string, endDate: string) {
+    startDate = parseStartDate(startDate);
+    endDate = parseEndDate(endDate);
+
+    const parsedStartDate = new Date(startDate);
+    const parsedEndDate = new Date(endDate);
+
+    const [rows, total] = await this.withdrawalRepository.findAndCount({
+      relations: ['user'],
+      where: {
+        createdAt: Between(parsedStartDate, parsedEndDate),
+      },
+    });
+
+    const dtos = await Promise.all(
+      rows.map(async (row) => {
+        const response = {
+          ...row,
+          userRole: row.user?.userType,
+          user: row.user[row.user?.userType.toLowerCase()],
+          systemProfit: null,
+          merchantFee: null,
+          merchantCharge: null,
+          date: row.createdAt,
+        };
+
+        return plainToInstance(WithdrawalAdminResponseDto, response);
+      }),
+    );
+
+    return {
+      total,
+      data: dtos,
+    };
   }
 }

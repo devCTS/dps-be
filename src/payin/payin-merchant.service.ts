@@ -47,7 +47,7 @@ export class PayinMerchantService {
     if (userId) queryBuilder.andWhere('merchant.id = :userId', { userId });
 
     if (search)
-      queryBuilder.andWhere(`CONCAT(payin.merchant) ILIKE :search`, {
+      queryBuilder.andWhere(`CONCAT(payin.systemOrderId) ILIKE :search`, {
         search: `%${search}%`,
       });
 
@@ -63,6 +63,11 @@ export class PayinMerchantService {
         },
       );
     }
+
+    if (sortBy)
+      sortBy === 'latest'
+        ? queryBuilder.orderBy('payin.createdAt', 'DESC')
+        : queryBuilder.orderBy('payin.createdAt', 'ASC');
 
     const [rows, total] = await queryBuilder.getManyAndCount();
 
@@ -97,7 +102,7 @@ export class PayinMerchantService {
       totalPages: Math.ceil(total / pageSize),
       startRecord,
       endRecord,
-      data: sortBy === 'latest' ? dtos.reverse() : dtos,
+      data: dtos,
     };
   }
 

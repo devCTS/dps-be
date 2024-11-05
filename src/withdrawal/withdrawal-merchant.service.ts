@@ -95,25 +95,27 @@ export class WithdrawalMerchantService {
       });
 
     if (search)
-      queryBuilder.andWhere(
-        `CONCAT(payin.id, ' ', payin.merchant) ILIKE :search`,
-        {
-          search: `%${search}%`,
-        },
-      );
+      queryBuilder.andWhere(`CONCAT(withdrawal.systemOrderId) ILIKE :search`, {
+        search: `%${search}%`,
+      });
 
     if (startDate && endDate) {
       const parsedStartDate = parseStartDate(startDate);
       const parsedEndDate = parseEndDate(endDate);
 
       queryBuilder.andWhere(
-        'payin.created_at BETWEEN :startDate AND :endDate',
+        'withdrawal.created_at BETWEEN :startDate AND :endDate',
         {
           startDate: parsedStartDate,
           endDate: parsedEndDate,
         },
       );
     }
+
+    if (sortBy)
+      sortBy === 'latest'
+        ? queryBuilder.orderBy('withdrawal.createdAt', 'DESC')
+        : queryBuilder.orderBy('withdrawal.createdAt', 'ASC');
 
     const [rows, total] = await queryBuilder.getManyAndCount();
 
@@ -149,7 +151,7 @@ export class WithdrawalMerchantService {
       totalPages: Math.ceil(total / pageSize),
       startRecord,
       endRecord,
-      data: sortBy === 'latest' ? dtos.reverse() : dtos,
+      data: dtos,
     };
   }
 

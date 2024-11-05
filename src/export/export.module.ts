@@ -6,6 +6,9 @@ import { MemberModule } from 'src/member/member.module';
 import { MerchantModule } from 'src/merchant/merchant.module';
 import { SubMerchantModule } from 'src/sub-merchant/sub-merchant.module';
 import { AgentModule } from 'src/agent/agent.module';
+import { PayinModule } from 'src/payin/payin.module';
+import { PayoutModule } from 'src/payout/payout.module';
+import { WithdrawalModule } from 'src/withdrawal/withdrawal.module';
 
 @Module({
   imports: [
@@ -14,6 +17,9 @@ import { AgentModule } from 'src/agent/agent.module';
     MerchantModule,
     SubMerchantModule,
     AgentModule,
+    PayinModule,
+    PayoutModule,
+    WithdrawalModule,
   ],
   controllers: [ExportController],
   providers: [ExportService],
