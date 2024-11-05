@@ -27,12 +27,6 @@ export class MemberTopupDetailsResponseDto {
   updatedAt: Date;
 
   @Expose()
-  @Transform(({ value }) => {
-    return value;
-  })
-  user: {};
-
-  @Expose()
   paymentDetails: any;
 
   @Expose()

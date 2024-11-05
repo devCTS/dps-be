@@ -9,6 +9,7 @@ import { MemberService } from 'src/member/member.service';
 import { MerchantService } from 'src/merchant/merchant.service';
 import { SubMerchantService } from 'src/sub-merchant/sub-merchant.service';
 import { AgentService } from 'src/agent/agent.service';
+import { TopupAdminService } from 'src/topup/topup-admin.service';
 
 @Injectable()
 export class ExportService {
@@ -18,6 +19,7 @@ export class ExportService {
     private readonly merchantService: MerchantService,
     private readonly subMerchantService: SubMerchantService,
     private readonly agentService: AgentService,
+    private readonly topupAdminService: TopupAdminService,
   ) {}
 
   async create(createExportDto: CreateExportDto) {
@@ -35,6 +37,9 @@ export class ExportService {
 
       case 'agent':
         return await this.agentService.exportRecords(startDate, endDate);
+
+      case 'topup':
+        return await this.topupAdminService.exportRecords(startDate, endDate);
 
       default:
         throw new NotAcceptableException('Invalid table name!');

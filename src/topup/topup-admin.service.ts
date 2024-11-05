@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { Topup } from './entities/topup.entity';
 import { plainToInstance } from 'class-transformer';
 import {
@@ -11,6 +11,7 @@ import {
 import { AdminAllTopupResponseDto } from './dto/paginate-response/admin-topup-response.dto';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
+import { AdminTopupDetailsResponseDto } from './dto/topup-details-response/admin-topup-details-response.dto';
 
 @Injectable()
 export class TopupAdminService {
@@ -30,16 +31,13 @@ export class TopupAdminService {
 
     const queryBuilder = this.topupRepository
       .createQueryBuilder('topup')
-      .leftJoinAndSelect('topup.merchant', 'merchant')
-      .leftJoinAndSelect('merchant.identity', 'identity')
-      .leftJoinAndSelect('topup.user', 'user')
       .leftJoinAndSelect('topup.member', 'member')
       .skip(skip)
       .take(take);
 
     if (search)
       queryBuilder.andWhere(
-        `CONCAT(topup.id, ' ', topup.merchant) ILIKE :search`,
+        `CONCAT(topup.id, ' ', topup.member) ILIKE :search`,
         {
           search: `%${search}%`,
         },
@@ -75,15 +73,14 @@ export class TopupAdminService {
         const systemProfitRow = await this.transactionUpdateRepository.findOne({
           where: {
             systemOrderId: row.systemOrderId,
-            userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
+            userType: UserTypeForTransactionUpdates.MEMBER_BALANCE,
           },
-          relations: ['topupOrder'],
         });
 
         const response = {
           ...row,
-          systemProfit: systemProfitRow?.after,
-          callbackStatus: row?.notificationStatus,
+          memberCommission: (row.amount * row.member.topupCommissionRate) / 100,
+          totalAgentCommission: systemProfitRow?.amount || 0,
         };
 
         return plainToInstance(AdminAllTopupResponseDto, response);
@@ -126,6 +123,43 @@ export class TopupAdminService {
       balancesAndProfit: transactionUpdateEntries,
     };
 
-    return plainToInstance(AdminAllTopupResponseDto, response);
+    return plainToInstance(AdminTopupDetailsResponseDto, response);
+  }
+
+  async exportRecords(startDate: string, endDate: string) {
+    startDate = parseStartDate(startDate);
+    endDate = parseEndDate(endDate);
+    const parsedStartDate = new Date(startDate);
+    const parsedEndDate = new Date(endDate);
+    const [rows, total] = await this.topupRepository.findAndCount({
+      relations: ['user'],
+      where: {
+        createdAt: Between(parsedStartDate, parsedEndDate),
+      },
+    });
+
+    const dtos = await Promise.all(
+      rows.map(async (row) => {
+        const systemProfitRow = await this.transactionUpdateRepository.findOne({
+          where: {
+            systemOrderId: row.systemOrderId,
+            userType: UserTypeForTransactionUpdates.MEMBER_BALANCE,
+          },
+        });
+
+        const response = {
+          ...row,
+          memberCommission: (row.amount * row.member.topupCommissionRate) / 100,
+          totalAgentCommission: systemProfitRow?.amount || 0,
+        };
+
+        return plainToInstance(AdminAllTopupResponseDto, response);
+      }),
+    );
+
+    return {
+      total,
+      data: dtos,
+    };
   }
 }

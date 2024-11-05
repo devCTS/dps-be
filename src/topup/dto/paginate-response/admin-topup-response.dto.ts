@@ -19,8 +19,7 @@ export class AdminAllTopupResponseDto {
   channel: string;
 
   @Expose()
-  @Transform(({ value }) => (value ? value.name : null), { toClassOnly: true })
-  user: string;
+  updatedAt: Date;
 
   @Expose()
   @Transform(
@@ -30,12 +29,11 @@ export class AdminAllTopupResponseDto {
   member: string;
 
   @Expose()
-  systemProfit: number;
-
-  @Expose()
-  @Transform(({ value }) => value?.toLowerCase())
-  callbackStatus: string;
-
-  @Expose()
   transactionId: string;
+
+  @Expose()
+  memberCommission: number;
+
+  @Expose()
+  totalAgentCommission: number;
 }

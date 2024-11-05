@@ -1,7 +1,7 @@
 import { Exclude, Expose, Transform } from 'class-transformer';
 import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
 @Exclude()
-export class AdminPayoutDetailsResponseDto {
+export class AdminTopupDetailsResponseDto {
   @Expose()
   id: number;
 
@@ -28,29 +28,6 @@ export class AdminPayoutDetailsResponseDto {
 
   @Expose()
   notificationStatus: string;
-
-  @Expose()
-  @Transform(
-    ({ value }) => ({
-      name: value?.name,
-      mobile: value?.mobile,
-      email: value?.email,
-    }),
-    { toClassOnly: true },
-  )
-  user: {};
-
-  @Expose()
-  @Transform(
-    ({ value }) => ({
-      id: value?.id,
-      name: value?.firstName + ' ' + value?.lastName,
-    }),
-    {
-      toClassOnly: true,
-    },
-  )
-  merchant: {};
 
   @Expose()
   payoutMadeVia: string;

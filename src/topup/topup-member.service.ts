@@ -43,8 +43,6 @@ export class TopupMemberService {
 
     const queryBuilder = this.topupRepository
       .createQueryBuilder('topup')
-      .leftJoinAndSelect('topup.merchant', 'merchant')
-      .leftJoinAndSelect('topup.user', 'user')
       .leftJoinAndSelect('topup.member', 'member')
       .leftJoinAndSelect('member.identity', 'identity')
       .skip(skip)
@@ -58,9 +56,14 @@ export class TopupMemberService {
       });
 
     if (search)
-      queryBuilder.andWhere(`CONCAT(topup.merchant) ILIKE :search`, {
+      queryBuilder.andWhere(`CONCAT(topup.systemOrderId) ILIKE :search`, {
         search: `%${search}%`,
       });
+
+    if (sortBy)
+      sortBy === 'latest'
+        ? queryBuilder.orderBy('topup.createdAt', 'DESC')
+        : queryBuilder.orderBy('topup.createdAt', 'ASC');
 
     if (startDate && endDate) {
       const parsedStartDate = parseStartDate(startDate);
@@ -88,13 +91,14 @@ export class TopupMemberService {
               systemOrderId: row.systemOrderId,
               user: { id: row.member?.identity?.id },
             },
-            relations: ['topupOrder', 'user', 'user.member'],
+            relations: ['topupOrder', 'user'],
           });
 
         return {
           ...plainToInstance(MemberAllTopupResponseDto, row),
-          commission: transactionUpdate.amount,
-          quotaCredit: transactionUpdate.after - transactionUpdate.before,
+          commission: transactionUpdate?.amount || null,
+          quotaCredit:
+            transactionUpdate?.after - transactionUpdate?.before || null,
         };
       }),
     );
@@ -129,10 +133,22 @@ export class TopupMemberService {
 
       if (!transactionUpdate) throw new NotFoundException();
 
+      const responseData = {
+        ...orderDetails,
+        quotaDetails: {
+          commissionRate: transactionUpdate.rate,
+          commissionAmount: transactionUpdate.amount,
+          quotaEarned: orderDetails.amount + transactionUpdate.amount,
+        },
+        transactionDetails: {
+          transactionId: orderDetails.transactionId,
+          receipt: orderDetails.transactionReceipt,
+          member: JSON.parse(orderDetails.transactionDetails),
+        },
+      };
+
       return {
-        ...plainToInstance(MemberTopupDetailsResponseDto, orderDetails),
-        commission: transactionUpdate.amount,
-        quotaCredit: transactionUpdate.before - transactionUpdate.after,
+        ...plainToInstance(MemberTopupDetailsResponseDto, responseData),
       };
     } catch (error) {
       throw new InternalServerErrorException();

@@ -1,4 +1,10 @@
-import { IsEnum, IsNotEmpty, IsString, IsNumber } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsString,
+  IsNumber,
+  IsOptional,
+} from 'class-validator';
 import { ChannelName } from 'src/utils/enum/enum';
 
 export class CreateTopupDto {
@@ -13,4 +19,8 @@ export class CreateTopupDto {
   @IsNotEmpty()
   @IsString()
   channelDetails: string;
+
+  @IsOptional()
+  @IsNumber()
+  memberId?: number;
 }

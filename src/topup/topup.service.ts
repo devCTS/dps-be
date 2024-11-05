@@ -45,13 +45,6 @@ export class TopupService {
 
     if (!topup) throw new InternalServerErrorException('Topup error');
 
-    if (topup)
-      await this.transactionUpdateTopupService.create({
-        orderDetails: topup,
-        orderType: OrderType.PAYOUT,
-        systemOrderId: topup.systemOrderId,
-      });
-
     return HttpStatus.CREATED;
   }
 

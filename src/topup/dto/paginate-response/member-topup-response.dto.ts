@@ -17,21 +17,4 @@ export class MemberAllTopupResponseDto {
 
   @Expose()
   channel: string;
-
-  @Expose()
-  @Transform(
-    ({ value }) => ({
-      name: value.name,
-      email: value.email,
-      mobile: value.mobile,
-    }),
-    { toClassOnly: true },
-  )
-  user: string;
-
-  @Expose()
-  commission: number;
-
-  @Expose()
-  quotaCredit: number;
 }
