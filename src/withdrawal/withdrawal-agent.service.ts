@@ -133,9 +133,9 @@ export class WithdrawalAgentService {
 
         const response = {
           ...row,
-          serviceCharge: transactionUpdate?.amount || null,
-          balanceAfter: transactionUpdate?.after || null,
-          balanceBefore: transactionUpdate?.before || null,
+          serviceCharge: transactionUpdate?.amount || 0,
+          balanceAfter: transactionUpdate?.after || 0,
+          balanceBefore: transactionUpdate?.before || 0,
           date: row.createdAt,
         };
 

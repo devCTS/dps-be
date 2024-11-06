@@ -133,9 +133,9 @@ export class WithdrawalMemberService {
 
         const response = {
           ...row,
-          serviceCharge: transactionUpdate?.amount,
-          balanceAfter: transactionUpdate?.after,
-          balanceBefore: transactionUpdate?.before,
+          serviceCharge: transactionUpdate?.amount || 0,
+          balanceAfter: transactionUpdate?.after || 0,
+          balanceBefore: transactionUpdate?.before || 0,
           date: row.createdAt,
         };
 
