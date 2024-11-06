@@ -42,7 +42,7 @@ export class TransactionUpdatesWithdrawalService {
 
     const systemConfig = await this.systemConfigService.findLatest();
 
-    let beforeProfit = systemConfig.systemProfit;
+    let beforeProfit = systemConfig.systemProfit || 0;
     let amount = 0;
 
     transactionUpdateEntries.forEach((row) => {
@@ -90,7 +90,7 @@ export class TransactionUpdatesWithdrawalService {
     const rate =
       withdrawalMadeOn === WithdrawalMadeOn.ADMIN
         ? 0
-        : user.withdrawalServiceRate;
+        : user?.withdrawalServiceRate || user?.withdrawalRate;
     const amount =
       withdrawalMadeOn === WithdrawalMadeOn.ADMIN
         ? 0

@@ -40,7 +40,7 @@ export class AgentResponseDto {
   identity: Identity;
 
   @Expose()
-  withdrawalServiceRate: string;
+  withdrawalRate: string;
 
   @Expose()
   minWithdrawalAmount: number;

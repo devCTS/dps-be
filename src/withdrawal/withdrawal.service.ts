@@ -11,6 +11,7 @@ import { Withdrawal } from './entities/withdrawal.entity';
 import { Repository } from 'typeorm';
 import * as uniqid from 'uniqid';
 import {
+  ChannelName,
   OrderType,
   UserTypeForTransactionUpdates,
   WithdrawalMadeOn,
@@ -54,8 +55,14 @@ export class WithdrawalService {
     });
     if (!user) throw new NotFoundException('User not found!');
 
+    const channelMap = {
+      UPI: ChannelName.UPI,
+      NETBANKING: ChannelName.BANKING,
+      EWALLET: ChannelName.E_WALLET,
+    };
+
     const createWithdrawalOrder = await this.withdrawalRepository.save({
-      channel,
+      channel: channelMap[channel],
       channelDetails,
       amount: withdrawalAmount,
       systemOrderId: uniqid(),

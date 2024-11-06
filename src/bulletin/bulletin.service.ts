@@ -28,6 +28,7 @@ export class BulletinService {
     const topupOrders = (
       await this.topupMemberService.paginate(paginateRequestDto)
     ).data;
+
     const payoutOrders = (
       await this.payoutMemberService.paginate(paginateRequestDto)
     ).data;
