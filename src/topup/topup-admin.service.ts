@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, Repository } from 'typeorm';
+import { Between, In, Repository } from 'typeorm';
 import { Topup } from './entities/topup.entity';
 import { plainToInstance } from 'class-transformer';
 import {
@@ -10,7 +10,10 @@ import {
 } from 'src/utils/dtos/paginate.dto';
 import { AdminAllTopupResponseDto } from './dto/paginate-response/admin-topup-response.dto';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
-import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
+import {
+  OrderStatus,
+  UserTypeForTransactionUpdates,
+} from 'src/utils/enum/enum';
 import { AdminTopupDetailsResponseDto } from './dto/topup-details-response/admin-topup-details-response.dto';
 
 @Injectable()
@@ -43,11 +46,14 @@ export class TopupAdminService {
         },
       );
 
-    if (status) {
-      queryBuilder.andWhere(`topup.status = :status`, {
-        status: status.toUpperCase(),
-      });
-    }
+    let statusFilter = [];
+
+    if (status) statusFilter.push(status);
+    else statusFilter.push(OrderStatus.COMPLETE, OrderStatus.FAILED);
+
+    queryBuilder.andWhere(`topup.status IN (:...statusFilter)`, {
+      statusFilter,
+    });
 
     if (startDate && endDate) {
       const parsedStartDate = parseStartDate(startDate);
@@ -120,7 +126,9 @@ export class TopupAdminService {
       transactionDetails: {
         transactionId: topup.transactionId,
         receipt: topup.transactionReceipt,
-        member: topup.member ? JSON.parse(topup.transactionDetails) : {},
+        member: JSON.parse(topup?.transactionDetails)?.member || null,
+        channelDetails:
+          JSON.parse(topup?.transactionDetails)?.channelDetails || null,
       },
       balancesAndProfit: transactionUpdateEntries,
     };

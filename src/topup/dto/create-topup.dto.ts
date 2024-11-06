@@ -4,6 +4,7 @@ import {
   IsString,
   IsNumber,
   IsOptional,
+  IsObject,
 } from 'class-validator';
 import { ChannelName } from 'src/utils/enum/enum';
 
@@ -17,8 +18,8 @@ export class CreateTopupDto {
   channel: ChannelName;
 
   @IsNotEmpty()
-  @IsString()
-  channelDetails: string;
+  @IsObject()
+  channelDetails: any;
 
   @IsOptional()
   @IsNumber()

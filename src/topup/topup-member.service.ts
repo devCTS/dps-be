@@ -144,7 +144,9 @@ export class TopupMemberService {
         transactionDetails: {
           transactionId: orderDetails.transactionId,
           receipt: orderDetails.transactionReceipt,
-          member: JSON.parse(orderDetails.transactionDetails),
+          member: JSON.parse(orderDetails.transactionDetails).member,
+          channelDetails: JSON.parse(orderDetails.transactionDetails)
+            .channelDetails,
         },
       };
 

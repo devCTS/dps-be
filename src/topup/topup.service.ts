@@ -120,7 +120,7 @@ export class TopupService {
       this.create({
         amount: topupAmount,
         channel: nextTopupChannel.channel,
-        channelDetails: JSON.stringify(nextTopupChannel.channelDetails),
+        channelDetails: nextTopupChannel.channelDetails,
       });
     }
   }
@@ -155,8 +155,9 @@ export class TopupService {
         ? {
             amount: currentTopup.amount,
             channel: currentTopup.channel,
-            channelDetails: JSON.parse(currentTopup.transactionDetails),
-            status: currentTopup.status,
+            channelDetails: JSON.parse(currentTopup.transactionDetails)
+              .channelDetails,
+            status: currentTopup.status.toLowerCase(),
             member: currentTopup.member
               ? {
                   name:
@@ -166,14 +167,19 @@ export class TopupService {
                   id: currentTopup.member.id,
                 }
               : null,
+            systemOrderId: currentTopup.systemOrderId,
           }
         : null,
     };
   }
 
   async create(topupDetails: CreateTopupDto) {
+    const { channelDetails } = topupDetails;
+    delete topupDetails.channelDetails;
+
     const topup = await this.topupRepository.save({
       ...topupDetails,
+      transactionDetails: JSON.stringify({ channelDetails }),
       systemOrderId: uniqid(),
     });
 
@@ -208,11 +214,16 @@ export class TopupService {
       systemOrderId: topupOrderDetails.systemOrderId,
     });
 
+    const newTransactionDetails = JSON.parse(
+      topupOrderDetails.transactionDetails,
+    );
+    newTransactionDetails.member = memberPaymentDetails;
+
     await this.topupRepository.update(
       { systemOrderId: id },
       {
         status: OrderStatus.ASSIGNED,
-        transactionDetails: JSON.stringify(memberPaymentDetails),
+        transactionDetails: JSON.stringify(newTransactionDetails),
         member,
       },
     );
