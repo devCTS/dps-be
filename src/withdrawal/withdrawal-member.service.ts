@@ -133,9 +133,9 @@ export class WithdrawalMemberService {
 
         const response = {
           ...row,
-          serviceCharge: transactionUpdate.amount,
-          balanceAfter: transactionUpdate.after,
-          balanceBefore: transactionUpdate.before,
+          serviceCharge: transactionUpdate?.amount,
+          balanceAfter: transactionUpdate?.after,
+          balanceBefore: transactionUpdate?.before,
           date: row.createdAt,
         };
 
@@ -171,8 +171,8 @@ export class WithdrawalMemberService {
 
     const data = {
       ...orderDetails,
-      serviceCharge: transactionUpdate.amount,
-      balanceDeducted: transactionUpdate.before - transactionUpdate.after,
+      serviceCharge: transactionUpdate?.amount,
+      balanceDeducted: transactionUpdate?.before - transactionUpdate?.after,
       userChannel: JSON.parse(orderDetails.channelDetails),
       transactionDetails: JSON.parse(orderDetails.transactionDetails),
     };
