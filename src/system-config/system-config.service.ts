@@ -79,7 +79,36 @@ export class SystemConfigService {
       take: 1,
     });
 
-    return plainToInstance(SystemConfigResponseDto, latestResult[0]);
+    const kgAdmin = await this.identityRepository.findOneBy({
+      email: process.env.SUPER_ADMIN_EMAIL,
+    });
+
+    const upiChannelData = await this.upiRepository.find({
+      where: {
+        identity: kgAdmin,
+      },
+    });
+    const netBankingChannelData = await this.netBankingRepository.find({
+      where: {
+        identity: kgAdmin,
+      },
+    });
+    const eWalletChannelData = await this.eWalletRepository.find({
+      where: {
+        identity: kgAdmin,
+      },
+    });
+
+    const channelsData = {
+      upi: upiChannelData,
+      netBanking: netBankingChannelData,
+      eWallet: eWalletChannelData,
+    };
+
+    return plainToInstance(SystemConfigResponseDto, {
+      ...latestResult[0],
+      channelProfile: channelsData,
+    });
   }
 
   async findLatest(withRelations: boolean = true) {
@@ -189,8 +218,15 @@ export class SystemConfigService {
         userType: 'SUPER_ADMIN',
       },
     });
-
     if (!identity) throw new NotFoundException('Identity not found!');
+
+    const kgAdmin = await this.identityRepository.findOne({
+      where: {
+        email: process.env.SUPER_ADMIN_EMAIL,
+      },
+    });
+
+    if (!kgAdmin) throw new NotFoundException('Kg admin not found.');
 
     const latestResult = await this.findLatest();
 
@@ -212,9 +248,45 @@ export class SystemConfigService {
     const newSystemConfig = await this.systemConfigRepository.save({
       topupAmount,
       topupThreshold,
-      channelProfile,
       ...latestResult,
     });
+
+    await this.upiRepository.delete({
+      identity: kgAdmin,
+    });
+    await this.eWalletRepository.delete({
+      identity: kgAdmin,
+    });
+    await this.netBankingRepository.delete({
+      identity: kgAdmin,
+    });
+
+    if (channelProfile?.upi && channelProfile.upi.length > 0) {
+      for (const element of channelProfile.upi) {
+        await this.upiRepository.save({
+          ...element,
+          identity: kgAdmin,
+        });
+      }
+    }
+
+    if (channelProfile?.eWallet && channelProfile.eWallet.length > 0) {
+      for (const element of channelProfile.eWallet) {
+        await this.eWalletRepository.save({
+          ...element,
+          identity: kgAdmin,
+        });
+      }
+    }
+
+    if (channelProfile?.netBanking && channelProfile.netBanking.length > 0) {
+      for (const element of channelProfile.netBanking) {
+        await this.netBankingRepository.save({
+          ...element,
+          identity: kgAdmin,
+        });
+      }
+    }
 
     if (!newSystemConfig) throw new InternalServerErrorException();
 

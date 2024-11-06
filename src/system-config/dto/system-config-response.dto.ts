@@ -80,11 +80,7 @@ export class SystemConfigResponseDto {
   topupAmount: number;
 
   @Expose()
-  @TransformChannelProfileFields()
-  defaultTopupChannels: {
-    channelName: string;
-    fields: { label: string; value: string }[];
-  };
+  channelProfile: {};
 
   // Member Defaults
   @Expose()
