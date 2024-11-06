@@ -30,6 +30,7 @@ import { Agent } from 'src/agent/entities/agent.entity';
 
 @Injectable()
 export class TopupService {
+  lastTopupIndex: number;
   constructor(
     @InjectRepository(Topup)
     private readonly topupRepository: Repository<Topup>,
@@ -46,7 +47,9 @@ export class TopupService {
     private readonly transactionUpdateTopupService: TransactionUpdatesTopupService,
     private readonly memberService: MemberService,
     private readonly systemConfigService: SystemConfigService,
-  ) {}
+  ) {
+    this.lastTopupIndex = 0;
+  }
 
   async getCurrentToupHoldings() {
     // return 2000;
@@ -89,12 +92,17 @@ export class TopupService {
   }
 
   async getNextTopupChannel() {
+    const channels = await this.systemConfigService.getTopupChannels();
+
+    const flattenedChannels = [
+      ...channels.upi,
+      ...channels.netbanking,
+      ...channels.eWallet,
+    ];
+
     return {
       channel: ChannelName.UPI,
-      channelDetails: {
-        'UPI ID': '123123123@ybs',
-        Mobile: '1231231230',
-      },
+      channelDetails: flattenedChannels[this.lastTopupIndex],
     };
   }
 

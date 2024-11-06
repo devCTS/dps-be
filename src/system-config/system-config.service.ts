@@ -79,35 +79,11 @@ export class SystemConfigService {
       take: 1,
     });
 
-    const kgAdmin = await this.identityRepository.findOneBy({
-      email: process.env.SUPER_ADMIN_EMAIL,
-    });
-
-    const upiChannelData = await this.upiRepository.find({
-      where: {
-        identity: kgAdmin,
-      },
-    });
-    const netBankingChannelData = await this.netBankingRepository.find({
-      where: {
-        identity: kgAdmin,
-      },
-    });
-    const eWalletChannelData = await this.eWalletRepository.find({
-      where: {
-        identity: kgAdmin,
-      },
-    });
-
-    const channelsData = {
-      upi: upiChannelData,
-      netBanking: netBankingChannelData,
-      eWallet: eWalletChannelData,
-    };
+    const channels = await this.getTopupChannels();
 
     return plainToInstance(SystemConfigResponseDto, {
       ...latestResult[0],
-      channelProfile: channelsData,
+      channelProfile: channels,
     });
   }
 
@@ -207,6 +183,21 @@ export class SystemConfigService {
     if (!newSystemConfig) throw new InternalServerErrorException();
 
     return HttpStatus.OK;
+  }
+
+  async getTopupChannels() {
+    const identity = await this.identityRepository.findOne({
+      where: {
+        email: process.env.SUPER_ADMIN_EMAIL,
+      },
+      relations: ['upi', 'netBanking', 'eWallet'],
+    });
+
+    return {
+      upi: identity.upi,
+      netbanking: identity.netBanking,
+      eWallet: identity.eWallet,
+    };
   }
 
   async updateTopupConfigurations(updateTopupConfigDto: UpdateTopupConfigDto) {
