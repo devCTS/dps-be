@@ -105,9 +105,12 @@ export class PayoutMerchantService {
         return {
           ...plainToInstance(MerchantAllPayoutResponseDto, row),
           payoutModeVia: row.payoutMadeVia,
-          serviceFee: (row.amount * row.merchant.payoutServiceRate) / 100,
-          balanceDebit:
-            row.amount + (row.amount * row.merchant.payoutServiceRate) / 100,
+          serviceFee: row?.merchant?.payoutServiceRate
+            ? (row.amount * row.merchant.payoutServiceRate) / 100
+            : 0,
+          balanceDebit: row?.merchant?.payoutServiceRate
+            ? (row.amount * row.merchant.payoutServiceRate) / 100
+            : 0,
           channelDetails: row.user.channelDetails,
         };
       }),
