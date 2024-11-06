@@ -14,10 +14,19 @@ import { MemberModule } from 'src/member/member.module';
 import { SystemConfigModule } from 'src/system-config/system-config.module';
 import { AgentModule } from 'src/agent/agent.module';
 import { PaymentSystemModule } from 'src/payment-system/payment-system.module';
+import { Merchant } from 'src/merchant/entities/merchant.entity';
+import { Agent } from 'src/agent/entities/agent.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Topup, EndUser, Member, TransactionUpdate]),
+    TypeOrmModule.forFeature([
+      Topup,
+      EndUser,
+      Member,
+      TransactionUpdate,
+      Merchant,
+      Agent,
+    ]),
     TransactionUpdatesModule,
     EndUserModule,
     MemberModule,

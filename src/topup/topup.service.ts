@@ -7,9 +7,10 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Topup } from './entities/topup.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 
 import {
+  ChannelName,
   OrderStatus,
   OrderType,
   UserTypeForTransactionUpdates,
@@ -23,6 +24,9 @@ import { MemberService } from 'src/member/member.service';
 import { CreateTopupDto } from './dto/create-topup.dto';
 import { UpdateTopupDto } from './dto/update-topup.dto';
 import { TransactionUpdatesTopupService } from 'src/transaction-updates/transaction-updates-topup.service';
+import { Merchant } from 'src/merchant/entities/merchant.entity';
+import { SystemConfigService } from 'src/system-config/system-config.service';
+import { Agent } from 'src/agent/entities/agent.entity';
 
 @Injectable()
 export class TopupService {
@@ -31,11 +35,141 @@ export class TopupService {
     private readonly topupRepository: Repository<Topup>,
     @InjectRepository(Member)
     private readonly memberRepository: Repository<Member>,
+
+    @InjectRepository(Agent)
+    private readonly agentRepository: Repository<Agent>,
+
+    @InjectRepository(Merchant)
+    private readonly merchantRepository: Repository<Merchant>,
     @InjectRepository(TransactionUpdate)
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
     private readonly transactionUpdateTopupService: TransactionUpdatesTopupService,
     private readonly memberService: MemberService,
+    private readonly systemConfigService: SystemConfigService,
   ) {}
+
+  async getCurrentToupHoldings() {
+    // return 2000;
+
+    const merchants = await this.merchantRepository.find();
+    const totalMerchantBalance = merchants.reduce((prev, curr) => {
+      return prev + curr?.balance;
+    }, 0);
+
+    const members = await this.memberRepository.find();
+    const totalMemberBalance = members.reduce((prev, curr) => {
+      return prev + curr?.balance;
+    }, 0);
+
+    const agents = await this.agentRepository.find();
+    const totalAgentBalance = agents.reduce((prev, curr) => {
+      return prev + curr?.balance;
+    }, 0);
+
+    const currentSystemProfit = (await this.systemConfigService.findLatest())
+      .systemProfit;
+
+    const setelledTopupOrders = await this.topupRepository.find({
+      where: {
+        status: OrderStatus.COMPLETE,
+      },
+    });
+    const totalSetteledAmount = setelledTopupOrders.reduce((prev, curr) => {
+      return prev + curr?.amount;
+    }, 0);
+
+    const topupHoldings =
+      totalMerchantBalance +
+      totalAgentBalance +
+      totalMemberBalance +
+      currentSystemProfit -
+      totalSetteledAmount;
+
+    return topupHoldings;
+  }
+
+  async getNextTopupChannel() {
+    return {
+      channel: ChannelName.UPI,
+      channelDetails: {
+        'UPI ID': '123123123@ybs',
+        Mobile: '1231231230',
+      },
+    };
+  }
+
+  async checkAndCreate() {
+    const pendingTopupOrderExists = await this.topupRepository.findOne({
+      where: {
+        status: In([
+          OrderStatus.ASSIGNED,
+          OrderStatus.INITIATED,
+          OrderStatus.SUBMITTED,
+        ]),
+      },
+    });
+    if (pendingTopupOrderExists) return;
+
+    const currentTopupHoldings = await this.getCurrentToupHoldings();
+    const nextTopupChannel = await this.getNextTopupChannel();
+
+    const { topupThreshold, topupAmount } =
+      await this.systemConfigService.findLatest();
+
+    if (currentTopupHoldings >= topupThreshold) {
+      this.create({
+        amount: topupAmount,
+        channel: nextTopupChannel.channel,
+        channelDetails: JSON.stringify(nextTopupChannel.channelDetails),
+      });
+    }
+  }
+
+  async getCurrentTopupDetails() {
+    const { systemProfit, topupAmount, topupThreshold } =
+      await this.systemConfigService.findLatest();
+    const currentSystemHoldings = await this.getCurrentToupHoldings();
+    const amountPending = topupThreshold - currentSystemHoldings;
+    const nextTopupChannel = await this.getNextTopupChannel();
+
+    const currentTopup = await this.topupRepository.findOne({
+      where: {
+        status: In([
+          OrderStatus.INITIATED,
+          OrderStatus.ASSIGNED,
+          OrderStatus.SUBMITTED,
+        ]),
+      },
+      relations: ['member'],
+    });
+
+    return {
+      upperCard: {
+        currentSystemProfit: systemProfit,
+        currentSystemHoldings,
+        amountPending: amountPending < 0 ? 0 : amountPending,
+        nextTopupAmount: topupAmount,
+        nextTopupChannel,
+      },
+      lowerCard: currentTopup
+        ? {
+            amount: currentTopup.amount,
+            channel: currentTopup.channel,
+            channelDetails: JSON.parse(currentTopup.transactionDetails),
+            status: currentTopup.status,
+            member: currentTopup.member
+              ? {
+                  name:
+                    currentTopup.member.firstName +
+                    ' ' +
+                    currentTopup.member.lastName,
+                  id: currentTopup.member.id,
+                }
+              : null,
+          }
+        : null,
+    };
+  }
 
   async create(topupDetails: CreateTopupDto) {
     const topup = await this.topupRepository.save({

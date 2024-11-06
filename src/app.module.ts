@@ -31,6 +31,7 @@ import { UploadModule } from './upload/upload.module';
 import { WithdrawalModule } from './withdrawal/withdrawal.module';
 import { TopupModule } from './topup/topup.module';
 import { BulletinModule } from './bulletin/bulletin.module';
+import { CronModule } from './services/cron/cron.module';
 
 @Module({
   imports: [
@@ -79,6 +80,7 @@ import { BulletinModule } from './bulletin/bulletin.module';
     WithdrawalModule,
     TopupModule,
     BulletinModule,
+    CronModule,
   ],
   controllers: [AppController],
   providers: [

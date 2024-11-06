@@ -32,6 +32,11 @@ export class TopupController {
     return this.topupService.findAll();
   }
 
+  @Get('current-topup-details')
+  getCurrentTopupDetails() {
+    return this.topupService.getCurrentTopupDetails();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.topupService.findOne(id);
