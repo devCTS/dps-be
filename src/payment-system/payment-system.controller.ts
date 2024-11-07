@@ -125,7 +125,7 @@ export class PaymentSystemController {
           amount: amount,
           memberDetails: {
             upiId: upiDetails.upiId,
-            isBusiness: true,
+            isBusiness: upiDetails.isBusinessUpi,
             name: name,
             qrCode: await QRCode.toDataURL(upiIntentURI),
           },
