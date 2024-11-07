@@ -10,6 +10,7 @@ import { Repository } from 'typeorm';
 import * as uniqid from 'uniqid';
 import { Payin } from './entities/payin.entity';
 import {
+  CallBackStatus,
   OrderStatus,
   OrderType,
   PaymentMadeOn,
@@ -361,6 +362,11 @@ export class PayinService {
 
     if (!payinOrderDetails)
       throw new NotFoundException('Payin order not found.');
+
+    if (payinOrderDetails.callbackStatus === CallBackStatus.SUCCESS)
+      throw new NotAcceptableException(
+        'Callback status is aready set to SUCCESS',
+      );
 
     await this.payinRepository.update(payinOrderDetails.id, { callbackStatus });
 

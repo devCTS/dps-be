@@ -83,7 +83,7 @@ export class PayinController {
     return this.payinService.updatePayinStatusToSubmitted(body);
   }
 
-  @Put('success-callback/:sysOrderId')
+  @Put('success-callback')
   handleCallbackStatusSuccess(
     @Body() changeCallbackStatusDto: ChangeCallbackStatusDto,
   ) {
