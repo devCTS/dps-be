@@ -26,6 +26,7 @@ import { MerchantService } from 'src/merchant/merchant.service';
 import { AgentService } from 'src/agent/agent.service';
 import { CreatePaymentOrderDto } from 'src/payment-system/dto/createPaymentOrder.dto';
 import { EndUser } from 'src/end-user/entities/end-user.entity';
+import { ChangeCallbackStatusDto } from './dto/change-callback-status.dto';
 
 @Injectable()
 export class PayinService {
@@ -350,5 +351,19 @@ export class PayinService {
 
   remove(id: number) {
     return `This action removes a #${id} payout`;
+  }
+
+  async changeCallbackStatus(changeCallbackStatusDto: ChangeCallbackStatusDto) {
+    const { systemOrderId, callbackStatus } = changeCallbackStatusDto;
+    const payinOrderDetails = await this.payinRepository.findOneBy({
+      systemOrderId,
+    });
+
+    if (!payinOrderDetails)
+      throw new NotFoundException('Payin order not found.');
+
+    await this.payinRepository.update(payinOrderDetails.id, { callbackStatus });
+
+    return HttpStatus.OK;
   }
 }
