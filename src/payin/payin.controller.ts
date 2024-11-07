@@ -83,10 +83,8 @@ export class PayinController {
     return this.payinService.updatePayinStatusToSubmitted(body);
   }
 
-  @Put('success-callback')
-  handleCallbackStatusSuccess(
-    @Body() changeCallbackStatusDto: ChangeCallbackStatusDto,
-  ) {
-    return this.payinService.changeCallbackStatus(changeCallbackStatusDto);
+  @Put('success-callback/:id')
+  handleCallbackStatusSuccess(@Param('id') id: string) {
+    return this.payinService.handleCallbackStatusSuccess(id);
   }
 }
