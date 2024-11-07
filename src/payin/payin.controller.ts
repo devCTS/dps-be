@@ -5,12 +5,14 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Put,
 } from '@nestjs/common';
 import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
 import { PayinAdminService } from './payin-admin.service';
 import { PayinMerchantService } from './payin-merchant.service';
 import { PayinMemberService } from './payin-member.service';
 import { PayinService } from './payin.service';
+import { ChangeCallbackStatusDto } from './dto/change-callback-status.dto';
 
 @Controller('payin')
 export class PayinController {
@@ -79,5 +81,12 @@ export class PayinController {
   @Post('update-status-submitted')
   updatePayinStatusToSubmitted(@Body() body) {
     return this.payinService.updatePayinStatusToSubmitted(body);
+  }
+
+  @Put('success-callback')
+  handleCallbackStatusSuccess(
+    @Body() changeCallbackStatusDto: ChangeCallbackStatusDto,
+  ) {
+    return this.payinService.changeCallbackStatus(changeCallbackStatusDto);
   }
 }
