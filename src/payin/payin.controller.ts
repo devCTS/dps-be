@@ -86,5 +86,7 @@ export class PayinController {
   @Put('success-callback/:sysOrderId')
   handleCallbackStatusSuccess(
     @Body() changeCallbackStatusDto: ChangeCallbackStatusDto,
-  ) {}
+  ) {
+    return this.payinService.changeCallbackStatus(changeCallbackStatusDto);
+  }
 }
