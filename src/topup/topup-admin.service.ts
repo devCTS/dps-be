@@ -15,6 +15,7 @@ import {
   UserTypeForTransactionUpdates,
 } from 'src/utils/enum/enum';
 import { AdminTopupDetailsResponseDto } from './dto/topup-details-response/admin-topup-details-response.dto';
+import { roundOffAmount } from 'src/utils/utils';
 
 @Injectable()
 export class TopupAdminService {
@@ -86,9 +87,11 @@ export class TopupAdminService {
         const response = {
           ...row,
           memberCommission: row?.member?.topupCommissionRate
-            ? (row.amount * row.member.topupCommissionRate) / 100
+            ? roundOffAmount(
+                (row.amount * row.member.topupCommissionRate) / 100,
+              )
             : 0,
-          totalAgentCommission: systemProfitRow?.amount || 0,
+          totalAgentCommission: roundOffAmount(systemProfitRow?.amount) || 0,
         };
 
         return plainToInstance(AdminAllTopupResponseDto, response);

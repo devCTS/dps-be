@@ -335,7 +335,20 @@ export class MemberReferralService {
   }
 
   private async trimTreeToUser(tree: any, userId: number): Promise<any> {
-    if (tree.id === userId) return tree;
+    if (tree.id === userId)
+      return {
+        id: tree.id,
+        firstName: tree.firstName,
+        lastName: tree.lastName,
+        referralCode: tree.referralCode,
+        email: tree.email,
+        balance: tree.balance,
+        quota: tree.quota,
+        payinCommission: tree.payinCommission,
+        payoutCommission: tree.payoutCommission,
+        topupCommission: tree.topupCommission,
+        children: [],
+      };
 
     const trimmedChildren = await Promise.all(
       tree.children.map((child: any) => this.trimTreeToUser(child, userId)),

@@ -194,9 +194,9 @@ export class SystemConfigService {
     });
 
     return {
-      upi: identity.upi,
-      netbanking: identity.netBanking,
-      eWallet: identity.eWallet,
+      upi: identity?.upi || [],
+      netBanking: identity?.netBanking || [],
+      eWallet: identity?.eWallet || [],
     };
   }
 

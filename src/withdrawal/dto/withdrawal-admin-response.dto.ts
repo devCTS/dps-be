@@ -11,6 +11,7 @@ import {
   WithdrawalMadeOn,
   WithdrawalOrderStatus,
 } from 'src/utils/enum/enum';
+import { roundOffAmount } from 'src/utils/utils';
 
 @Exclude()
 export class WithdrawalAdminResponseDto {
@@ -160,10 +161,10 @@ function TransformBalancesAndProfit() {
               role,
               name: item.name,
               serviceRate: item.rate,
-              serviceFee: item.amount,
-              balanceDeducted: item.before - item.after,
-              balanceBefore: item.before,
-              balanceAfter: item.after,
+              serviceFee: roundOffAmount(item.amount),
+              balanceDeducted: roundOffAmount(item.before - item.after),
+              balanceBefore: roundOffAmount(item.before),
+              balanceAfter: roundOffAmount(item.after),
             };
 
           case UserTypeForTransactionUpdates.MERCHANT_BALANCE:
@@ -171,10 +172,10 @@ function TransformBalancesAndProfit() {
               role,
               name: item.name,
               serviceRate: item.rate,
-              serviceFee: item.amount,
-              balanceDeducted: item.before - item.after,
-              balanceBefore: item.before,
-              balanceAfter: item.after,
+              serviceFee: roundOffAmount(item.amount),
+              balanceDeducted: roundOffAmount(item.before - item.after),
+              balanceBefore: roundOffAmount(item.before),
+              balanceAfter: roundOffAmount(item.after),
             };
 
           case UserTypeForTransactionUpdates.AGENT_BALANCE:
@@ -182,25 +183,25 @@ function TransformBalancesAndProfit() {
               role,
               name: item.name,
               serviceRate: item.rate,
-              serviceFee: item.amount,
-              balanceDeducted: item.before - item.after,
-              balanceBefore: item.before,
-              balanceAfter: item.after,
+              serviceFee: roundOffAmount(item.amount),
+              balanceDeducted: roundOffAmount(item.before - item.after),
+              balanceBefore: roundOffAmount(item.before),
+              balanceAfter: roundOffAmount(item.after),
             };
 
           case UserTypeForTransactionUpdates.SYSTEM_PROFIT:
             return {
               role,
-              profit: item.after - item.before,
-              balanceBefore: item.before,
-              balanceAfter: item.after,
+              profit: roundOffAmount(item.after - item.before),
+              balanceBefore: roundOffAmount(item.before),
+              balanceAfter: roundOffAmount(item.after),
             };
 
           case UserTypeForTransactionUpdates.GATEWAY_FEE:
             return {
               role,
               name: item.name,
-              upstreamFee: item.amount,
+              upstreamFee: roundOffAmount(item.amount),
               upstreamRate: item.rate,
             };
 

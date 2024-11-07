@@ -49,3 +49,8 @@ export const generateRandomOTP = () => {
 export const extractToken = (token: string) => {
   return token.split(' ')[1];
 };
+
+export const roundOffAmount = (amount) => {
+  if (!amount) return;
+  return Math.trunc(amount * 100) / 100;
+};

@@ -10,7 +10,7 @@ import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { ProportionalPayinMode } from 'src/merchant/entities/proportionalPayinMode.entity';
 import { SystemConfigService } from 'src/system-config/system-config.service';
 import { ChannelName, GatewayName } from 'src/utils/enum/enum';
-import { Repository } from 'typeorm';
+import { IsNull, MoreThan, MoreThanOrEqual, Not, Repository } from 'typeorm';
 
 @Injectable()
 export class PaymentSystemUtilService {
@@ -31,7 +31,7 @@ export class PaymentSystemUtilService {
     private readonly systemConfigService: SystemConfigService,
   ) {}
 
-  async fetchForDefault(merchant, channelName) {
+  async fetchForDefault(merchant, channelName, amount) {
     // Both member and gateway are enabled
     if (merchant.allowMemberChannelsPayin && merchant.allowPgBackupForPayin) {
       let selectedMember;
@@ -40,14 +40,14 @@ export class PaymentSystemUtilService {
       const startTime = Date.now();
 
       while (Date.now() - startTime < payinTimeout) {
-        selectedMember = await this.getMemberForPayin(channelName);
+        selectedMember = await this.getMemberForPayin(channelName, amount);
         if (selectedMember) return selectedMember;
 
         await new Promise((resolve) => setTimeout(resolve, 500));
       }
 
       if (!selectedMember)
-        selectedMember = await this.getGatewayForPayin(channelName);
+        selectedMember = await this.getGatewayForPayin(channelName, amount);
       return selectedMember;
     }
 
@@ -55,7 +55,7 @@ export class PaymentSystemUtilService {
     if (!merchant.allowPgBackupForPayin) {
       let selectedMember;
       while (true) {
-        selectedMember = await this.getMemberForPayin(channelName);
+        selectedMember = await this.getMemberForPayin(channelName, amount);
         if (selectedMember) return selectedMember;
 
         await new Promise((resolve) => setTimeout(resolve, 500));
@@ -64,7 +64,7 @@ export class PaymentSystemUtilService {
 
     // member channels disabled
     if (!merchant.allowMemberChannelsPayin)
-      return await this.getGatewayForPayin(channelName);
+      return await this.getGatewayForPayin(channelName, amount);
   }
 
   async fetchForAmountRange(merchant: Merchant, channelName, payinAmount) {
@@ -85,13 +85,21 @@ export class PaymentSystemUtilService {
         selectedGateway = range.gateway;
 
     if (selectedGateway === GatewayName.RAZORPAY)
-      return await this.getGatewayForPayin(channelName, GatewayName.RAZORPAY);
+      return await this.getGatewayForPayin(
+        channelName,
+        payinAmount,
+        GatewayName.RAZORPAY,
+      );
     else if (selectedGateway === GatewayName.PHONEPE)
-      return await this.getGatewayForPayin(channelName, GatewayName.PHONEPE);
-    else return await this.getMemberForPayin(channelName);
+      return await this.getGatewayForPayin(
+        channelName,
+        payinAmount,
+        GatewayName.PHONEPE,
+      );
+    else return await this.getMemberForPayin(channelName, payinAmount);
   }
 
-  async fetchForProportional(merchant: Merchant, channelName: ChannelName) {
+  async fetchForProportional(merchant: Merchant, channelName, amount) {
     const ratios = await this.proportionalRepository.find({
       where: {
         payinMode: {
@@ -155,48 +163,48 @@ export class PaymentSystemUtilService {
     });
 
     if (selected.name === 'member')
-      return await this.getMemberForPayin(channelName);
+      return await this.getMemberForPayin(channelName, amount);
 
     if (selected.name === 'razorpay')
-      return await this.getGatewayForPayin(channelName, GatewayName.RAZORPAY);
+      return await this.getGatewayForPayin(
+        channelName,
+        amount,
+        GatewayName.RAZORPAY,
+      );
 
     if (selected.name === 'phonepe')
-      return await this.getGatewayForPayin(channelName, GatewayName.PHONEPE);
+      return await this.getGatewayForPayin(
+        channelName,
+        amount,
+        GatewayName.PHONEPE,
+      );
   }
 
-  async getMemberForPayin(channelName) {
-    const onlineMembers = await this.memberRepository.find({
-      where: { isOnline: true },
-      relations: [
-        'identity',
-        'identity.upi',
-        'identity.netBanking',
-        'identity.eWallet',
-        'payin',
-      ],
-    });
-    if (!onlineMembers || !onlineMembers.length) return null;
+  async getMemberForPayin(channelName, amount) {
+    const eligibleMembers = await this.memberRepository
+      .createQueryBuilder('member')
+      .leftJoinAndSelect('member.identity', 'identity')
+      .leftJoinAndSelect('identity.netBanking', 'netBanking')
+      .leftJoinAndSelect('identity.eWallet', 'eWallet')
+      .leftJoinAndSelect('identity.upi', 'upi')
+      .leftJoinAndSelect('member.payin', 'payin')
+      .where('member.isOnline = :isOnline', { isOnline: true })
+      .andWhere('member.quota >= :amount', { amount })
+      .andWhere(`${channelName}.id IS NOT NULL`)
+      .getMany();
+    if (!eligibleMembers || !eligibleMembers.length) return null;
 
-    const membersWithSameChannel = onlineMembers.filter((member) => {
-      return (
-        member.identity[channelName] && member.identity[channelName].length > 0
-      );
-    });
-    if (!membersWithSameChannel || !membersWithSameChannel.length) return null;
-    const memberWithLeastPayinCount = membersWithSameChannel.reduce(
-      (prev, curr) => {
-        if (!prev) return curr;
-
-        return prev.payin.length <= curr.payin.length ? prev : curr;
-      },
-      null,
-    );
+    const memberWithLeastPayinCount = eligibleMembers.reduce((prev, curr) => {
+      if (!prev) return curr;
+      return prev.payin.length <= curr.payin.length ? prev : curr;
+    }, null);
 
     return memberWithLeastPayinCount;
   }
 
   async getGatewayForPayin(
     channelName: string,
+    amount,
     priority: GatewayName | null = null,
   ) {
     let selectedGateway =
@@ -222,7 +230,10 @@ export class PaymentSystemUtilService {
 
       if (!isSelectedGatewayEnabled) {
         while (true) {
-          const selectedMember = await this.getMemberForPayin(channelName);
+          const selectedMember = await this.getMemberForPayin(
+            channelName,
+            amount,
+          );
           if (selectedMember) return selectedMember;
           await new Promise((resolve) => setTimeout(resolve, 500));
         }

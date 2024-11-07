@@ -19,6 +19,7 @@ import {
   OrderStatus,
   UserTypeForTransactionUpdates,
 } from 'src/utils/enum/enum';
+import { roundOffAmount } from 'src/utils/utils';
 
 @Injectable()
 export class PayoutMerchantService {
@@ -105,10 +106,10 @@ export class PayoutMerchantService {
         return {
           ...plainToInstance(MerchantAllPayoutResponseDto, row),
           payoutModeVia: row.payoutMadeVia,
-          serviceFee: row?.merchant?.payoutServiceRate
+          serviceFee: roundOffAmount(row?.merchant?.payoutServiceRate)
             ? (row.amount * row.merchant.payoutServiceRate) / 100
             : 0,
-          balanceDebit: row?.merchant?.payoutServiceRate
+          balanceDebit: roundOffAmount(row?.merchant?.payoutServiceRate)
             ? (row.amount * row.merchant.payoutServiceRate) / 100
             : 0,
           channelDetails: row.user.channelDetails,
@@ -159,9 +160,10 @@ export class PayoutMerchantService {
         },
         balanceDetails: {
           serviceRate: transactionUpdateMerchant.rate,
-          serviceFee: transactionUpdateMerchant.amount,
-          balanceDeducted:
+          serviceFee: roundOffAmount(transactionUpdateMerchant.amount),
+          balanceDeducted: roundOffAmount(
             transactionUpdateMerchant.before - transactionUpdateMerchant.after,
+          ),
         },
         channelDetails: orderDetails.user.channelDetails,
       };

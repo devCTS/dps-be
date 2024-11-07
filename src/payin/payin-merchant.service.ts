@@ -18,6 +18,7 @@ import {
 } from './dto/payin-merchant-response.dto';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
+import { roundOffAmount } from 'src/utils/utils';
 
 @Injectable()
 export class PayinMerchantService {
@@ -87,8 +88,10 @@ export class PayinMerchantService {
 
         const response = {
           ...row,
-          serviceCharge: transactionUpdate?.amount,
-          balanceCredit: transactionUpdate.after - transactionUpdate.before,
+          serviceCharge: roundOffAmount(transactionUpdate?.amount),
+          balanceCredit: roundOffAmount(
+            transactionUpdate.after - transactionUpdate.before,
+          ),
         };
 
         return plainToInstance(PayinMerchantResponseDto, response);
@@ -138,9 +141,10 @@ export class PayinMerchantService {
         },
         balanceDetails: {
           serviceRate: transactionUpdateMerchant.rate,
-          serviceFee: transactionUpdateMerchant?.amount,
-          balanceEarned:
+          serviceFee: roundOffAmount(transactionUpdateMerchant?.amount),
+          balanceEarned: roundOffAmount(
             transactionUpdateMerchant.after - transactionUpdateMerchant.before,
+          ),
         },
       };
 

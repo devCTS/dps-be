@@ -8,6 +8,7 @@ import { AgentReferralService } from 'src/agent-referral/agent-referral.service'
 import { Identity } from 'src/identity/entities/identity.entity';
 import { MemberReferralService } from 'src/member-referral/member-referral.service';
 import { SystemConfigService } from 'src/system-config/system-config.service';
+import { roundOffAmount } from 'src/utils/utils';
 
 @Injectable()
 export class TransactionUpdatesPayoutService {
@@ -83,9 +84,9 @@ export class TransactionUpdatesPayoutService {
       orderType,
       userType,
       rate,
-      amount,
-      before,
-      after,
+      amount: roundOffAmount(amount),
+      before: roundOffAmount(before),
+      after: roundOffAmount(after),
       name: `${referral.firstName} ${referral.lastName}`,
       isAgentOf:
         referral.children?.length > 0
@@ -141,6 +142,9 @@ export class TransactionUpdatesPayoutService {
           case UserTypeForTransactionUpdates.MEMBER_BALANCE:
             acc.memberTotal += entry.amount;
             break;
+          case UserTypeForTransactionUpdates.MEMBER_QUOTA:
+            acc.memberQuota += entry.amount;
+            break;
           case UserTypeForTransactionUpdates.AGENT_BALANCE:
             acc.agentTotal += entry.amount;
             break;
@@ -152,20 +156,27 @@ export class TransactionUpdatesPayoutService {
         }
         return acc;
       },
-      { merchantTotal: 0, memberTotal: 0, agentTotal: 0, gatewayTotal: 0 },
+      {
+        merchantTotal: 0,
+        memberTotal: 0,
+        memberQuota: 0,
+        agentTotal: 0,
+        gatewayTotal: 0,
+      },
     );
-    const afterProfit =
+    const currentProfit =
       profitFromCurrentOrder.merchantTotal -
       (profitFromCurrentOrder.memberTotal +
         profitFromCurrentOrder.agentTotal +
-        profitFromCurrentOrder.gatewayTotal);
+        profitFromCurrentOrder.gatewayTotal +
+        profitFromCurrentOrder.memberQuota);
 
     await this.transactionUpdateRepository.save({
       orderType,
       userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
-      before: beforeProfit,
-      amount: afterProfit - beforeProfit,
-      after: afterProfit,
+      before: roundOffAmount(beforeProfit),
+      amount: roundOffAmount(currentProfit),
+      after: roundOffAmount(currentProfit - beforeProfit),
       payoutOrder: orderDetails,
       systemOrderId,
     });

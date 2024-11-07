@@ -23,8 +23,9 @@ import { ChannelSettings } from 'src/gateway/entities/channel-settings.entity';
 import { GetPayPageDto } from './dto/getPayPage.dto';
 import { SystemConfig } from 'src/system-config/entities/system-config.entity';
 import { SystemConfigService } from 'src/system-config/system-config.service';
-const paymentPageBaseUrl =
-  'http://www.kingsgate-payments.com.s3-website-ap-southeast-1.amazonaws.com';
+// const paymentPageBaseUrl =
+//   'http://www.kingsgate-payments.com.s3-website-ap-southeast-1.amazonaws.com';
+const paymentPageBaseUrl = 'http://localhost:5174';
 @Injectable()
 export class PaymentSystemService {
   constructor(
@@ -75,7 +76,7 @@ export class PaymentSystemService {
     let channelNameMap = {
       UPI: 'upi',
       NET_BANKING: 'netBanking',
-      E_WALLEt: 'eWallet',
+      E_WALLET: 'eWallet',
     };
     let channelName = channelNameMap[createdPayin.channel];
 
@@ -84,6 +85,7 @@ export class PaymentSystemService {
         selectedPaymentMode = await this.utilService.fetchForDefault(
           merchant,
           channelName,
+          createdPayin.amount,
         );
         break;
 
@@ -99,6 +101,7 @@ export class PaymentSystemService {
         selectedPaymentMode = await this.utilService.fetchForProportional(
           merchant,
           channelName,
+          createdPayin.amount,
         );
         break;
 
@@ -154,8 +157,6 @@ export class PaymentSystemService {
       });
       url = res.url;
     }
-
-    console.log(selectedPaymentMode);
 
     response.send({
       url,

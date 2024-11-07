@@ -8,6 +8,8 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToOne,
+  BeforeInsert,
+  BeforeUpdate,
 } from 'typeorm';
 import { PayinMode } from './payinMode.entity';
 import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
@@ -123,4 +125,10 @@ export class Merchant {
 
   @Column({ default: false })
   isOnline: boolean;
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  truncateAmounts() {
+    if (this.balance) this.balance = Math.trunc(this.balance * 100) / 100;
+  }
 }

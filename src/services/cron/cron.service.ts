@@ -7,7 +7,7 @@ export class CronService {
   constructor(private readonly topupService: TopupService) {}
 
   //   '0 */15 * * * *';
-  @Cron(CronExpression.EVERY_5_SECONDS)
+  @Cron(CronExpression.EVERY_30_MINUTES)
   handleCron() {
     this.topupService.checkAndCreate();
   }
