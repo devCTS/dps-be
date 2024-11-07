@@ -96,7 +96,7 @@ export class TopupService {
 
     const flattenedChannels = [
       ...channels.upi,
-      ...channels.netbanking,
+      ...channels.netBanking,
       ...channels.eWallet,
     ];
 

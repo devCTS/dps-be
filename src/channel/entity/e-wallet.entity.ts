@@ -12,6 +12,9 @@ export class EWallet {
   @Column()
   mobile: string;
 
+  @Column({ default: 0 })
+  channelIndex: number;
+
   @ManyToOne(() => Identity, (identity) => identity.eWallet)
   identity: Identity;
 }

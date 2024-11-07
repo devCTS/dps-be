@@ -15,6 +15,9 @@ export class Upi {
   @Column({ nullable: true, default: false })
   isBusinessUpi: boolean;
 
+  @Column({ default: 0 })
+  channelIndex: number;
+
   @ManyToOne(() => Identity, (identity) => identity.upi)
   identity: Identity;
 }

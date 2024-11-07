@@ -18,6 +18,9 @@ export class NetBanking {
   @Column()
   beneficiaryName: string;
 
+  @Column({ default: 0 })
+  channelIndex: number;
+
   @ManyToOne(() => Identity, (identity) => identity.netBanking)
   identity: Identity;
 }
