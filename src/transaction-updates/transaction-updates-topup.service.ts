@@ -7,6 +7,7 @@ import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
 import { Identity } from 'src/identity/entities/identity.entity';
 import { MemberReferralService } from 'src/member-referral/member-referral.service';
 import { SystemConfigService } from 'src/system-config/system-config.service';
+import { roundOffAmount } from 'src/utils/utils';
 
 @Injectable()
 export class TransactionUpdatesTopupService {
@@ -57,9 +58,9 @@ export class TransactionUpdatesTopupService {
       orderType,
       userType,
       rate,
-      amount,
-      before,
-      after,
+      amount: roundOffAmount(amount),
+      before: roundOffAmount(before),
+      after: roundOffAmount(after),
       name: `${referral.firstName} ${referral.lastName}`,
       isAgentOf:
         referral.children?.length > 0

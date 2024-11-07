@@ -3,6 +3,10 @@ import { Payin } from 'src/payin/entities/payin.entity';
 import { Identity } from './../../identity/entities/identity.entity';
 import { OrderType, UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
 import {
+  AfterInsert,
+  AfterUpdate,
+  BeforeInsert,
+  BeforeUpdate,
   Column,
   CreateDateColumn,
   Entity,
@@ -37,13 +41,13 @@ export class TransactionUpdate {
   @Column({ nullable: true, type: 'float' })
   rate: number;
 
-  @Column({ type: 'float' })
+  @Column({ type: 'float', nullable: true })
   amount: number;
 
-  @Column({ type: 'float' })
+  @Column({ type: 'float', nullable: true })
   before: number;
 
-  @Column({ type: 'float' })
+  @Column({ type: 'float', nullable: true })
   after: number;
 
   @Column({ default: true })

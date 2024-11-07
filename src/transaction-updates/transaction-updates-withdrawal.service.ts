@@ -1,3 +1,4 @@
+import { roundOffAmount } from 'src/utils/utils';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -62,9 +63,9 @@ export class TransactionUpdatesWithdrawalService {
     await this.transactionUpdateRepository.save({
       orderType,
       userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
-      before: beforeProfit,
-      amount,
-      after,
+      before: roundOffAmount(beforeProfit),
+      amount: roundOffAmount(amount),
+      after: roundOffAmount(after),
       withdrawalOrder: orderDetails,
       systemOrderId,
       pending: false,
@@ -105,9 +106,9 @@ export class TransactionUpdatesWithdrawalService {
       orderType,
       userType: mapUserType[userRole],
       rate,
-      amount,
-      before,
-      after,
+      amount: roundOffAmount(amount),
+      before: roundOffAmount(before),
+      after: roundOffAmount(after),
       name:
         userRole === UserTypeForTransactionUpdates.GATEWAY_FEE
           ? gatewayName

@@ -337,7 +337,19 @@ export class AgentReferralService {
   }
 
   private async trimTreeToUser(tree: any, userId: number): Promise<any> {
-    if (tree.id === userId) return tree;
+    if (tree.id === userId)
+      return {
+        id: tree.id,
+        firstName: tree.firstName,
+        lastName: tree.lastName,
+        referralCode: tree.referralCode,
+        email: tree.email,
+        agentType: 'merchant',
+        balance: tree.balance,
+        merchantPayinServiceRate: tree.payinServiceRate,
+        merchantPayoutServiceRate: tree.payoutServiceRate,
+        children: [],
+      };
 
     const trimmedChildren = await Promise.all(
       tree.children.map((child: any) => this.trimTreeToUser(child, userId)),

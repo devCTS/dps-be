@@ -1,3 +1,4 @@
+import { roundOffAmount } from './../utils/utils';
 import { TransactionUpdate } from './../transaction-updates/entities/transaction-update.entity';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -133,9 +134,9 @@ export class WithdrawalAgentService {
 
         const response = {
           ...row,
-          serviceCharge: transactionUpdate?.amount || 0,
-          balanceAfter: transactionUpdate?.after || 0,
-          balanceBefore: transactionUpdate?.before || 0,
+          serviceCharge: roundOffAmount(transactionUpdate?.amount) || 0,
+          balanceAfter: roundOffAmount(transactionUpdate?.after) || 0,
+          balanceBefore: roundOffAmount(transactionUpdate?.before) || 0,
           date: row.createdAt,
         };
 
@@ -171,9 +172,10 @@ export class WithdrawalAgentService {
 
     const data = {
       ...orderDetails,
-      serviceCharge: transactionUpdate?.amount || null,
+      serviceCharge: roundOffAmount(transactionUpdate?.amount) || null,
       balanceDeducted:
-        transactionUpdate?.before - transactionUpdate?.after || null,
+        roundOffAmount(transactionUpdate?.before - transactionUpdate?.after) ||
+        null,
       userChannel: JSON.parse(orderDetails.channelDetails),
       transactionDetails: JSON.parse(orderDetails.transactionDetails),
     };

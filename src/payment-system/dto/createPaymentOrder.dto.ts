@@ -13,7 +13,7 @@ export class CreatePaymentOrderDto {
   @IsNotEmpty()
   amount: number;
 
-  @IsAlphanumeric()
+  @IsString()
   @IsNotEmpty()
   orderId: string;
 

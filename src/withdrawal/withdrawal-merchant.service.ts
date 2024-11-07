@@ -18,6 +18,7 @@ import {
   WithdrawalDetailsUserResDto,
   WithdrawalUserResponseDto,
 } from './dto/withdrawal-user-response.dto';
+import { roundOffAmount } from 'src/utils/utils';
 
 @Injectable()
 export class WithdrawalMerchantService {
@@ -134,9 +135,9 @@ export class WithdrawalMerchantService {
 
         const response = {
           ...row,
-          serviceCharge: transactionUpdate?.amount || 0,
-          balanceAfter: transactionUpdate?.after || 0,
-          balanceBefore: transactionUpdate?.before || 0,
+          serviceCharge: roundOffAmount(transactionUpdate?.amount) || 0,
+          balanceAfter: roundOffAmount(transactionUpdate?.after) || 0,
+          balanceBefore: roundOffAmount(transactionUpdate?.before) || 0,
           date: row.createdAt,
         };
 
@@ -172,9 +173,10 @@ export class WithdrawalMerchantService {
 
     const data = {
       ...orderDetails,
-      serviceCharge: transactionUpdate?.amount || null,
+      serviceCharge: roundOffAmount(transactionUpdate?.amount) || null,
       balanceDeducted:
-        transactionUpdate?.before - transactionUpdate?.after || null,
+        roundOffAmount(transactionUpdate?.before - transactionUpdate?.after) ||
+        null,
       userChannel: JSON.parse(orderDetails.channelDetails),
       transactionDetails: JSON.parse(orderDetails.transactionDetails),
     };

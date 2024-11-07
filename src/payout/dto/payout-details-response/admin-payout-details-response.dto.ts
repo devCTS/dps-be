@@ -1,5 +1,6 @@
 import { Exclude, Expose, Transform } from 'class-transformer';
 import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
+import { roundOffAmount } from 'src/utils/utils';
 @Exclude()
 export class AdminPayoutDetailsResponseDto {
   @Expose()
@@ -102,10 +103,10 @@ function TransformBalancesAndProfit() {
               role,
               name: item.name,
               serviceRate: item.rate,
-              serviceFee: item.amount,
-              balanceDeducted: item.before - item.after,
-              balanceBefore: item.before,
-              balanceAfter: item.after,
+              serviceFee: roundOffAmount(item.amount),
+              balanceDeducted: roundOffAmount(item.before - item.after),
+              balanceBefore: roundOffAmount(item.before),
+              balanceAfter: roundOffAmount(item.after),
             };
 
           case UserTypeForTransactionUpdates.AGENT_BALANCE:
@@ -113,10 +114,10 @@ function TransformBalancesAndProfit() {
               role,
               name: item.name,
               commissionRate: item.rate,
-              commissionAmount: item.amount,
-              balanceEarned: item.after - item.before,
-              balanceBefore: item.before,
-              balanceAfter: item.after,
+              commissionAmount: roundOffAmount(item.amount),
+              balanceEarned: roundOffAmount(item.after - item.before),
+              balanceBefore: roundOffAmount(item.before),
+              balanceAfter: roundOffAmount(item.after),
               isAgentOf: item.isAgentOf,
             };
 
@@ -125,10 +126,10 @@ function TransformBalancesAndProfit() {
               role,
               name: item.name,
               commissionRate: item.rate,
-              commissionAmount: item.amount,
-              quotaEarned: item.after - item.before,
-              quotaBefore: item.before,
-              quotaAfter: item.after,
+              commissionAmount: roundOffAmount(item.amount),
+              quotaEarned: roundOffAmount(item.after - item.before),
+              quotaBefore: roundOffAmount(item.before),
+              quotaAfter: roundOffAmount(item.after),
             };
 
           case UserTypeForTransactionUpdates.MEMBER_BALANCE:
@@ -136,10 +137,10 @@ function TransformBalancesAndProfit() {
               role,
               name: item.name,
               commissionRate: item.rate,
-              commissionAmount: item.amount,
-              balanceEarned: item.after - item.before,
-              balanceBefore: item.before,
-              balanceAfter: item.after,
+              commissionAmount: roundOffAmount(item.amount),
+              balanceEarned: roundOffAmount(item.after - item.before),
+              balanceBefore: roundOffAmount(item.before),
+              balanceAfter: roundOffAmount(item.after),
               isAgentOf: item.isAgentOf,
               isMember: true,
             };
@@ -147,16 +148,16 @@ function TransformBalancesAndProfit() {
           case UserTypeForTransactionUpdates.SYSTEM_PROFIT:
             return {
               role,
-              profit: item.after - item.before,
-              balanceBefore: item.before,
-              balanceAfter: item.after,
+              profit: roundOffAmount(item.after - item.before),
+              balanceBefore: roundOffAmount(item.before),
+              balanceAfter: roundOffAmount(item.after),
             };
 
           case UserTypeForTransactionUpdates.GATEWAY_FEE:
             return {
               role,
               name: item.name,
-              upstreamFee: item.amount,
+              upstreamFee: roundOffAmount(item.amount),
               upstreamRate: item.rate,
             };
 

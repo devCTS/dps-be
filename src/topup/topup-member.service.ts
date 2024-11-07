@@ -16,6 +16,7 @@ import { MemberAllTopupResponseDto } from './dto/paginate-response/member-topup-
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { OrderStatus } from 'src/utils/enum/enum';
 import { MemberTopupDetailsResponseDto } from './dto/topup-details-response/member-topup-details-response.dto';
+import { roundOffAmount } from 'src/utils/utils';
 
 @Injectable()
 export class TopupMemberService {
@@ -96,9 +97,11 @@ export class TopupMemberService {
 
         return {
           ...plainToInstance(MemberAllTopupResponseDto, row),
-          commission: transactionUpdate?.amount || null,
+          commission: roundOffAmount(transactionUpdate?.amount) || null,
           quotaCredit:
-            transactionUpdate?.after - transactionUpdate?.before || null,
+            roundOffAmount(
+              transactionUpdate?.after - transactionUpdate?.before,
+            ) || null,
           orderType: 'Topup',
         };
       }),
@@ -137,9 +140,11 @@ export class TopupMemberService {
       const responseData = {
         ...orderDetails,
         quotaDetails: {
-          commissionRate: transactionUpdate.rate,
-          commissionAmount: transactionUpdate.amount,
-          quotaEarned: orderDetails.amount + transactionUpdate.amount,
+          commissionRate: roundOffAmount(transactionUpdate.rate),
+          commissionAmount: roundOffAmount(transactionUpdate.amount),
+          quotaEarned: roundOffAmount(
+            orderDetails.amount + transactionUpdate.amount,
+          ),
         },
         transactionDetails: {
           transactionId: orderDetails.transactionId,

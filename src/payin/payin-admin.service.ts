@@ -1,3 +1,4 @@
+import { roundOffAmount } from './../utils/utils';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
@@ -93,8 +94,8 @@ export class PayinAdminService {
 
         const response = {
           ...row,
-          merchantCharge: merchantRow?.amount,
-          systemProfit: systemProfitRow?.after,
+          merchantCharge: roundOffAmount(merchantRow?.amount),
+          systemProfit: roundOffAmount(systemProfitRow?.after),
         };
 
         return plainToInstance(PayinAdminResponseDto, response);

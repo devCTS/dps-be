@@ -12,6 +12,7 @@ import {
 import { AdminAllPayoutResponseDto } from './dto/paginate-response/admin-payout-response.dto';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
+import { roundOffAmount } from 'src/utils/utils';
 
 @Injectable()
 export class PayoutAdminService {
@@ -98,8 +99,8 @@ export class PayoutAdminService {
 
         const response = {
           ...row,
-          merchantCharge: merchantRow?.amount,
-          systemProfit: systemProfitRow?.after,
+          merchantCharge: roundOffAmount(merchantRow?.amount),
+          systemProfit: roundOffAmount(systemProfitRow?.after),
           callbackStatus: row?.notificationStatus,
           transactionId: payoutDetails.transactionId,
         };
