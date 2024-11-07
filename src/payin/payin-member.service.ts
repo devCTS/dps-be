@@ -18,6 +18,7 @@ import {
 } from './dto/payin-member-response.dto';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { OrderStatus } from 'src/utils/enum/enum';
+import { roundOffAmount } from 'src/utils/utils';
 
 @Injectable()
 export class PayinMemberService {
@@ -100,8 +101,10 @@ export class PayinMemberService {
 
         return {
           ...plainToInstance(PayinMemberResponseDto, row),
-          commission: transactionUpdate?.amount,
-          quotaDebit: transactionUpdate?.after - transactionUpdate?.before,
+          commission: roundOffAmount(transactionUpdate?.amount),
+          quotaDebit: roundOffAmount(
+            transactionUpdate?.after - transactionUpdate?.before,
+          ),
         };
       }),
     );
@@ -147,11 +150,14 @@ export class PayinMemberService {
         },
         quotaDetails: {
           commissionRate: transactionUpdate?.rate,
-          commissionAmount: transactionUpdate.amount,
-          quotaDeducted: transactionUpdate.after - transactionUpdate.before,
+          commissionAmount: roundOffAmount(transactionUpdate.amount),
+          quotaDeducted: roundOffAmount(
+            transactionUpdate.after - transactionUpdate.before,
+          ),
           withHeldAmount:
-            (orderDetails.amount / 100) * orderDetails.member?.withdrawalRate ||
-            0,
+            roundOffAmount(
+              (orderDetails.amount / 100) * orderDetails.member?.withdrawalRate,
+            ) || 0,
           withHeldRate: orderDetails.member?.withdrawalRate || 0,
         },
       };

@@ -16,6 +16,7 @@ import {
 import { MemberAllPayoutResponseDto } from './dto/paginate-response/member-payout-response.dto';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { OrderStatus } from 'src/utils/enum/enum';
+import { roundOffAmount } from 'src/utils/utils';
 
 @Injectable()
 export class PayoutMemberService {
@@ -98,8 +99,10 @@ export class PayoutMemberService {
 
         return {
           ...plainToInstance(MemberAllPayoutResponseDto, row),
-          commission: transactionUpdate?.amount,
-          quotaCredit: transactionUpdate?.after - transactionUpdate?.before,
+          commission: roundOffAmount(transactionUpdate?.amount),
+          quotaCredit: roundOffAmount(
+            transactionUpdate?.after - transactionUpdate?.before,
+          ),
           orderType: 'Payout',
         };
       }),
@@ -136,8 +139,10 @@ export class PayoutMemberService {
 
       return {
         ...plainToInstance(MemberPayoutDetailsResponseDto, orderDetails),
-        commission: transactionUpdate.amount,
-        quotaCredit: transactionUpdate.before - transactionUpdate.after,
+        commission: roundOffAmount(transactionUpdate.amount),
+        quotaCredit: roundOffAmount(
+          transactionUpdate.before - transactionUpdate.after,
+        ),
       };
     } catch (error) {
       throw new InternalServerErrorException();

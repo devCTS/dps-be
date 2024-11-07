@@ -13,6 +13,8 @@ import {
   UpdateDateColumn,
   OneToOne,
   OneToMany,
+  BeforeInsert,
+  BeforeUpdate,
 } from 'typeorm';
 
 @Entity()
@@ -101,6 +103,13 @@ export class Member {
   @Column({ default: false })
   isOnline: boolean;
 
-  @Column({ default: 'abcd1234' })
+  @Column()
   withdrawalPassword: string;
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  truncateAmounts() {
+    if (this.balance) this.balance = Math.trunc(this.balance * 100) / 100;
+    if (this.quota) this.quota = Math.trunc(this.quota * 100) / 100;
+  }
 }

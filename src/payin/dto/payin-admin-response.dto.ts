@@ -1,3 +1,4 @@
+import { roundOffAmount } from './../../utils/utils';
 import { Exclude, Expose, Transform } from 'class-transformer';
 import {
   CallBackStatus,
@@ -173,10 +174,10 @@ function TransformBalancesAndProfit() {
               role,
               name: item.name,
               serviceRate: item.rate,
-              serviceFee: item.amount,
-              balanceEarned: item.after - item.before,
-              balanceBefore: item.before,
-              balanceAfter: item.after,
+              serviceFee: roundOffAmount(item.amount),
+              balanceEarned: roundOffAmount(item.after - item.before),
+              balanceBefore: roundOffAmount(item.before),
+              balanceAfter: roundOffAmount(item.after),
             };
 
           case UserTypeForTransactionUpdates.AGENT_BALANCE:
@@ -184,10 +185,10 @@ function TransformBalancesAndProfit() {
               role,
               name: item.name,
               commissionRate: item.rate,
-              commissionAmount: item.amount,
-              balanceEarned: item.after - item.before,
-              balanceBefore: item.before,
-              balanceAfter: item.after,
+              commissionAmount: roundOffAmount(item.amount),
+              balanceEarned: roundOffAmount(item.after - item.before),
+              balanceBefore: roundOffAmount(item.before),
+              balanceAfter: roundOffAmount(item.after),
               isAgentOf: item.isAgentOf,
             };
 
@@ -196,10 +197,10 @@ function TransformBalancesAndProfit() {
               role,
               name: item.name,
               commissionRate: item.rate,
-              commissionAmount: item.amount,
-              quotaDeducted: item.after - item.before, // verify
-              quotaBefore: item.before,
-              quotaAfter: item.after,
+              commissionAmount: roundOffAmount(item.amount),
+              quotaDeducted: roundOffAmount(item.after - item.before), // verify
+              quotaBefore: roundOffAmount(item.before),
+              quotaAfter: roundOffAmount(item.after),
             };
 
           case UserTypeForTransactionUpdates.MEMBER_BALANCE:
@@ -207,10 +208,10 @@ function TransformBalancesAndProfit() {
               role,
               name: item.name,
               commissionRate: item.rate,
-              commissionAmount: item.amount,
-              balanceEarned: item.after - item.before,
-              balanceBefore: item.before,
-              balanceAfter: item.after,
+              commissionAmount: roundOffAmount(item.amount),
+              balanceEarned: roundOffAmount(item.after - item.before),
+              balanceBefore: roundOffAmount(item.before),
+              balanceAfter: roundOffAmount(item.after),
               isAgentOf: item.isAgentOf,
               isMember: true,
             };
@@ -218,16 +219,16 @@ function TransformBalancesAndProfit() {
           case UserTypeForTransactionUpdates.SYSTEM_PROFIT:
             return {
               role,
-              profit: item.after - item.before,
-              balanceBefore: item.before,
-              balanceAfter: item.after,
+              profit: roundOffAmount(item.after - item.before),
+              balanceBefore: roundOffAmount(item.before),
+              balanceAfter: roundOffAmount(item.after),
             };
 
           case UserTypeForTransactionUpdates.GATEWAY_FEE:
             return {
               role,
               name: item.name,
-              upstreamFee: item.amount,
+              upstreamFee: roundOffAmount(item.amount),
               upstreamRate: item.rate,
             };
 

@@ -97,7 +97,7 @@ export class TopupService {
         ...channel,
         channelName: ChannelName.UPI,
       })),
-      ...channels.netbanking.map((channel) => ({
+      ...channels.netBanking.map((channel) => ({
         ...channel,
         channelName: ChannelName.BANKING,
       })),
