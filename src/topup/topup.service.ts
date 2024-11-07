@@ -30,7 +30,7 @@ import { Agent } from 'src/agent/entities/agent.entity';
 
 @Injectable()
 export class TopupService {
-  lastTopupIndex: number;
+  private lastTopupIndex: number;
   constructor(
     @InjectRepository(Topup)
     private readonly topupRepository: Repository<Topup>,
@@ -52,8 +52,6 @@ export class TopupService {
   }
 
   async getCurrentToupHoldings() {
-    // return 2000;
-
     const merchants = await this.merchantRepository.find();
     const totalMerchantBalance = merchants.reduce((prev, curr) => {
       return prev + curr?.balance;
@@ -95,14 +93,29 @@ export class TopupService {
     const channels = await this.systemConfigService.getTopupChannels();
 
     const flattenedChannels = [
-      ...channels.upi,
-      ...channels.netbanking,
-      ...channels.eWallet,
+      ...channels.upi.map((channel) => ({
+        ...channel,
+        channelName: ChannelName.UPI,
+      })),
+      ...channels.netbanking.map((channel) => ({
+        ...channel,
+        channelName: ChannelName.BANKING,
+      })),
+      ...channels.eWallet.map((channel) => ({
+        ...channel,
+        channelName: ChannelName.E_WALLET,
+      })),
     ];
 
+    const selectedChannel = flattenedChannels[this.lastTopupIndex];
+
+    this.lastTopupIndex = (this.lastTopupIndex + 1) % flattenedChannels.length;
+
+    const { channelName, ...channelDetails } = selectedChannel;
+
     return {
-      channel: ChannelName.UPI,
-      channelDetails: flattenedChannels[this.lastTopupIndex],
+      channel: channelName,
+      channelDetails,
     };
   }
 
