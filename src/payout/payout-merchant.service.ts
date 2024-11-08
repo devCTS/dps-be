@@ -20,12 +20,15 @@ import {
   UserTypeForTransactionUpdates,
 } from 'src/utils/enum/enum';
 import { roundOffAmount } from 'src/utils/utils';
+import { EndUser } from 'src/end-user/entities/end-user.entity';
 
 @Injectable()
 export class PayoutMerchantService {
   constructor(
     @InjectRepository(Payout)
     private readonly payoutRepository: Repository<Payout>,
+    @InjectRepository(EndUser)
+    private readonly endUserRepository: Repository<EndUser>,
     @InjectRepository(TransactionUpdate)
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
   ) {}
@@ -119,6 +122,90 @@ export class PayoutMerchantService {
         };
       }),
     );
+
+    return {
+      total,
+      page: pageNumber,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+      startRecord,
+      endRecord,
+      data: dtos,
+    };
+  }
+
+  async paginateMerchantUsers(
+    paginateRequestDto: PaginateRequestDto,
+    searchSuggestion: string,
+  ) {
+    const { search, pageSize, pageNumber, startDate, endDate, sortBy, userId } =
+      paginateRequestDto;
+
+    const skip = (pageNumber - 1) * pageSize;
+    const take = pageSize;
+
+    const queryBuilder = this.payoutRepository
+      .createQueryBuilder('payout')
+      .leftJoinAndSelect('payout.merchant', 'merchant')
+      .leftJoinAndSelect('payout.user', 'user')
+      .leftJoinAndSelect('payout.member', 'member')
+      .leftJoinAndSelect('member.identity', 'identity')
+      .skip(skip)
+      .take(take);
+
+    if (searchSuggestion)
+      queryBuilder.andWhere(`user.name ILIKE :search`, {
+        search: `%${searchSuggestion}%`,
+      });
+
+    if (userId && !searchSuggestion)
+      queryBuilder.andWhere('merchant.id = :userId', { userId });
+
+    if (search && !searchSuggestion)
+      queryBuilder.andWhere(
+        `CONCAT(payout.systemOrderId, ' ', user.name) ILIKE :search`,
+        {
+          search: `%${search}%`,
+        },
+      );
+
+    if (startDate && endDate && !searchSuggestion) {
+      const parsedStartDate = parseStartDate(startDate);
+      const parsedEndDate = parseEndDate(endDate);
+
+      queryBuilder.andWhere(
+        'payout.created_at BETWEEN :startDate AND :endDate',
+        {
+          startDate: parsedStartDate,
+          endDate: parsedEndDate,
+        },
+      );
+    }
+
+    if (sortBy)
+      sortBy === 'latest'
+        ? queryBuilder.orderBy('payout.createdAt', 'DESC')
+        : queryBuilder.orderBy('payout.createdAt', 'ASC');
+
+    const [rows, total] = await queryBuilder.getManyAndCount();
+
+    const startRecord = skip + 1;
+    const endRecord = Math.min(skip + pageSize, total);
+
+    const dtos = await Promise.all(
+      rows.map(async (row) => {
+        return {
+          name: row.user.name,
+          channel: row.user.channel,
+          channelDetails: row.user.channelDetails,
+          email: row.user.email,
+          mobile: row.user.mobile,
+          orderId: row.systemOrderId,
+        };
+      }),
+    );
+
+    console.log(searchSuggestion, dtos);
 
     return {
       total,

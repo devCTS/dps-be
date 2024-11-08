@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { PayoutService } from './payout.service';
 import { CreatePayoutDto } from './dto/create-payout.dto';
@@ -50,52 +51,63 @@ export class PayoutController {
   }
 
   @Post('admin/paginate')
-  adminPayins(@Body() paginateRequestDto: PaginateRequestDto) {
+  adminPayouts(@Body() paginateRequestDto: PaginateRequestDto) {
     return this.payoutAdminService.paginate(paginateRequestDto);
   }
 
   @Post('merchant/paginate')
-  merchantPayins(@Body() paginateRequestDto: PaginateRequestDto) {
+  merchantPayouts(@Body() paginateRequestDto: PaginateRequestDto) {
     return this.payoutMerchantService.paginate(paginateRequestDto);
   }
 
+  @Post('merchant-user/paginate')
+  merchantUserPayouts(
+    @Body() paginateRequestDto: PaginateRequestDto,
+    @Query('searchSuggestion') searchSuggestion: any,
+  ) {
+    return this.payoutMerchantService.paginateMerchantUsers(
+      paginateRequestDto,
+      searchSuggestion,
+    );
+  }
+
   @Post('member/paginate')
-  memberPayins(@Body() paginateRequestDto: PaginateRequestDto) {
+  memberPayouts(@Body() paginateRequestDto: PaginateRequestDto) {
     return this.payoutMemberService.paginate(paginateRequestDto);
   }
 
   @Get('admin/:id')
-  getPayinOrderDetailsAdmin(@Param('id') id: string) {
+  getPayoutOrderDetailsAdmin(@Param('id') id: string) {
     return this.payoutAdminService.getPayoutDetails(id);
   }
 
   @Get('merchant/:id')
-  getPayinOrderDetailsMerchant(@Param('id') id: string) {
+  getPayoutOrderDetailsMerchant(@Param('id') id: string) {
     return this.payoutMerchantService.getPayoutDetails(id);
   }
 
   @Get('member/:id')
-  getPayinOrderDetailsMember(@Param('id') id: string) {
+  getPayoutOrderDetailsMember(@Param('id') id: string) {
     return this.payoutMemberService.getPayoutDetails(id);
   }
 
   @Post('update-status-assigned')
-  updatePayinStatusToAssigned(@Body() body) {
+  updatePayoutStatusToAssigned(@Body() body) {
     return this.payoutService.updatePayoutStatusToAssigned(body);
   }
 
   @Post('update-status-complete')
-  updatePayinStatusToCompleted(@Body() body) {
+  updatePayoutStatusToCompleted(@Body() body) {
     return this.payoutService.updatePayoutStatusToComplete(body);
   }
 
   @Post('update-status-failed')
-  updatePayinStatusToFailed(@Body() body) {
+  updatePayoutStatusToFailed(@Body() body) {
     return this.payoutService.updatePayoutStatusToFailed(body);
   }
 
   @Post('update-status-submitted')
-  updatePayinStatusToSubmitted(@Body() body) {
+  updatePayoutStatusToSubmitted(@Body() body) {
     return this.payoutService.updatePayoutStatusToSubmitted(body);
   }
 }
