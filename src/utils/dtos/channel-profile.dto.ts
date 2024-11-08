@@ -30,6 +30,10 @@ export class UpiDto {
   @IsOptional()
   @IsBoolean()
   isBusinessUpi: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  channelIndex: number;
 }
 
 export class NetBankingDto {
@@ -48,6 +52,10 @@ export class NetBankingDto {
   @IsNotEmpty()
   @IsString()
   accountNumber: string;
+
+  @IsOptional()
+  @IsNumber()
+  channelIndex: number;
 }
 
 export class EWalletDto {
@@ -58,6 +66,10 @@ export class EWalletDto {
   @IsNotEmpty()
   @IsString()
   mobile: string;
+
+  @IsOptional()
+  @IsNumber()
+  channelIndex: number;
 }
 
 export class ChannelProfileDto {

@@ -423,8 +423,7 @@ export class PayinService {
     return `This action removes a #${id} payout`;
   }
 
-  async changeCallbackStatus(changeCallbackStatusDto: ChangeCallbackStatusDto) {
-    const { systemOrderId, callbackStatus } = changeCallbackStatusDto;
+  async handleCallbackStatusSuccess(systemOrderId) {
     const payinOrderDetails = await this.payinRepository.findOneBy({
       systemOrderId,
     });
@@ -437,7 +436,9 @@ export class PayinService {
         'Callback status is aready set to SUCCESS',
       );
 
-    await this.payinRepository.update(payinOrderDetails.id, { callbackStatus });
+    await this.payinRepository.update(payinOrderDetails.id, {
+      callbackStatus: CallBackStatus.SUCCESS,
+    });
 
     return HttpStatus.OK;
   }
