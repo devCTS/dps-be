@@ -111,11 +111,17 @@ export class TopupService {
 
     this.lastTopupIndex = (this.lastTopupIndex + 1) % flattenedChannels.length;
 
-    const { channelName, ...channelDetails } = selectedChannel;
+    if (selectedChannel) {
+      const { channelName, ...channelDetails } = selectedChannel;
 
+      return {
+        channel: channelName,
+        channelDetails,
+      };
+    }
     return {
-      channel: channelName,
-      channelDetails,
+      channel: null,
+      channelDetails: null,
     };
   }
 
