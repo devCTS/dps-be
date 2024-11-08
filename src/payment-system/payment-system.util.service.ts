@@ -10,10 +10,12 @@ import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { ProportionalPayinMode } from 'src/merchant/entities/proportionalPayinMode.entity';
 import { SystemConfigService } from 'src/system-config/system-config.service';
 import { ChannelName, GatewayName } from 'src/utils/enum/enum';
-import { IsNull, MoreThan, MoreThanOrEqual, Not, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class PaymentSystemUtilService {
+  private selectGateway = false;
+
   constructor(
     @InjectRepository(Member)
     private readonly memberRepository: Repository<Member>,

@@ -100,9 +100,10 @@ export class PayoutMemberService {
         return {
           ...plainToInstance(MemberAllPayoutResponseDto, row),
           commission: roundOffAmount(transactionUpdate?.amount),
-          quotaCredit: roundOffAmount(
-            transactionUpdate?.after - transactionUpdate?.before,
-          ),
+          quotaCredit:
+            row.status === OrderStatus.FAILED
+              ? 0
+              : roundOffAmount(row.amount + transactionUpdate.amount, true),
           orderType: 'Payout',
         };
       }),
@@ -137,13 +138,26 @@ export class PayoutMemberService {
 
       if (!transactionUpdate) throw new NotFoundException();
 
-      return {
-        ...plainToInstance(MemberPayoutDetailsResponseDto, orderDetails),
-        commission: roundOffAmount(transactionUpdate.amount),
-        quotaCredit: roundOffAmount(
-          transactionUpdate.before - transactionUpdate.after,
-        ),
+      const payload = {
+        ...orderDetails,
+        transactionDetails: {
+          transactionId: orderDetails.transactionId,
+          receipt: orderDetails.transactionReceipt,
+          recipient: JSON.parse(orderDetails.user.channelDetails),
+          member: JSON.parse(orderDetails.transactionDetails),
+          gateway: JSON.parse(orderDetails.transactionDetails),
+        },
+        quotaDetails: {
+          commissionRate: transactionUpdate.rate,
+          commissionAmount: transactionUpdate.amount,
+          quotaEarned:
+            orderDetails.status === OrderStatus.FAILED
+              ? 0
+              : roundOffAmount(orderDetails.amount + transactionUpdate.amount),
+        },
       };
+
+      return plainToInstance(MemberPayoutDetailsResponseDto, payload);
     } catch (error) {
       throw new InternalServerErrorException();
     }

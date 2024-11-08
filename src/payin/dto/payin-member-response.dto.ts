@@ -14,6 +14,7 @@ import {
   OrderStatus,
   PaymentMadeOn,
 } from 'src/utils/enum/enum';
+import { TransformTransactionDetails } from './payin-admin-response.dto';
 
 @Exclude()
 export class PayinMemberResponseDto {
@@ -80,4 +81,8 @@ export class PayinDetailsMemberResDto {
 
   @Expose()
   quotaDetails: {};
+
+  @Expose()
+  @TransformTransactionDetails()
+  transactionDetails: {};
 }

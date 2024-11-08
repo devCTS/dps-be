@@ -176,7 +176,7 @@ export class TransactionUpdatesPayoutService {
       userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
       before: roundOffAmount(beforeProfit),
       amount: roundOffAmount(currentProfit),
-      after: roundOffAmount(currentProfit - beforeProfit),
+      after: roundOffAmount(currentProfit + beforeProfit),
       payoutOrder: orderDetails,
       systemOrderId,
     });

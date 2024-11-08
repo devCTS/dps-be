@@ -28,6 +28,9 @@ export class AdminPayoutDetailsResponseDto {
   updatedAt: Date;
 
   @Expose()
+  @Transform(({ value }) => (value ? value.toLowerCase() : null), {
+    toClassOnly: true,
+  })
   notificationStatus: string;
 
   @Expose()
@@ -54,6 +57,9 @@ export class AdminPayoutDetailsResponseDto {
   merchant: {};
 
   @Expose()
+  @Transform(({ value }) => (value ? value.toLowerCase() : null), {
+    toClassOnly: true,
+  })
   payoutMadeVia: string;
 
   @Expose()
@@ -72,6 +78,7 @@ export class AdminPayoutDetailsResponseDto {
   gatewayName: string;
 
   @Expose()
+  @TransformTransactionDetails()
   transactionDetails: {};
 
   @Expose()
@@ -189,6 +196,21 @@ function TransformBalancesAndProfit() {
         gatewayEntry,
         systemProfitEntry,
       ].filter(Boolean);
+    },
+    { toClassOnly: true },
+  );
+}
+
+function TransformTransactionDetails() {
+  return Transform(
+    ({ value }) => {
+      return {
+        transactionId: value.transactionId,
+        receipt: value.receipt,
+        gateway: value.gateway,
+        member: value.member,
+        recipient: value.recipient,
+      };
     },
     { toClassOnly: true },
   );

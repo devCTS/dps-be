@@ -1,3 +1,4 @@
+import { identity } from 'rxjs';
 import {
   HttpStatus,
   Injectable,
@@ -142,9 +143,12 @@ export class PayinService {
 
     let member;
     if (paymentMode === PaymentMadeOn.MEMBER)
-      member = await this.memberRepository.findOneBy({ id: memberId });
+      member = await this.memberRepository.findOne({
+        where: { id: memberId },
+        relations: ['identity'],
+      });
 
-    if (paymentMode === PaymentMadeOn.MEMBER)
+    if (paymentMode === PaymentMadeOn.MEMBER) {
       await this.transactionUpdateService.create({
         orderDetails: payinOrderDetails,
         userId: memberId,
@@ -152,6 +156,18 @@ export class PayinService {
         orderType: OrderType.PAYIN,
         systemOrderId: payinOrderDetails.systemOrderId,
       });
+
+      // Withheld
+      const deductedQuota = -((payinOrderDetails.amount * 50) / 100);
+
+      await this.memberService.updateQuota(
+        member.identity.id,
+        payinOrderDetails.systemOrderId,
+        deductedQuota,
+        false,
+        false,
+      );
+    }
 
     if (paymentMode === PaymentMadeOn.GATEWAY) {
       await this.transactionUpdateRepository.save({
@@ -241,16 +257,47 @@ export class PayinService {
 
     transactionUpdateEntries.forEach(async (entry) => {
       if (entry.userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE)
-        await this.merchantService.updateBalance(entry.user.id, 0, true);
+        await this.merchantService.updateBalance(
+          entry.user.id,
+          entry.systemOrderId,
+          0,
+          true,
+        );
 
       if (entry.userType === UserTypeForTransactionUpdates.MEMBER_BALANCE)
-        await this.memberService.updateBalance(entry.user.id, 0, true);
+        await this.memberService.updateBalance(
+          entry.user.id,
+          entry.systemOrderId,
+          0,
+          true,
+        );
 
-      if (entry.userType === UserTypeForTransactionUpdates.MEMBER_QUOTA)
-        await this.memberService.updateQuota(entry.user.id, 0, true);
+      if (entry.userType === UserTypeForTransactionUpdates.MEMBER_QUOTA) {
+        // Release Withheld
+        const addedQuota = (payinOrderDetails.amount * 50) / 100;
+        await this.memberService.updateQuota(
+          entry.user.id,
+          entry.systemOrderId,
+          addedQuota,
+          false,
+          false,
+        );
+
+        await this.memberService.updateQuota(
+          entry.user.id,
+          entry.systemOrderId,
+          0,
+          true,
+        );
+      }
 
       if (entry.userType === UserTypeForTransactionUpdates.AGENT_BALANCE)
-        await this.agentService.updateBalance(entry.user.id, 0, true);
+        await this.agentService.updateBalance(
+          entry.user.id,
+          entry.systemOrderId,
+          0,
+          true,
+        );
 
       if (entry.userType === UserTypeForTransactionUpdates.SYSTEM_PROFIT)
         await this.systemConfigService.updateSystemProfit(
@@ -274,8 +321,11 @@ export class PayinService {
 
   async updatePayinStatusToComplete(body) {
     const { id } = body;
-    const payinOrderDetails = await this.payinRepository.findOneBy({
-      systemOrderId: id,
+    const payinOrderDetails = await this.payinRepository.findOne({
+      where: {
+        systemOrderId: id,
+      },
+      relations: ['member'],
     });
     if (!payinOrderDetails) throw new NotFoundException('Order not found');
 
@@ -297,6 +347,7 @@ export class PayinService {
       if (entry.userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE)
         await this.merchantService.updateBalance(
           entry.user.id,
+          entry.systemOrderId,
           entry.after,
           false,
         );
@@ -304,16 +355,34 @@ export class PayinService {
       if (entry.userType === UserTypeForTransactionUpdates.MEMBER_BALANCE)
         await this.memberService.updateBalance(
           entry.user.id,
+          entry.systemOrderId,
           entry.after,
           false,
         );
 
-      if (entry.userType === UserTypeForTransactionUpdates.MEMBER_QUOTA)
-        await this.memberService.updateQuota(entry.user.id, entry.after, false);
+      if (entry.userType === UserTypeForTransactionUpdates.MEMBER_QUOTA) {
+        // Release Withheld
+        const addedQuota = (payinOrderDetails.amount * 50) / 100;
+        await this.memberService.updateQuota(
+          entry.user.id,
+          entry.systemOrderId,
+          addedQuota,
+          false,
+          false,
+        );
+
+        await this.memberService.updateQuota(
+          entry.user.id,
+          entry.systemOrderId,
+          entry.after,
+          false,
+        );
+      }
 
       if (entry.userType === UserTypeForTransactionUpdates.AGENT_BALANCE)
         await this.agentService.updateBalance(
           entry.user.id,
+          entry.systemOrderId,
           entry.after,
           false,
         );

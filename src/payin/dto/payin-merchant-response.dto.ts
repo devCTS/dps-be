@@ -14,6 +14,7 @@ import {
   OrderStatus,
   PaymentMadeOn,
 } from 'src/utils/enum/enum';
+import { TransformTransactionDetails } from './payin-admin-response.dto';
 
 @Exclude()
 export class PayinMerchantResponseDto {
@@ -127,6 +128,7 @@ export class PayinMerchantOrderResDto {
   gatewayName: GatewayName | null;
 
   @Expose()
+  @TransformTransactionDetails()
   transactionDetails: {};
 
   @Expose()

@@ -402,10 +402,17 @@ export class SystemConfigService {
     let afterValue = failed ? beforeValue : beforeValue + amount;
 
     if (systemProfitRow)
-      await this.transactionUpdateRepository.update(systemProfitRow.id, {
-        before: beforeValue,
-        after: afterValue,
-      });
+      if (failed)
+        await this.transactionUpdateRepository.update(systemProfitRow.id, {
+          before: beforeValue,
+          after: afterValue,
+          amount: 0,
+        });
+      else
+        await this.transactionUpdateRepository.update(systemProfitRow.id, {
+          before: beforeValue,
+          after: afterValue,
+        });
   }
 
   async updateWithdrawalDefaults(

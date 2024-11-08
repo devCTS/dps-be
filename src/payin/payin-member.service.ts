@@ -104,6 +104,7 @@ export class PayinMemberService {
           commission: roundOffAmount(transactionUpdate?.amount),
           quotaDebit: roundOffAmount(
             transactionUpdate?.after - transactionUpdate?.before,
+            true,
           ),
         };
       }),
@@ -153,12 +154,10 @@ export class PayinMemberService {
           commissionAmount: roundOffAmount(transactionUpdate.amount),
           quotaDeducted: roundOffAmount(
             transactionUpdate.after - transactionUpdate.before,
+            true,
           ),
-          withHeldAmount:
-            roundOffAmount(
-              (orderDetails.amount / 100) * orderDetails.member?.withdrawalRate,
-            ) || 0,
-          withHeldRate: orderDetails.member?.withdrawalRate || 0,
+          withHeldRate: 50,
+          withHeldAmount: roundOffAmount((orderDetails.amount / 100) * 50),
         },
       };
 

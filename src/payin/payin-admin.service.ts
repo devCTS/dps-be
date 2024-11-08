@@ -95,7 +95,7 @@ export class PayinAdminService {
         const response = {
           ...row,
           merchantCharge: roundOffAmount(merchantRow?.amount),
-          systemProfit: roundOffAmount(systemProfitRow?.after),
+          systemProfit: roundOffAmount(systemProfitRow?.amount),
         };
 
         return plainToInstance(PayinAdminResponseDto, response);

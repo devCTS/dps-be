@@ -1,3 +1,4 @@
+import { systemConfigData } from './../system-config/data/system-config.data';
 import {
   HttpStatus,
   Injectable,
@@ -451,7 +452,13 @@ export class MemberService {
     );
   }
 
-  async updateQuota(identityId, amount, failed) {
+  async updateQuota(
+    identityId,
+    systemOrderId,
+    amount,
+    failed,
+    updateTransactionEntries = true,
+  ) {
     const member = await this.memberRepository.findOne({
       where: {
         identity: identityId,
@@ -465,25 +472,44 @@ export class MemberService {
       quota: member.quota + amount,
     });
 
-    const transactionUpdateMember =
-      await this.transactionUpdateRepository.findOne({
-        where: {
-          user: { id: identityId },
-          pending: true,
-        },
-        relations: ['user'],
-      });
+    if (updateTransactionEntries) {
+      const transactionUpdateMember =
+        await this.transactionUpdateRepository.findOne({
+          where: {
+            userType: UserTypeForTransactionUpdates.MEMBER_QUOTA,
+            user: { id: identityId },
+            pending: true,
+            systemOrderId,
+          },
+          relations: ['user'],
+        });
 
-    let beforeValue = member.quota;
-    let afterValue = failed ? member.quota : amount + beforeValue;
+      let beforeValue = member.quota;
+      let afterValue = failed ? member.quota : amount + beforeValue;
 
-    await this.transactionUpdateRepository.update(transactionUpdateMember.id, {
-      before: beforeValue,
-      after: afterValue,
-    });
+      if (transactionUpdateMember)
+        if (failed)
+          await this.transactionUpdateRepository.update(
+            transactionUpdateMember.id,
+            {
+              before: beforeValue,
+              after: afterValue,
+              amount: 0,
+              rate: 0,
+            },
+          );
+        else
+          await this.transactionUpdateRepository.update(
+            transactionUpdateMember.id,
+            {
+              before: beforeValue,
+              after: afterValue,
+            },
+          );
+    }
   }
 
-  async updateBalance(identityId, amount, failed) {
+  async updateBalance(identityId, systemOrderId, amount, failed) {
     const member = await this.memberRepository.findOne({
       where: {
         identity: { id: identityId },
@@ -500,8 +526,10 @@ export class MemberService {
     const transactionUpdateMember =
       await this.transactionUpdateRepository.findOne({
         where: {
+          userType: UserTypeForTransactionUpdates.MEMBER_BALANCE,
           user: { id: identityId },
           pending: true,
+          systemOrderId,
         },
         relations: ['user'],
       });
@@ -510,13 +538,24 @@ export class MemberService {
     let afterValue = failed ? member.balance : amount + beforeValue;
 
     if (transactionUpdateMember)
-      await this.transactionUpdateRepository.update(
-        transactionUpdateMember.id,
-        {
-          before: beforeValue,
-          after: afterValue,
-        },
-      );
+      if (failed)
+        await this.transactionUpdateRepository.update(
+          transactionUpdateMember.id,
+          {
+            before: beforeValue,
+            after: afterValue,
+            amount: 0,
+            rate: 0,
+          },
+        );
+      else
+        await this.transactionUpdateRepository.update(
+          transactionUpdateMember.id,
+          {
+            before: beforeValue,
+            after: afterValue,
+          },
+        );
   }
 
   async verifyWithdrawalPassword(

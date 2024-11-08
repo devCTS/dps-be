@@ -55,4 +55,7 @@ export class AdminAllPayoutResponseDto {
 
   @Expose()
   transactionId: string;
+
+  @Expose()
+  receipt: string;
 }

@@ -98,7 +98,7 @@ export class PayoutMerchantService {
           await this.transactionUpdateRepository.findOne({
             where: {
               systemOrderId: row.systemOrderId,
-              user: { id: row.member?.identity?.id },
+              user: { id: row.merchant?.identity?.id },
             },
             relations: ['payoutOrder', 'user', 'user.member'],
           });
@@ -106,12 +106,15 @@ export class PayoutMerchantService {
         return {
           ...plainToInstance(MerchantAllPayoutResponseDto, row),
           payoutModeVia: row.payoutMadeVia,
-          serviceFee: roundOffAmount(row?.merchant?.payoutServiceRate)
-            ? (row.amount * row.merchant.payoutServiceRate) / 100
+          serviceFee: row?.merchant?.payoutServiceRate
+            ? roundOffAmount(
+                (row.amount * row.merchant.payoutServiceRate) / 100,
+              )
             : 0,
-          balanceDebit: roundOffAmount(row?.merchant?.payoutServiceRate)
-            ? (row.amount * row.merchant.payoutServiceRate) / 100
-            : 0,
+          balanceDebit:
+            row.status === OrderStatus.FAILED
+              ? 0
+              : roundOffAmount(row.amount + transactionUpdate.amount, true),
           channelDetails: row.user.channelDetails,
         };
       }),
@@ -161,9 +164,13 @@ export class PayoutMerchantService {
         balanceDetails: {
           serviceRate: transactionUpdateMerchant.rate,
           serviceFee: roundOffAmount(transactionUpdateMerchant.amount),
-          balanceDeducted: roundOffAmount(
-            transactionUpdateMerchant.before - transactionUpdateMerchant.after,
-          ),
+          balanceDeducted:
+            orderDetails.status === OrderStatus.FAILED
+              ? 0
+              : roundOffAmount(
+                  orderDetails.amount + transactionUpdateMerchant.amount,
+                  true,
+                ),
         },
         channelDetails: orderDetails.user.channelDetails,
       };

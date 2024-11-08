@@ -162,6 +162,7 @@ export class WithdrawalService {
       if (entry.userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE)
         await this.merchantService.updateBalance(
           entry.user.id,
+          entry.systemOrderId,
           -orderDetails.amount,
           false,
         );
@@ -169,6 +170,7 @@ export class WithdrawalService {
       if (entry.userType === UserTypeForTransactionUpdates.MEMBER_BALANCE)
         await this.memberService.updateBalance(
           entry.user.id,
+          entry.systemOrderId,
           -orderDetails.amount,
           false,
         );
@@ -176,6 +178,7 @@ export class WithdrawalService {
       if (entry.userType === UserTypeForTransactionUpdates.AGENT_BALANCE)
         await this.agentService.updateBalance(
           entry.user.id,
+          entry.systemOrderId,
           -orderDetails.amount,
           false,
         );

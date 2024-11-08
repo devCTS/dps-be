@@ -1,4 +1,4 @@
-import { SortedBy } from './../utils/enum/enum';
+import { SortedBy, UserTypeForTransactionUpdates } from './../utils/enum/enum';
 import {
   HttpStatus,
   Injectable,
@@ -608,7 +608,7 @@ export class MerchantService {
     return { message: 'Withdrawal password changed.' };
   }
 
-  async updateBalance(identityId, amount, failed) {
+  async updateBalance(identityId, systemOrderId, amount, failed) {
     const merchant = await this.merchantRepository.findOne({
       where: {
         identity: { id: identityId },
@@ -625,6 +625,8 @@ export class MerchantService {
     const transactionUpdateMerchant =
       await this.transactionUpdateRepository.findOne({
         where: {
+          userType: UserTypeForTransactionUpdates.MERCHANT_BALANCE,
+          systemOrderId,
           user: { id: identityId },
           pending: true,
         },
@@ -635,13 +637,24 @@ export class MerchantService {
     let afterValue = failed ? merchant.balance : amount + beforeValue;
 
     if (transactionUpdateMerchant)
-      await this.transactionUpdateRepository.update(
-        transactionUpdateMerchant.id,
-        {
-          before: beforeValue,
-          after: afterValue,
-        },
-      );
+      if (failed)
+        await this.transactionUpdateRepository.update(
+          transactionUpdateMerchant.id,
+          {
+            before: beforeValue,
+            after: afterValue,
+            amount: 0,
+            rate: 0,
+          },
+        );
+      else
+        await this.transactionUpdateRepository.update(
+          transactionUpdateMerchant.id,
+          {
+            before: beforeValue,
+            after: afterValue,
+          },
+        );
   }
 
   async verifyWithdrawalPassword(

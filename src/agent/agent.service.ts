@@ -392,7 +392,7 @@ export class AgentService {
     return { message: 'Withdrawal password changed.' };
   }
 
-  async updateBalance(identityId, amount, failed) {
+  async updateBalance(identityId, systemOrderId, amount, failed) {
     const agent = await this.agentRepository.findOne({
       where: {
         identity: { id: identityId },
@@ -409,8 +409,10 @@ export class AgentService {
     const transactionUpdateAgent =
       await this.transactionUpdateRepository.findOne({
         where: {
+          userType: UserTypeForTransactionUpdates.AGENT_BALANCE,
           user: { id: identityId },
           pending: true,
+          systemOrderId,
         },
         relations: ['user'],
       });
@@ -419,10 +421,24 @@ export class AgentService {
     let afterValue = failed ? agent.balance : amount + beforeValue;
 
     if (transactionUpdateAgent)
-      await this.transactionUpdateRepository.update(transactionUpdateAgent.id, {
-        before: beforeValue,
-        after: afterValue,
-      });
+      if (failed)
+        await this.transactionUpdateRepository.update(
+          transactionUpdateAgent.id,
+          {
+            before: beforeValue,
+            after: afterValue,
+            amount: 0,
+            rate: 0,
+          },
+        );
+      else
+        await this.transactionUpdateRepository.update(
+          transactionUpdateAgent.id,
+          {
+            before: beforeValue,
+            after: afterValue,
+          },
+        );
   }
 
   async verifyWithdrawalPassword(

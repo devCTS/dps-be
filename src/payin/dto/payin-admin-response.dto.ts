@@ -46,7 +46,7 @@ export class PayinAdminResponseDto {
   user: string;
 
   @Expose()
-  @Transform(({ value }) => value?.firstName + value?.lastName, {
+  @Transform(({ value }) => value?.firstName + ' ' + value?.lastName, {
     toClassOnly: true,
   })
   merchant: string;
@@ -58,7 +58,7 @@ export class PayinAdminResponseDto {
   payinMadeOn: PaymentMadeOn;
 
   @Expose()
-  @Transform(({ value }) => value?.firstName + value?.lastName, {
+  @Transform(({ value }) => value?.firstName + ' ' + value?.lastName, {
     toClassOnly: true,
   })
   member: string | null;
@@ -135,7 +135,7 @@ export class PayinDetailsAdminResDto {
   @Transform(
     ({ value }) => ({
       id: value?.id,
-      name: value?.firstName + value?.lastName,
+      name: value?.firstName + ' ' + value?.lastName,
     }),
     { toClassOnly: true },
   )
@@ -146,6 +146,7 @@ export class PayinDetailsAdminResDto {
   gatewayName: GatewayName | null;
 
   @Expose()
+  @TransformTransactionDetails()
   transactionDetails: {};
 
   @Expose()
@@ -198,7 +199,7 @@ function TransformBalancesAndProfit() {
               name: item.name,
               commissionRate: item.rate,
               commissionAmount: roundOffAmount(item.amount),
-              quotaDeducted: roundOffAmount(item.after - item.before), // verify
+              quotaDeducted: roundOffAmount(item.after - item.before, true),
               quotaBefore: roundOffAmount(item.before),
               quotaAfter: roundOffAmount(item.after),
             };
@@ -260,6 +261,43 @@ function TransformBalancesAndProfit() {
         gatewayEntry,
         systemProfitEntry,
       ].filter(Boolean);
+    },
+    { toClassOnly: true },
+  );
+}
+
+export function TransformTransactionDetails() {
+  return Transform(
+    ({ value }) => {
+      const formatMemberChannelDetails = (member) => {
+        if (member.upiId)
+          return {
+            'UPI ID': member.upiId,
+            Mobile: member.mobile,
+          };
+
+        if (member.app)
+          return {
+            App: member.app,
+            Mobile: member.mobile,
+          };
+
+        if (member.bankName) {
+          return {
+            'Bank Name': member.bankName,
+            'IFSC Code': member.ifsc,
+            'Account Number': member.accountNumber,
+            'Beneficiary Name': member.beneficiaryName,
+          };
+        }
+      };
+
+      return {
+        transactionId: value.transactionId,
+        receipt: value.receipt,
+        gateway: value.gateway,
+        member: formatMemberChannelDetails(value.member),
+      };
     },
     { toClassOnly: true },
   );

@@ -100,9 +100,10 @@ export class PayoutAdminService {
         const response = {
           ...row,
           merchantCharge: roundOffAmount(merchantRow?.amount),
-          systemProfit: roundOffAmount(systemProfitRow?.after),
+          systemProfit: roundOffAmount(systemProfitRow?.amount),
           callbackStatus: row?.notificationStatus,
           transactionId: payoutDetails.transactionId,
+          receipt: payoutDetails.transactionReceipt,
         };
 
         return plainToInstance(AdminAllPayoutResponseDto, response);
@@ -144,9 +145,9 @@ export class PayoutAdminService {
         gateway: payout.gatewayName
           ? JSON.parse(payout.transactionDetails)
           : null,
+        recipient: JSON.parse(payout.user.channelDetails),
       },
       balancesAndProfit: transactionUpdateEntries,
-      channelDetails: payout.user?.channelDetails,
     };
 
     return plainToInstance(AdminPayoutDetailsResponseDto, response);

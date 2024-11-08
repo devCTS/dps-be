@@ -277,12 +277,19 @@ export class TopupService {
       if (entry.userType === UserTypeForTransactionUpdates.MEMBER_BALANCE)
         await this.memberService.updateBalance(
           entry.user.id,
+          entry.systemOrderId,
           entry.after,
           false,
         );
 
       if (entry.userType === UserTypeForTransactionUpdates.MEMBER_QUOTA)
-        await this.memberService.updateQuota(entry.user.id, entry.after, false);
+        await this.memberService.updateQuota(
+          entry.user.id,
+          entry,
+          this.systemConfigService,
+          entry.after,
+          false,
+        );
 
       await this.transactionUpdateRepository.update(entry.id, {
         pending: false,
@@ -323,10 +330,20 @@ export class TopupService {
 
     transactionUpdateEntries.forEach(async (entry) => {
       if (entry.userType === UserTypeForTransactionUpdates.MEMBER_BALANCE)
-        await this.memberService.updateBalance(entry.user.id, 0, true);
+        await this.memberService.updateBalance(
+          entry.user.id,
+          entry.systemOrderId,
+          0,
+          true,
+        );
 
       if (entry.userType === UserTypeForTransactionUpdates.MEMBER_QUOTA)
-        await this.memberService.updateQuota(entry.user.id, 0, true);
+        await this.memberService.updateQuota(
+          entry.user.id,
+          entry.systemOrderId,
+          0,
+          true,
+        );
 
       await this.transactionUpdateRepository.update(entry.id, {
         pending: false,

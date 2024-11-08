@@ -35,6 +35,8 @@ import { PaymentSystemService } from 'src/payment-system/payment-system.service'
 
 @Injectable()
 export class PayoutService {
+  private selectGateway = false;
+
   constructor(
     @InjectRepository(Payout)
     private readonly payoutRepository: Repository<Payout>,
@@ -93,40 +95,43 @@ export class PayoutService {
         systemOrderId: payout.systemOrderId,
       });
 
-    let intervalId = setInterval(async () => {
-      try {
-        const response = await this.findOne(payout.systemOrderId);
+    if (this.selectGateway) {
+      let intervalId = setInterval(async () => {
+        try {
+          const response = await this.findOne(payout.systemOrderId);
 
-        if (response.status === OrderStatus.ASSIGNED) {
-          clearInterval(intervalId);
-          clearTimeout(timeoutId);
-          return HttpStatus.CREATED;
+          if (response.status === OrderStatus.ASSIGNED) {
+            clearInterval(intervalId);
+            clearTimeout(timeoutId);
+            return HttpStatus.CREATED;
+          }
+        } catch (error) {
+          console.error('Error fetching the API:', error);
         }
-      } catch (error) {
-        console.error('Error fetching the API:', error);
-      }
-    }, 500);
+      }, 500);
 
-    const timeoutId = setTimeout(async () => {
-      clearInterval(intervalId);
-      const result = await this.paymentSystemService.makeGatewayPayout({
-        userId: merchant.id,
-        orderId: payout.systemOrderId,
-        amount: payout.amount,
-        orderType: OrderType.PAYOUT,
-      });
-
-      if (result.paymentStatus === 'success') {
-        await this.updatePayoutStatusToAssigned({
-          id: payout.systemOrderId,
-          paymentMode: PaymentMadeOn.GATEWAY,
-          gatewayServiceRate: payout.gatewayServiceRate || 0.3,
-          gatewayName: result.gatewayName,
+      const timeoutId = setTimeout(async () => {
+        clearInterval(intervalId);
+        const result = await this.paymentSystemService.makeGatewayPayout({
+          userId: merchant.id,
+          orderId: payout.systemOrderId,
+          amount: payout.amount,
+          orderType: OrderType.PAYOUT,
         });
-      }
 
-      return HttpStatus.CREATED;
-    }, 6000);
+        if (result.paymentStatus === 'success') {
+          await this.updatePayoutStatusToAssigned({
+            id: payout.systemOrderId,
+            paymentMode: PaymentMadeOn.GATEWAY,
+            gatewayServiceRate: payout.gatewayServiceRate || 0.3,
+            gatewayName: result.gatewayName,
+          });
+        }
+
+        return HttpStatus.CREATED;
+      }, 6000);
+    }
+    return HttpStatus.CREATED;
   }
 
   async updatePayoutStatusToAssigned(body) {
@@ -239,6 +244,7 @@ export class PayoutService {
       if (entry.userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE)
         await this.merchantService.updateBalance(
           entry.user.id,
+          entry.systemOrderId,
           entry.after,
           false,
         );
@@ -246,16 +252,23 @@ export class PayoutService {
       if (entry.userType === UserTypeForTransactionUpdates.MEMBER_BALANCE)
         await this.memberService.updateBalance(
           entry.user.id,
+          entry.systemOrderId,
           entry.after,
           false,
         );
 
       if (entry.userType === UserTypeForTransactionUpdates.MEMBER_QUOTA)
-        await this.memberService.updateQuota(entry.user.id, entry.after, false);
+        await this.memberService.updateQuota(
+          entry.user.id,
+          entry.systemOrderId,
+          entry.after,
+          false,
+        );
 
       if (entry.userType === UserTypeForTransactionUpdates.AGENT_BALANCE)
         await this.agentService.updateBalance(
           entry.user.id,
+          entry.systemOrderId,
           entry.after,
           false,
         );
@@ -306,16 +319,36 @@ export class PayoutService {
 
     transactionUpdateEntries.forEach(async (entry) => {
       if (entry.userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE)
-        await this.merchantService.updateBalance(entry.user.id, 0, true);
+        await this.merchantService.updateBalance(
+          entry.user.id,
+          entry.systemOrderId,
+          0,
+          true,
+        );
 
       if (entry.userType === UserTypeForTransactionUpdates.MEMBER_BALANCE)
-        await this.memberService.updateBalance(entry.user.id, 0, true);
+        await this.memberService.updateBalance(
+          entry.user.id,
+          entry.systemOrderId,
+          0,
+          true,
+        );
 
       if (entry.userType === UserTypeForTransactionUpdates.MEMBER_QUOTA)
-        await this.memberService.updateQuota(entry.user.id, 0, true);
+        await this.memberService.updateQuota(
+          entry.user.id,
+          entry.systemOrderId,
+          0,
+          true,
+        );
 
       if (entry.userType === UserTypeForTransactionUpdates.AGENT_BALANCE)
-        await this.agentService.updateBalance(entry.user.id, 0, true);
+        await this.agentService.updateBalance(
+          entry.user.id,
+          entry.systemOrderId,
+          0,
+          true,
+        );
 
       if (entry.userType === UserTypeForTransactionUpdates.SYSTEM_PROFIT)
         await this.systemConfigService.updateSystemProfit(

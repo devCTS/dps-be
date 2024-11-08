@@ -1,5 +1,4 @@
 import { Exclude, Expose, Transform } from 'class-transformer';
-import { EndUser } from 'src/end-user/entities/end-user.entity';
 import { ChannelName } from 'src/utils/enum/enum';
 
 @Exclude()
@@ -36,15 +35,34 @@ export class MemberPayoutDetailsResponseDto {
   paymentDetails: any;
 
   @Expose()
+  @TransformTransactionDetails()
   transactionDetails: any;
 
   @Expose()
-  @Transform(({ value }) => {
-    return {
-      commissionRate: value?.commissionRate,
-      commissionAmount: value?.commissionAmount,
-      quotaEarned: value?.quotaEarned,
-    };
-  })
+  @Transform(
+    ({ value }) => {
+      return {
+        commissionRate: value?.commissionRate,
+        commissionAmount: value?.commissionAmount,
+        quotaEarned: value?.quotaEarned,
+      };
+    },
+    { toClassOnly: true },
+  )
   quotaDetails: {};
+}
+
+function TransformTransactionDetails() {
+  return Transform(
+    ({ value }) => {
+      return {
+        transactionId: value.transactionId,
+        receipt: value.receipt,
+        gateway: value.gateway,
+        member: value.member,
+        recipient: value.member,
+      };
+    },
+    { toClassOnly: true },
+  );
 }
