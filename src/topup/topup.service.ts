@@ -89,34 +89,57 @@ export class TopupService {
     return topupHoldings;
   }
 
+  getOrderedChannels(channelProfiles) {
+    let upiChannels;
+    let netBanking;
+    let eWallet;
+    if (channelProfiles?.upi) {
+      upiChannels = [...channelProfiles.upi].map((item) => ({
+        ...item,
+        type: ChannelName.UPI,
+      }));
+    }
+
+    if (channelProfiles?.netBanking) {
+      netBanking = [...channelProfiles.netBanking].map((item) => ({
+        ...item,
+        type: ChannelName.BANKING,
+      }));
+    }
+
+    if (channelProfiles?.eWallet) {
+      eWallet = [...channelProfiles.eWallet].map((item) => ({
+        ...item,
+        type: ChannelName.E_WALLET,
+      }));
+    }
+
+    const latestChannels = [...upiChannels, ...netBanking, ...eWallet];
+
+    latestChannels.sort((a, b) => a.channelIndex - b.channelIndex);
+
+    return latestChannels;
+  }
+
   async getNextTopupChannel() {
+    const totalSetteledTopupOrders = await this.topupRepository.count();
+
     const channels = await this.systemConfigService.getTopupChannels();
 
-    const flattenedChannels = [
-      ...channels.upi.map((channel) => ({
-        ...channel,
-        channelName: ChannelName.UPI,
-      })),
-      ...channels.netBanking.map((channel) => ({
-        ...channel,
-        channelName: ChannelName.BANKING,
-      })),
-      ...channels.eWallet.map((channel) => ({
-        ...channel,
-        channelName: ChannelName.E_WALLET,
-      })),
-    ];
+    const flattenedChannels = this.getOrderedChannels(channels);
 
-    const selectedChannel = flattenedChannels[this.lastTopupIndex];
+    const nextTopupIndex = totalSetteledTopupOrders % flattenedChannels.length;
 
-    this.lastTopupIndex = (this.lastTopupIndex + 1) % flattenedChannels.length;
+    const selectedChannel = flattenedChannels[nextTopupIndex];
 
     if (selectedChannel) {
-      const { channelName, ...channelDetails } = selectedChannel;
+      // const { channelName, ...channelDetails } = selectedChannel;
+      const channelName = selectedChannel.type;
+      delete selectedChannel.type;
 
       return {
         channel: channelName,
-        channelDetails,
+        channelDetails: selectedChannel,
       };
     }
     return {
@@ -291,8 +314,7 @@ export class TopupService {
       if (entry.userType === UserTypeForTransactionUpdates.MEMBER_QUOTA)
         await this.memberService.updateQuota(
           entry.user.id,
-          entry,
-          this.systemConfigService,
+          entry.systemOrderId,
           entry.after,
           false,
         );

@@ -103,7 +103,7 @@ export class PayoutMemberService {
           quotaCredit:
             row.status === OrderStatus.FAILED
               ? 0
-              : roundOffAmount(row.amount + transactionUpdate.amount, true),
+              : roundOffAmount(row?.amount + transactionUpdate?.amount, true),
           orderType: 'Payout',
         };
       }),
