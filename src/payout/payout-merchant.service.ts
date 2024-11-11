@@ -108,7 +108,9 @@ export class PayoutMerchantService {
 
         return {
           ...plainToInstance(MerchantAllPayoutResponseDto, row),
-          payoutModeVia: row.payoutMadeVia,
+          member: row?.member
+            ? row.member?.firstName + ' ' + row.member?.lastName
+            : null,
           serviceFee: row?.merchant?.payoutServiceRate
             ? roundOffAmount(
                 (row.amount * row.merchant.payoutServiceRate) / 100,
@@ -204,8 +206,6 @@ export class PayoutMerchantService {
         };
       }),
     );
-
-    console.log(searchSuggestion, dtos);
 
     return {
       total,

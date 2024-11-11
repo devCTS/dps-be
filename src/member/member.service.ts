@@ -11,7 +11,7 @@ import { RegisterDto } from './dto/register.dto';
 import { IdentityService } from 'src/identity/identity.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Member } from './entities/member.entity';
-import { Repository, Between } from 'typeorm';
+import { Repository, Between, Not } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import { MemberResponseDto } from './dto/member-response.dto';
 import {
@@ -461,7 +461,7 @@ export class MemberService {
   ) {
     const member = await this.memberRepository.findOne({
       where: {
-        identity: identityId,
+        identity: { id: identityId },
       },
       relations: ['identity'],
     });
@@ -472,20 +472,91 @@ export class MemberService {
       quota: member.quota + amount,
     });
 
+    const updatedMember = await this.memberRepository.findOne({
+      where: { identity: { id: identityId } },
+      relations: ['identity'],
+    });
+
+    let whereCondition;
+    whereCondition = {
+      userType: UserTypeForTransactionUpdates.MEMBER_QUOTA,
+      user: { id: identityId },
+      pending: true,
+    };
+    if (failed) whereCondition.systemOrderId = systemOrderId;
+    else whereCondition.systemOrderId = Not(systemOrderId);
+
     if (updateTransactionEntries) {
-      const transactionUpdateMember =
-        await this.transactionUpdateRepository.findOne({
-          where: {
-            userType: UserTypeForTransactionUpdates.MEMBER_QUOTA,
-            user: { id: identityId },
-            pending: true,
-            systemOrderId,
-          },
+      const transactionUpdateMembers =
+        await this.transactionUpdateRepository.find({
+          where: whereCondition,
           relations: ['user'],
         });
 
-      let beforeValue = member.quota;
-      let afterValue = failed ? member.quota : amount + beforeValue;
+      for (const transactionUpdateMember of transactionUpdateMembers) {
+        let beforeValue = updatedMember.quota;
+        let afterValue = failed ? updatedMember.quota : beforeValue + amount;
+
+        if (transactionUpdateMember)
+          if (failed)
+            await this.transactionUpdateRepository.update(
+              transactionUpdateMember.id,
+              {
+                before: beforeValue,
+                after: afterValue,
+                amount: 0,
+                rate: 0,
+              },
+            );
+          else
+            await this.transactionUpdateRepository.update(
+              transactionUpdateMember.id,
+              {
+                before: beforeValue,
+                after: afterValue,
+              },
+            );
+      }
+    }
+  }
+
+  async updateBalance(identityId, systemOrderId, amount, failed) {
+    const member = await this.memberRepository.findOne({
+      where: {
+        identity: { id: identityId },
+      },
+      relations: ['identity'],
+    });
+
+    if (!member) throw new NotFoundException('Member not found!');
+
+    await this.memberRepository.update(member.id, {
+      balance: member.balance + amount,
+    });
+
+    const updatedMember = await this.memberRepository.findOne({
+      where: { identity: { id: identityId } },
+      relations: ['identity'],
+    });
+
+    let whereCondition;
+    whereCondition = {
+      userType: UserTypeForTransactionUpdates.MEMBER_BALANCE,
+      user: { id: identityId },
+      pending: true,
+    };
+    if (failed) whereCondition.systemOrderId = systemOrderId;
+    else whereCondition.systemOrderId = Not(systemOrderId);
+
+    const transactionUpdateMembers =
+      await this.transactionUpdateRepository.find({
+        where: whereCondition,
+        relations: ['user'],
+      });
+
+    for (const transactionUpdateMember of transactionUpdateMembers) {
+      let beforeValue = updatedMember.balance;
+      let afterValue = failed ? updatedMember.balance : amount + beforeValue;
 
       if (transactionUpdateMember)
         if (failed)
@@ -507,55 +578,6 @@ export class MemberService {
             },
           );
     }
-  }
-
-  async updateBalance(identityId, systemOrderId, amount, failed) {
-    const member = await this.memberRepository.findOne({
-      where: {
-        identity: { id: identityId },
-      },
-      relations: ['identity'],
-    });
-
-    if (!member) throw new NotFoundException('Member not found!');
-
-    await this.memberRepository.update(member.id, {
-      quota: member.quota + amount,
-    });
-
-    const transactionUpdateMember =
-      await this.transactionUpdateRepository.findOne({
-        where: {
-          userType: UserTypeForTransactionUpdates.MEMBER_BALANCE,
-          user: { id: identityId },
-          pending: true,
-          systemOrderId,
-        },
-        relations: ['user'],
-      });
-
-    let beforeValue = member.balance;
-    let afterValue = failed ? member.balance : amount + beforeValue;
-
-    if (transactionUpdateMember)
-      if (failed)
-        await this.transactionUpdateRepository.update(
-          transactionUpdateMember.id,
-          {
-            before: beforeValue,
-            after: afterValue,
-            amount: 0,
-            rate: 0,
-          },
-        );
-      else
-        await this.transactionUpdateRepository.update(
-          transactionUpdateMember.id,
-          {
-            before: beforeValue,
-            after: afterValue,
-          },
-        );
   }
 
   async verifyWithdrawalPassword(

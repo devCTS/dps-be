@@ -23,7 +23,9 @@ import { ChannelSettings } from 'src/gateway/entities/channel-settings.entity';
 import { GetPayPageDto } from './dto/getPayPage.dto';
 import { SystemConfig } from 'src/system-config/entities/system-config.entity';
 import { SystemConfigService } from 'src/system-config/system-config.service';
-
+const paymentPageBaseUrl =
+  'http://www.kingsgate-payments.com.s3-website-ap-southeast-1.amazonaws.com';
+// const paymentPageBaseUrl = 'http://localhost:5174';
 @Injectable()
 export class PaymentSystemService {
   constructor(

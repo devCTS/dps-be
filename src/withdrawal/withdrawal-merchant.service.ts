@@ -62,7 +62,7 @@ export class WithdrawalMerchantService {
       channelProfiles,
       minWithdrawal: merchant.minWithdrawal,
       maxWithdrawal: merchant.maxWithdrawal,
-      currentBalance: merchant.balance,
+      currentBalance: roundOffAmount(merchant.balance),
     };
   }
 

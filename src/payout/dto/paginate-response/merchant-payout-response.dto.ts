@@ -37,6 +37,9 @@ export class MerchantAllPayoutResponseDto {
   gatewayName: string;
 
   @Expose()
+  member: string;
+
+  @Expose()
   serviceFee: number;
 
   @Expose()

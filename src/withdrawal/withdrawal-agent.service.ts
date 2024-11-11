@@ -61,7 +61,7 @@ export class WithdrawalAgentService {
       channelProfiles,
       minWithdrawal: agent.minWithdrawalAmount,
       maxWithdrawal: agent.maxWithdrawalAmount,
-      currentBalance: agent.balance,
+      currentBalance: roundOffAmount(agent.balance),
     };
   }
 

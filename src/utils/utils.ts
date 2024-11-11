@@ -52,6 +52,6 @@ export const extractToken = (token: string) => {
 
 export const roundOffAmount = (amount, makeAbsolute = false) => {
   if (!amount) return 0;
-  const truncatedAmount = Math.trunc(amount * 100) / 100;
+  const truncatedAmount = Math.round(amount * 100) / 100;
   return makeAbsolute ? Math.abs(truncatedAmount) : truncatedAmount;
 };

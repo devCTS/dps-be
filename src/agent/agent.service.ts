@@ -8,7 +8,7 @@ import { CreateAgentDto } from './dto/create-agent.dto';
 import { IdentityService } from 'src/identity/identity.service';
 import { Agent } from './entities/agent.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
+import { Repository, Between, Not } from 'typeorm';
 import { AgentResponseDto } from './dto/agent-response.dto';
 import { plainToInstance } from 'class-transformer';
 import { UpdateAgentDto } from './dto/update-agent.dto';
@@ -406,39 +406,51 @@ export class AgentService {
       balance: agent.balance + amount,
     });
 
-    const transactionUpdateAgent =
-      await this.transactionUpdateRepository.findOne({
-        where: {
-          userType: UserTypeForTransactionUpdates.AGENT_BALANCE,
-          user: { id: identityId },
-          pending: true,
-          systemOrderId,
-        },
+    const updatedAgent = await this.agentRepository.findOne({
+      where: { identity: { id: identityId } },
+      relations: ['identity'],
+    });
+
+    let whereCondition;
+    whereCondition = {
+      userType: UserTypeForTransactionUpdates.AGENT_BALANCE,
+      user: { id: identityId },
+      pending: true,
+    };
+    if (failed) whereCondition.systemOrderId = systemOrderId;
+    else whereCondition.systemOrderId = Not(systemOrderId);
+
+    const transactionUpdateAgents = await this.transactionUpdateRepository.find(
+      {
+        where: whereCondition,
         relations: ['user'],
-      });
+      },
+    );
 
-    let beforeValue = agent.balance;
-    let afterValue = failed ? agent.balance : amount + beforeValue;
+    for (const transactionUpdateAgent of transactionUpdateAgents) {
+      let beforeValue = updatedAgent.balance;
+      let afterValue = failed ? updatedAgent.balance : amount + beforeValue;
 
-    if (transactionUpdateAgent)
-      if (failed)
-        await this.transactionUpdateRepository.update(
-          transactionUpdateAgent.id,
-          {
-            before: beforeValue,
-            after: afterValue,
-            amount: 0,
-            rate: 0,
-          },
-        );
-      else
-        await this.transactionUpdateRepository.update(
-          transactionUpdateAgent.id,
-          {
-            before: beforeValue,
-            after: afterValue,
-          },
-        );
+      if (transactionUpdateAgent)
+        if (failed)
+          await this.transactionUpdateRepository.update(
+            transactionUpdateAgent.id,
+            {
+              before: beforeValue,
+              after: afterValue,
+              amount: 0,
+              rate: 0,
+            },
+          );
+        else
+          await this.transactionUpdateRepository.update(
+            transactionUpdateAgent.id,
+            {
+              before: beforeValue,
+              after: afterValue,
+            },
+          );
+    }
   }
 
   async verifyWithdrawalPassword(

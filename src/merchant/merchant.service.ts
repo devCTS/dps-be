@@ -1,8 +1,5 @@
-import {
-  OrderStatus,
-  SortedBy,
-  UserTypeForTransactionUpdates,
-} from './../utils/enum/enum';
+import { systemConfigData } from './../system-config/data/system-config.data';
+import { SortedBy, UserTypeForTransactionUpdates } from './../utils/enum/enum';
 import {
   HttpStatus,
   Injectable,
@@ -17,7 +14,7 @@ import {
 import { UpdateMerchantDto } from './dto/update-merchant.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Merchant } from './entities/merchant.entity';
-import { Repository, Between, In } from 'typeorm';
+import { Repository, Between, Not } from 'typeorm';
 import { IdentityService } from 'src/identity/identity.service';
 import { JwtService } from 'src/services/jwt/jwt.service';
 import { plainToInstance } from 'class-transformer';
@@ -628,39 +625,53 @@ export class MerchantService {
       balance: merchant.balance + amount,
     });
 
-    const transactionUpdateMerchant =
-      await this.transactionUpdateRepository.findOne({
-        where: {
-          userType: UserTypeForTransactionUpdates.MERCHANT_BALANCE,
-          systemOrderId,
-          user: { id: identityId },
-          pending: true,
-        },
+    const updatedMerchant = await this.merchantRepository.findOne({
+      where: { identity: { id: identityId } },
+      relations: ['identity'],
+    });
+
+    let whereCondition;
+    whereCondition = {
+      userType: UserTypeForTransactionUpdates.MERCHANT_BALANCE,
+      user: { id: identityId },
+      pending: true,
+    };
+    if (failed) whereCondition.systemOrderId = systemOrderId;
+    else whereCondition.systemOrderId = Not(systemOrderId);
+
+    const transactionUpdateMerchants =
+      await this.transactionUpdateRepository.find({
+        where: whereCondition,
         relations: ['user'],
       });
 
-    let beforeValue = merchant.balance;
-    let afterValue = failed ? merchant.balance : amount + beforeValue;
+    if (transactionUpdateMerchants)
+      for (const transactionUpdateMerchant of transactionUpdateMerchants) {
+        let beforeValue = updatedMerchant.balance;
+        let afterValue = failed
+          ? updatedMerchant.balance
+          : amount + beforeValue;
 
-    if (transactionUpdateMerchant)
-      if (failed)
-        await this.transactionUpdateRepository.update(
-          transactionUpdateMerchant.id,
-          {
-            before: beforeValue,
-            after: afterValue,
-            amount: 0,
-            rate: 0,
-          },
-        );
-      else
-        await this.transactionUpdateRepository.update(
-          transactionUpdateMerchant.id,
-          {
-            before: beforeValue,
-            after: afterValue,
-          },
-        );
+        if (failed) {
+          await this.transactionUpdateRepository.update(
+            transactionUpdateMerchant.id,
+            {
+              before: beforeValue,
+              after: afterValue,
+              amount: 0,
+              rate: 0,
+            },
+          );
+        } else {
+          await this.transactionUpdateRepository.update(
+            transactionUpdateMerchant.id,
+            {
+              before: beforeValue,
+              after: afterValue,
+            },
+          );
+        }
+      }
   }
 
   async verifyWithdrawalPassword(

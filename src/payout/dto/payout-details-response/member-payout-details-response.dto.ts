@@ -60,7 +60,7 @@ function TransformTransactionDetails() {
         receipt: value.receipt,
         gateway: value.gateway,
         member: value.member,
-        recipient: value.member,
+        recipient: value.recipient,
       };
     },
     { toClassOnly: true },

@@ -29,6 +29,7 @@ import { AgentService } from 'src/agent/agent.service';
 import { CreatePaymentOrderDto } from 'src/payment-system/dto/createPaymentOrder.dto';
 import { EndUser } from 'src/end-user/entities/end-user.entity';
 import { ChangeCallbackStatusDto } from './dto/change-callback-status.dto';
+import { after } from 'node:test';
 
 @Injectable()
 export class PayinService {
@@ -345,21 +346,27 @@ export class PayinService {
       });
 
     transactionUpdateEntries.forEach(async (entry) => {
-      if (entry.userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE)
+      if (entry.userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE) {
+        const afterBalance = entry.after - entry.before;
+
         await this.merchantService.updateBalance(
           entry.user.id,
           entry.systemOrderId,
-          entry.after,
+          afterBalance,
           false,
         );
+      }
 
-      if (entry.userType === UserTypeForTransactionUpdates.MEMBER_BALANCE)
+      if (entry.userType === UserTypeForTransactionUpdates.MEMBER_BALANCE) {
+        const afterBalance = entry.after - entry.before;
+
         await this.memberService.updateBalance(
           entry.user.id,
           entry.systemOrderId,
-          entry.after,
+          afterBalance,
           false,
         );
+      }
 
       if (entry.userType === UserTypeForTransactionUpdates.MEMBER_QUOTA) {
         // Release Withheld
@@ -372,21 +379,26 @@ export class PayinService {
           false,
         );
 
+        const afterAmount = -(entry.before - entry.after);
+
         await this.memberService.updateQuota(
           entry.user.id,
           entry.systemOrderId,
-          entry.after,
+          afterAmount,
           false,
         );
       }
 
-      if (entry.userType === UserTypeForTransactionUpdates.AGENT_BALANCE)
+      if (entry.userType === UserTypeForTransactionUpdates.AGENT_BALANCE) {
+        const afterBalance = entry.after - entry.before;
+
         await this.agentService.updateBalance(
           entry.user.id,
           entry.systemOrderId,
-          entry.after,
+          afterBalance,
           false,
         );
+      }
 
       if (entry.userType === UserTypeForTransactionUpdates.SYSTEM_PROFIT)
         await this.systemConfigService.updateSystemProfit(
