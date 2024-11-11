@@ -83,6 +83,10 @@ export class PaginateRequestDto {
   forBulletin?: boolean;
 
   @IsOptional()
+  @IsBoolean()
+  forPendingOrder?: boolean;
+
+  @IsOptional()
   @IsString()
   status?: string;
 }

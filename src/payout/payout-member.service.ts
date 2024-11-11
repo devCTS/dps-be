@@ -37,6 +37,7 @@ export class PayoutMemberService {
       sortBy,
       userId,
       forBulletin,
+      forPendingOrder,
     } = paginateRequestDto;
 
     const skip = (pageNumber - 1) * pageSize;
@@ -55,7 +56,12 @@ export class PayoutMemberService {
 
     if (forBulletin)
       queryBuilder.andWhere('payout.status = :status', {
-        status: OrderStatus.SUBMITTED,
+        status: OrderStatus.INITIATED,
+      });
+
+    if (forPendingOrder)
+      queryBuilder.andWhere('payout.status = :status', {
+        status: OrderStatus.ASSIGNED,
       });
 
     if (search)

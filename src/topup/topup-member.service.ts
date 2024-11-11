@@ -53,7 +53,7 @@ export class TopupMemberService {
 
     if (forBulletin)
       queryBuilder.andWhere('topup.status = :status', {
-        status: OrderStatus.SUBMITTED,
+        status: OrderStatus.INITIATED,
       });
 
     if (search)
