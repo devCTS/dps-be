@@ -34,4 +34,10 @@ export class MemberAllPayoutResponseDto {
 
   @Expose()
   quotaCredit: number;
+
+  @Expose()
+  createdAt: Date;
+
+  @Expose()
+  updatedAt: Date;
 }

@@ -17,4 +17,10 @@ export class MemberAllTopupResponseDto {
 
   @Expose()
   channel: string;
+
+  @Expose()
+  createdAt: Date;
+
+  @Expose()
+  updatedAt: Date;
 }

@@ -43,6 +43,12 @@ export class PayinMemberResponseDto {
 
   @Expose()
   quotaDebit: number;
+
+  @Expose()
+  createdAt: Date;
+
+  @Expose()
+  updatedAt: Date;
 }
 
 export class PayinDetailsMemberResDto {

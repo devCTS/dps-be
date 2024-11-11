@@ -119,7 +119,7 @@ export class PayinDetailsAdminResDto {
   @Transform(
     ({ value }) => ({
       id: value?.id,
-      name: value?.firstName + value?.lastName,
+      name: value?.firstName + ' ' + value?.lastName,
     }),
     { toClassOnly: true },
   )
@@ -296,7 +296,7 @@ export function TransformTransactionDetails() {
         transactionId: value.transactionId,
         receipt: value.receipt,
         gateway: value.gateway,
-        member: formatMemberChannelDetails(value.member),
+        member: value.member ? formatMemberChannelDetails(value.member) : null,
       };
     },
     { toClassOnly: true },
