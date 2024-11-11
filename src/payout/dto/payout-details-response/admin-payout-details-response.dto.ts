@@ -111,7 +111,7 @@ function TransformBalancesAndProfit() {
               name: item.name,
               serviceRate: item.rate,
               serviceFee: roundOffAmount(item.amount),
-              balanceDeducted: roundOffAmount(item.before - item.after),
+              balanceDeducted: roundOffAmount(item.before - item.after, true),
               balanceBefore: roundOffAmount(item.before),
               balanceAfter: roundOffAmount(item.after),
             };
@@ -122,7 +122,7 @@ function TransformBalancesAndProfit() {
               name: item.name,
               commissionRate: item.rate,
               commissionAmount: roundOffAmount(item.amount),
-              balanceEarned: roundOffAmount(item.after - item.before),
+              balanceEarned: roundOffAmount(item.after - item.before, true),
               balanceBefore: roundOffAmount(item.before),
               balanceAfter: roundOffAmount(item.after),
               isAgentOf: item.isAgentOf,
@@ -134,7 +134,7 @@ function TransformBalancesAndProfit() {
               name: item.name,
               commissionRate: item.rate,
               commissionAmount: roundOffAmount(item.amount),
-              quotaEarned: roundOffAmount(item.after - item.before),
+              quotaEarned: roundOffAmount(item.after - item.before, true),
               quotaBefore: roundOffAmount(item.before),
               quotaAfter: roundOffAmount(item.after),
             };
@@ -145,7 +145,7 @@ function TransformBalancesAndProfit() {
               name: item.name,
               commissionRate: item.rate,
               commissionAmount: roundOffAmount(item.amount),
-              balanceEarned: roundOffAmount(item.after - item.before),
+              balanceEarned: roundOffAmount(item.after - item.before, true),
               balanceBefore: roundOffAmount(item.before),
               balanceAfter: roundOffAmount(item.after),
               isAgentOf: item.isAgentOf,
@@ -192,7 +192,7 @@ function TransformBalancesAndProfit() {
 
       return [
         merchantEntry,
-        ...otherEntries.reverse(),
+        ...otherEntries,
         gatewayEntry,
         systemProfitEntry,
       ].filter(Boolean);

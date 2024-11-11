@@ -241,37 +241,49 @@ export class PayoutService {
       });
 
     transactionUpdateEntries.forEach(async (entry) => {
-      if (entry.userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE)
+      if (entry.userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE) {
+        const afterBalance = -(entry.before - entry.after);
+
         await this.merchantService.updateBalance(
           entry.user.id,
           entry.systemOrderId,
-          entry.after,
+          afterBalance,
           false,
         );
+      }
 
-      if (entry.userType === UserTypeForTransactionUpdates.MEMBER_BALANCE)
+      if (entry.userType === UserTypeForTransactionUpdates.MEMBER_BALANCE) {
+        const afterBalance = entry.after - entry.before;
+
         await this.memberService.updateBalance(
           entry.user.id,
           entry.systemOrderId,
-          entry.after,
+          afterBalance,
           false,
         );
+      }
 
-      if (entry.userType === UserTypeForTransactionUpdates.MEMBER_QUOTA)
+      if (entry.userType === UserTypeForTransactionUpdates.MEMBER_QUOTA) {
+        const afterAmount = entry.after - entry.before;
+
         await this.memberService.updateQuota(
           entry.user.id,
           entry.systemOrderId,
-          entry.after,
+          afterAmount,
           false,
         );
+      }
 
-      if (entry.userType === UserTypeForTransactionUpdates.AGENT_BALANCE)
+      if (entry.userType === UserTypeForTransactionUpdates.AGENT_BALANCE) {
+        const afterBalance = entry.after - entry.before;
+
         await this.agentService.updateBalance(
           entry.user.id,
           entry.systemOrderId,
-          entry.after,
+          afterBalance,
           false,
         );
+      }
 
       if (entry.userType === UserTypeForTransactionUpdates.SYSTEM_PROFIT)
         await this.systemConfigService.updateSystemProfit(

@@ -61,7 +61,7 @@ export class WithdrawalMemberService {
       channelProfiles,
       minWithdrawal: member.minWithdrawalAmount,
       maxWithdrawal: member.maxWithdrawalAmount,
-      currentBalance: member.balance,
+      currentBalance: roundOffAmount(member.balance),
     };
   }
 

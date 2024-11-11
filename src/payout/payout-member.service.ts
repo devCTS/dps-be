@@ -144,8 +144,12 @@ export class PayoutMemberService {
           transactionId: orderDetails.transactionId,
           receipt: orderDetails.transactionReceipt,
           recipient: JSON.parse(orderDetails.user.channelDetails),
-          member: JSON.parse(orderDetails.transactionDetails),
-          gateway: JSON.parse(orderDetails.transactionDetails),
+          member: orderDetails.member
+            ? JSON.parse(orderDetails.transactionDetails)
+            : null,
+          gateway: orderDetails.gatewayName
+            ? JSON.parse(orderDetails.transactionDetails)
+            : null,
         },
         quotaDetails: {
           commissionRate: transactionUpdate.rate,

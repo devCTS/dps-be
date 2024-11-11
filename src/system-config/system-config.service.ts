@@ -5,7 +5,7 @@ import {
   NotAcceptableException,
   NotFoundException,
 } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { SystemConfig } from './entities/system-config.entity';
@@ -385,23 +385,29 @@ export class SystemConfigService {
 
     if (!systemConfig) throw new NotFoundException('SystemConfig not found!');
 
-    const systemProfitRow = await this.transactionUpdateRepository.findOne({
-      where: {
-        userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
-        pending: true,
-        systemOrderId: orderId,
-      },
-      relations: ['payinOrder'],
-    });
-
     await this.systemConfigRepository.update(systemConfig.id, {
       systemProfit: systemConfig.systemProfit + amount,
     });
 
-    let beforeValue = systemConfig.systemProfit;
-    let afterValue = failed ? beforeValue : beforeValue + amount;
+    const updatedSystemConfig = await this.findLatest();
 
-    if (systemProfitRow)
+    let whereCondition;
+    whereCondition = {
+      userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
+      pending: true,
+    };
+    if (failed) whereCondition.systemOrderId = orderId;
+    else whereCondition.systemOrderId = Not(orderId);
+
+    const systemProfitRows = await this.transactionUpdateRepository.find({
+      where: whereCondition,
+      relations: ['payinOrder'],
+    });
+
+    for (const systemProfitRow of systemProfitRows) {
+      let beforeValue = updatedSystemConfig.systemProfit;
+      let afterValue = failed ? beforeValue : beforeValue + amount;
+
       if (failed)
         await this.transactionUpdateRepository.update(systemProfitRow.id, {
           before: beforeValue,
@@ -413,6 +419,7 @@ export class SystemConfigService {
           before: beforeValue,
           after: afterValue,
         });
+    }
   }
 
   async updateWithdrawalDefaults(
