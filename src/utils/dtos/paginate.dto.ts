@@ -11,7 +11,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { BadRequestException } from '@nestjs/common';
-import { SortedBy } from '../enum/enum';
+import { ChannelName, OrderStatus, SortedBy } from '../enum/enum';
 
 // Helper function to convert DD/MM/YYYY to a valid Date object
 // Helper function to convert DD/MM/YYYY to a UTC Date object
@@ -89,4 +89,22 @@ export class PaginateRequestDto {
   @IsOptional()
   @IsString()
   status?: string;
+
+  @IsOptional()
+  filterStatusArray?: OrderStatus[];
+
+  @IsOptional()
+  filterChannelArray?: ChannelName[];
+
+  @IsOptional()
+  @IsEnum(['BOTH', 'MEMBER', 'GATEWAY'])
+  filterMadeVia?: 'BOTH' | 'MEMBER' | 'GATEWAY';
+
+  @IsOptional()
+  @IsNumber()
+  filterAmountLower?: number;
+
+  @IsOptional()
+  @IsNumber()
+  filterAmountUpper?: number;
 }

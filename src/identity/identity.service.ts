@@ -8,7 +8,7 @@ import {
 import { JwtService } from 'src/services/jwt/jwt.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Identity } from './entities/identity.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { SignInDto } from './dto/signin.dto';
 import { extractToken, generateRandomOTP, verifyToken } from 'src/utils/utils';
 import { SignUpDto } from './dto/singup.dto';
@@ -21,6 +21,9 @@ import { Admin } from 'src/admin/entities/admin.entity';
 import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
 import { IP } from './entities/ip.entity';
 import { Agent } from 'src/agent/entities/agent.entity';
+import { Payout } from 'src/payout/entities/payout.entity';
+import { Withdrawal } from 'src/withdrawal/entities/withdrawal.entity';
+import { OrderStatus, WithdrawalOrderStatus } from 'src/utils/enum/enum';
 
 type MemberContext = {
   firstName: string;
@@ -64,6 +67,11 @@ export class IdentityService {
     @InjectRepository(IP)
     private ipRepository: Repository<IP>,
     private readonly jwtService: JwtService,
+
+    @InjectRepository(Payout)
+    private readonly payoutRepository: Repository<Payout>,
+    @InjectRepository(Withdrawal)
+    private readonly withdrawalRepository: Repository<Withdrawal>,
   ) {
     this.membersContexts = {};
     this.forgotPasswordContexts = {};
@@ -348,5 +356,48 @@ export class IdentityService {
 
   async deleteIps(identity: Identity) {
     await this.ipRepository.delete({ identity });
+  }
+
+  async getCurrentBalalnce(email) {
+    const identity = await this.identityRepository.findOne({
+      where: { email },
+      relations: ['merchant', 'member', 'agent'],
+    });
+    let outstandingBalance = 0;
+    let currentBalance = 0;
+
+    if (identity.member) currentBalance = identity.member.balance;
+    if (identity.agent) currentBalance = identity.agent.balance;
+
+    if (identity.merchant) {
+      currentBalance = identity.merchant.balance;
+      const pendingBalancePayoutRows = await this.payoutRepository.find({
+        where: {
+          merchant: { id: identity.merchant.id },
+          status: In([
+            OrderStatus.INITIATED,
+            OrderStatus.ASSIGNED,
+            OrderStatus.SUBMITTED,
+          ]),
+        },
+      });
+
+      outstandingBalance = pendingBalancePayoutRows.reduce(
+        (acc, curr) => acc + curr.amount,
+        0,
+      );
+    }
+
+    const pendingBalanceWithdrawalRows = await this.withdrawalRepository.find({
+      where: {
+        user: { id: identity.id },
+        status: WithdrawalOrderStatus.PENDING,
+      },
+    });
+    outstandingBalance =
+      outstandingBalance +
+      pendingBalanceWithdrawalRows.reduce((acc, curr) => acc + curr.amount, 0);
+    console.log({ currentBalance, outstandingBalance });
+    return currentBalance - outstandingBalance;
   }
 }

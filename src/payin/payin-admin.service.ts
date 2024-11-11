@@ -26,8 +26,19 @@ export class PayinAdminService {
   ) {}
 
   async paginatePayins(paginateRequestDto: PaginateRequestDto) {
-    const { search, pageSize, pageNumber, startDate, endDate, sortBy } =
-      paginateRequestDto;
+    const {
+      search,
+      pageSize,
+      pageNumber,
+      startDate,
+      endDate,
+      sortBy,
+      filterStatusArray,
+      filterChannelArray,
+      filterMadeVia,
+      filterAmountLower,
+      filterAmountUpper,
+    } = paginateRequestDto;
 
     const skip = (pageNumber - 1) * pageSize;
     const take = pageSize;
@@ -66,6 +77,39 @@ export class PayinAdminService {
       sortBy === 'latest'
         ? queryBuilder.orderBy('payin.createdAt', 'DESC')
         : queryBuilder.orderBy('payin.createdAt', 'ASC');
+
+    // Apply filterStatusArray filter
+    if (filterStatusArray && filterStatusArray.length > 0) {
+      queryBuilder.andWhere('payin.status IN (:...filterStatusArray)', {
+        filterStatusArray,
+      });
+    }
+
+    // Apply filterChannelArray filter
+    if (filterChannelArray && filterChannelArray.length > 0) {
+      queryBuilder.andWhere('payin.channel IN (:...filterChannelArray)', {
+        filterChannelArray,
+      });
+    }
+
+    // Apply filterMadeVia filter
+    if (filterMadeVia && filterMadeVia !== 'BOTH') {
+      queryBuilder.andWhere('payin.payinMadeOn = :filterMadeVia', {
+        filterMadeVia: filterMadeVia,
+      });
+    }
+
+    // Apply filterAmountLower and filterAmountUpper filters
+    if (filterAmountLower !== undefined && filterAmountLower !== null) {
+      queryBuilder.andWhere('payin.amount >= :filterAmountLower', {
+        filterAmountLower,
+      });
+    }
+    if (filterAmountUpper !== undefined && filterAmountUpper !== null) {
+      queryBuilder.andWhere('payin.amount <= :filterAmountUpper', {
+        filterAmountUpper,
+      });
+    }
 
     const [rows, total] = await queryBuilder.getManyAndCount();
 

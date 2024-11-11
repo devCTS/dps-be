@@ -64,6 +64,13 @@ export class PayinService {
       amount,
     } = payinDetails;
 
+    const merchant = await this.merchantRepository.findOneBy({
+      integrationId,
+    });
+
+    if (!merchant)
+      throw new InternalServerErrorException('Merchant not found!');
+
     let endUser = await this.endUserRepository.findOneBy({ userId });
 
     if (!endUser) {
@@ -81,12 +88,6 @@ export class PayinService {
         console.log(e.toString());
       }
     }
-
-    const merchant = await this.merchantRepository.findOneBy({
-      integrationId,
-    });
-    if (!merchant)
-      throw new InternalServerErrorException('Merchant not found!');
 
     const payin = await this.payinRepository.save({
       merchantOrderId: orderId,

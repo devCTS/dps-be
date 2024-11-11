@@ -12,6 +12,8 @@ import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
 import { Agent } from 'src/agent/entities/agent.entity';
 import { ChannelModule } from 'src/channel/channel.module';
 import { GatewayModule } from 'src/gateway/gateway.module';
+import { Withdrawal } from 'src/withdrawal/entities/withdrawal.entity';
+import { Payout } from 'src/payout/entities/payout.entity';
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { GatewayModule } from 'src/gateway/gateway.module';
       Member,
       Submerchant,
       Agent,
+      Withdrawal,
+      Payout,
     ]),
     JwtModule,
     ChannelModule,

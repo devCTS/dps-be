@@ -14,6 +14,8 @@ import { PayoutModule } from 'src/payout/payout.module';
 import { TransactionUpdatesModule } from 'src/transaction-updates/transaction-updates.module';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { ChannelModule } from 'src/channel/channel.module';
+import { Payout } from 'src/payout/entities/payout.entity';
+import { Withdrawal } from 'src/withdrawal/entities/withdrawal.entity';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { ChannelModule } from 'src/channel/channel.module';
       AmountRangePayinMode,
       IP,
       TransactionUpdate,
+      Payout,
+      Withdrawal,
     ]),
     JwtModule,
     IdentityModule,

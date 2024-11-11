@@ -9,6 +9,7 @@ import {
   Res,
   UseGuards,
   Req,
+  Put,
 } from '@nestjs/common';
 import { IdentityService } from './identity.service';
 import { SignInDto } from './dto/signin.dto';
@@ -53,5 +54,10 @@ export class IdentityController {
   @Get('/:id')
   findOne(@Param('id') id: string) {
     return this.identityService.findOne(+id);
+  }
+
+  @Put('current-balance/:id')
+  getCurrentBalance(@Param('id') id: string) {
+    return this.identityService.getCurrentBalalnce(id);
   }
 }

@@ -1,4 +1,8 @@
-import { SortedBy, UserTypeForTransactionUpdates } from './../utils/enum/enum';
+import {
+  OrderStatus,
+  SortedBy,
+  UserTypeForTransactionUpdates,
+} from './../utils/enum/enum';
 import {
   HttpStatus,
   Injectable,
@@ -13,7 +17,7 @@ import {
 import { UpdateMerchantDto } from './dto/update-merchant.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Merchant } from './entities/merchant.entity';
-import { Repository, Between } from 'typeorm';
+import { Repository, Between, In } from 'typeorm';
 import { IdentityService } from 'src/identity/identity.service';
 import { JwtService } from 'src/services/jwt/jwt.service';
 import { plainToInstance } from 'class-transformer';
@@ -35,6 +39,8 @@ import { NetBanking } from 'src/channel/entity/net-banking.entity';
 import { EWallet } from 'src/channel/entity/e-wallet.entity';
 import * as uniqid from 'uniqid';
 import { VerifyWithdrawalPasswordDto } from './dto/verify-withdrawal-password.dto';
+import { Payout } from 'src/payout/entities/payout.entity';
+import { Withdrawal } from 'src/withdrawal/entities/withdrawal.entity';
 
 @Injectable()
 export class MerchantService {
