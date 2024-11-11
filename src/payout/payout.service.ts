@@ -10,7 +10,7 @@ import {
 import { UpdatePayoutDto } from './dto/update-payout.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Payout } from './entities/payout.entity';
-import { Repository } from 'typeorm';
+import { In, MoreThan, Repository } from 'typeorm';
 
 import {
   GatewayName,
@@ -32,6 +32,7 @@ import { MerchantService } from 'src/merchant/merchant.service';
 import { AgentService } from 'src/agent/agent.service';
 import { SystemConfigService } from 'src/system-config/system-config.service';
 import { PaymentSystemService } from 'src/payment-system/payment-system.service';
+import { AssignPayoutOrderDto } from './dto/assign-payout-order.dto';
 
 @Injectable()
 export class PayoutService {
@@ -134,15 +135,81 @@ export class PayoutService {
     return HttpStatus.CREATED;
   }
 
-  async updatePayoutStatusToAssigned(body) {
-    const {
-      id,
-      paymentMode,
-      memberId,
-      gatewayServiceRate,
-      memberPaymentDetails,
-      gatewayName,
-    } = body;
+  async updatePayoutStatusToAssigned(
+    assignPayoutOrderDto: AssignPayoutOrderDto,
+  ) {
+    const { id, paymentMode, memberId, gatewayServiceRate, gatewayName } =
+      assignPayoutOrderDto;
+
+    // Fetch payout order details
+    const payoutOrderData = await this.payoutRepository.findOne({
+      where: {
+        systemOrderId: id,
+      },
+    });
+    const payoutAmount = payoutOrderData.amount;
+
+    // Fetch member and member Data
+    const memberData = await this.memberRepository.findOne({
+      where: {
+        id: memberId,
+      },
+      relations: ['identity.upi', 'identity.eWallet', 'identity.netBanking'],
+    });
+
+    const minPayoutAmount = memberData.singlePayoutLowerLimit;
+    const maxPayoutAmount = memberData.singlePayoutUpperLimit;
+    const dailyPayoutLimit = memberData.dailyTotalPayoutLimit;
+
+    // Fetch total payouts assigned submitted and completed by member within 24 hrs
+    // 24 hrs filter
+    const twentyFourHoursAgo = new Date();
+    twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
+    const payoutMadeByMember = await this.payoutRepository.find({
+      where: {
+        status: In([
+          OrderStatus.COMPLETE,
+          OrderStatus.SUBMITTED,
+          OrderStatus.ASSIGNED,
+        ]),
+        updatedAt: MoreThan(twentyFourHoursAgo),
+      },
+      relations: ['member'],
+    });
+
+    // Accumulated amount
+    const accumulatedAmount = payoutMadeByMember.reduce(function (
+      accumulator,
+      curValue,
+    ) {
+      console.log(accumulator);
+      return accumulator + curValue.amount;
+    }, 0);
+
+    if (payoutAmount < minPayoutAmount) {
+      throw new NotAcceptableException(
+        'Payout amount cannot be less than min payout amount',
+      );
+    }
+
+    if (payoutAmount > maxPayoutAmount) {
+      throw new NotAcceptableException(
+        'Payout amount cannot be more than max payout amount',
+      );
+    }
+
+    if (dailyPayoutLimit < accumulatedAmount + payoutAmount) {
+      throw new NotAcceptableException('Daily payout limit reached');
+    }
+
+    if (
+      !memberData.identity.upi &&
+      !memberData.identity.netBanking &&
+      !memberData.identity.eWallet
+    ) {
+      throw new NotFoundException('Channels not found');
+    }
 
     if (
       paymentMode === PaymentMadeOn.GATEWAY &&
@@ -151,12 +218,6 @@ export class PayoutService {
       throw new NotAcceptableException(
         'gateway service rate or gateway payment details missing!',
       );
-
-    if (
-      paymentMode === PaymentMadeOn.MEMBER &&
-      (!memberId || !memberPaymentDetails)
-    )
-      throw new NotAcceptableException('memberId or payment details missing!');
 
     const payoutOrderDetails = await this.payoutRepository.findOne({
       where: { systemOrderId: id },
@@ -211,7 +272,11 @@ export class PayoutService {
           paymentMode === PaymentMadeOn.GATEWAY ? gatewayServiceRate : null,
         transactionDetails:
           paymentMode === PaymentMadeOn.MEMBER
-            ? JSON.stringify(memberPaymentDetails)
+            ? JSON.stringify({
+                upi: memberData.identity.upi,
+                netBanking: memberData.identity.netBanking,
+                eWallet: memberData.identity.eWallet,
+              })
             : null,
       },
     );

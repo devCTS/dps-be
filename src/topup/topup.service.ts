@@ -27,6 +27,7 @@ import { TransactionUpdatesTopupService } from 'src/transaction-updates/transact
 import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { SystemConfigService } from 'src/system-config/system-config.service';
 import { Agent } from 'src/agent/entities/agent.entity';
+import { AssignTopupOrderDto } from './dto/assign-topup-order.dto';
 
 @Injectable()
 export class TopupService {
@@ -238,11 +239,31 @@ export class TopupService {
     return HttpStatus.CREATED;
   }
 
-  async updateTopupStatusToAssigned(body) {
-    const { id, memberId, memberPaymentDetails } = body;
+  async updateTopupStatusToAssigned(assignTopupOrderDto: AssignTopupOrderDto) {
+    const { id, memberId } = assignTopupOrderDto;
 
-    if (!memberId || !memberPaymentDetails)
-      throw new NotAcceptableException('memberId or payment details missing!');
+    // Fetch member Data
+    const memberData = await this.memberRepository.findOne({
+      where: {
+        id: memberId,
+      },
+      relations: ['identity.upi', 'identity.netBanking', 'identity.eWallet'],
+    });
+
+    // check if member chanels exists
+    if (
+      !memberData.identity.upi &&
+      !memberData.identity.netBanking &&
+      !memberData.identity.eWallet
+    ) {
+      throw new NotFoundException('Channels not found');
+    }
+
+    const memberPaymentDetails = {
+      upi: memberData.identity.upi,
+      netBanking: memberData.identity.netBanking,
+      eWallet: memberData.identity.eWallet,
+    };
 
     const topupOrderDetails = await this.topupRepository.findOne({
       where: { systemOrderId: id },
