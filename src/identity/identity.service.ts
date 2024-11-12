@@ -397,7 +397,7 @@ export class IdentityService {
     outstandingBalance =
       outstandingBalance +
       pendingBalanceWithdrawalRows.reduce((acc, curr) => acc + curr.amount, 0);
-    console.log({ currentBalance, outstandingBalance });
+
     return currentBalance - outstandingBalance;
   }
 
