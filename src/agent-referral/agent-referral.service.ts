@@ -1,3 +1,4 @@
+import { identity } from 'rxjs';
 import {
   HttpStatus,
   Injectable,
@@ -274,6 +275,7 @@ export class AgentReferralService {
             payinCommission: referral.payinCommission,
             payoutCommission: referral.payoutCommission,
             balance: referral.referredAgent.balance,
+            uniqueId: referral.referredAgent.identity.id,
             ...childTree,
           };
         } else if (referral.referredMerchant) {
@@ -287,6 +289,7 @@ export class AgentReferralService {
             merchantPayinServiceRate: referral.merchantPayinServiceRate,
             merchantPayoutServiceRate: referral.merchantPayoutServiceRate,
             balance: referral.referredMerchant.balance,
+            uniqueId: referral.referredMerchant.identity.id,
             ...childTree,
           };
         } else {
@@ -297,6 +300,7 @@ export class AgentReferralService {
 
     return {
       id: agent.id,
+      uniqueId: agent.identity.id,
       firstName: agent.firstName,
       lastName: agent.lastName,
       referralCode: agent.referralCode,
@@ -315,7 +319,7 @@ export class AgentReferralService {
     const referralTree = await this.getReferralTree();
     if (!referralTree) {
       const merchant = await this.merchantRepository.findOne({
-        where: { id: userId },
+        where: { identity: { id: userId } },
         relations: ['identity'],
       });
       if (!merchant) return null;
@@ -337,7 +341,7 @@ export class AgentReferralService {
   }
 
   private async trimTreeToUser(tree: any, userId: number): Promise<any> {
-    if (tree.id === userId)
+    if (tree.uniqueId === userId)
       return {
         id: tree.id,
         firstName: tree.firstName,
@@ -362,7 +366,7 @@ export class AgentReferralService {
       };
 
     const merchant = await this.merchantRepository.findOne({
-      where: { id: userId },
+      where: { identity: { id: userId } },
       relations: ['identity'],
     });
     if (!merchant) return null;

@@ -15,8 +15,9 @@ import {
 } from 'src/utils/dtos/paginate.dto';
 import { MemberAllPayoutResponseDto } from './dto/paginate-response/member-payout-response.dto';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
-import { OrderStatus } from 'src/utils/enum/enum';
+import { ChannelName, OrderStatus } from 'src/utils/enum/enum';
 import { roundOffAmount } from 'src/utils/utils';
+import * as QRCode from 'qrcode';
 
 @Injectable()
 export class PayoutMemberService {
@@ -127,49 +128,76 @@ export class PayoutMemberService {
   }
 
   async getPayoutDetails(id: string) {
-    try {
-      const orderDetails = await this.payoutRepository.findOne({
-        where: { systemOrderId: id },
-        relations: ['user', 'member', 'merchant', 'member.identity'],
-      });
-      if (!orderDetails) throw new NotFoundException('Order not found.');
+    const orderDetails = await this.payoutRepository.findOne({
+      where: { systemOrderId: id },
+      relations: ['user', 'member', 'merchant', 'member.identity'],
+    });
+    if (!orderDetails) throw new NotFoundException('Order not found.');
 
-      const transactionUpdate = await this.transactionUpdateRepository.findOne({
-        where: {
-          systemOrderId: id,
-          user: { id: orderDetails.member?.identity?.id },
-        },
-        relations: ['payoutOrder', 'user', 'user.member'],
-      });
+    const transactionUpdate = await this.transactionUpdateRepository.findOne({
+      where: {
+        systemOrderId: id,
+        user: { id: orderDetails.member?.identity?.id },
+      },
+      relations: ['payoutOrder', 'user', 'user.member'],
+    });
 
-      if (!transactionUpdate) throw new NotFoundException();
+    if (!transactionUpdate) throw new NotFoundException();
 
-      const payload = {
-        ...orderDetails,
-        transactionDetails: {
-          transactionId: orderDetails.transactionId,
-          receipt: orderDetails.transactionReceipt,
-          recipient: JSON.parse(orderDetails.user.channelDetails),
-          member: orderDetails.member
-            ? JSON.parse(orderDetails.transactionDetails)
-            : null,
-          gateway: orderDetails.gatewayName
-            ? JSON.parse(orderDetails.transactionDetails)
-            : null,
+    const userChannelName = orderDetails.user.channel;
+    let transactionDetails = null;
+    if (
+      userChannelName === ChannelName.UPI &&
+      orderDetails.status === OrderStatus.ASSIGNED
+    ) {
+      const userChannelDetails = JSON.parse(orderDetails.user.channelDetails);
+
+      const upiId = userChannelDetails['Upi Id'];
+      const name = orderDetails.user.name;
+      const amount = orderDetails.amount;
+      const upiIntentURI = `upi://pay?pa=${upiId}&pn=${name}&am=${amount}&cu=INR`;
+
+      transactionDetails = {
+        transactionId: orderDetails.transactionId,
+        receipt: orderDetails.transactionReceipt,
+        recipient: {
+          ...JSON.parse(orderDetails.user.channelDetails),
+          qrCode: await QRCode.toDataURL(upiIntentURI),
         },
-        quotaDetails: {
-          commissionRate: transactionUpdate.rate,
-          commissionAmount: transactionUpdate.amount,
-          quotaEarned:
-            orderDetails.status === OrderStatus.FAILED
-              ? 0
-              : roundOffAmount(orderDetails.amount + transactionUpdate.amount),
-        },
+        member: orderDetails.member
+          ? JSON.parse(orderDetails.transactionDetails)
+          : null,
+        gateway: orderDetails.gatewayName
+          ? JSON.parse(orderDetails.transactionDetails)
+          : null,
       };
-
-      return plainToInstance(MemberPayoutDetailsResponseDto, payload);
-    } catch (error) {
-      throw new InternalServerErrorException();
+    } else {
+      transactionDetails = {
+        transactionId: orderDetails.transactionId,
+        receipt: orderDetails.transactionReceipt,
+        recipient: JSON.parse(orderDetails.user.channelDetails),
+        member: orderDetails.member
+          ? JSON.parse(orderDetails.transactionDetails)
+          : null,
+        gateway: orderDetails.gatewayName
+          ? JSON.parse(orderDetails.transactionDetails)
+          : null,
+      };
     }
+
+    const payload = {
+      ...orderDetails,
+      transactionDetails,
+      quotaDetails: {
+        commissionRate: transactionUpdate.rate,
+        commissionAmount: transactionUpdate.amount,
+        quotaEarned:
+          orderDetails.status === OrderStatus.FAILED
+            ? 0
+            : roundOffAmount(orderDetails.amount + transactionUpdate.amount),
+      },
+    };
+
+    return plainToInstance(MemberPayoutDetailsResponseDto, payload);
   }
 }

@@ -400,4 +400,45 @@ export class IdentityService {
     console.log({ currentBalance, outstandingBalance });
     return currentBalance - outstandingBalance;
   }
+
+  //   async getUserIdByIdentity(identityId) {
+  //     const identity = await this.identityRepository.findOne({
+  //       where: { id: identityId },
+  //       relations: ['merchant', 'member', 'agent'],
+  //     });
+
+  //     if (identity.member) return identity.member.id;
+  //     if (identity.agent) currentBalance = identity.agent.balance;
+
+  //     if (identity.merchant) {
+  //       currentBalance = identity.merchant.balance;
+  //       const pendingBalancePayoutRows = await this.payoutRepository.find({
+  //         where: {
+  //           merchant: { id: identity.merchant.id },
+  //           status: In([
+  //             OrderStatus.INITIATED,
+  //             OrderStatus.ASSIGNED,
+  //             OrderStatus.SUBMITTED,
+  //           ]),
+  //         },
+  //       });
+
+  //       outstandingBalance = pendingBalancePayoutRows.reduce(
+  //         (acc, curr) => acc + curr.amount,
+  //         0,
+  //       );
+  //     }
+
+  //     const pendingBalanceWithdrawalRows = await this.withdrawalRepository.find({
+  //       where: {
+  //         user: { id: identity.id },
+  //         status: WithdrawalOrderStatus.PENDING,
+  //       },
+  //     });
+  //     outstandingBalance =
+  //       outstandingBalance +
+  //       pendingBalanceWithdrawalRows.reduce((acc, curr) => acc + curr.amount, 0);
+  //     console.log({ currentBalance, outstandingBalance });
+  //     return currentBalance - outstandingBalance;
+  //   }
 }

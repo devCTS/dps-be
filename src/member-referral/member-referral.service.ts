@@ -270,6 +270,7 @@ export class MemberReferralService {
 
           return {
             id: referral.referredMember.id,
+            uniqueId: referral.referredMember.identity.id,
             firstName: referral.referredMember.firstName,
             lastName: referral.referredMember.lastName,
             referralCode: referral.referredMember.referralCode,
@@ -295,6 +296,7 @@ export class MemberReferralService {
 
     return {
       id: member.id,
+      uniqueId: member.identity.id,
       firstName: member.firstName,
       lastName: member.lastName,
       referralCode: member.referralCode,
@@ -312,7 +314,7 @@ export class MemberReferralService {
     const referralTree = await this.getReferralTree();
     if (!referralTree) {
       const member = await this.memberRepository.findOne({
-        where: { id: userId },
+        where: { identity: { id: userId } },
         relations: ['identity'],
       });
       if (!member) return null;
@@ -335,7 +337,7 @@ export class MemberReferralService {
   }
 
   private async trimTreeToUser(tree: any, userId: number): Promise<any> {
-    if (tree.id === userId)
+    if (tree.uniqueId === userId)
       return {
         id: tree.id,
         firstName: tree.firstName,
@@ -361,7 +363,7 @@ export class MemberReferralService {
       };
 
     const member = await this.memberRepository.findOne({
-      where: { id: userId },
+      where: { identity: { id: userId } },
       relations: ['identity'],
     });
     if (!member) return null;

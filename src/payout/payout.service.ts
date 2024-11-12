@@ -62,21 +62,22 @@ export class PayoutService {
     const { name, email, merchantId, channelDetails, channel, mobile } =
       payoutDetails;
 
-    let endUserData = await this.endUserRepository.findOneBy({ email });
+    // let endUserData = await this.endUserRepository.findOneBy({ email });
 
-    if (!endUserData) {
-      endUserData = await this.endUserService.create({
-        email,
-        channelDetails,
-        channel,
-        mobile,
-        name,
-        userId: uniqid(),
-      });
-    }
+    const endUserData = await this.endUserService.create({
+      email,
+      channelDetails,
+      channel,
+      mobile,
+      name,
+      userId: uniqid(),
+    });
 
-    const merchant = await this.merchantRepository.findOneBy({
-      id: merchantId,
+    const merchant = await this.merchantRepository.findOne({
+      where: {
+        id: merchantId,
+      },
+      relations: ['identity'],
     });
 
     const payout = await this.payoutRepository.save({
@@ -92,7 +93,7 @@ export class PayoutService {
       await this.transactionUpdatePayoutService.create({
         orderDetails: payout,
         orderType: OrderType.PAYOUT,
-        userId: merchantId,
+        userId: merchant.identity.id,
         systemOrderId: payout.systemOrderId,
       });
 
@@ -183,7 +184,6 @@ export class PayoutService {
       accumulator,
       curValue,
     ) {
-      console.log(accumulator);
       return accumulator + curValue.amount;
     }, 0);
 
@@ -231,12 +231,15 @@ export class PayoutService {
 
     let member;
     if (paymentMode === PaymentMadeOn.MEMBER)
-      member = await this.memberRepository.findOneBy({ id: memberId });
+      member = await this.memberRepository.findOne({
+        where: { id: memberId },
+        relations: ['identity'],
+      });
 
     if (paymentMode === PaymentMadeOn.MEMBER)
       await this.transactionUpdatePayoutService.create({
         orderDetails: payoutOrderDetails,
-        userId: memberId,
+        userId: member.identity.id,
         forMember: true,
         orderType: OrderType.PAYOUT,
         systemOrderId: payoutOrderDetails.systemOrderId,

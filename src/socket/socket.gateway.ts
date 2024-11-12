@@ -31,12 +31,9 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private userRooms: Map<string, string> = new Map();
 
-  handleConnection(socket: Socket) {
-    // console.log(`User connected: ${socket.id}`);
-  }
+  handleConnection(socket: Socket) {}
 
   handleDisconnect(socket: Socket) {
-    // console.log(`User disconnected: ${socket.id}`);
     this.leaveRoom(socket);
   }
 

@@ -78,7 +78,6 @@ export class PhonepeService {
         transactionId: merchantTransactionId,
       };
     } catch (error) {
-      console.log(error.response);
       throw new ConflictException(error.response?.data || error.toString());
     }
   }
@@ -142,7 +141,6 @@ export class PhonepeService {
 
         // responseObj.redirect('https://ginrummy.asia/redirect.html');
       } catch (error) {
-        console.log(error.response);
         throw new ConflictException(error.response?.data || error.toString());
       }
     }

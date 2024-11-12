@@ -65,8 +65,11 @@ export class PayinService {
       amount,
     } = payinDetails;
 
-    const merchant = await this.merchantRepository.findOneBy({
-      integrationId,
+    const merchant = await this.merchantRepository.findOne({
+      where: {
+        integrationId,
+      },
+      relations: ['identity'],
     });
 
     if (!merchant)
@@ -104,7 +107,7 @@ export class PayinService {
         orderDetails: payin,
         orderType: OrderType.PAYIN,
         systemOrderId: payin.systemOrderId,
-        userId: merchant.id,
+        userId: merchant.identity.id,
       });
 
     return payin;
@@ -153,7 +156,7 @@ export class PayinService {
     if (paymentMode === PaymentMadeOn.MEMBER) {
       await this.transactionUpdateService.create({
         orderDetails: payinOrderDetails,
-        userId: memberId,
+        userId: member.identity.id,
         forMember: true,
         orderType: OrderType.PAYIN,
         systemOrderId: payinOrderDetails.systemOrderId,

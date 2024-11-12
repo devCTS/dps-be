@@ -248,19 +248,26 @@ function TransformBalancesAndProfit() {
       const gatewayEntry = filteredValues.find(
         (entry) => entry.role === 'gateway',
       );
-      const otherEntries = filteredValues.filter(
-        (entry) =>
-          entry.role !== 'system' &&
-          entry.role !== 'merchant' &&
-          entry.role !== 'gateway',
+      const memberEntry = filteredValues.find(
+        (entry) => entry.role === 'member',
+      );
+      const memberAgents = filteredValues.filter(
+        (entry) => entry.isMember && entry.role === 'agent',
+      );
+      const merchantAgents = filteredValues.filter(
+        (entry) => entry.role === 'agent' && !entry.isMember,
       );
 
-      return [
+      const newSequence = [
         merchantEntry,
-        ...otherEntries.reverse(),
+        memberEntry,
+        ...merchantAgents.reverse(),
+        ...memberAgents.reverse(),
         gatewayEntry,
         systemProfitEntry,
-      ].filter(Boolean);
+      ];
+
+      return newSequence.filter(Boolean);
     },
     { toClassOnly: true },
   );
