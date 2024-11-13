@@ -72,13 +72,18 @@ export enum UserTypeForTransactionUpdates {
 }
 
 export enum Users {
-  MERCHANT = 'MERCHANT',
-  AGENT = 'AGENT',
-  MEMBER = 'MEMBER',
-  ADMIN = 'ADMIN',
+  MERCHANT = 'Merchant',
+  AGENT = 'Agent',
+  MEMBER = 'Member',
+  ADMIN = 'Admin',
 }
 
 export enum NotificationReadStatus {
+  READ = 'READ',
+  UNREAD = 'UNREAD',
+}
+
+export enum AlertReadStatus {
   READ = 'READ',
   UNREAD = 'UNREAD',
 }
