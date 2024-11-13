@@ -201,14 +201,20 @@ export class TopupService {
         currentSystemHoldings,
         amountPending: amountPending < 0 ? 0 : amountPending,
         nextTopupAmount: topupAmount,
-        nextTopupChannel,
+        nextTopupChannel: {
+          channel: nextTopupChannel.channel,
+          channelDetails: this.formatChannelDetails(
+            nextTopupChannel.channelDetails,
+          ),
+        },
       },
       lowerCard: currentTopup
         ? {
             amount: currentTopup.amount,
             channel: currentTopup.channel,
-            channelDetails: JSON.parse(currentTopup.transactionDetails)
-              .channelDetails,
+            channelDetails: this.formatChannelDetails(
+              JSON.parse(currentTopup.transactionDetails).channelDetails,
+            ),
             status: currentTopup.status.toLowerCase(),
             member: currentTopup.member
               ? {
@@ -275,13 +281,16 @@ export class TopupService {
     if (topupOrderDetails.status !== OrderStatus.INITIATED)
       throw new NotAcceptableException('order status is not initiated!');
 
-    const member = await this.memberRepository.findOneBy({ id: memberId });
+    const member = await this.memberRepository.findOne({
+      where: { id: memberId },
+      relations: ['identity'],
+    });
 
     if (!member) throw new NotFoundException('Member not found');
 
     await this.transactionUpdateTopupService.create({
       orderDetails: topupOrderDetails,
-      userId: memberId,
+      userId: member.identity.id,
       orderType: OrderType.PAYOUT,
       systemOrderId: topupOrderDetails.systemOrderId,
     });
@@ -467,4 +476,27 @@ export class TopupService {
   remove(id: number) {
     return `This action removes a #${id} topup`;
   }
+
+  formatChannelDetails = (value) => {
+    if (value.upiId)
+      return {
+        'UPI ID': value.upiId,
+        Mobile: value.mobile,
+      };
+
+    if (value.app)
+      return {
+        App: value.app,
+        Mobile: value.mobile,
+      };
+
+    if (value.bankName) {
+      return {
+        'Bank Name': value.bankName,
+        'IFSC Code': value.ifsc,
+        'Account Number': value.accountNumber,
+        'Beneficiary Name': value.beneficiaryName,
+      };
+    }
+  };
 }
