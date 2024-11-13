@@ -14,9 +14,10 @@ import {
 } from 'src/utils/dtos/paginate.dto';
 import { MemberAllTopupResponseDto } from './dto/paginate-response/member-topup-response.dto';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
-import { OrderStatus } from 'src/utils/enum/enum';
+import { ChannelName, OrderStatus } from 'src/utils/enum/enum';
 import { MemberTopupDetailsResponseDto } from './dto/topup-details-response/member-topup-details-response.dto';
 import { roundOffAmount } from 'src/utils/utils';
+import * as QRCode from 'qrcode';
 
 @Injectable()
 export class TopupMemberService {
@@ -137,6 +138,25 @@ export class TopupMemberService {
 
       if (!transactionUpdate) throw new NotFoundException();
 
+      let channelDetails;
+      if (orderDetails.channel === ChannelName.UPI) {
+        const upiId = JSON.parse(orderDetails.transactionDetails)
+          .channelDetails['upiId'];
+        const amount = orderDetails.amount;
+        const upiIntentURI = `upi://pay?pa=${upiId}&am=${amount}&cu=INR`;
+
+        channelDetails = {
+          ...this.formatChannelDetails(
+            JSON.parse(orderDetails.transactionDetails).channelDetails,
+          ),
+          qrCode: await QRCode.toDataURL(upiIntentURI),
+        };
+      } else {
+        channelDetails = this.formatChannelDetails(
+          JSON.parse(orderDetails.transactionDetails).channelDetails,
+        );
+      }
+
       const responseData = {
         ...orderDetails,
         quotaDetails: {
@@ -150,8 +170,7 @@ export class TopupMemberService {
           transactionId: orderDetails.transactionId,
           receipt: orderDetails.transactionReceipt,
           member: JSON.parse(orderDetails.transactionDetails).member,
-          channelDetails: JSON.parse(orderDetails.transactionDetails)
-            .channelDetails,
+          channelDetails,
         },
       };
 
@@ -162,4 +181,27 @@ export class TopupMemberService {
       throw new InternalServerErrorException();
     }
   }
+
+  formatChannelDetails = (value) => {
+    if (value.upiId)
+      return {
+        'UPI ID': value.upiId,
+        Mobile: value.mobile,
+      };
+
+    if (value.app)
+      return {
+        App: value.app,
+        Mobile: value.mobile,
+      };
+
+    if (value.bankName) {
+      return {
+        'Bank Name': value.bankName,
+        'IFSC Code': value.ifsc,
+        'Account Number': value.accountNumber,
+        'Beneficiary Name': value.beneficiaryName,
+      };
+    }
+  };
 }

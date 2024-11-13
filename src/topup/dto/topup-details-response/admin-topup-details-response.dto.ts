@@ -147,12 +147,7 @@ function TransformBalancesAndProfit() {
       const systemProfitEntry = filteredValues.find(
         (entry) => entry.role === 'system',
       );
-      const merchantEntry = filteredValues.find(
-        (entry) => entry.role === 'merchant',
-      );
-      const gatewayEntry = filteredValues.find(
-        (entry) => entry.role === 'gateway',
-      );
+
       const otherEntries = filteredValues.filter(
         (entry) =>
           entry.role !== 'system' &&
@@ -160,12 +155,7 @@ function TransformBalancesAndProfit() {
           entry.role !== 'gateway',
       );
 
-      return [
-        merchantEntry,
-        ...otherEntries.reverse(),
-        gatewayEntry,
-        systemProfitEntry,
-      ].filter(Boolean);
+      return [...otherEntries, systemProfitEntry].filter(Boolean);
     },
     { toClassOnly: true },
   );
