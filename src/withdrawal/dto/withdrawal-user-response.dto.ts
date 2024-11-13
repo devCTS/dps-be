@@ -64,6 +64,7 @@ export class WithdrawalDetailsUserResDto {
   channel: ChannelName;
 
   @Expose()
+  @TransformChannelDetails()
   userChannel: JSON;
 
   @Expose()
@@ -86,4 +87,37 @@ export class WithdrawalDetailsUserResDto {
 
   @Expose()
   balanceDeducted: number;
+}
+
+export function TransformChannelDetails() {
+  return Transform(
+    ({ value }) => {
+      const formatChannelDetails = (value) => {
+        if (value.upiId)
+          return {
+            'UPI ID': value.upiId,
+            Mobile: value.mobile,
+            qrCode: value?.qrCode,
+          };
+
+        if (value.app)
+          return {
+            App: value.app,
+            Mobile: value.mobile,
+          };
+
+        if (value.bankName) {
+          return {
+            'Bank Name': value.bankName,
+            'IFSC Code': value.ifsc,
+            'Account Number': value.accountNumber,
+            'Beneficiary Name': value.beneficiaryName,
+          };
+        }
+      };
+
+      return formatChannelDetails(value);
+    },
+    { toClassOnly: true },
+  );
 }

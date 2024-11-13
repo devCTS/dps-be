@@ -173,10 +173,10 @@ export class WithdrawalMerchantService {
 
     const data = {
       ...orderDetails,
-      serviceCharge: roundOffAmount(transactionUpdate?.amount) || null,
+      serviceCharge: roundOffAmount(transactionUpdate?.amount) || 0,
       balanceDeducted:
         roundOffAmount(transactionUpdate?.before - transactionUpdate?.after) ||
-        null,
+        0,
       userChannel: JSON.parse(orderDetails.channelDetails),
       transactionDetails: JSON.parse(orderDetails.transactionDetails),
     };
