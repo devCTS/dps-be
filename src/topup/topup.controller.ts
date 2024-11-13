@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Put,
 } from '@nestjs/common';
 import { TopupService } from './topup.service';
 import { CreateTopupDto } from './dto/create-topup.dto';
@@ -90,5 +91,10 @@ export class TopupController {
   @Post('update-status-submitted')
   updatePayinStatusToSubmitted(@Body() body) {
     return this.topupService.updateTopupStatusToSubmitted(body);
+  }
+
+  @Put('success-notification/:id')
+  handleNotificationStatusSuccess(@Param('id') id: string) {
+    return this.topupService.handleNotificationStatusSuccess(id);
   }
 }
