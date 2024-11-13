@@ -81,8 +81,6 @@ export class WithdrawalAdminService {
         ? queryBuilder.orderBy('withdrawal.createdAt', 'DESC')
         : queryBuilder.orderBy('withdrawal.createdAt', 'ASC');
 
-    console.log(filterStatusArray);
-
     // Apply filterStatusArray filter
     if (filterStatusArray && filterStatusArray.length > 0) {
       queryBuilder.andWhere('withdrawal.status IN (:...filterStatusArray)', {

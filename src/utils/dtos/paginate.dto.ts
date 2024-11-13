@@ -97,8 +97,8 @@ export class PaginateRequestDto {
   filterChannelArray?: ChannelName[];
 
   @IsOptional()
-  @IsEnum(['BOTH', 'MEMBER', 'GATEWAY'])
-  filterMadeVia?: 'BOTH' | 'MEMBER' | 'GATEWAY';
+  @IsEnum(['BOTH', 'MEMBER', 'GATEWAY', 'ADMIN'])
+  filterMadeVia?: 'BOTH' | 'MEMBER' | 'GATEWAY' | 'ADMIN';
 
   @IsOptional()
   @IsNumber()
