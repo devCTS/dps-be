@@ -11,6 +11,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { Member } from 'src/member/entities/member.entity';
 import { MemberService } from 'src/member/member.service';
+import { Users } from 'src/utils/enum/enum';
 import { Repository } from 'typeorm';
 
 @WebSocketGateway({
@@ -72,4 +73,20 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
       socket.emit('statusUpdate', { userId: socket.id, status: status });
     }
   }
+
+  async handleSendNotification(notificationData: {
+    for: number;
+    userType: Users;
+    text: string;
+  }) {
+    const roomId = `room_${notificationData.for}`;
+    this.server.to(roomId).emit('newNotification', notificationData);
+    console.log(roomId);
+  }
 }
+
+// Send notification to users
+
+// method will have three arguments for type , text
+// Send type and text to FE by mapping for to room id -  const roomId = `room_${for}`;
+// this.server.to(roomId).emit('newNotification', {type,text});
