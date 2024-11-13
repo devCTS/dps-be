@@ -12,9 +12,9 @@ import {
   WithdrawalAdminResponseDto,
   WithdrawalDetailsAdminResDto,
 } from './dto/withdrawal-admin-response.dto';
-import { WithdrawalOrderStatus } from 'src/utils/enum/enum';
-import { WithdrawalDefaultsDto } from 'src/system-config/dto/update-withdrawal-default.dto';
+import { ChannelName, WithdrawalOrderStatus } from 'src/utils/enum/enum';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
+import * as QRCode from 'qrcode';
 
 @Injectable()
 export class WithdrawalAdminService {
@@ -34,6 +34,11 @@ export class WithdrawalAdminService {
       endDate,
       sortBy,
       forBulletin,
+      filterStatusArray,
+      filterChannelArray,
+      filterMadeVia,
+      filterAmountLower,
+      filterAmountUpper,
     } = paginateRequestDto;
 
     const skip = (pageNumber - 1) * pageSize;
@@ -75,6 +80,41 @@ export class WithdrawalAdminService {
       sortBy === 'latest'
         ? queryBuilder.orderBy('withdrawal.createdAt', 'DESC')
         : queryBuilder.orderBy('withdrawal.createdAt', 'ASC');
+
+    console.log(filterStatusArray);
+
+    // Apply filterStatusArray filter
+    if (filterStatusArray && filterStatusArray.length > 0) {
+      queryBuilder.andWhere('withdrawal.status IN (:...filterStatusArray)', {
+        filterStatusArray,
+      });
+    }
+
+    // Apply filterChannelArray filter
+    if (filterChannelArray && filterChannelArray.length > 0) {
+      queryBuilder.andWhere('withdrawal.channel IN (:...filterChannelArray)', {
+        filterChannelArray,
+      });
+    }
+
+    // Apply filterMadeVia filter
+    if (filterMadeVia && filterMadeVia !== 'BOTH') {
+      queryBuilder.andWhere('withdrawal.withdrawalMadeOn = :filterMadeVia', {
+        filterMadeVia: filterMadeVia,
+      });
+    }
+
+    // Apply filterAmountLower and filterAmountUpper filters
+    if (filterAmountLower !== undefined && filterAmountLower !== null) {
+      queryBuilder.andWhere('withdrawal.amount >= :filterAmountLower', {
+        filterAmountLower,
+      });
+    }
+    if (filterAmountUpper !== undefined && filterAmountUpper !== null) {
+      queryBuilder.andWhere('withdrawal.amount <= :filterAmountUpper', {
+        filterAmountUpper,
+      });
+    }
 
     const [rows, total] = await queryBuilder.getManyAndCount();
 
@@ -125,18 +165,34 @@ export class WithdrawalAdminService {
       });
 
     const userRole = orderDetails.user.userType.toLowerCase();
+    const name =
+      orderDetails.user[userRole]?.firstName +
+      ' ' +
+      orderDetails.user[userRole]?.lastName;
+    let userChannel;
+
+    if (orderDetails.channel === ChannelName.UPI) {
+      const upiId = JSON.parse(orderDetails.channelDetails)['upiId'];
+
+      const amount = orderDetails.amount;
+
+      const upiIntentURI = `upi://pay?pa=${upiId}&pn=${name}&am=${amount}&cu=INR`;
+      userChannel = {
+        ...JSON.parse(orderDetails.channelDetails),
+        qrCode: (await QRCode.toDataURL(upiIntentURI)) || null,
+      };
+    } else {
+      userChannel = JSON.parse(orderDetails.channelDetails);
+    }
 
     const data = {
       ...orderDetails,
       user: {
         role: userRole,
-        name:
-          orderDetails.user[userRole]?.firstName +
-          ' ' +
-          orderDetails.user[userRole]?.lastName,
+        name,
         id: orderDetails.user[userRole]?.id,
       },
-      userChannel: JSON.parse(orderDetails.channelDetails),
+      userChannel,
       transactionDetails: JSON.parse(orderDetails.transactionDetails),
       balancesAndProfit: transactionUpdateEntries || null,
     };

@@ -25,7 +25,6 @@ import { AgentService } from 'src/agent/agent.service';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { SystemConfigService } from 'src/system-config/system-config.service';
 import { PaymentSystemService } from 'src/payment-system/payment-system.service';
-import { ChannelSettings } from 'src/gateway/entities/channel-settings.entity';
 
 @Injectable()
 export class WithdrawalService {
@@ -159,29 +158,36 @@ export class WithdrawalService {
       });
 
     transactionUpdateEntries.forEach(async (entry) => {
-      if (entry.userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE)
+      if (entry.userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE) {
+        const afterAmount = -(entry.before - entry.after);
         await this.merchantService.updateBalance(
           entry.user.id,
           entry.systemOrderId,
-          -orderDetails.amount,
+          afterAmount,
           false,
         );
+      }
 
-      if (entry.userType === UserTypeForTransactionUpdates.MEMBER_BALANCE)
+      if (entry.userType === UserTypeForTransactionUpdates.MEMBER_BALANCE) {
+        const afterAmount = -(entry.before - entry.after);
         await this.memberService.updateBalance(
           entry.user.id,
           entry.systemOrderId,
-          -orderDetails.amount,
+          afterAmount,
           false,
         );
+      }
 
-      if (entry.userType === UserTypeForTransactionUpdates.AGENT_BALANCE)
+      if (entry.userType === UserTypeForTransactionUpdates.AGENT_BALANCE) {
+        const afterAmount = -(entry.before - entry.after);
+
         await this.agentService.updateBalance(
           entry.user.id,
           entry.systemOrderId,
-          -orderDetails.amount,
+          afterAmount,
           false,
         );
+      }
 
       if (entry.userType === UserTypeForTransactionUpdates.SYSTEM_PROFIT)
         await this.systemConfigService.updateSystemProfit(

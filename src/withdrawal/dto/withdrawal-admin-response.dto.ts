@@ -12,6 +12,7 @@ import {
   WithdrawalOrderStatus,
 } from 'src/utils/enum/enum';
 import { roundOffAmount } from 'src/utils/utils';
+import { TransformChannelDetails } from './withdrawal-user-response.dto';
 
 @Exclude()
 export class WithdrawalAdminResponseDto {
@@ -101,6 +102,7 @@ export class WithdrawalDetailsAdminResDto {
   channel: ChannelName;
 
   @Expose()
+  @TransformChannelDetails()
   userChannel: JSON;
 
   @Expose()
