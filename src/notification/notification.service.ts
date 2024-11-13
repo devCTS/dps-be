@@ -39,6 +39,7 @@ export class NotificationService {
     const myNotifications = await this.notificationRepository.find({
       where: {
         for: id,
+        status: NotificationReadStatus.UNREAD,
       },
     });
 

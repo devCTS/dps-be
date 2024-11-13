@@ -33,6 +33,7 @@ import { TopupModule } from './topup/topup.module';
 import { BulletinModule } from './bulletin/bulletin.module';
 import { CronModule } from './services/cron/cron.module';
 import { NotificationModule } from './notification/notification.module';
+import { AlertModule } from './alert/alert.module';
 
 @Module({
   imports: [
@@ -83,6 +84,7 @@ import { NotificationModule } from './notification/notification.module';
     BulletinModule,
     CronModule,
     NotificationModule,
+    AlertModule,
   ],
   controllers: [AppController],
   providers: [

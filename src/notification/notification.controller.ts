@@ -12,7 +12,7 @@ import { CreateNotificationDto } from './dto/create-notification.dto';
 @Controller('notification')
 export class NotificationController {
   constructor(private notificationService: NotificationService) {}
-  @Post()
+  @Post('/create')
   create(@Body() createNotificationDto: CreateNotificationDto) {
     return this.notificationService.create(createNotificationDto);
   }
