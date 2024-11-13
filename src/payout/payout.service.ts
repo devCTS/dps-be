@@ -14,6 +14,7 @@ import { In, MoreThan, Repository } from 'typeorm';
 
 import {
   GatewayName,
+  NotificationStatus,
   OrderStatus,
   OrderType,
   PaymentMadeOn,
@@ -473,6 +474,23 @@ export class PayoutService {
         transactionReceipt,
       },
     );
+
+    return HttpStatus.OK;
+  }
+
+  async handleNotificationStatusSuccess(systemOrderId: string) {
+    const payoutOrderDetails = await this.payoutRepository.findOne({
+      where: {
+        systemOrderId,
+      },
+    });
+
+    if (!payoutOrderDetails)
+      throw new NotFoundException('Order details not found');
+
+    await this.payoutRepository.update(payoutOrderDetails.id, {
+      notificationStatus: NotificationStatus.SUCCESS,
+    });
 
     return HttpStatus.OK;
   }

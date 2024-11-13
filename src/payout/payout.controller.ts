@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Query,
+  Put,
 } from '@nestjs/common';
 import { PayoutService } from './payout.service';
 import { CreatePayoutDto } from './dto/create-payout.dto';
@@ -109,5 +110,10 @@ export class PayoutController {
   @Post('update-status-submitted')
   updatePayoutStatusToSubmitted(@Body() body) {
     return this.payoutService.updatePayoutStatusToSubmitted(body);
+  }
+
+  @Put('success-notification/:id')
+  handleNotificationStatusSuccess(@Param('id') id: string) {
+    return this.payoutService.handleNotificationStatusSuccess(id);
   }
 }

@@ -12,6 +12,7 @@ import { Repository } from 'typeorm';
 import * as uniqid from 'uniqid';
 import {
   ChannelName,
+  NotificationStatus,
   OrderType,
   UserTypeForTransactionUpdates,
   WithdrawalMadeOn,
@@ -219,6 +220,23 @@ export class WithdrawalService {
 
     await this.withdrawalRepository.update(orderDetails.id, {
       status: WithdrawalOrderStatus.FAILED,
+    });
+
+    return HttpStatus.OK;
+  }
+
+  async handleNotificationStatusSuccess(systemOrderId: string) {
+    const withdrawaOrderDetails = await this.withdrawalRepository.findOne({
+      where: {
+        systemOrderId,
+      },
+    });
+
+    if (!withdrawaOrderDetails)
+      throw new NotFoundException('Order details not found');
+
+    await this.withdrawalRepository.update(withdrawaOrderDetails.id, {
+      notificationStatus: NotificationStatus.SUCCESS,
     });
 
     return HttpStatus.OK;

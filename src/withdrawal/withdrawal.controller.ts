@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Put } from '@nestjs/common';
 import { WithdrawalService } from './withdrawal.service';
 import { CreateWithdrawalDto } from './dto/create-withdrawal.dto';
 import { WithdrawalMemberService } from './withdrawal-member.service';
@@ -97,5 +97,10 @@ export class WithdrawalController {
   @Post('make-gateway-payout')
   makeGatewayPayout(@Body() body) {
     return this.withdrawalService.makeGatewayPayout(body);
+  }
+
+  @Put('success-notification/:id')
+  handleNotificationStatusSuccess(@Param('id') id: string) {
+    return this.withdrawalService.handleNotificationStatusSuccess(id);
   }
 }

@@ -11,6 +11,7 @@ import { In, Repository } from 'typeorm';
 
 import {
   ChannelName,
+  NotificationStatus,
   OrderStatus,
   OrderType,
   UserTypeForTransactionUpdates,
@@ -430,6 +431,23 @@ export class TopupService {
         transactionReceipt,
       },
     );
+
+    return HttpStatus.OK;
+  }
+
+  async handleNotificationStatusSuccess(systemOrderId: string) {
+    const topupOrderDetails = await this.topupRepository.findOne({
+      where: {
+        systemOrderId,
+      },
+    });
+
+    if (!topupOrderDetails)
+      throw new NotFoundException('Order details not found');
+
+    await this.topupRepository.update(topupOrderDetails.id, {
+      notificationStatus: NotificationStatus.SUCCESS,
+    });
 
     return HttpStatus.OK;
   }
