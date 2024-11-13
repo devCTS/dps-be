@@ -70,3 +70,15 @@ export enum UserTypeForTransactionUpdates {
   SYSTEM_PROFIT = 'system_profit',
   GATEWAY_FEE = 'gateway_fee',
 }
+
+export enum Users {
+  MERCHANT = 'MERCHANT',
+  AGENT = 'AGENT',
+  MEMBER = 'MEMBER',
+  ADMIN = 'ADMIN',
+}
+
+export enum NotificationReadStatus {
+  READ = 'READ',
+  UNREAD = 'UNREAD',
+}
