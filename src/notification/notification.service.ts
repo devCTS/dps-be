@@ -32,6 +32,7 @@ export class NotificationService {
         for: memberId,
         userType: Users.MEMBER,
         text: 'This is notification',
+        type: 'notification',
       });
 
       return HttpStatus.CREATED;
