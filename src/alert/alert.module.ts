@@ -7,9 +7,13 @@ import { Member } from 'src/member/entities/member.entity';
 import { Agent } from 'http';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { Alert } from './entities/alert.entity';
+import { SocketModule } from 'src/socket/socket.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Admin, Member, Agent, Merchant, Alert])],
+  imports: [
+    TypeOrmModule.forFeature([Admin, Member, Agent, Merchant, Alert]),
+    SocketModule,
+  ],
   controllers: [AlertController],
   providers: [AlertService],
 })

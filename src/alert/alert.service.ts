@@ -8,6 +8,7 @@ import { Agent } from 'src/agent/entities/agent.entity';
 import { Member } from 'src/member/entities/member.entity';
 import { Admin } from 'src/admin/entities/admin.entity';
 import { Alert } from './entities/alert.entity';
+import { SocketGateway } from 'src/socket/socket.gateway';
 
 @Injectable()
 export class AlertService {
@@ -22,6 +23,7 @@ export class AlertService {
     private agentRepository: Repository<Agent>,
     @InjectRepository(Member)
     private memberRepository: Repository<Member>,
+    private socketGateway: SocketGateway,
   ) {}
 
   async create(alertCreateDto: AlertCreateDto) {
@@ -52,6 +54,13 @@ export class AlertService {
     }
 
     await this.alertRepository.save(alertCreateDto);
+
+    this.socketGateway.handleSendAlert({
+      for: userId,
+      userType,
+      text: 'abc',
+      type: 'Alert',
+    });
 
     return HttpStatus.CREATED;
   }

@@ -5,8 +5,9 @@ import { In, Repository } from 'typeorm';
 import { Notification } from './entities/notification.entity';
 import { MemberService } from 'src/member/member.service';
 import { Member } from 'src/member/entities/member.entity';
-import { NotificationReadStatus } from 'src/utils/enum/enum';
+import { NotificationReadStatus, Users } from 'src/utils/enum/enum';
 import { MarkNotificationReadDto } from './dto/mark-notification-read.dto';
+import { SocketGateway } from 'src/socket/socket.gateway';
 
 @Injectable()
 export class NotificationService {
@@ -15,7 +16,9 @@ export class NotificationService {
     private notificationRepository: Repository<Notification>,
     @InjectRepository(Member)
     private memberRepository: Repository<Member>,
+    private socketGateway: SocketGateway,
   ) {}
+
   async create(createNotificationDto: CreateNotificationDto) {
     const { for: memberId } = createNotificationDto;
 
@@ -25,6 +28,13 @@ export class NotificationService {
 
     try {
       await this.notificationRepository.save(createNotificationDto);
+      this.socketGateway.handleSendNotification({
+        for: memberId,
+        userType: Users.MEMBER,
+        text: 'This is notification',
+        type: 'notification',
+      });
+
       return HttpStatus.CREATED;
     } catch (error) {
       console.log(error);

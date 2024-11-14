@@ -11,6 +11,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { Member } from 'src/member/entities/member.entity';
 import { MemberService } from 'src/member/member.service';
+import { Users } from 'src/utils/enum/enum';
 import { Repository } from 'typeorm';
 
 @WebSocketGateway({
@@ -50,10 +51,15 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('joinRoom')
-  async handleJoinRoom(socket: Socket, userId: number) {
-    await this.memberService.update(userId, {
-      isOnline: true,
-    });
+  async handleJoinRoom(
+    socket: Socket,
+    { userId, userType }: { userId: number; userType: Users },
+  ) {
+    if (userType === Users.MEMBER) {
+      await this.memberService.update(userId, {
+        isOnline: true,
+      });
+    }
     this.memberId = userId;
     const roomId = `room_${userId}`;
     socket.join(roomId);
@@ -72,4 +78,30 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
       socket.emit('statusUpdate', { userId: socket.id, status: status });
     }
   }
+
+  async handleSendNotification(notificationData: {
+    for: number;
+    userType: Users;
+    text: string;
+    type: string;
+  }) {
+    const roomId = `room_${notificationData.for}`;
+    this.server.to(roomId).emit('newNotification', notificationData);
+  }
+
+  async handleSendAlert(alertData: {
+    for: number;
+    userType: Users;
+    text: string;
+    type: string;
+  }) {
+    const roomId = `room_${alertData.for}`;
+    this.server.to(roomId).emit('newAlert', alertData);
+  }
 }
+
+// Send notification to users
+
+// method will have three arguments for type , text
+// Send type and text to FE by mapping for to room id -  const roomId = `room_${for}`;
+// this.server.to(roomId).emit('newNotification', {type,text});
