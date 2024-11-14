@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Topup } from './entities/topup.entity';
 import { plainToInstance } from 'class-transformer';
 import {
@@ -38,6 +38,7 @@ export class TopupMemberService {
       sortBy,
       userId,
       forBulletin,
+      forPendingOrder,
     } = paginateRequestDto;
 
     const skip = (pageNumber - 1) * pageSize;
@@ -55,6 +56,11 @@ export class TopupMemberService {
     if (forBulletin)
       queryBuilder.andWhere('topup.status = :status', {
         status: OrderStatus.INITIATED,
+      });
+
+    if (forPendingOrder)
+      queryBuilder.andWhere('topup.status = :status', {
+        status: OrderStatus.ASSIGNED,
       });
 
     if (search)

@@ -27,8 +27,20 @@ export class TopupAdminService {
   ) {}
 
   async paginate(paginateRequestDto: PaginateRequestDto, showPending = false) {
-    const { search, pageSize, pageNumber, startDate, endDate, sortBy, status } =
-      paginateRequestDto;
+    const {
+      search,
+      pageSize,
+      pageNumber,
+      startDate,
+      endDate,
+      sortBy,
+      status,
+      filterStatusArray,
+      filterChannelArray,
+      filterMadeVia,
+      filterAmountLower,
+      filterAmountUpper,
+    } = paginateRequestDto;
 
     const skip = (pageNumber - 1) * pageSize;
     const take = pageSize;
@@ -40,12 +52,9 @@ export class TopupAdminService {
       .take(take);
 
     if (search)
-      queryBuilder.andWhere(
-        `CONCAT(topup.id, ' ', topup.member) ILIKE :search`,
-        {
-          search: `%${search}%`,
-        },
-      );
+      queryBuilder.andWhere(`topup.systemOrderId ILIKE :search`, {
+        search: `%${search}%`,
+      });
 
     let statusFilter = [];
 
@@ -69,29 +78,83 @@ export class TopupAdminService {
       );
     }
 
+    // Apply filterStatusArray filter
+    if (filterStatusArray && filterStatusArray.length > 0) {
+      queryBuilder.andWhere('topup.status IN (:...filterStatusArray)', {
+        filterStatusArray,
+      });
+    }
+
+    // Apply filterChannelArray filter
+    if (filterChannelArray && filterChannelArray.length > 0) {
+      queryBuilder.andWhere('topup.channel IN (:...filterChannelArray)', {
+        filterChannelArray,
+      });
+    }
+
+    // Apply filterMadeVia filter
+    if (filterMadeVia && filterMadeVia !== 'BOTH') {
+      queryBuilder.andWhere('topup.payinMadeOn = :filterMadeVia', {
+        filterMadeVia: filterMadeVia,
+      });
+    }
+
+    // Apply filterAmountLower and filterAmountUpper filters
+    if (filterAmountLower !== undefined && filterAmountLower !== null) {
+      queryBuilder.andWhere('topup.amount >= :filterAmountLower', {
+        filterAmountLower,
+      });
+    }
+
+    if (filterAmountUpper !== undefined && filterAmountUpper !== null) {
+      queryBuilder.andWhere('topup.amount <= :filterAmountUpper', {
+        filterAmountUpper,
+      });
+    }
+
     const [rows, total] = await queryBuilder.getManyAndCount();
 
     const startRecord = skip + 1;
     const endRecord = Math.min(skip + pageSize, total);
 
-    // fetch merchantCharge and systemProfit from transactionUpdate entity
     const dtos = await Promise.all(
       rows.map(async (row) => {
-        const systemProfitRow = await this.transactionUpdateRepository.findOne({
-          where: {
-            systemOrderId: row.systemOrderId,
-            userType: UserTypeForTransactionUpdates.MEMBER_BALANCE,
+        const transactionUpdateMembers =
+          await this.transactionUpdateRepository.find({
+            where: {
+              systemOrderId: row.systemOrderId,
+              userType: In([
+                UserTypeForTransactionUpdates.MEMBER_BALANCE,
+                UserTypeForTransactionUpdates.MEMBER_QUOTA,
+              ]),
+            },
+          });
+
+        const commissions = transactionUpdateMembers.reduce(
+          (accumulator, currentValue) => {
+            if (
+              currentValue.userType ===
+              UserTypeForTransactionUpdates.MEMBER_QUOTA
+            )
+              accumulator.memberCommission += currentValue?.amount;
+
+            if (
+              currentValue.userType ===
+              UserTypeForTransactionUpdates.MEMBER_BALANCE
+            )
+              accumulator.memberAgentsCommission += currentValue?.amount;
+
+            return accumulator;
           },
-        });
+          { memberCommission: 0, memberAgentsCommission: 0 },
+        );
 
         const response = {
           ...row,
-          memberCommission: row?.member?.topupCommissionRate
-            ? roundOffAmount(
-                (row.amount * row.member.topupCommissionRate) / 100,
-              )
-            : 0,
-          totalAgentCommission: roundOffAmount(systemProfitRow?.amount) || 0,
+          memberCommission: roundOffAmount(commissions.memberCommission),
+          totalAgentCommission: roundOffAmount(
+            commissions.memberAgentsCommission,
+          ),
         };
 
         return plainToInstance(AdminAllTopupResponseDto, response);
@@ -129,7 +192,10 @@ export class TopupAdminService {
       transactionDetails: {
         transactionId: topup.transactionId,
         receipt: topup.transactionReceipt,
-        member: JSON.parse(topup?.transactionDetails)?.member || null,
+        member:
+          this.formatChannelDetails(
+            JSON.parse(topup?.transactionDetails)?.member,
+          ) || null,
         channelDetails:
           JSON.parse(topup?.transactionDetails)?.channelDetails || null,
       },
@@ -145,27 +211,50 @@ export class TopupAdminService {
     const parsedStartDate = new Date(startDate);
     const parsedEndDate = new Date(endDate);
     const [rows, total] = await this.topupRepository.findAndCount({
-      relations: ['user'],
       where: {
         createdAt: Between(parsedStartDate, parsedEndDate),
       },
+      relations: ['member'],
     });
 
     const dtos = await Promise.all(
       rows.map(async (row) => {
-        const systemProfitRow = await this.transactionUpdateRepository.findOne({
-          where: {
-            systemOrderId: row.systemOrderId,
-            userType: UserTypeForTransactionUpdates.MEMBER_BALANCE,
+        const transactionUpdateMembers =
+          await this.transactionUpdateRepository.find({
+            where: {
+              systemOrderId: row.systemOrderId,
+              userType: In([
+                UserTypeForTransactionUpdates.MEMBER_BALANCE,
+                UserTypeForTransactionUpdates.MEMBER_QUOTA,
+              ]),
+            },
+          });
+
+        const commissions = transactionUpdateMembers.reduce(
+          (accumulator, currentValue) => {
+            if (
+              currentValue.userType ===
+              UserTypeForTransactionUpdates.MEMBER_QUOTA
+            )
+              accumulator.memberCommission += currentValue?.amount;
+
+            if (
+              currentValue.userType ===
+              UserTypeForTransactionUpdates.MEMBER_BALANCE
+            )
+              accumulator.memberAgentsCommission += currentValue?.amount;
+
+            return accumulator;
           },
-        });
+          { memberCommission: 0, memberAgentsCommission: 0 },
+        );
 
         const response = {
           ...row,
-          memberCommission: row?.member?.topupCommissionRate
-            ? (row.amount * row.member.topupCommissionRate) / 100
-            : 0,
-          totalAgentCommission: systemProfitRow?.amount || 0,
+          memberCommission: roundOffAmount(commissions.memberCommission),
+          totalAgentCommission: roundOffAmount(
+            commissions.memberAgentsCommission,
+          ),
         };
 
         return plainToInstance(AdminAllTopupResponseDto, response);
@@ -177,4 +266,27 @@ export class TopupAdminService {
       data: dtos,
     };
   }
+
+  formatChannelDetails = (value) => {
+    if (value?.upiId)
+      return {
+        'UPI ID': value?.upiId,
+        Mobile: value?.mobile,
+      };
+
+    if (value?.app)
+      return {
+        App: value?.app,
+        Mobile: value?.mobile,
+      };
+
+    if (value?.bankName) {
+      return {
+        'Bank Name': value?.bankName,
+        'IFSC Code': value?.ifsc,
+        'Account Number': value?.accountNumber,
+        'Beneficiary Name': value?.beneficiaryName,
+      };
+    }
+  };
 }

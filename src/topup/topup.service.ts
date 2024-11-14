@@ -29,6 +29,7 @@ import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { SystemConfigService } from 'src/system-config/system-config.service';
 import { Agent } from 'src/agent/entities/agent.entity';
 import { AssignTopupOrderDto } from './dto/assign-topup-order.dto';
+import { roundOffAmount } from 'src/utils/utils';
 
 @Injectable()
 export class TopupService {
@@ -151,6 +152,15 @@ export class TopupService {
   }
 
   async checkAndCreate() {
+    const channels = await this.systemConfigService.getTopupChannels();
+    if (
+      !channels ||
+      (!channels.upi.length &&
+        !channels.eWallet.length &&
+        !channels.netBanking.length)
+    )
+      return 'No top-up channel found!';
+
     const pendingTopupOrderExists = await this.topupRepository.findOne({
       where: {
         status: In([
@@ -178,6 +188,15 @@ export class TopupService {
   }
 
   async getCurrentTopupDetails() {
+    const channels = await this.systemConfigService.getTopupChannels();
+    if (
+      !channels ||
+      (!channels.upi.length &&
+        !channels.eWallet.length &&
+        !channels.netBanking.length)
+    )
+      throw new NotFoundException('No top-up channel found!');
+
     const { systemProfit, topupAmount, topupThreshold } =
       await this.systemConfigService.findLatest();
     const currentSystemHoldings = await this.getCurrentToupHoldings();
@@ -197,10 +216,10 @@ export class TopupService {
 
     return {
       upperCard: {
-        currentSystemProfit: systemProfit,
-        currentSystemHoldings,
-        amountPending: amountPending < 0 ? 0 : amountPending,
-        nextTopupAmount: topupAmount,
+        currentSystemProfit: roundOffAmount(systemProfit),
+        currentSystemHoldings: roundOffAmount(currentSystemHoldings),
+        amountPending: amountPending < 0 ? 0 : roundOffAmount(amountPending),
+        nextTopupAmount: roundOffAmount(topupAmount),
         nextTopupChannel: {
           channel: nextTopupChannel.channel,
           channelDetails: this.formatChannelDetails(
@@ -210,7 +229,7 @@ export class TopupService {
       },
       lowerCard: currentTopup
         ? {
-            amount: currentTopup.amount,
+            amount: roundOffAmount(currentTopup.amount),
             channel: currentTopup.channel,
             channelDetails: this.formatChannelDetails(
               JSON.parse(currentTopup.transactionDetails).channelDetails,
@@ -249,33 +268,9 @@ export class TopupService {
   async updateTopupStatusToAssigned(assignTopupOrderDto: AssignTopupOrderDto) {
     const { id, memberId } = assignTopupOrderDto;
 
-    // Fetch member Data
-    const memberData = await this.memberRepository.findOne({
-      where: {
-        id: memberId,
-      },
-      relations: ['identity.upi', 'identity.netBanking', 'identity.eWallet'],
-    });
-
-    // check if member chanels exists
-    if (
-      !memberData.identity.upi &&
-      !memberData.identity.netBanking &&
-      !memberData.identity.eWallet
-    ) {
-      throw new NotFoundException('Channels not found');
-    }
-
-    const memberPaymentDetails = {
-      upi: memberData.identity.upi,
-      netBanking: memberData.identity.netBanking,
-      eWallet: memberData.identity.eWallet,
-    };
-
     const topupOrderDetails = await this.topupRepository.findOne({
       where: { systemOrderId: id },
     });
-
     if (!topupOrderDetails) throw new NotFoundException('Order not found');
 
     if (topupOrderDetails.status !== OrderStatus.INITIATED)
@@ -283,15 +278,33 @@ export class TopupService {
 
     const member = await this.memberRepository.findOne({
       where: { id: memberId },
-      relations: ['identity'],
+      relations: [
+        'identity',
+        'identity.upi',
+        'identity.netBanking',
+        'identity.eWallet',
+      ],
     });
-
     if (!member) throw new NotFoundException('Member not found');
+
+    const channelMap = {
+      UPI: 'upi',
+      NET_BANKING: 'netBanking',
+      E_WALLET: 'eWallet',
+    };
+
+    if (!member.identity[channelMap[topupOrderDetails.channel]].length)
+      throw new NotFoundException(
+        `Please add a ${topupOrderDetails.channel} channel to grab this order!`,
+      );
+
+    const memberPaymentDetails =
+      member.identity[channelMap[topupOrderDetails.channel]][0];
 
     await this.transactionUpdateTopupService.create({
       orderDetails: topupOrderDetails,
       userId: member.identity.id,
-      orderType: OrderType.PAYOUT,
+      orderType: OrderType.TOPUP,
       systemOrderId: topupOrderDetails.systemOrderId,
     });
 
@@ -478,24 +491,24 @@ export class TopupService {
   }
 
   formatChannelDetails = (value) => {
-    if (value.upiId)
+    if (value?.upiId)
       return {
-        'UPI ID': value.upiId,
-        Mobile: value.mobile,
+        'UPI ID': value?.upiId,
+        Mobile: value?.mobile,
       };
 
-    if (value.app)
+    if (value?.app)
       return {
-        App: value.app,
-        Mobile: value.mobile,
+        App: value?.app,
+        Mobile: value?.mobile,
       };
 
-    if (value.bankName) {
+    if (value?.bankName) {
       return {
-        'Bank Name': value.bankName,
-        'IFSC Code': value.ifsc,
-        'Account Number': value.accountNumber,
-        'Beneficiary Name': value.beneficiaryName,
+        'Bank Name': value?.bankName,
+        'IFSC Code': value?.ifsc,
+        'Account Number': value?.accountNumber,
+        'Beneficiary Name': value?.beneficiaryName,
       };
     }
   };

@@ -65,27 +65,13 @@ function TransformBalancesAndProfit() {
       const mappedValues = value.map((item) => {
         const roleMapping = {
           agent_balance: 'agent',
-          merchant_balance: 'merchant',
           member_balance: 'agent',
-          system_profit: 'system',
           member_quota: 'member',
-          gateway_fee: 'gateway',
         };
 
         const role = roleMapping[item.userType] || item.userType;
 
         switch (item.userType) {
-          case UserTypeForTransactionUpdates.MERCHANT_BALANCE:
-            return {
-              role,
-              name: item.name,
-              serviceRate: item.rate,
-              serviceFee: roundOffAmount(item.amount),
-              balanceDeducted: roundOffAmount(item.before - item.after),
-              balanceBefore: roundOffAmount(item.before),
-              balanceAfter: roundOffAmount(item.after),
-            };
-
           case UserTypeForTransactionUpdates.AGENT_BALANCE:
             return {
               role,
@@ -122,40 +108,22 @@ function TransformBalancesAndProfit() {
               isMember: true,
             };
 
-          case UserTypeForTransactionUpdates.SYSTEM_PROFIT:
-            return {
-              role,
-              profit: roundOffAmount(item.after - item.before),
-              balanceBefore: roundOffAmount(item.before),
-              balanceAfter: roundOffAmount(item.after),
-            };
-
-          case UserTypeForTransactionUpdates.GATEWAY_FEE:
-            return {
-              role,
-              name: item.name,
-              upstreamFee: roundOffAmount(item.amount),
-              upstreamRate: item.rate,
-            };
-
           default:
             return;
         }
       });
-
       const filteredValues = mappedValues.filter(Boolean);
-      const systemProfitEntry = filteredValues.find(
-        (entry) => entry.role === 'system',
+
+      const memberEntry = filteredValues.find(
+        (entry) => entry.role === 'member',
+      );
+      const memberAgents = filteredValues.filter(
+        (entry) => entry.isMember && entry.role === 'agent',
       );
 
-      const otherEntries = filteredValues.filter(
-        (entry) =>
-          entry.role !== 'system' &&
-          entry.role !== 'merchant' &&
-          entry.role !== 'gateway',
-      );
+      const newSequence = [memberEntry, ...memberAgents];
 
-      return [...otherEntries, systemProfitEntry].filter(Boolean);
+      return newSequence.filter(Boolean);
     },
     { toClassOnly: true },
   );
