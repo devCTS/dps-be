@@ -23,7 +23,7 @@ export class TransactionUpdate {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ nullable: true })
   orderType: OrderType;
 
   @Column()

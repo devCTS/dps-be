@@ -34,6 +34,7 @@ import { TransactionUpdatesTopupService } from './transaction-updates-topup.serv
     TransactionUpdatesPayoutService,
     TransactionUpdatesWithdrawalService,
     TransactionUpdatesTopupService,
+    TransactionUpdatesService,
   ],
 })
 export class TransactionUpdatesModule {}

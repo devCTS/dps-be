@@ -34,6 +34,7 @@ import { BulletinModule } from './bulletin/bulletin.module';
 import { CronModule } from './services/cron/cron.module';
 import { NotificationModule } from './notification/notification.module';
 import { AlertModule } from './alert/alert.module';
+import { ManualSettlementModule } from './manual-settlement/manual-settelment.module';
 
 @Module({
   imports: [
@@ -85,6 +86,7 @@ import { AlertModule } from './alert/alert.module';
     CronModule,
     NotificationModule,
     AlertModule,
+    ManualSettlementModule,
   ],
   controllers: [AppController],
   providers: [
