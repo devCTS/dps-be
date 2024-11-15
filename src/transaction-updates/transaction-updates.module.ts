@@ -12,10 +12,19 @@ import { TransactionUpdatesPayoutService } from './transaction-updates-payout.se
 import { TransactionUpdatesWithdrawalService } from './transaction-updates-withdrawal.service';
 import { TransactionUpdatesService } from './transaction-updates.service';
 import { TransactionUpdatesTopupService } from './transaction-updates-topup.service';
+import { Payin } from 'src/payin/entities/payin.entity';
+import { Payout } from 'src/payout/entities/payout.entity';
+import { Topup } from 'src/topup/entities/topup.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([TransactionUpdate, Identity]),
+    TypeOrmModule.forFeature([
+      TransactionUpdate,
+      Identity,
+      Payin,
+      Payout,
+      Topup,
+    ]),
     AgentReferralModule,
     MemberReferralModule,
     IdentityModule,

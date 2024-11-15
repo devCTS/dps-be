@@ -82,4 +82,10 @@ export class MemberResponseDto {
 
   @Exclude()
   identity: Identity;
+
+  @Expose()
+  balance: number;
+
+  @Expose()
+  quota: number;
 }

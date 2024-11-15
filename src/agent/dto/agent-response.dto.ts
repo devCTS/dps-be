@@ -61,4 +61,7 @@ export class AgentResponseDto {
     { toClassOnly: true },
   )
   channelProfile: ChannelProfileDto;
+
+  @Expose()
+  balance: number;
 }

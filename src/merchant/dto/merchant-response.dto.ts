@@ -115,4 +115,7 @@ export class MerchantResponseDto {
 
   @Expose()
   numberOfRangesOrRatio?: number;
+
+  @Expose()
+  balance: number;
 }

@@ -9,13 +9,23 @@ import {
 } from 'src/utils/dtos/paginate.dto';
 import { plainToInstance } from 'class-transformer';
 import { CommissionsAdminPaginateResponseDto } from './dto/commissions-paginate.dto';
-import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
+import { OrderType, UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
+import { roundOffAmount } from 'src/utils/utils';
+import { Payin } from 'src/payin/entities/payin.entity';
+import { Payout } from 'src/payout/entities/payout.entity';
+import { Topup } from 'src/topup/entities/topup.entity';
 
 @Injectable()
 export class TransactionUpdatesService {
   constructor(
     @InjectRepository(TransactionUpdate)
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
+    @InjectRepository(Payin)
+    private readonly payinRepository: Repository<Payin>,
+    @InjectRepository(Payout)
+    private readonly payoutRepository: Repository<Payout>,
+    @InjectRepository(Topup)
+    private readonly topupRepository: Repository<Topup>,
   ) {}
 
   async paginateCommissionsAndProfits(paginateRequestDto: PaginateRequestDto) {
@@ -41,12 +51,11 @@ export class TransactionUpdatesService {
     if (userEmail)
       queryBuilder.andWhere('user.email = :userEmail', { userEmail });
 
-    if (search) {
+    if (search)
       queryBuilder.andWhere(
         `CONCAT(transactionUpdate.systemOrderId) ILIKE :search`,
         { search: `%${search}%` },
       );
-    }
 
     if (startDate && endDate) {
       const parsedStartDate = parseStartDate(startDate);
@@ -77,6 +86,9 @@ export class TransactionUpdatesService {
     queryBuilder.andWhere(
       'NOT transactionUpdate.before = transactionUpdate.after',
     );
+    queryBuilder.andWhere('transactionUpdate.orderType IN (:...orderType)', {
+      orderType: [OrderType.PAYIN, OrderType.PAYOUT, OrderType.TOPUP],
+    });
 
     const [rows, total] = await queryBuilder.getManyAndCount();
 
@@ -85,27 +97,50 @@ export class TransactionUpdatesService {
 
     const dtos = await Promise.all(
       rows.map(async (row) => {
-        const orderType =
-          row.orderType === 'Payin' ? 'payinOrder' : 'payoutOrder';
+        const mapOrderType = {
+          Payin: 'payinOrder',
+          Payout: 'payoutOrder',
+          Topup: 'topupOrder',
+        };
+        const orderType = mapOrderType[row.orderType];
 
         const merchantRow = await this.transactionUpdateRepository.findOne({
           where: {
             systemOrderId: row.systemOrderId,
-            userType: UserTypeForTransactionUpdates.MERCHANT_BALANCE,
+            userType: UserTypeForTransactionUpdates.MEMBER_BALANCE,
           },
-          relations: ['payinOrder', 'payoutOrder'],
+          relations: ['payinOrder', 'payoutOrder', 'topupOrder'],
         });
+
+        let orderRow;
+        switch (orderType) {
+          case 'payinOrder':
+            orderRow = await this.payinRepository.findOneBy({
+              systemOrderId: row.systemOrderId,
+            });
+            break;
+          case 'payoutOrder':
+            orderRow = await this.payoutRepository.findOneBy({
+              systemOrderId: row.systemOrderId,
+            });
+            break;
+          case 'topupOrder':
+            orderRow = await this.topupRepository.findOneBy({
+              systemOrderId: row.systemOrderId,
+            });
+            break;
+        }
 
         const payload = {
           orderId: row.systemOrderId,
-          orderType: orderType === 'payinOrder' ? 'payin' : 'payout',
-          agentMember: row.name,
-          merchant: merchantRow.name,
-          merchantFees: merchantRow.amount,
-          orderAmount: merchantRow[orderType].amount,
-          commission: row.amount,
+          orderType: row.orderType.toLowerCase(),
+          agentMember: row?.name,
+          merchant: orderType === 'topupOrder' ? 'None' : merchantRow?.name,
+          merchantFees: orderType === 'topupOrder' ? 0 : merchantRow?.amount,
+          orderAmount: roundOffAmount(orderRow?.amount) || 0,
+          commission: row?.amount || 0,
           date: row.createdAt,
-          referralUser: merchantRow.name,
+          // referralUser: merchantRow?.name,
         };
 
         return plainToInstance(CommissionsAdminPaginateResponseDto, payload);
