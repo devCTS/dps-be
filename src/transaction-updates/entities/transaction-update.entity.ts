@@ -3,10 +3,6 @@ import { Payin } from 'src/payin/entities/payin.entity';
 import { Identity } from './../../identity/entities/identity.entity';
 import { OrderType, UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
 import {
-  AfterInsert,
-  AfterUpdate,
-  BeforeInsert,
-  BeforeUpdate,
   Column,
   CreateDateColumn,
   Entity,

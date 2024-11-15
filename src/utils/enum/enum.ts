@@ -60,6 +60,8 @@ export enum OrderType {
   PAYOUT = 'Payout',
   TOPUP = 'Topup',
   WITHDRAWAL = 'Withdrawal',
+  ADMIN_SETTLEMENT = 'admin_settlement',
+  MEMBER_SETTLEMENT = 'member_settlement',
 }
 
 export enum UserTypeForTransactionUpdates {
@@ -69,8 +71,6 @@ export enum UserTypeForTransactionUpdates {
   AGENT_BALANCE = 'agent_balance',
   SYSTEM_PROFIT = 'system_profit',
   GATEWAY_FEE = 'gateway_fee',
-  ADMIN_SETTLEMENT = 'admin_settlement',
-  MEMBER_SETTLEMENT = 'member_settlement',
 }
 
 export enum Users {

@@ -34,7 +34,7 @@ import { BulletinModule } from './bulletin/bulletin.module';
 import { CronModule } from './services/cron/cron.module';
 import { NotificationModule } from './notification/notification.module';
 import { AlertModule } from './alert/alert.module';
-import { ManualSettlementModule } from './manual-settlement/manual-settelment.module';
+import { FundRecordModule } from './fund-record/fund-record.module';
 
 @Module({
   imports: [
@@ -86,7 +86,7 @@ import { ManualSettlementModule } from './manual-settlement/manual-settelment.mo
     CronModule,
     NotificationModule,
     AlertModule,
-    ManualSettlementModule,
+    FundRecordModule,
   ],
   controllers: [AppController],
   providers: [

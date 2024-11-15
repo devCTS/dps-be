@@ -10,3 +10,5 @@ export class CreateSettlementDto {
   @IsEnum({ enum: ['INCREMENT', 'DECREMENT'] })
   operation: 'INCREMENT' | 'DECREMENT';
 }
+
+export class CreateFundRecordDto {}
