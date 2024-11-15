@@ -13,6 +13,8 @@ import { TopupAdminService } from 'src/topup/topup-admin.service';
 import { PayinAdminService } from 'src/payin/payin-admin.service';
 import { PayoutAdminService } from 'src/payout/payout-admin.service';
 import { WithdrawalAdminService } from 'src/withdrawal/withdrawal-admin.service';
+import { TransactionUpdatesController } from 'src/transaction-updates/transaction-updates.controller';
+import { TransactionUpdatesService } from 'src/transaction-updates/transaction-updates.service';
 
 @Injectable()
 export class ExportService {
@@ -26,6 +28,7 @@ export class ExportService {
     private readonly payinAdminService: PayinAdminService,
     private readonly payoutAdminService: PayoutAdminService,
     private readonly withdrawalAdminService: WithdrawalAdminService,
+    private readonly transactionUpdatesService: TransactionUpdatesService,
   ) {}
 
   async create(createExportDto: CreateExportDto) {
@@ -51,12 +54,17 @@ export class ExportService {
           startDate,
           endDate,
         );
-
       case 'topup':
         return await this.topupAdminService.exportRecords(startDate, endDate);
 
+      case 'commissions':
+        return await this.transactionUpdatesService.exportRecords(
+          startDate,
+          endDate,
+        );
+
       default:
-        throw new NotAcceptableException('Invalid table name!');
+        throw new NotFoundException('Invalid table name!');
     }
   }
 }

@@ -1,7 +1,7 @@
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import {
   PaginateRequestDto,
   parseEndDate,
@@ -107,6 +107,104 @@ export class TransactionUpdatesService {
         const merchantRow = await this.transactionUpdateRepository.findOne({
           where: {
             systemOrderId: row.systemOrderId,
+            userType: UserTypeForTransactionUpdates.MERCHANT_BALANCE,
+          },
+          relations: ['payinOrder', 'payoutOrder', 'topupOrder'],
+        });
+
+        let orderRow;
+        switch (orderType) {
+          case 'payinOrder':
+            orderRow = await this.payinRepository.findOneBy({
+              systemOrderId: row.systemOrderId,
+            });
+            break;
+          case 'payoutOrder':
+            orderRow = await this.payoutRepository.findOneBy({
+              systemOrderId: row.systemOrderId,
+            });
+            break;
+          case 'topupOrder':
+            orderRow = await this.topupRepository.findOneBy({
+              systemOrderId: row.systemOrderId,
+            });
+            break;
+        }
+
+        const payload = {
+          orderId: row.systemOrderId,
+          orderType: row.orderType.toLowerCase(),
+          agentMember: row?.name,
+          merchant: orderType === 'topupOrder' ? 'None' : merchantRow?.name,
+          merchantFees: orderType === 'topupOrder' ? 0 : merchantRow?.amount,
+          orderAmount: roundOffAmount(orderRow?.amount) || 0,
+          commission: row?.amount || 0,
+          date: row.createdAt,
+          referralUser: row?.isAgentOf,
+        };
+
+        return plainToInstance(CommissionsAdminPaginateResponseDto, payload);
+      }),
+    );
+
+    return {
+      total,
+      page: pageNumber,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+      startRecord,
+      endRecord,
+      data: dtos,
+    };
+  }
+
+  async exportRecords(startDate: string, endDate: string) {
+    startDate = parseStartDate(startDate);
+    endDate = parseEndDate(endDate);
+
+    const parsedStartDate = new Date(startDate);
+    const parsedEndDate = new Date(endDate);
+
+    const queryBuilder = this.transactionUpdateRepository
+      .createQueryBuilder('transactionUpdate')
+      .leftJoinAndSelect('transactionUpdate.user', 'user');
+
+    queryBuilder.andWhere(
+      'transactionUpdate.userType IN (:agentCommission, :memberCommission)',
+      {
+        agentCommission: UserTypeForTransactionUpdates.AGENT_BALANCE,
+        memberCommission: UserTypeForTransactionUpdates.MEMBER_BALANCE,
+      },
+    );
+    queryBuilder.andWhere('transactionUpdate.pending = false');
+    queryBuilder.andWhere(
+      'NOT transactionUpdate.before = transactionUpdate.after',
+    );
+    queryBuilder.andWhere('transactionUpdate.orderType IN (:...orderType)', {
+      orderType: [OrderType.PAYIN, OrderType.PAYOUT, OrderType.TOPUP],
+    });
+    queryBuilder.andWhere(
+      'transactionUpdate.createdAt BETWEEN :startDate AND :endDate',
+      {
+        startDate: parsedStartDate,
+        endDate: parsedEndDate,
+      },
+    );
+
+    const [rows, total] = await queryBuilder.getManyAndCount();
+
+    const dtos = await Promise.all(
+      rows.map(async (row) => {
+        const mapOrderType = {
+          Payin: 'payinOrder',
+          Payout: 'payoutOrder',
+          Topup: 'topupOrder',
+        };
+        const orderType = mapOrderType[row.orderType];
+
+        const merchantRow = await this.transactionUpdateRepository.findOne({
+          where: {
+            systemOrderId: row.systemOrderId,
             userType: UserTypeForTransactionUpdates.MEMBER_BALANCE,
           },
           relations: ['payinOrder', 'payoutOrder', 'topupOrder'],
@@ -140,7 +238,6 @@ export class TransactionUpdatesService {
           orderAmount: roundOffAmount(orderRow?.amount) || 0,
           commission: row?.amount || 0,
           date: row.createdAt,
-          // referralUser: merchantRow?.name,
         };
 
         return plainToInstance(CommissionsAdminPaginateResponseDto, payload);
@@ -149,11 +246,6 @@ export class TransactionUpdatesService {
 
     return {
       total,
-      page: pageNumber,
-      pageSize,
-      totalPages: Math.ceil(total / pageSize),
-      startRecord,
-      endRecord,
       data: dtos,
     };
   }

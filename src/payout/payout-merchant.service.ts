@@ -119,7 +119,7 @@ export class PayoutMerchantService {
           balanceDebit:
             row.status === OrderStatus.FAILED
               ? 0
-              : roundOffAmount(row.amount + transactionUpdate.amount, true),
+              : roundOffAmount(row?.amount + transactionUpdate?.amount, true),
           channelDetails: row.user.channelDetails,
         };
       }),

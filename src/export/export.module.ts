@@ -10,6 +10,7 @@ import { TopupModule } from 'src/topup/topup.module';
 import { PayinModule } from 'src/payin/payin.module';
 import { PayoutModule } from 'src/payout/payout.module';
 import { WithdrawalModule } from 'src/withdrawal/withdrawal.module';
+import { TransactionUpdatesModule } from 'src/transaction-updates/transaction-updates.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { WithdrawalModule } from 'src/withdrawal/withdrawal.module';
     PayinModule,
     PayoutModule,
     WithdrawalModule,
+    TransactionUpdatesModule,
   ],
   controllers: [ExportController],
   providers: [ExportService],
