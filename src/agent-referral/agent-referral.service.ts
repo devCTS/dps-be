@@ -350,8 +350,10 @@ export class AgentReferralService {
         email: tree.email,
         agentType: 'merchant',
         balance: tree.balance,
-        merchantPayinServiceRate: tree.payinServiceRate,
-        merchantPayoutServiceRate: tree.payoutServiceRate,
+        merchantPayinServiceRate: tree.merchantPayinServiceRate,
+        merchantPayoutServiceRate: tree.merchantPayoutServiceRate,
+        payinCommission: tree.payinCommission,
+        payoutCommission: tree.payoutCommission,
         children: [],
       };
 
