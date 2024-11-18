@@ -1,7 +1,10 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { FundRecordService } from './fund-record.service';
 import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
-import { CreateSettlementDto } from './dto/create-fund-record.dto';
+import {
+  CreateSettlementDto,
+  MemberSettlementDto,
+} from './dto/create-fund-record.dto';
 
 @Controller('fund-record')
 export class FundRecordController {
@@ -17,5 +20,10 @@ export class FundRecordController {
   @Post('/admin-adjustment')
   async adminAdjustment(@Body() requestBody: CreateSettlementDto) {
     return await this.fundRecordService.adminAdjustment(requestBody);
+  }
+
+  @Post('/member-adjustment')
+  async memberAdjustment(@Body() requestBody: MemberSettlementDto) {
+    return await this.fundRecordService.memberAdjustment(requestBody);
   }
 }
