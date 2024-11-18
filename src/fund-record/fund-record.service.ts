@@ -7,7 +7,7 @@ import {
 import { CreateSettlementDto } from './dto/create-fund-record.dto';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { Identity } from 'src/identity/entities/identity.entity';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { Member } from 'src/member/entities/member.entity';
@@ -16,16 +16,23 @@ import { MemberService } from 'src/member/member.service';
 import { MerchantService } from 'src/merchant/merchant.service';
 import { AgentService } from 'src/agent/agent.service';
 import { FundRecord } from './entities/fund-record.entity';
-import { OrderType, UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
+import { OrderType } from 'src/utils/enum/enum';
 import { getDescription } from './find-record.utils';
+import {
+  PaginateRequestDto,
+  parseEndDate,
+  parseStartDate,
+} from 'src/utils/dtos/paginate.dto';
+import { plainToInstance } from 'class-transformer';
+import { FundRecordAdminResponseDto } from './dto/paginate-response.dto';
 
 @Injectable()
 export class FundRecordService {
   constructor(
     @InjectRepository(TransactionUpdate)
-    private readonly transactionUpdateRepositoy: Repository<TransactionUpdate>,
+    private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
     @InjectRepository(FundRecord)
-    private readonly fundRecordRepositoy: Repository<FundRecord>,
+    private readonly fundRecordRepository: Repository<FundRecord>,
     @InjectRepository(Identity)
     private readonly identityRepository: Repository<Identity>,
     @InjectRepository(Merchant)
@@ -40,43 +47,113 @@ export class FundRecordService {
     private readonly agentService: AgentService,
   ) {}
 
+  async paginateFundRecords(paginateRequestDto: PaginateRequestDto) {
+    const {
+      search,
+      pageSize,
+      pageNumber,
+      startDate,
+      endDate,
+      sortBy,
+      balanceType,
+      userId,
+    } = paginateRequestDto;
+
+    const skip = (pageNumber - 1) * pageSize;
+    const take = pageSize;
+
+    const queryBuilder = this.fundRecordRepository
+      .createQueryBuilder('fundRecord')
+      .leftJoinAndSelect('fundRecord.user', 'user')
+      .skip(skip)
+      .take(take);
+
+    if (userId) queryBuilder.andWhere('user.id = :userId', { userId });
+
+    if (search)
+      queryBuilder.andWhere(
+        `CONCAT(fundRecord.systemOrderId, " ", fundRecord.name) ILIKE :search`,
+        {
+          search: `%${search}%`,
+        },
+      );
+
+    if (startDate && endDate) {
+      const parsedStartDate = parseStartDate(startDate);
+      const parsedEndDate = parseEndDate(endDate);
+
+      queryBuilder.andWhere(
+        'fundRecord.created_at BETWEEN :startDate AND :endDate',
+        {
+          startDate: parsedStartDate,
+          endDate: parsedEndDate,
+        },
+      );
+    }
+
+    if (sortBy)
+      sortBy === 'latest'
+        ? queryBuilder.orderBy('fundRecord.createdAt', 'DESC')
+        : queryBuilder.orderBy('fundRecord.createdAt', 'ASC');
+
+    if (balanceType)
+      queryBuilder.andWhere('fundRecord.balanceType = :balanceType', {
+        balanceType: balanceType,
+      });
+
+    const [rows, total] = await queryBuilder.getManyAndCount();
+
+    const startRecord = skip + 1;
+    const endRecord = Math.min(skip + pageSize, total);
+
+    return {
+      total,
+      page: pageNumber,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+      startRecord,
+      endRecord,
+      data: plainToInstance(FundRecordAdminResponseDto, rows),
+    };
+  }
+
   async addFundRecordForSuccessOrder({
     orderType,
     orderAmount,
     systemOrderId,
   }) {
     switch (orderType) {
-      case 'PAYIN':
+      case OrderType.PAYIN:
         await this.createFundRecordForPayin({ orderAmount, systemOrderId });
         break;
 
-      case 'PAYOUT':
+      case OrderType.PAYOUT:
         await this.createFundRecordForPayout({ orderAmount, systemOrderId });
         break;
 
-      case 'WITHDRAWAL':
+      case OrderType.WITHDRAWAL:
         await this.createFundRecordForWithdrawal({
           orderAmount,
           systemOrderId,
         });
         break;
 
-      case 'TOPUP':
+      case OrderType.TOPUP:
         await this.createFundRecordForTopup({ orderAmount, systemOrderId });
         break;
     }
   }
 
   private async createFundRecordForPayin({ orderAmount, systemOrderId }) {
-    const transactionUpdateEntries = await this.transactionUpdateRepositoy.find(
-      {
+    const transactionUpdateEntries =
+      await this.transactionUpdateRepository.find({
         where: {
           systemOrderId: systemOrderId,
           orderType: OrderType.PAYIN,
           pending: false,
         },
-      },
-    );
+        relations: ['user'],
+      });
 
     for (const row of transactionUpdateEntries) {
       const fundRecordEntry = {
@@ -93,20 +170,20 @@ export class FundRecordService {
         description: getDescription(),
       };
 
-      await this.fundRecordRepositoy.save(fundRecordEntry);
+      await this.fundRecordRepository.save(fundRecordEntry);
     }
   }
 
   private async createFundRecordForPayout({ orderAmount, systemOrderId }) {
-    const transactionUpdateEntries = await this.transactionUpdateRepositoy.find(
-      {
+    const transactionUpdateEntries =
+      await this.transactionUpdateRepository.find({
         where: {
           systemOrderId: systemOrderId,
           orderType: OrderType.PAYOUT,
           pending: false,
         },
-      },
-    );
+        relations: ['user'],
+      });
 
     for (const row of transactionUpdateEntries) {
       const fundRecordEntry = {
@@ -123,20 +200,20 @@ export class FundRecordService {
         description: getDescription(),
       };
 
-      await this.fundRecordRepositoy.save(fundRecordEntry);
+      await this.fundRecordRepository.save(fundRecordEntry);
     }
   }
 
   private async createFundRecordForWithdrawal({ orderAmount, systemOrderId }) {
-    const transactionUpdateEntries = await this.transactionUpdateRepositoy.find(
-      {
+    const transactionUpdateEntries =
+      await this.transactionUpdateRepository.find({
         where: {
           systemOrderId: systemOrderId,
           orderType: OrderType.WITHDRAWAL,
           pending: false,
         },
-      },
-    );
+        relations: ['user'],
+      });
 
     for (const row of transactionUpdateEntries) {
       const fundRecordEntry = {
@@ -153,20 +230,20 @@ export class FundRecordService {
         description: getDescription(),
       };
 
-      await this.fundRecordRepositoy.save(fundRecordEntry);
+      await this.fundRecordRepository.save(fundRecordEntry);
     }
   }
 
   private async createFundRecordForTopup({ orderAmount, systemOrderId }) {
-    const transactionUpdateEntries = await this.transactionUpdateRepositoy.find(
-      {
+    const transactionUpdateEntries =
+      await this.transactionUpdateRepository.find({
         where: {
           systemOrderId: systemOrderId,
           orderType: OrderType.TOPUP,
           pending: false,
         },
-      },
-    );
+        relations: ['user'],
+      });
 
     for (const row of transactionUpdateEntries) {
       const fundRecordEntry = {
@@ -183,7 +260,7 @@ export class FundRecordService {
         description: getDescription(),
       };
 
-      await this.fundRecordRepositoy.save(fundRecordEntry);
+      await this.fundRecordRepository.save(fundRecordEntry);
     }
   }
 
@@ -258,5 +335,25 @@ export class FundRecordService {
       default:
         throw new NotAcceptableException('Invalid user type!');
     }
+  }
+
+  async exportRecords(startDate: string, endDate: string) {
+    startDate = parseStartDate(startDate);
+    endDate = parseEndDate(endDate);
+
+    const parsedStartDate = new Date(startDate);
+    const parsedEndDate = new Date(endDate);
+
+    const [rows, total] = await this.fundRecordRepository.findAndCount({
+      relations: ['user'],
+      where: {
+        createdAt: Between(parsedStartDate, parsedEndDate),
+      },
+    });
+
+    return {
+      total,
+      data: plainToInstance(FundRecordAdminResponseDto, rows),
+    };
   }
 }

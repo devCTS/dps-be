@@ -30,6 +30,7 @@ import { SystemConfigService } from 'src/system-config/system-config.service';
 import { Agent } from 'src/agent/entities/agent.entity';
 import { AssignTopupOrderDto } from './dto/assign-topup-order.dto';
 import { roundOffAmount } from 'src/utils/utils';
+import { FundRecordService } from 'src/fund-record/fund-record.service';
 
 @Injectable()
 export class TopupService {
@@ -50,6 +51,7 @@ export class TopupService {
     private readonly transactionUpdateTopupService: TransactionUpdatesTopupService,
     private readonly memberService: MemberService,
     private readonly systemConfigService: SystemConfigService,
+    private readonly fundRecordService: FundRecordService,
   ) {
     this.lastTopupIndex = 0;
   }
@@ -366,6 +368,12 @@ export class TopupService {
       await this.transactionUpdateRepository.update(entry.id, {
         pending: false,
       });
+    });
+
+    await this.fundRecordService.addFundRecordForSuccessOrder({
+      systemOrderId: topupOrderDetails.systemOrderId,
+      orderAmount: topupOrderDetails.amount,
+      orderType: OrderType.TOPUP,
     });
 
     await this.topupRepository.update(

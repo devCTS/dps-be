@@ -30,6 +30,7 @@ import { CreatePaymentOrderDto } from 'src/payment-system/dto/createPaymentOrder
 import { EndUser } from 'src/end-user/entities/end-user.entity';
 import { ChangeCallbackStatusDto } from './dto/change-callback-status.dto';
 import { after } from 'node:test';
+import { FundRecordService } from 'src/fund-record/fund-record.service';
 
 @Injectable()
 export class PayinService {
@@ -51,6 +52,7 @@ export class PayinService {
     private readonly memberService: MemberService,
     private readonly merchantService: MerchantService,
     private readonly agentService: AgentService,
+    private readonly fundRecordService: FundRecordService,
   ) {}
 
   async create(payinDetails: CreatePaymentOrderDto) {
@@ -413,6 +415,12 @@ export class PayinService {
       await this.transactionUpdateRepository.update(entry.id, {
         pending: false,
       });
+    });
+
+    await this.fundRecordService.addFundRecordForSuccessOrder({
+      orderAmount: payinOrderDetails.amount,
+      systemOrderId: payinOrderDetails.systemOrderId,
+      orderType: OrderType.PAYIN,
     });
 
     await this.payinRepository.update(

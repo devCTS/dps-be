@@ -1,3 +1,4 @@
+import { FundRecordService } from 'src/fund-record/fund-record.service';
 import { TransactionUpdatesWithdrawalService } from './../transaction-updates/transaction-updates-withdrawal.service';
 import {
   HttpStatus,
@@ -44,6 +45,7 @@ export class WithdrawalService {
     private readonly agentService: AgentService,
     private readonly systemConfigService: SystemConfigService,
     private readonly paymentSystemService: PaymentSystemService,
+    private readonly fundRecordService: FundRecordService,
   ) {}
 
   async create(createWithdrawalDto: CreateWithdrawalDto) {
@@ -196,6 +198,12 @@ export class WithdrawalService {
           entry.systemOrderId,
           false,
         );
+    });
+
+    await this.fundRecordService.addFundRecordForSuccessOrder({
+      systemOrderId: orderDetails.systemOrderId,
+      orderAmount: orderDetails.amount,
+      orderType: OrderType.WITHDRAWAL,
     });
 
     return HttpStatus.OK;

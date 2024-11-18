@@ -11,7 +11,12 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { BadRequestException } from '@nestjs/common';
-import { ChannelName, OrderStatus, SortedBy } from '../enum/enum';
+import {
+  ChannelName,
+  OrderStatus,
+  SortedBy,
+  UserTypeForTransactionUpdates,
+} from '../enum/enum';
 
 // Helper function to convert DD/MM/YYYY to a valid Date object
 // Helper function to convert DD/MM/YYYY to a UTC Date object
@@ -107,4 +112,8 @@ export class PaginateRequestDto {
   @IsOptional()
   @IsNumber()
   filterAmountUpper?: number;
+
+  @IsOptional()
+  @IsEnum(UserTypeForTransactionUpdates)
+  balanceType?: UserTypeForTransactionUpdates;
 }

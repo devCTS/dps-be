@@ -18,7 +18,7 @@ export class FundRecord {
   @Column({ nullable: true })
   orderType: OrderType;
 
-  @Column()
+  @Column({ nullable: true })
   name: string;
 
   @Column()

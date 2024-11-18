@@ -20,6 +20,7 @@ import { MerchantModule } from 'src/merchant/merchant.module';
 import { SystemConfigModule } from 'src/system-config/system-config.module';
 import { PaymentSystemModule } from 'src/payment-system/payment-system.module';
 import { ChannelSettings } from 'src/gateway/entities/channel-settings.entity';
+import { FundRecordModule } from 'src/fund-record/fund-record.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { ChannelSettings } from 'src/gateway/entities/channel-settings.entity';
     MerchantModule,
     SystemConfigModule,
     PaymentSystemModule,
+    FundRecordModule,
   ],
   controllers: [WithdrawalController],
   providers: [

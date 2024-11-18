@@ -28,5 +28,6 @@ import { FundRecord } from './entities/fund-record.entity';
   ],
   controllers: [FundRecordController],
   providers: [FundRecordService],
+  exports: [FundRecordService],
 })
 export class FundRecordModule {}

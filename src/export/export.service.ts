@@ -15,6 +15,7 @@ import { PayoutAdminService } from 'src/payout/payout-admin.service';
 import { WithdrawalAdminService } from 'src/withdrawal/withdrawal-admin.service';
 import { TransactionUpdatesController } from 'src/transaction-updates/transaction-updates.controller';
 import { TransactionUpdatesService } from 'src/transaction-updates/transaction-updates.service';
+import { FundRecordService } from 'src/fund-record/fund-record.service';
 
 @Injectable()
 export class ExportService {
@@ -29,6 +30,7 @@ export class ExportService {
     private readonly payoutAdminService: PayoutAdminService,
     private readonly withdrawalAdminService: WithdrawalAdminService,
     private readonly transactionUpdatesService: TransactionUpdatesService,
+    private readonly fundRecordService: FundRecordService,
   ) {}
 
   async create(createExportDto: CreateExportDto) {
@@ -62,6 +64,9 @@ export class ExportService {
           startDate,
           endDate,
         );
+
+      case 'fund-record':
+        return await this.fundRecordService.exportRecords(startDate, endDate);
 
       default:
         throw new NotFoundException('Invalid table name!');

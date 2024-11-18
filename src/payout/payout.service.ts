@@ -34,6 +34,7 @@ import { AgentService } from 'src/agent/agent.service';
 import { SystemConfigService } from 'src/system-config/system-config.service';
 import { PaymentSystemService } from 'src/payment-system/payment-system.service';
 import { AssignPayoutOrderDto } from './dto/assign-payout-order.dto';
+import { FundRecordService } from 'src/fund-record/fund-record.service';
 
 @Injectable()
 export class PayoutService {
@@ -57,6 +58,7 @@ export class PayoutService {
     private readonly agentService: AgentService,
     private readonly systemConfigService: SystemConfigService,
     private readonly paymentSystemService: PaymentSystemService,
+    private readonly fundRecordService: FundRecordService,
   ) {}
 
   async create(payoutDetails: CreatePayoutDto) {
@@ -364,6 +366,12 @@ export class PayoutService {
       await this.transactionUpdateRepository.update(entry.id, {
         pending: false,
       });
+    });
+
+    await this.fundRecordService.addFundRecordForSuccessOrder({
+      systemOrderId: payoutOrderDetails.systemOrderId,
+      orderAmount: payoutOrderDetails.amount,
+      orderType: OrderType.PAYOUT,
     });
 
     await this.payoutRepository.update(

@@ -18,6 +18,7 @@ import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-
 import { MemberModule } from 'src/member/member.module';
 import { Member } from 'src/member/entities/member.entity';
 import { AgentModule } from 'src/agent/agent.module';
+import { FundRecordModule } from 'src/fund-record/fund-record.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { AgentModule } from 'src/agent/agent.module';
     AgentModule,
     SystemConfigModule,
     TransactionUpdatesModule,
+    FundRecordModule,
   ],
   controllers: [PayinController],
   providers: [

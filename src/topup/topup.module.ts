@@ -16,6 +16,7 @@ import { AgentModule } from 'src/agent/agent.module';
 import { PaymentSystemModule } from 'src/payment-system/payment-system.module';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { Agent } from 'src/agent/entities/agent.entity';
+import { FundRecordModule } from 'src/fund-record/fund-record.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { Agent } from 'src/agent/entities/agent.entity';
     SystemConfigModule,
     PaymentSystemModule,
     TransactionUpdatesModule,
+    FundRecordModule,
   ],
   controllers: [TopupController],
   providers: [TopupService, TopupAdminService, TopupMemberService],
