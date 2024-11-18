@@ -16,7 +16,7 @@ import { MemberService } from 'src/member/member.service';
 import { MerchantService } from 'src/merchant/merchant.service';
 import { AgentService } from 'src/agent/agent.service';
 import { FundRecord } from './entities/fund-record.entity';
-import { OrderType } from 'src/utils/enum/enum';
+import { OrderType, UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
 import { getDescription } from './find-record.utils';
 import {
   PaginateRequestDto,
@@ -25,6 +25,8 @@ import {
 } from 'src/utils/dtos/paginate.dto';
 import { plainToInstance } from 'class-transformer';
 import { FundRecordAdminResponseDto } from './dto/paginate-response.dto';
+import * as uniqid from 'uniqid';
+import { roundOffAmount } from 'src/utils/utils';
 
 @Injectable()
 export class FundRecordService {
@@ -264,24 +266,25 @@ export class FundRecordService {
     }
   }
 
-  async updateBalanceOrQuota(createSettlementDto: CreateSettlementDto) {
-    const { amount, identityId, operation } = createSettlementDto;
+  async adminAdjustment(createSettlementDto: CreateSettlementDto) {
+    const { amount, identityId, operation, balanceType } = createSettlementDto;
 
     let amountAfterOperation = 0;
     if (operation === 'INCREMENT') amountAfterOperation = amount;
     if (operation === 'DECREMENT') amountAfterOperation = -amount;
 
-    const user = await this.identityRepository.findOne({
+    const identity = await this.identityRepository.findOne({
       where: {
         id: identityId,
       },
     });
-    if (!user) throw new NotFoundException('User not found!');
+    if (!identity) throw new NotFoundException('User not found!');
 
     let before, after;
+    let user;
 
-    switch (user.userType) {
-      case 'MERCHANT':
+    switch (balanceType) {
+      case UserTypeForTransactionUpdates.MERCHANT_BALANCE:
         await this.merchantService.updateBalance(
           user.id,
           '0',
@@ -289,16 +292,16 @@ export class FundRecordService {
           false,
         );
 
-        const merchant = await this.merchantRepository.findOneBy({
+        user = await this.merchantRepository.findOneBy({
           id: user.merchant.id,
         });
 
-        before = merchant.balance;
+        before = user.balance;
         after = before + amount;
 
         break;
 
-      case 'MEMBER':
+      case UserTypeForTransactionUpdates.MEMBER_BALANCE:
         await this.memberService.updateBalance(
           user.id,
           '0',
@@ -306,16 +309,33 @@ export class FundRecordService {
           false,
         );
 
-        const member = await this.memberRepository.findOneBy({
+        user = await this.memberRepository.findOneBy({
           id: user.member.id,
         });
 
-        before = member.balance;
+        before = user.balance;
         after = before + amount;
 
         break;
 
-      case 'AGENT':
+      case UserTypeForTransactionUpdates.MEMBER_QUOTA:
+        await this.memberService.updateQuota(
+          user.id,
+          '0',
+          amountAfterOperation,
+          false,
+        );
+
+        user = await this.memberRepository.findOneBy({
+          id: user.member.id,
+        });
+
+        before = user.quota;
+        after = before + amount;
+
+        break;
+
+      case UserTypeForTransactionUpdates.AGENT_BALANCE:
         await this.agentService.updateBalance(
           user.id,
           '0',
@@ -323,11 +343,11 @@ export class FundRecordService {
           false,
         );
 
-        const agent = await this.agentRepository.findOneBy({
+        user = await this.agentRepository.findOneBy({
           id: user.merchant.id,
         });
 
-        before = agent.balance;
+        before = user.balance;
         after = before + amount;
 
         break;
@@ -335,6 +355,74 @@ export class FundRecordService {
       default:
         throw new NotAcceptableException('Invalid user type!');
     }
+
+    const fundRecordEntry = {
+      orderType: OrderType.ADMIN_ADJUSTMENT,
+      name: user?.firstName + ' ' + user?.lastName,
+      balanceType: balanceType,
+      systemOrderId: uniqid(),
+      before,
+      after,
+      amount: 0,
+      serviceFee: 0,
+      orderAmount: amount,
+      user,
+      description: getDescription(),
+    };
+
+    await this.fundRecordRepository.save(fundRecordEntry);
+  }
+
+  async memberAdjustment(createSettlementDto: CreateSettlementDto) {
+    const { amount, identityId, operation, balanceType } = createSettlementDto;
+
+    let amountAfterOperation = 0;
+    if (operation === 'INCREMENT') amountAfterOperation = amount;
+    if (operation === 'DECREMENT') amountAfterOperation = -amount;
+
+    const identity = await this.identityRepository.findOne({
+      where: {
+        id: identityId,
+      },
+    });
+    if (!identity) throw new NotFoundException('User not found!');
+
+    let before, after;
+    let user;
+
+    if (balanceType === UserTypeForTransactionUpdates.MEMBER_QUOTA) {
+      await this.memberService.updateQuota(
+        user.id,
+        '0',
+        amountAfterOperation,
+        false,
+      );
+
+      user = await this.memberRepository.findOneBy({
+        id: user.member.id,
+      });
+
+      before = user.quota;
+      after = before + amount;
+    } else {
+      throw new NotAcceptableException('Invalid balance type!');
+    }
+
+    const fundRecordEntry = {
+      orderType: OrderType.ADMIN_ADJUSTMENT,
+      name: user?.firstName + ' ' + user?.lastName,
+      balanceType: balanceType,
+      systemOrderId: uniqid(),
+      before,
+      after,
+      amount: 0,
+      serviceFee: 0,
+      orderAmount: amount,
+      user,
+      description: getDescription(),
+    };
+
+    await this.fundRecordRepository.save(fundRecordEntry);
   }
 
   async exportRecords(startDate: string, endDate: string) {

@@ -60,8 +60,8 @@ export enum OrderType {
   PAYOUT = 'Payout',
   TOPUP = 'Topup',
   WITHDRAWAL = 'Withdrawal',
-  ADMIN_SETTLEMENT = 'admin_settlement',
-  MEMBER_SETTLEMENT = 'member_settlement',
+  ADMIN_ADJUSTMENT = 'admin_adjustment',
+  MEMBER_adjustment = 'member_adjustment',
 }
 
 export enum UserTypeForTransactionUpdates {
