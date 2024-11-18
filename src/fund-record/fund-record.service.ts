@@ -1,10 +1,15 @@
+import { identity } from 'rxjs';
 import { Topup } from 'src/topup/entities/topup.entity';
 import {
+  HttpStatus,
   Injectable,
   NotAcceptableException,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateSettlementDto } from './dto/create-fund-record.dto';
+import {
+  CreateSettlementDto,
+  MemberSettlementDto,
+} from './dto/create-fund-record.dto';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Repository } from 'typeorm';
@@ -58,7 +63,7 @@ export class FundRecordService {
       endDate,
       sortBy,
       balanceType,
-      userId,
+      userEmail,
     } = paginateRequestDto;
 
     const skip = (pageNumber - 1) * pageSize;
@@ -70,11 +75,12 @@ export class FundRecordService {
       .skip(skip)
       .take(take);
 
-    if (userId) queryBuilder.andWhere('user.id = :userId', { userId });
+    if (userEmail)
+      queryBuilder.andWhere('user.email = :userEmail', { userEmail });
 
     if (search)
       queryBuilder.andWhere(
-        `CONCAT(fundRecord.systemOrderId, " ", fundRecord.name) ILIKE :search`,
+        `CONCAT(fundRecord.systemOrderId, ' ', fundRecord.name) ILIKE :search`,
         {
           search: `%${search}%`,
         },
@@ -286,14 +292,14 @@ export class FundRecordService {
     switch (balanceType) {
       case UserTypeForTransactionUpdates.MERCHANT_BALANCE:
         await this.merchantService.updateBalance(
-          user.id,
+          identity.id,
           '0',
           amountAfterOperation,
           false,
         );
 
         user = await this.merchantRepository.findOneBy({
-          id: user.merchant.id,
+          id: identity.merchant.id,
         });
 
         before = user.balance;
@@ -303,14 +309,14 @@ export class FundRecordService {
 
       case UserTypeForTransactionUpdates.MEMBER_BALANCE:
         await this.memberService.updateBalance(
-          user.id,
+          identity.id,
           '0',
           amountAfterOperation,
           false,
         );
 
         user = await this.memberRepository.findOneBy({
-          id: user.member.id,
+          id: identity.member.id,
         });
 
         before = user.balance;
@@ -320,14 +326,14 @@ export class FundRecordService {
 
       case UserTypeForTransactionUpdates.MEMBER_QUOTA:
         await this.memberService.updateQuota(
-          user.id,
+          identity.id,
           '0',
           amountAfterOperation,
           false,
         );
 
         user = await this.memberRepository.findOneBy({
-          id: user.member.id,
+          id: identity.member.id,
         });
 
         before = user.quota;
@@ -337,14 +343,14 @@ export class FundRecordService {
 
       case UserTypeForTransactionUpdates.AGENT_BALANCE:
         await this.agentService.updateBalance(
-          user.id,
+          identity.id,
           '0',
           amountAfterOperation,
           false,
         );
 
         user = await this.agentRepository.findOneBy({
-          id: user.merchant.id,
+          id: identity.merchant.id,
         });
 
         before = user.balance;
@@ -373,56 +379,70 @@ export class FundRecordService {
     await this.fundRecordRepository.save(fundRecordEntry);
   }
 
-  async memberAdjustment(createSettlementDto: CreateSettlementDto) {
-    const { amount, identityId, operation, balanceType } = createSettlementDto;
+  async memberAdjustment(createSettlementDto: MemberSettlementDto) {
+    const { amount, sendingMemberId, receivingMemberId } = createSettlementDto;
 
-    let amountAfterOperation = 0;
-    if (operation === 'INCREMENT') amountAfterOperation = amount;
-    if (operation === 'DECREMENT') amountAfterOperation = -amount;
-
-    const identity = await this.identityRepository.findOne({
+    const sendingMember = await this.memberRepository.findOne({
       where: {
-        id: identityId,
+        id: sendingMemberId,
       },
+      relations: ['identity'],
     });
-    if (!identity) throw new NotFoundException('User not found!');
+    if (!sendingMember)
+      throw new NotFoundException('Sending member not found!');
 
-    let before, after;
-    let user;
+    const receivingMember = await this.memberRepository.findOne({
+      where: {
+        id: receivingMemberId,
+      },
+      relations: ['identity'],
+    });
+    if (!receivingMember)
+      throw new NotFoundException('Receiving member not found!');
 
-    if (balanceType === UserTypeForTransactionUpdates.MEMBER_QUOTA) {
-      await this.memberService.updateQuota(
-        user.id,
-        '0',
-        amountAfterOperation,
-        false,
-      );
-
-      user = await this.memberRepository.findOneBy({
-        id: user.member.id,
-      });
-
-      before = user.quota;
-      after = before + amount;
-    } else {
-      throw new NotAcceptableException('Invalid balance type!');
-    }
-
-    const fundRecordEntry = {
+    // Deduct from sending member
+    await this.memberService.updateQuota(
+      sendingMember.identity.id,
+      '0',
+      -amount,
+      false,
+    );
+    await this.fundRecordRepository.save({
       orderType: OrderType.ADMIN_ADJUSTMENT,
-      name: user?.firstName + ' ' + user?.lastName,
-      balanceType: balanceType,
+      name: sendingMember?.firstName + ' ' + sendingMember?.lastName,
+      balanceType: UserTypeForTransactionUpdates.MEMBER_QUOTA,
       systemOrderId: uniqid(),
-      before,
-      after,
+      before: sendingMember.quota,
+      after: sendingMember.quota + amount,
       amount: 0,
       serviceFee: 0,
       orderAmount: amount,
-      user,
+      user: sendingMember.identity,
       description: getDescription(),
-    };
+    });
 
-    await this.fundRecordRepository.save(fundRecordEntry);
+    // Add in receiving member
+    await this.memberService.updateQuota(
+      receivingMember.identity.id,
+      '0',
+      amount,
+      false,
+    );
+    await this.fundRecordRepository.save({
+      orderType: OrderType.ADMIN_ADJUSTMENT,
+      name: receivingMember?.firstName + ' ' + receivingMember?.lastName,
+      balanceType: UserTypeForTransactionUpdates.MEMBER_QUOTA,
+      systemOrderId: uniqid(),
+      before: receivingMember.quota,
+      after: receivingMember.quota + amount,
+      amount: 0,
+      serviceFee: 0,
+      orderAmount: amount,
+      user: receivingMember.identity,
+      description: getDescription(),
+    });
+
+    return HttpStatus.OK;
   }
 
   async exportRecords(startDate: string, endDate: string) {

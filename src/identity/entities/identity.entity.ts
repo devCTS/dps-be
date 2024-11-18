@@ -18,6 +18,7 @@ import { EWallet } from 'src/channel/entity/e-wallet.entity';
 import { Upi } from 'src/channel/entity/upi.entity';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { Withdrawal } from 'src/withdrawal/entities/withdrawal.entity';
+import { FundRecord } from 'src/fund-record/entities/fund-record.entity';
 
 @Entity()
 export class Identity {
@@ -92,4 +93,9 @@ export class Identity {
     nullable: true,
   })
   withdrawal: Withdrawal[];
+
+  @OneToMany(() => FundRecord, (record) => record.user, {
+    nullable: true,
+  })
+  fundRecord: FundRecord[];
 }

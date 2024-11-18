@@ -1,4 +1,4 @@
-import { IsEnum, IsNumber } from 'class-validator';
+import { IsEnum, IsNumber, IsString } from 'class-validator';
 import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
 
 export class CreateSettlementDto {
@@ -13,6 +13,17 @@ export class CreateSettlementDto {
 
   @IsEnum(UserTypeForTransactionUpdates)
   balanceType: UserTypeForTransactionUpdates;
+}
+
+export class MemberSettlementDto {
+  @IsNumber()
+  sendingMemberId: number;
+
+  @IsNumber()
+  amount: number;
+
+  @IsNumber()
+  receivingMemberId: number;
 }
 
 export class CreateFundRecordDto {}
