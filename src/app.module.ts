@@ -35,6 +35,7 @@ import { CronModule } from './services/cron/cron.module';
 import { NotificationModule } from './notification/notification.module';
 import { AlertModule } from './alert/alert.module';
 import { FundRecordModule } from './fund-record/fund-record.module';
+import { UserDetailsModule } from './user-details/user-details.module';
 
 @Module({
   imports: [
@@ -87,6 +88,7 @@ import { FundRecordModule } from './fund-record/fund-record.module';
     NotificationModule,
     AlertModule,
     FundRecordModule,
+    UserDetailsModule,
   ],
   controllers: [AppController],
   providers: [

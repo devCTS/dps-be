@@ -67,10 +67,4 @@ export class Agent {
 
   @Column({ type: 'float', default: 0 })
   balance: number;
-
-  @BeforeInsert()
-  @BeforeUpdate()
-  truncateAmounts() {
-    if (this.balance) this.balance = Math.trunc(this.balance * 100) / 100;
-  }
 }
