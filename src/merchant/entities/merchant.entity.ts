@@ -125,10 +125,4 @@ export class Merchant {
 
   @Column({ default: false })
   isOnline: boolean;
-
-  @BeforeInsert()
-  @BeforeUpdate()
-  truncateAmounts() {
-    if (this.balance) this.balance = Math.trunc(this.balance * 100) / 100;
-  }
 }

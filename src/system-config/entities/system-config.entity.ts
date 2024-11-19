@@ -90,11 +90,4 @@ export class SystemConfig {
 
   @Column({ type: 'float', default: 0 })
   systemProfit: number;
-
-  @BeforeInsert()
-  @BeforeUpdate()
-  truncateAmounts() {
-    if (this.systemProfit)
-      this.systemProfit = Math.trunc(this.systemProfit * 100) / 100;
-  }
 }
