@@ -1,7 +1,9 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
+  NotAcceptableException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -24,6 +26,7 @@ import { Agent } from 'src/agent/entities/agent.entity';
 import { Payout } from 'src/payout/entities/payout.entity';
 import { Withdrawal } from 'src/withdrawal/entities/withdrawal.entity';
 import { OrderStatus, WithdrawalOrderStatus } from 'src/utils/enum/enum';
+import { send } from 'process';
 
 type MemberContext = {
   firstName: string;
@@ -441,4 +444,52 @@ export class IdentityService {
   //     console.log({ currentBalance, outstandingBalance });
   //     return currentBalance - outstandingBalance;
   //   }
+
+  async getUserCurrentBalance(userId, body) {
+    const { userType } = body;
+
+    let user;
+
+    switch (userType) {
+      case 'MERCHANT':
+        user = await this.merchantRepository.findOneBy({ id: userId });
+        break;
+
+      case 'MEMBER':
+        user = await this.memberRepository.findOneBy({ id: userId });
+        break;
+
+      case 'AGENT':
+        user = await this.agentRepository.findOneBy({ id: userId });
+        break;
+
+      default:
+        throw new BadRequestException(
+          'User type must be - MERCHANT, MEMBER or AGENT',
+        );
+    }
+
+    if (!user) throw new NotFoundException('User not found!');
+
+    return user.balance;
+  }
+
+  async getMembersQuota(sendingMemberId, receivingMemberId) {
+    const sendingMember = await this.memberRepository.findOneBy({
+      id: sendingMemberId,
+    });
+    if (!sendingMember)
+      throw new NotFoundException('Sending member not found!');
+
+    const receivingMember = await this.memberRepository.findOneBy({
+      id: receivingMemberId,
+    });
+    if (!receivingMember)
+      throw new NotFoundException('Receiving member not found!');
+
+    return {
+      sendingMemberQuota: sendingMember.quota,
+      receivingMemberQuota: receivingMember.quota,
+    };
+  }
 }

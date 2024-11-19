@@ -60,4 +60,20 @@ export class IdentityController {
   getCurrentBalance(@Param('id') id: string) {
     return this.identityService.getCurrentBalalnce(id);
   }
+
+  @Put('user-details/current-balance/:id')
+  getUserCurrentBalance(@Param('id') id: string, @Body() body) {
+    return this.identityService.getUserCurrentBalance(+id, body);
+  }
+
+  @Put('user-details/current-quota/:sendingMemberId/:receivingMemberId')
+  getmemberCurrentQuotas(
+    @Param('sendingMemberId') sendingMemberId: string,
+    @Param('receivingMemberId') receivingMemberId: string,
+  ) {
+    return this.identityService.getUserCurrentBalance(
+      sendingMemberId,
+      receivingMemberId,
+    );
+  }
 }
