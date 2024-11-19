@@ -66,14 +66,11 @@ export class IdentityController {
     return this.identityService.getUserCurrentBalance(+id, body);
   }
 
-  @Put('user-details/current-quota/:sendingMemberId/:receivingMemberId')
+  @Put('user-details/current-quota/:sendingMemberId')
   getmemberCurrentQuotas(
     @Param('sendingMemberId') sendingMemberId: string,
-    @Param('receivingMemberId') receivingMemberId: string,
+    @Body() body,
   ) {
-    return this.identityService.getUserCurrentBalance(
-      sendingMemberId,
-      receivingMemberId,
-    );
+    return this.identityService.getMembersQuota(sendingMemberId, body);
   }
 }

@@ -474,15 +474,18 @@ export class IdentityService {
     return user.balance;
   }
 
-  async getMembersQuota(sendingMemberId, receivingMemberId) {
+  async getMembersQuota(sendingMemberId, body) {
+    const { receivingMemberEmail } = body;
+
     const sendingMember = await this.memberRepository.findOneBy({
       id: sendingMemberId,
     });
     if (!sendingMember)
       throw new NotFoundException('Sending member not found!');
 
-    const receivingMember = await this.memberRepository.findOneBy({
-      id: receivingMemberId,
+    const receivingMember = await this.memberRepository.findOne({
+      where: { identity: { email: receivingMemberEmail } },
+      relations: ['identity'],
     });
     if (!receivingMember)
       throw new NotFoundException('Receiving member not found!');
