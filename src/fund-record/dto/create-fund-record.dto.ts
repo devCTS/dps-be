@@ -3,7 +3,7 @@ import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
 
 export class CreateSettlementDto {
   @IsNumber()
-  identityId: number;
+  userId: number;
 
   @IsNumber()
   amount: number;

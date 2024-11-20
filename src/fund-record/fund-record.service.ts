@@ -273,33 +273,32 @@ export class FundRecordService {
   }
 
   async adminAdjustment(createSettlementDto: CreateSettlementDto) {
-    const { amount, identityId, operation, balanceType } = createSettlementDto;
+    const { amount, userId, operation, balanceType } = createSettlementDto;
 
     let amountAfterOperation = 0;
     if (operation === 'INCREMENT') amountAfterOperation = amount;
     if (operation === 'DECREMENT') amountAfterOperation = -amount;
-
-    const identity = await this.identityRepository.findOne({
-      where: {
-        id: identityId,
-      },
-    });
-    if (!identity) throw new NotFoundException('User not found!');
 
     let before, after;
     let user;
 
     switch (balanceType) {
       case UserTypeForTransactionUpdates.MERCHANT_BALANCE:
+        const merchant = await this.merchantRepository.findOne({
+          where: { id: userId },
+          relations: ['identity'],
+        });
+        if (!merchant) throw new NotFoundException('User not found!');
+
         await this.merchantService.updateBalance(
-          identity.id,
+          merchant.identity.id,
           '0',
           amountAfterOperation,
           false,
         );
 
         user = await this.merchantRepository.findOneBy({
-          id: identity.merchant.id,
+          id: merchant.id,
         });
 
         before = user.balance;
@@ -308,15 +307,21 @@ export class FundRecordService {
         break;
 
       case UserTypeForTransactionUpdates.MEMBER_BALANCE:
+        const memberBal = await this.memberRepository.findOne({
+          where: { id: userId },
+          relations: ['identity'],
+        });
+        if (!memberBal) throw new NotFoundException('User not found!');
+
         await this.memberService.updateBalance(
-          identity.id,
+          memberBal.identity.id,
           '0',
           amountAfterOperation,
           false,
         );
 
         user = await this.memberRepository.findOneBy({
-          id: identity.member.id,
+          id: memberBal.id,
         });
 
         before = user.balance;
@@ -325,15 +330,21 @@ export class FundRecordService {
         break;
 
       case UserTypeForTransactionUpdates.MEMBER_QUOTA:
+        const memberQuota = await this.memberRepository.findOne({
+          where: { id: userId },
+          relations: ['identity'],
+        });
+        if (!memberQuota) throw new NotFoundException('User not found!');
+
         await this.memberService.updateQuota(
-          identity.id,
+          memberQuota.identity.id,
           '0',
           amountAfterOperation,
           false,
         );
 
         user = await this.memberRepository.findOneBy({
-          id: identity.member.id,
+          id: memberQuota.id,
         });
 
         before = user.quota;
@@ -342,15 +353,21 @@ export class FundRecordService {
         break;
 
       case UserTypeForTransactionUpdates.AGENT_BALANCE:
+        const agent = await this.agentRepository.findOne({
+          where: { id: userId },
+          relations: ['identity'],
+        });
+        if (!agent) throw new NotFoundException('User not found!');
+
         await this.agentService.updateBalance(
-          identity.id,
+          agent.identity.id,
           '0',
           amountAfterOperation,
           false,
         );
 
         user = await this.agentRepository.findOneBy({
-          id: identity.merchant.id,
+          id: agent.id,
         });
 
         before = user.balance;
