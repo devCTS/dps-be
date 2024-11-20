@@ -1,7 +1,12 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { OverviewAdminService } from './overview-admin.service';
 
 @Controller('overview-admin')
-export class OverviewController {
-  constructor(private readonly overviewService: OverviewAdminService) {}
+export class OverviewAdminController {
+  constructor(private readonly overviewAdminService: OverviewAdminService) {}
+
+  @Get('user-analytics')
+  getUserAnalytics() {
+    return this.overviewAdminService.getUserAnalytics();
+  }
 }

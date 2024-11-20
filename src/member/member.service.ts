@@ -190,6 +190,7 @@ export class MemberService {
         singlePayoutUpperLimit: 1000000,
         topupCommissionRate: 4,
         withdrawalPassword: hashedWithdrawalPassword,
+        selfRegistered: true,
       });
 
       const createdMember = await this.memberRepository.save(member);

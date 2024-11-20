@@ -79,7 +79,7 @@ export class Member {
 
   // Referred any other member
   @OneToMany(() => MemberReferral, (referral) => referral.member)
-  referredMember: MemberReferral;
+  referredMember: MemberReferral[];
 
   // Used referral code of anther member
   @OneToOne(() => MemberReferral, (referral) => referral.referredMember)
@@ -105,4 +105,7 @@ export class Member {
 
   @Column()
   withdrawalPassword: string;
+
+  @Column({ nullable: true })
+  selfRegistered: boolean;
 }

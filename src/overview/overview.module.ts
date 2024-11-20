@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { OverviewAdminService } from './overview-admin.service';
-import { OverviewController } from './overview-user.controller';
+import { OverviewUserController } from './overview-user.controller';
 import { OverviewUserService } from './overview-user.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Agent } from 'src/agent/entities/agent.entity';
@@ -13,6 +13,7 @@ import { Withdrawal } from 'src/withdrawal/entities/withdrawal.entity';
 import { Payin } from 'src/payin/entities/payin.entity';
 import { Payout } from 'src/payout/entities/payout.entity';
 import { Topup } from 'src/topup/entities/topup.entity';
+import { OverviewAdminController } from './overview-admin.controller';
 
 @Module({
   imports: [
@@ -29,7 +30,7 @@ import { Topup } from 'src/topup/entities/topup.entity';
       Topup,
     ]),
   ],
-  controllers: [OverviewController],
+  controllers: [OverviewAdminController, OverviewUserController],
   providers: [OverviewAdminService, OverviewUserService],
 })
 export class OverviewModule {}
