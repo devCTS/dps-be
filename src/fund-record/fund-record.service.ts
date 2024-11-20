@@ -397,7 +397,8 @@ export class FundRecordService {
   }
 
   async memberAdjustment(createSettlementDto: MemberSettlementDto) {
-    const { amount, sendingMemberId, receivingMemberId } = createSettlementDto;
+    const { amount, sendingMemberId, receivingMemberEmail } =
+      createSettlementDto;
 
     const sendingMember = await this.memberRepository.findOne({
       where: {
@@ -410,7 +411,7 @@ export class FundRecordService {
 
     const receivingMember = await this.memberRepository.findOne({
       where: {
-        id: receivingMemberId,
+        identity: { email: receivingMemberEmail },
       },
       relations: ['identity'],
     });

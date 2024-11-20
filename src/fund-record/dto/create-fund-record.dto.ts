@@ -23,7 +23,7 @@ export class MemberSettlementDto {
   amount: number;
 
   @IsNumber()
-  receivingMemberId: number;
+  receivingMemberEmail: string;
 }
 
 export class CreateFundRecordDto {}
