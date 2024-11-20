@@ -400,6 +400,8 @@ export class FundRecordService {
     const { amount, sendingMemberId, receivingMemberEmail } =
       createSettlementDto;
 
+    console.log(receivingMemberEmail);
+
     const sendingMember = await this.memberRepository.findOne({
       where: {
         id: sendingMemberId,

@@ -22,7 +22,7 @@ export class MemberSettlementDto {
   @IsNumber()
   amount: number;
 
-  @IsNumber()
+  @IsString()
   receivingMemberEmail: string;
 }
 
