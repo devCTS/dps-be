@@ -55,3 +55,20 @@ export const roundOffAmount = (amount, makeAbsolute = false) => {
   const truncatedAmount = Math.round(amount * 100) / 100;
   return makeAbsolute ? Math.abs(truncatedAmount) : truncatedAmount;
 };
+
+export const monthNames = () => {
+  return [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+};

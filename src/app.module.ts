@@ -36,6 +36,7 @@ import { NotificationModule } from './notification/notification.module';
 import { AlertModule } from './alert/alert.module';
 import { FundRecordModule } from './fund-record/fund-record.module';
 import { UserDetailsModule } from './user-details/user-details.module';
+import { OverviewModule } from './overview/overview.module';
 
 @Module({
   imports: [
@@ -89,6 +90,7 @@ import { UserDetailsModule } from './user-details/user-details.module';
     AlertModule,
     FundRecordModule,
     UserDetailsModule,
+    OverviewModule,
   ],
   controllers: [AppController],
   providers: [

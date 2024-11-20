@@ -8,8 +8,8 @@ export class CreateSettlementDto {
   @IsNumber()
   amount: number;
 
-  @IsEnum({ enum: ['INCREMENT', 'DECREMENT'] })
-  operation: 'INCREMENT' | 'DECREMENT';
+  @IsString()
+  operation: string;
 
   @IsEnum(UserTypeForTransactionUpdates)
   balanceType: UserTypeForTransactionUpdates;
