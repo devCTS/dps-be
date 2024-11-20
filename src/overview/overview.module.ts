@@ -10,6 +10,9 @@ import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { FundRecord } from 'src/fund-record/entities/fund-record.entity';
 import { Withdrawal } from 'src/withdrawal/entities/withdrawal.entity';
+import { Payin } from 'src/payin/entities/payin.entity';
+import { Payout } from 'src/payout/entities/payout.entity';
+import { Topup } from 'src/topup/entities/topup.entity';
 
 @Module({
   imports: [
@@ -21,6 +24,9 @@ import { Withdrawal } from 'src/withdrawal/entities/withdrawal.entity';
       TransactionUpdate,
       FundRecord,
       Withdrawal,
+      Payin,
+      Payout,
+      Topup,
     ]),
   ],
   controllers: [OverviewController],

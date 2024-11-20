@@ -9,4 +9,14 @@ export class OverviewController {
   getAgentOverviewDetails(@Param('id') id: string) {
     return this.overviewUserService.getAgentOverviewDetails(+id);
   }
+
+  @Get('merchant/:id')
+  getMerchantOverviewDetails(@Param('id') id: string) {
+    return this.overviewUserService.getMerchantOverviewDetails(+id);
+  }
+
+  @Get('member/:id')
+  getMemberOverviewDetails(@Param('id') id: string) {
+    return this.overviewUserService.getMemberOverviewDetails(+id);
+  }
 }

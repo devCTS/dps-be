@@ -30,7 +30,7 @@ export class FundRecord {
   @Column({ type: 'float', nullable: true })
   amount: number;
 
-  @Column({ nullable: true })
+  @Column({ type: 'float', nullable: true })
   serviceFee: number;
 
   @Column()

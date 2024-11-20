@@ -79,7 +79,7 @@ export class Payout {
 
   @OneToMany(
     () => TransactionUpdate,
-    (transactionUpdate) => transactionUpdate.payinOrder,
+    (transactionUpdate) => transactionUpdate.payoutOrder,
     { nullable: true },
   )
   transactionUpdate: TransactionUpdate[];
