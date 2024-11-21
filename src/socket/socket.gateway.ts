@@ -61,7 +61,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
     }
     this.memberId = userId;
-    const roomId = `room_${userId}`;
+    const roomId = `${userType}_${userId}`;
     socket.join(roomId);
     this.userRooms.set(socket.id, roomId);
     this.server.to(roomId).emit('userJoined', socket.id);
@@ -85,7 +85,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     text: string;
     type: string;
   }) {
-    const roomId = `room_${notificationData.for}`;
+    const roomId = `${notificationData.userType}_${notificationData.for}`;
     this.server.to(roomId).emit('newNotification', notificationData);
   }
 
@@ -95,7 +95,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     text: string;
     type: string;
   }) {
-    const roomId = `room_${alertData.for}`;
+    const roomId = `${alertData.userType}_${alertData.for}`;
     this.server.to(roomId).emit('newAlert', alertData);
   }
 }
