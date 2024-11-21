@@ -6,15 +6,12 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { NotificationReadStatus } from 'src/utils/enum/enum';
+import { NotificationReadStatus, NotificationType } from 'src/utils/enum/enum';
 
 export class CreateNotificationDto {
   @IsOptional()
-  @IsString()
-  type: string;
-
-  @IsEnum(NotificationReadStatus)
-  status: NotificationReadStatus;
+  @IsEnum(NotificationType)
+  type: NotificationType;
 
   @IsOptional()
   @IsObject()

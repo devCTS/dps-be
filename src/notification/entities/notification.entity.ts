@@ -1,4 +1,8 @@
-import { NotificationReadStatus, Users } from 'src/utils/enum/enum';
+import {
+  NotificationReadStatus,
+  NotificationType,
+  Users,
+} from 'src/utils/enum/enum';
 import {
   Column,
   CreateDateColumn,
@@ -21,8 +25,8 @@ export class Notification {
   @Column()
   for: number;
 
-  @Column({ nullable: true })
-  type: string;
+  @Column({ nullable: true, type: 'enum', enum: NotificationType })
+  type: NotificationType;
 
   @Column({
     type: 'enum',

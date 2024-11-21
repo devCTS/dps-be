@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { Any, In, Repository } from 'typeorm';
 import { Notification } from './entities/notification.entity';
 import { MemberService } from 'src/member/member.service';
 import { Member } from 'src/member/entities/member.entity';
@@ -20,7 +20,7 @@ export class NotificationService {
   ) {}
 
   async create(createNotificationDto: CreateNotificationDto) {
-    const { for: memberId } = createNotificationDto;
+    const { for: memberId, type, data } = createNotificationDto;
 
     const member = await this.memberRepository.findOneBy({ id: memberId });
 
@@ -31,8 +31,8 @@ export class NotificationService {
       this.socketGateway.handleSendNotification({
         for: memberId,
         userType: Users.MEMBER,
-        text: 'This is notification',
-        type: 'notification',
+        type,
+        data,
       });
 
       return HttpStatus.CREATED;

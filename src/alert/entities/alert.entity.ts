@@ -1,4 +1,4 @@
-import { AlertReadStatus, Users } from 'src/utils/enum/enum';
+import { AlertReadStatus, AlertType, Users } from 'src/utils/enum/enum';
 import {
   Column,
   CreateDateColumn,
@@ -15,8 +15,8 @@ export class Alert {
   @Column()
   for: number;
 
-  @Column({ nullable: true })
-  type: string;
+  @Column({ nullable: true, type: 'enum', enum: AlertType })
+  type: AlertType;
 
   @Column({ type: 'enum', enum: Users })
   userType: Users;
