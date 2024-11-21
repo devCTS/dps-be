@@ -14,6 +14,8 @@ import { Payin } from 'src/payin/entities/payin.entity';
 import { Payout } from 'src/payout/entities/payout.entity';
 import { Topup } from 'src/topup/entities/topup.entity';
 import { OverviewAdminController } from './overview-admin.controller';
+import { SystemConfigModule } from 'src/system-config/system-config.module';
+import { SystemConfigService } from 'src/system-config/system-config.service';
 
 @Module({
   imports: [
@@ -29,6 +31,7 @@ import { OverviewAdminController } from './overview-admin.controller';
       Payout,
       Topup,
     ]),
+    SystemConfigModule,
   ],
   controllers: [OverviewAdminController, OverviewUserController],
   providers: [OverviewAdminService, OverviewUserService],
