@@ -58,8 +58,8 @@ export class AlertService {
     this.socketGateway.handleSendAlert({
       for: userId,
       userType,
-      text: 'abc',
-      type: 'Alert',
+      type: alertCreateDto.type,
+      data: alertCreateDto.data,
     });
 
     return HttpStatus.CREATED;

@@ -11,7 +11,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { Member } from 'src/member/entities/member.entity';
 import { MemberService } from 'src/member/member.service';
-import { Users } from 'src/utils/enum/enum';
+import { AlertType, NotificationType, Users } from 'src/utils/enum/enum';
 import { Repository } from 'typeorm';
 
 @WebSocketGateway({
@@ -79,29 +79,53 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
+  async handleBroadcastUsers({
+    text,
+    data,
+    type,
+  }: {
+    text: string;
+    data: any;
+    type: NotificationType;
+  }) {
+    const membersRooms = [...this.userRooms.values()].filter((item) =>
+      item.includes('Member'),
+    );
+    this.server.to(membersRooms).emit('newNotification', { data, text, type });
+  }
+
+  getText(type) {
+    return 'dummy notification text' + type;
+  }
+
   async handleSendNotification(notificationData: {
     for: number;
     userType: Users;
-    text: string;
-    type: string;
+    type: NotificationType;
+    data: any;
   }) {
-    const roomId = `${notificationData.userType}_${notificationData.for}`;
-    this.server.to(roomId).emit('newNotification', notificationData);
+    const { data, type } = notificationData;
+    const text = this.getText(notificationData.type);
+    if (
+      notificationData.type === NotificationType.GRAB_PAYOUT ||
+      notificationData.type === NotificationType.GRAB_TOPUP
+    ) {
+      this.handleBroadcastUsers({ text, data, type });
+    } else {
+      const roomId = `Member_${notificationData.for}`;
+      this.server.to(roomId).emit('newNotification', { data, type, text });
+    }
   }
 
   async handleSendAlert(alertData: {
     for: number;
     userType: Users;
-    text: string;
-    type: string;
+    data: any;
+    type: AlertType;
   }) {
-    const roomId = `${alertData.userType}_${alertData.for}`;
-    this.server.to(roomId).emit('newAlert', alertData);
+    const { userType, data, type } = alertData;
+    console.log({ userType, for: alertData.for });
+    const roomId = `${userType}_${alertData.for}`;
+    this.server.to(roomId).emit('newAlert', { data, type });
   }
 }
-
-// Send notification to users
-
-// method will have three arguments for type , text
-// Send type and text to FE by mapping for to room id -  const roomId = `room_${for}`;
-// this.server.to(roomId).emit('newNotification', {type,text});

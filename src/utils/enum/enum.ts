@@ -102,6 +102,8 @@ export enum NotificationType {
   GRAB_PAYOUT = 'grab_payout',
   GRAB_TOPUP = 'grab_topup',
   PAYOUT_VERIFIED = 'payout_verified',
+  PAYOUT_REJECTED = 'payout_rejected',
   TOPUP_VERIFIED = 'topup_verified',
+  TOPUP_REJETCED = 'topup_rejected',
   PAYIN_FOR_VERIFY = 'payin_for_verify',
 }
