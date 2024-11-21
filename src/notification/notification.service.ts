@@ -8,6 +8,7 @@ import { Member } from 'src/member/entities/member.entity';
 import { NotificationReadStatus, Users } from 'src/utils/enum/enum';
 import { MarkNotificationReadDto } from './dto/mark-notification-read.dto';
 import { SocketGateway } from 'src/socket/socket.gateway';
+import { getTextForNotification } from 'src/utils/utils';
 
 @Injectable()
 export class NotificationService {
@@ -27,12 +28,15 @@ export class NotificationService {
     if (!member) throw new NotFoundException('Member not found.');
 
     try {
-      await this.notificationRepository.save(createNotificationDto);
+      const createdNotification = await this.notificationRepository.save(
+        createNotificationDto,
+      );
       this.socketGateway.handleSendNotification({
         for: memberId,
         userType: Users.MEMBER,
         type,
         data,
+        id: createdNotification.id,
       });
 
       return HttpStatus.CREATED;
@@ -53,18 +57,23 @@ export class NotificationService {
       },
     });
 
-    return myNotifications;
+    return myNotifications.map((item) => ({
+      id: item.id,
+      type: item.type,
+      text: getTextForNotification(item.type),
+      date: item.createdAt,
+    }));
   }
 
   async markNotificationRead(markNotificationReadDto: MarkNotificationReadDto) {
-    const { id, arrayOfNotificationIds } = markNotificationReadDto;
+    const { id, notificationsIds } = markNotificationReadDto;
     const member = await this.memberRepository.findOneBy({ id });
 
     if (!member) throw new NotFoundException('Member not found.');
 
     const notifications = await this.notificationRepository.find({
       where: {
-        id: In(arrayOfNotificationIds),
+        id: In(notificationsIds),
         for: id,
       },
     });

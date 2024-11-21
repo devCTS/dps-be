@@ -7,5 +7,5 @@ export class MarkNotificationReadDto {
 
   @IsArray()
   @IsInt({ each: true })
-  arrayOfNotificationIds: number[];
+  notificationsIds: number[];
 }

@@ -9,6 +9,7 @@ import { Member } from 'src/member/entities/member.entity';
 import { Admin } from 'src/admin/entities/admin.entity';
 import { Alert } from './entities/alert.entity';
 import { SocketGateway } from 'src/socket/socket.gateway';
+import { getTextForAlert } from 'src/utils/utils';
 
 @Injectable()
 export class AlertService {
@@ -53,13 +54,14 @@ export class AlertService {
       }
     }
 
-    await this.alertRepository.save(alertCreateDto);
+    const createdAlert = await this.alertRepository.save(alertCreateDto);
 
     this.socketGateway.handleSendAlert({
       for: userId,
       userType,
       type: alertCreateDto.type,
       data: alertCreateDto.data,
+      id: createdAlert.id,
     });
 
     return HttpStatus.CREATED;
@@ -78,7 +80,12 @@ export class AlertService {
       throw new NotFoundException('No ALerts found');
     }
 
-    return myAlerts;
+    return myAlerts.map((item) => ({
+      id: item.id,
+      type: item.type,
+      text: getTextForAlert(item.type),
+      date: item.createdAt,
+    }));
   }
 
   async markAlertRead(id: number) {

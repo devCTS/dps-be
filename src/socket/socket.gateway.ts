@@ -12,6 +12,7 @@ import { Server, Socket } from 'socket.io';
 import { Member } from 'src/member/entities/member.entity';
 import { MemberService } from 'src/member/member.service';
 import { AlertType, NotificationType, Users } from 'src/utils/enum/enum';
+import { getTextForAlert, getTextForNotification } from 'src/utils/utils';
 import { Repository } from 'typeorm';
 
 @WebSocketGateway({
@@ -83,21 +84,19 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     text,
     data,
     type,
+    id,
   }: {
     text: string;
     data: any;
     type: NotificationType;
+    id: number;
   }) {
     const membersRooms = [...this.userRooms.values()].filter((item) =>
       item.includes('Member'),
     );
     this.server
       .to(membersRooms)
-      .emit('newNotification', { data, text, type, date: new Date() });
-  }
-
-  getText(type) {
-    return 'dummy notification text' + type;
+      .emit('newNotification', { data, text, type, date: new Date(), id: id });
   }
 
   async handleSendNotification(notificationData: {
@@ -105,14 +104,15 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     userType: Users;
     type: NotificationType;
     data: any;
+    id: number;
   }) {
-    const { data, type } = notificationData;
-    const text = this.getText(notificationData.type);
+    const { data, type, id } = notificationData;
+    const text = getTextForNotification(type);
     if (
       notificationData.type === NotificationType.GRAB_PAYOUT ||
       notificationData.type === NotificationType.GRAB_TOPUP
     ) {
-      this.handleBroadcastUsers({ text, data, type });
+      this.handleBroadcastUsers({ text, data, type, id });
     } else {
       const roomId = `Member_${notificationData.for}`;
       this.server
@@ -126,10 +126,13 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     userType: Users;
     data: any;
     type: AlertType;
+    id: number;
   }) {
     const { userType, data, type } = alertData;
-    console.log({ userType, for: alertData.for });
+    const text = getTextForAlert(type);
     const roomId = `${userType}_${alertData.for}`;
-    this.server.to(roomId).emit('newAlert', { data, type });
+    this.server
+      .to(roomId)
+      .emit('newAlert', { data, type, text, date: new Date() });
   }
 }

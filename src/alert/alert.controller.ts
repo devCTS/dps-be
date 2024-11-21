@@ -6,6 +6,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Put,
 } from '@nestjs/common';
 import { AlertCreateDto } from './dto/alert-create.dto';
 import { AlertService } from './alert.service';
@@ -19,7 +20,7 @@ export class AlertController {
     return this.alertService.create(alertCreateDto);
   }
 
-  @Get('/:id')
+  @Post(':id')
   getMyAlerts(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: { userType: Users },
@@ -27,7 +28,7 @@ export class AlertController {
     return this.alertService.getMyAlerts({ id, userType: body.userType });
   }
 
-  @Patch('mark-read')
+  @Put('mark-read')
   markAlertRead(@Body() body: { alertId: number }) {
     return this.alertService.markAlertRead(body.alertId);
   }

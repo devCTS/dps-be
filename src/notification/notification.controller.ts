@@ -5,6 +5,7 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Put,
 } from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
@@ -12,24 +13,24 @@ import { CreateNotificationDto } from './dto/create-notification.dto';
 @Controller('notification')
 export class NotificationController {
   constructor(private notificationService: NotificationService) {}
-  @Post('/create')
+  @Post('create')
   create(@Body() createNotificationDto: CreateNotificationDto) {
     return this.notificationService.create(createNotificationDto);
   }
 
-  @Get('/:id')
+  @Get(':id')
   getMyNotifications(@Param('id', ParseIntPipe) id: number) {
     return this.notificationService.getMyNotifications(id);
   }
 
-  @Post('mark-read/:id')
+  @Put('mark-read/:id')
   markNotificationRead(
     @Param('id') id: number,
-    @Body() arrayOfNotificationIds: number[],
+    @Body() body: { notificationsIds: number[] },
   ) {
     return this.notificationService.markNotificationRead({
       id,
-      arrayOfNotificationIds,
+      notificationsIds: body.notificationsIds,
     });
   }
 }

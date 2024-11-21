@@ -1,6 +1,7 @@
 import { HttpStatus } from '@nestjs/common';
 import * as bycrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
+import { AlertType, NotificationType } from './enum/enum';
 
 // Encrypt password or match password
 export const encryptPassword = async (password: string): Promise<string> => {
@@ -54,6 +55,13 @@ export const roundOffAmount = (amount, makeAbsolute = false) => {
   if (!amount) return 0;
   const truncatedAmount = Math.round(amount * 100) / 100;
   return makeAbsolute ? Math.abs(truncatedAmount) : truncatedAmount;
+};
+
+export const getTextForNotification = (type: NotificationType) => {
+  return `dummy text ${type}`;
+};
+export const getTextForAlert = (type: AlertType) => {
+  return `dummy text ${type}`;
 };
 
 export const monthNames = () => {
