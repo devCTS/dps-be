@@ -1,4 +1,5 @@
 import { Exclude, Expose, Transform } from 'class-transformer';
+import { roundOffAmount } from 'src/utils/utils';
 
 @Exclude()
 export class FundRecordAdminResponseDto {
@@ -21,9 +22,11 @@ export class FundRecordAdminResponseDto {
   orderAmount: number;
 
   @Expose()
+  @Transform(({ value }) => roundOffAmount(value), { toClassOnly: true })
   before: number;
 
   @Expose()
+  @Transform(({ value }) => roundOffAmount(value), { toClassOnly: true })
   after: number;
 
   @Expose()
