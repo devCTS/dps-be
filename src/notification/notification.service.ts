@@ -23,10 +23,6 @@ export class NotificationService {
   async create(createNotificationDto: CreateNotificationDto) {
     const { for: memberId, type, data } = createNotificationDto;
 
-    const member = await this.memberRepository.findOneBy({ id: memberId });
-
-    if (!member) throw new NotFoundException('Member not found.');
-
     try {
       const createdNotification = await this.notificationRepository.save(
         createNotificationDto,
@@ -60,7 +56,7 @@ export class NotificationService {
     return myNotifications.map((item) => ({
       id: item.id,
       type: item.type,
-      text: getTextForNotification(item.type),
+      text: getTextForNotification(item.type, item.data),
       date: item.createdAt,
     }));
   }

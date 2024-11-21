@@ -12,6 +12,7 @@ import { In, Repository } from 'typeorm';
 import {
   ChannelName,
   NotificationStatus,
+  NotificationType,
   OrderStatus,
   OrderType,
   UserTypeForTransactionUpdates,
@@ -31,6 +32,7 @@ import { Agent } from 'src/agent/entities/agent.entity';
 import { AssignTopupOrderDto } from './dto/assign-topup-order.dto';
 import { roundOffAmount } from 'src/utils/utils';
 import { FundRecordService } from 'src/fund-record/fund-record.service';
+import { NotificationService } from 'src/notification/notification.service';
 
 @Injectable()
 export class TopupService {
@@ -52,6 +54,7 @@ export class TopupService {
     private readonly memberService: MemberService,
     private readonly systemConfigService: SystemConfigService,
     private readonly fundRecordService: FundRecordService,
+    private readonly notificationService: NotificationService,
   ) {
     this.lastTopupIndex = 0;
   }
@@ -262,6 +265,16 @@ export class TopupService {
       systemOrderId: uniqid(),
     });
 
+    await this.notificationService.create({
+      for: null,
+      type: NotificationType.GRAB_TOPUP,
+      data: {
+        orderId: topup.systemOrderId,
+        channel: topup.channel,
+        amount: topup.amount,
+      },
+    });
+
     if (!topup) throw new InternalServerErrorException('Topup error');
 
     return HttpStatus.CREATED;
@@ -329,8 +342,11 @@ export class TopupService {
 
   async updateTopupStatusToComplete(body) {
     const { id } = body;
-    const topupOrderDetails = await this.topupRepository.findOneBy({
-      systemOrderId: id,
+    const topupOrderDetails = await this.topupRepository.findOne({
+      where: {
+        systemOrderId: id,
+      },
+      relations: ['member'],
     });
     if (!topupOrderDetails) throw new NotFoundException('Order not found');
 
@@ -383,14 +399,27 @@ export class TopupService {
       },
     );
 
+    await this.notificationService.create({
+      for: topupOrderDetails.member.id,
+      type: NotificationType.TOPUP_VERIFIED,
+      data: {
+        orderId: topupOrderDetails.systemOrderId,
+        amount: topupOrderDetails.amount,
+        channel: topupOrderDetails.channel,
+      },
+    });
+
     return HttpStatus.OK;
   }
 
   async updateTopupStatusToFailed(body) {
     const { id } = body;
 
-    const topupOrderDetails = await this.topupRepository.findOneBy({
-      systemOrderId: id,
+    const topupOrderDetails = await this.topupRepository.findOne({
+      where: {
+        systemOrderId: id,
+      },
+      relations: ['member'],
     });
     if (!topupOrderDetails) throw new NotFoundException('Order not found');
 
@@ -434,6 +463,16 @@ export class TopupService {
       { systemOrderId: id },
       { status: OrderStatus.FAILED },
     );
+
+    await this.notificationService.create({
+      for: topupOrderDetails.member.id,
+      type: NotificationType.TOPUP_REJETCED,
+      data: {
+        orderId: topupOrderDetails.systemOrderId,
+        amount: topupOrderDetails.amount,
+        channel: topupOrderDetails.channel,
+      },
+    });
 
     return HttpStatus.OK;
   }

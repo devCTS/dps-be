@@ -18,6 +18,7 @@ import { SystemConfigModule } from 'src/system-config/system-config.module';
 import { AgentModule } from 'src/agent/agent.module';
 import { PaymentSystemModule } from 'src/payment-system/payment-system.module';
 import { FundRecordModule } from 'src/fund-record/fund-record.module';
+import { NotificationModule } from 'src/notification/notification.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { FundRecordModule } from 'src/fund-record/fund-record.module';
     SystemConfigModule,
     PaymentSystemModule,
     FundRecordModule,
+    NotificationModule,
   ],
   controllers: [PayoutController],
   providers: [

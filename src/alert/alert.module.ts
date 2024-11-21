@@ -16,5 +16,6 @@ import { SocketModule } from 'src/socket/socket.module';
   ],
   controllers: [AlertController],
   providers: [AlertService],
+  exports: [AlertService],
 })
 export class AlertModule {}

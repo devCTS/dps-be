@@ -12,6 +12,7 @@ import * as uniqid from 'uniqid';
 import { Payin } from './entities/payin.entity';
 import {
   CallBackStatus,
+  NotificationType,
   OrderStatus,
   OrderType,
   PaymentMadeOn,
@@ -31,6 +32,7 @@ import { EndUser } from 'src/end-user/entities/end-user.entity';
 import { ChangeCallbackStatusDto } from './dto/change-callback-status.dto';
 import { after } from 'node:test';
 import { FundRecordService } from 'src/fund-record/fund-record.service';
+import { NotificationService } from 'src/notification/notification.service';
 
 @Injectable()
 export class PayinService {
@@ -53,6 +55,7 @@ export class PayinService {
     private readonly merchantService: MerchantService,
     private readonly agentService: AgentService,
     private readonly fundRecordService: FundRecordService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async create(payinDetails: CreatePaymentOrderDto) {
@@ -236,6 +239,17 @@ export class PayinService {
         transactionReceipt,
       },
     );
+
+    if (payinOrderDetails.payinMadeOn === PaymentMadeOn.MEMBER)
+      await this.notificationService.create({
+        for: payinOrderDetails.member.id,
+        type: NotificationType.PAYIN_FOR_VERIFY,
+        data: {
+          orderId: payinOrderDetails.systemOrderId,
+          amount: payinOrderDetails.amount,
+          channel: payinOrderDetails.channel,
+        },
+      });
 
     return HttpStatus.OK;
   }

@@ -57,9 +57,38 @@ export const roundOffAmount = (amount, makeAbsolute = false) => {
   return makeAbsolute ? Math.abs(truncatedAmount) : truncatedAmount;
 };
 
-export const getTextForNotification = (type: NotificationType) => {
-  return `dummy text ${type}`;
+export const getTextForNotification = (type: NotificationType, data: any) => {
+  let text;
+
+  switch (type) {
+    case NotificationType.GRAB_PAYOUT:
+      text = `A new payout order of amount ${data.amount} is up for grab on for channel - ${data.channel}`;
+      break;
+    case NotificationType.GRAB_TOPUP:
+      text = `A new topup order of amount ${data.amount} is up for grab on for channel - ${data.channel}`;
+      break;
+    case NotificationType.PAYOUT_REJECTED:
+      text = `Your payment submission for payout order #${data.orderId} for amount ${data.amount} has been rejected.`;
+      break;
+    case NotificationType.PAYOUT_VERIFIED:
+      text = `Your payment submission for payout order #${data.orderId} for amount ${data.amount} has been verified.`;
+      break;
+    case NotificationType.TOPUP_REJETCED:
+      text = `Your payment submission for topup order #${data.orderId} for amount ${data.amount} has been rejected.`;
+      break;
+    case NotificationType.TOPUP_VERIFIED:
+      text = `Your payment submission for topup order #${data.orderId} for amount ${data.amount} has been verified.`;
+      break;
+    case NotificationType.PAYIN_FOR_VERIFY:
+      text = `You have a new payin order to be verified for amount ${data.amount}.`;
+      break;
+    default:
+      break;
+  }
+
+  return text;
 };
+
 export const getTextForAlert = (type: AlertType) => {
   return `dummy text ${type}`;
 };

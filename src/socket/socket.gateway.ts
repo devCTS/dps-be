@@ -107,7 +107,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     id: number;
   }) {
     const { data, type, id } = notificationData;
-    const text = getTextForNotification(type);
+    const text = getTextForNotification(type, data);
     if (
       notificationData.type === NotificationType.GRAB_PAYOUT ||
       notificationData.type === NotificationType.GRAB_TOPUP

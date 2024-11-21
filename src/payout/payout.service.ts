@@ -15,6 +15,7 @@ import { In, MoreThan, Repository } from 'typeorm';
 import {
   GatewayName,
   NotificationStatus,
+  NotificationType,
   OrderStatus,
   OrderType,
   PaymentMadeOn,
@@ -35,6 +36,7 @@ import { SystemConfigService } from 'src/system-config/system-config.service';
 import { PaymentSystemService } from 'src/payment-system/payment-system.service';
 import { AssignPayoutOrderDto } from './dto/assign-payout-order.dto';
 import { FundRecordService } from 'src/fund-record/fund-record.service';
+import { NotificationService } from 'src/notification/notification.service';
 
 @Injectable()
 export class PayoutService {
@@ -59,6 +61,7 @@ export class PayoutService {
     private readonly systemConfigService: SystemConfigService,
     private readonly paymentSystemService: PaymentSystemService,
     private readonly fundRecordService: FundRecordService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async create(payoutDetails: CreatePayoutDto) {
@@ -99,6 +102,16 @@ export class PayoutService {
         userId: merchant.identity.id,
         systemOrderId: payout.systemOrderId,
       });
+
+    await this.notificationService.create({
+      for: null,
+      type: NotificationType.GRAB_PAYOUT,
+      data: {
+        orderId: payout.systemOrderId,
+        amount: payout.amount,
+        channel: payout.channel,
+      },
+    });
 
     if (this.selectGateway) {
       let intervalId = setInterval(async () => {
@@ -292,8 +305,11 @@ export class PayoutService {
 
   async updatePayoutStatusToComplete(body) {
     const { id } = body;
-    const payoutOrderDetails = await this.payoutRepository.findOneBy({
-      systemOrderId: id,
+    const payoutOrderDetails = await this.payoutRepository.findOne({
+      where: {
+        systemOrderId: id,
+      },
+      relations: ['member'],
     });
     if (!payoutOrderDetails) throw new NotFoundException('Order not found');
 
@@ -381,14 +397,28 @@ export class PayoutService {
       },
     );
 
+    if (payoutOrderDetails.payoutMadeVia === PaymentMadeOn.MEMBER)
+      await this.notificationService.create({
+        for: payoutOrderDetails.member.id,
+        type: NotificationType.PAYOUT_VERIFIED,
+        data: {
+          orderId: payoutOrderDetails.systemOrderId,
+          amount: payoutOrderDetails.amount,
+          channel: payoutOrderDetails.channel,
+        },
+      });
+
     return HttpStatus.OK;
   }
 
   async updatePayoutStatusToFailed(body) {
     const { id } = body;
 
-    const payoutOrderDetails = await this.payoutRepository.findOneBy({
-      systemOrderId: id,
+    const payoutOrderDetails = await this.payoutRepository.findOne({
+      where: {
+        systemOrderId: id,
+      },
+      relations: ['member'],
     });
     if (!payoutOrderDetails) throw new NotFoundException('Order not found');
 
@@ -455,6 +485,17 @@ export class PayoutService {
       { systemOrderId: id },
       { status: OrderStatus.FAILED },
     );
+
+    if (payoutOrderDetails.payoutMadeVia === PaymentMadeOn.MEMBER)
+      await this.notificationService.create({
+        for: payoutOrderDetails.member.id,
+        type: NotificationType.PAYOUT_REJECTED,
+        data: {
+          orderId: payoutOrderDetails.systemOrderId,
+          amount: payoutOrderDetails.amount,
+          channel: payoutOrderDetails.channel,
+        },
+      });
 
     return HttpStatus.OK;
   }
