@@ -53,7 +53,7 @@ export class UserDetailsMerchantService {
 
     return {
       name: merchant.firstName + ' ' + merchant.lastName,
-      role: 'MEMBER',
+      role: 'MERCHANT',
       email: merchant.identity.email,
       phone: merchant.phone,
       joinedOn: merchant.createdAt,
