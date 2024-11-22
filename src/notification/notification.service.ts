@@ -58,6 +58,7 @@ export class NotificationService {
       type: item.type,
       text: getTextForNotification(item.type, item.data),
       date: item.createdAt,
+      data: item.data,
     }));
   }
 
