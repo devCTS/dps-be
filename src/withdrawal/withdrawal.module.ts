@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { WithdrawalService } from './withdrawal.service';
 import { WithdrawalController } from './withdrawal.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -21,6 +21,7 @@ import { SystemConfigModule } from 'src/system-config/system-config.module';
 import { PaymentSystemModule } from 'src/payment-system/payment-system.module';
 import { ChannelSettings } from 'src/gateway/entities/channel-settings.entity';
 import { FundRecordModule } from 'src/fund-record/fund-record.module';
+import { AlertModule } from 'src/alert/alert.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { FundRecordModule } from 'src/fund-record/fund-record.module';
     SystemConfigModule,
     PaymentSystemModule,
     FundRecordModule,
+    forwardRef(() => AlertModule),
   ],
   controllers: [WithdrawalController],
   providers: [

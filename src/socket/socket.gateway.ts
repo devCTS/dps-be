@@ -129,10 +129,10 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     id: number;
   }) {
     const { userType, data, type } = alertData;
-    const text = getTextForAlert(type);
+    const text = getTextForAlert(type, data);
     const roomId = `${userType}_${alertData.for}`;
     this.server
       .to(roomId)
-      .emit('newAlert', { data, type, text, date: new Date() });
+      .emit('newAlert', { data, type, text, date: new Date(), userType });
   }
 }

@@ -1,7 +1,9 @@
 import { FundRecordService } from 'src/fund-record/fund-record.service';
 import { TransactionUpdatesWithdrawalService } from './../transaction-updates/transaction-updates-withdrawal.service';
 import {
+  forwardRef,
   HttpStatus,
+  Inject,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -12,9 +14,11 @@ import { Withdrawal } from './entities/withdrawal.entity';
 import { Repository } from 'typeorm';
 import * as uniqid from 'uniqid';
 import {
+  AlertType,
   ChannelName,
   NotificationStatus,
   OrderType,
+  Users,
   UserTypeForTransactionUpdates,
   WithdrawalMadeOn,
   WithdrawalOrderStatus,
@@ -27,6 +31,8 @@ import { AgentService } from 'src/agent/agent.service';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { SystemConfigService } from 'src/system-config/system-config.service';
 import { PaymentSystemService } from 'src/payment-system/payment-system.service';
+import { AlertService } from 'src/alert/alert.service';
+import { roundOffAmount } from 'src/utils/utils';
 
 @Injectable()
 export class WithdrawalService {
@@ -46,6 +52,8 @@ export class WithdrawalService {
     private readonly systemConfigService: SystemConfigService,
     private readonly paymentSystemService: PaymentSystemService,
     private readonly fundRecordService: FundRecordService,
+    @Inject(forwardRef(() => AlertService))
+    private readonly alertService: AlertService,
   ) {}
 
   async create(createWithdrawalDto: CreateWithdrawalDto) {
@@ -206,19 +214,71 @@ export class WithdrawalService {
       orderType: OrderType.WITHDRAWAL,
     });
 
+    const mapUserType = {
+      MERCHANT: Users.MERCHANT,
+      AGENT: Users.AGENT,
+      MEMBER: Users.MEMBER,
+    };
+
+    const { withdrawalRate } = await this.systemConfigService.findLatest();
+
+    await this.alertService.create({
+      for: user?.id,
+      userType: mapUserType[orderDetails.user.userType],
+      type: AlertType.WITHDRAWAL_COMPLETE,
+      data: {
+        orderId: orderDetails.systemOrderId,
+        amount: orderDetails.amount,
+        channel: orderDetails.channel,
+        serviceFee: roundOffAmount(
+          (orderDetails.amount / 100) * withdrawalRate,
+        ),
+      },
+    });
+
     return HttpStatus.OK;
   }
 
   async updateStatusToRejected(body) {
     const { id } = body;
 
-    const orderDetails = await this.withdrawalRepository.findOneBy({
-      systemOrderId: id,
+    const orderDetails = await this.withdrawalRepository.findOne({
+      where: {
+        systemOrderId: id,
+      },
+      relations: ['user'],
     });
     if (!orderDetails) throw new NotFoundException('Order not found!');
 
+    const user = await this.identityService.getUser(
+      orderDetails.user.id,
+      orderDetails.user.userType,
+    );
+
     await this.withdrawalRepository.update(orderDetails.id, {
       status: WithdrawalOrderStatus.REJECTED,
+    });
+
+    const mapUserType = {
+      MeERCHANT: Users.MERCHANT,
+      AGENT: Users.AGENT,
+      MEMBER: Users.MEMBER,
+    };
+
+    const { withdrawalRate } = await this.systemConfigService.findLatest();
+
+    await this.alertService.create({
+      for: user.id,
+      userType: mapUserType[orderDetails.user.userType],
+      type: AlertType.WITHDRAWAL_REJECTED,
+      data: {
+        orderId: orderDetails.systemOrderId,
+        amount: orderDetails.amount,
+        channel: orderDetails.channel,
+        serviceFee: roundOffAmount(
+          (orderDetails.amount / 100) * withdrawalRate,
+        ),
+      },
     });
 
     return HttpStatus.OK;
@@ -227,13 +287,43 @@ export class WithdrawalService {
   async updateStatusToFailed(body) {
     const { id } = body;
 
-    const orderDetails = await this.withdrawalRepository.findOneBy({
-      systemOrderId: id,
+    const orderDetails = await this.withdrawalRepository.findOne({
+      where: {
+        systemOrderId: id,
+      },
+      relations: ['user'],
     });
     if (!orderDetails) throw new NotFoundException('Order not found!');
 
+    const user = await this.identityService.getUser(
+      orderDetails.user.id,
+      orderDetails.user.userType,
+    );
+
     await this.withdrawalRepository.update(orderDetails.id, {
       status: WithdrawalOrderStatus.FAILED,
+    });
+
+    const mapUserType = {
+      MeERCHANT: Users.MERCHANT,
+      AGENT: Users.AGENT,
+      MEMBER: Users.MEMBER,
+    };
+
+    const { withdrawalRate } = await this.systemConfigService.findLatest();
+
+    await this.alertService.create({
+      for: user.id,
+      userType: mapUserType[orderDetails.user.userType],
+      type: AlertType.WITHDRAWAL_REJECTED,
+      data: {
+        orderId: orderDetails.systemOrderId,
+        amount: orderDetails.amount,
+        channel: orderDetails.channel,
+        serviceFee: roundOffAmount(
+          (orderDetails.amount / 100) * withdrawalRate,
+        ),
+      },
     });
 
     return HttpStatus.OK;

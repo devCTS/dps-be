@@ -89,8 +89,30 @@ export const getTextForNotification = (type: NotificationType, data: any) => {
   return text;
 };
 
-export const getTextForAlert = (type: AlertType) => {
-  return `dummy text ${type}`;
+export const getTextForAlert = (type: AlertType, data: any) => {
+  let text;
+
+  switch (type) {
+    case AlertType.PAYOUT_FAILED:
+      text = ``;
+      break;
+    case AlertType.PAYOUT_SUCCESS:
+      text = ``;
+      break;
+    case AlertType.WITHDRAWAL_COMPLETE:
+      text = ``;
+      break;
+    case AlertType.WITHDRAWAL_FAILED:
+      text = ``;
+      break;
+    case AlertType.WITHDRAWAL_REJECTED:
+      text = ``;
+      break;
+    default:
+      break;
+  }
+
+  return text;
 };
 
 export const monthNames = () => {

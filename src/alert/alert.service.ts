@@ -1,6 +1,17 @@
-import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  forwardRef,
+  HttpStatus,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { AlertCreateDto } from './dto/alert-create.dto';
-import { AlertReadStatus, Users } from 'src/utils/enum/enum';
+import {
+  AlertReadStatus,
+  AlertType,
+  OrderType,
+  Users,
+} from 'src/utils/enum/enum';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
@@ -10,6 +21,8 @@ import { Admin } from 'src/admin/entities/admin.entity';
 import { Alert } from './entities/alert.entity';
 import { SocketGateway } from 'src/socket/socket.gateway';
 import { getTextForAlert } from 'src/utils/utils';
+import { WithdrawalService } from 'src/withdrawal/withdrawal.service';
+import { PayoutService } from 'src/payout/payout.service';
 
 @Injectable()
 export class AlertService {
@@ -24,7 +37,11 @@ export class AlertService {
     private agentRepository: Repository<Agent>,
     @InjectRepository(Member)
     private memberRepository: Repository<Member>,
+
     private socketGateway: SocketGateway,
+    private withdrawalService: WithdrawalService,
+    @Inject(forwardRef(() => PayoutService))
+    private payoutService: PayoutService,
   ) {}
 
   async create(alertCreateDto: AlertCreateDto) {
@@ -36,11 +53,6 @@ export class AlertService {
       user = await this.memberRepository.findOneBy({ id: userId });
       if (!user) {
         throw new NotFoundException('Member not found.');
-      }
-    } else if (userType === Users.ADMIN) {
-      user = await this.adminRepository.findOneBy({ id: userId });
-      if (!user) {
-        throw new NotFoundException('Admin not found.');
       }
     } else if (userType === Users.MERCHANT) {
       user = await this.merchantRepository.findOneBy({ id: userId });
@@ -83,8 +95,10 @@ export class AlertService {
     return myAlerts.map((item) => ({
       id: item.id,
       type: item.type,
-      text: getTextForAlert(item.type),
+      text: getTextForAlert(item.type, item.data),
       date: item.createdAt,
+      userType: item.userType,
+      data: item.data,
     }));
   }
 
@@ -93,7 +107,21 @@ export class AlertService {
 
     if (!alertDetails) throw new NotFoundException('Alert details not found.');
 
-    this.alertRepository.update(id, { status: AlertReadStatus.READ });
+    await this.alertRepository.update(alertDetails.id, {
+      status: AlertReadStatus.READ,
+    });
+
+    const orderId = alertDetails.data?.orderId;
+    const orderType = alertDetails.type;
+
+    if (
+      orderType === AlertType.PAYOUT_FAILED ||
+      orderType === AlertType.PAYOUT_SUCCESS
+    ) {
+      await this.payoutService.handleNotificationStatusSuccess(orderId);
+    } else {
+      await this.withdrawalService.handleNotificationStatusSuccess(orderId);
+    }
 
     return HttpStatus.OK;
   }

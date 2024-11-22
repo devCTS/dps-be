@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { PayoutService } from './payout.service';
 import { PayoutController } from './payout.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -19,6 +19,7 @@ import { AgentModule } from 'src/agent/agent.module';
 import { PaymentSystemModule } from 'src/payment-system/payment-system.module';
 import { FundRecordModule } from 'src/fund-record/fund-record.module';
 import { NotificationModule } from 'src/notification/notification.module';
+import { AlertModule } from 'src/alert/alert.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { NotificationModule } from 'src/notification/notification.module';
     PaymentSystemModule,
     FundRecordModule,
     NotificationModule,
+    forwardRef(() => AlertModule),
   ],
   controllers: [PayoutController],
   providers: [

@@ -13,12 +13,14 @@ import { Payout } from './entities/payout.entity';
 import { In, MoreThan, Repository } from 'typeorm';
 
 import {
+  AlertType,
   GatewayName,
   NotificationStatus,
   NotificationType,
   OrderStatus,
   OrderType,
   PaymentMadeOn,
+  Users,
   UserTypeForTransactionUpdates,
 } from 'src/utils/enum/enum';
 import { EndUserService } from 'src/end-user/end-user.service';
@@ -37,6 +39,7 @@ import { PaymentSystemService } from 'src/payment-system/payment-system.service'
 import { AssignPayoutOrderDto } from './dto/assign-payout-order.dto';
 import { FundRecordService } from 'src/fund-record/fund-record.service';
 import { NotificationService } from 'src/notification/notification.service';
+import { AlertService } from 'src/alert/alert.service';
 
 @Injectable()
 export class PayoutService {
@@ -62,6 +65,8 @@ export class PayoutService {
     private readonly paymentSystemService: PaymentSystemService,
     private readonly fundRecordService: FundRecordService,
     private readonly notificationService: NotificationService,
+    @Inject(forwardRef(() => AlertService))
+    private readonly alertService: AlertService,
   ) {}
 
   async create(payoutDetails: CreatePayoutDto) {
@@ -309,7 +314,7 @@ export class PayoutService {
       where: {
         systemOrderId: id,
       },
-      relations: ['member'],
+      relations: ['member', 'merchant'],
     });
     if (!payoutOrderDetails) throw new NotFoundException('Order not found');
 
@@ -408,6 +413,23 @@ export class PayoutService {
         },
       });
 
+    const mapUserType = {
+      MeERCHANT: Users.MERCHANT,
+      AGENT: Users.AGENT,
+      MEMBER: Users.MEMBER,
+    };
+
+    await this.alertService.create({
+      for: payoutOrderDetails.merchant.id,
+      userType: Users.MERCHANT,
+      type: AlertType.PAYOUT_SUCCESS,
+      data: {
+        orderId: payoutOrderDetails.systemOrderId,
+        amount: payoutOrderDetails.amount,
+        channel: payoutOrderDetails.channel,
+      },
+    });
+
     return HttpStatus.OK;
   }
 
@@ -418,7 +440,7 @@ export class PayoutService {
       where: {
         systemOrderId: id,
       },
-      relations: ['member'],
+      relations: ['member', 'merchant'],
     });
     if (!payoutOrderDetails) throw new NotFoundException('Order not found');
 
@@ -496,6 +518,17 @@ export class PayoutService {
           channel: payoutOrderDetails.channel,
         },
       });
+
+    await this.alertService.create({
+      for: payoutOrderDetails.merchant.id,
+      userType: Users.MERCHANT,
+      type: AlertType.PAYOUT_FAILED,
+      data: {
+        orderId: payoutOrderDetails.systemOrderId,
+        amount: payoutOrderDetails.amount,
+        channel: payoutOrderDetails.channel,
+      },
+    });
 
     return HttpStatus.OK;
   }

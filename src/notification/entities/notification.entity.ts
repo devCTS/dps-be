@@ -22,7 +22,7 @@ export class Notification {
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
 
-  @Column()
+  @Column({ nullable: true })
   for: number;
 
   @Column({ nullable: true, type: 'enum', enum: NotificationType })

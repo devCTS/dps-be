@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { AlertController } from './alert.controller';
 import { AlertService } from './alert.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -8,11 +8,15 @@ import { Agent } from 'http';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { Alert } from './entities/alert.entity';
 import { SocketModule } from 'src/socket/socket.module';
+import { WithdrawalModule } from 'src/withdrawal/withdrawal.module';
+import { PayoutModule } from 'src/payout/payout.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Admin, Member, Agent, Merchant, Alert]),
     SocketModule,
+    forwardRef(() => WithdrawalModule),
+    forwardRef(() => PayoutModule),
   ],
   controllers: [AlertController],
   providers: [AlertService],

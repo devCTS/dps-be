@@ -77,7 +77,6 @@ export enum Users {
   MERCHANT = 'Merchant',
   AGENT = 'Agent',
   MEMBER = 'Member',
-  ADMIN = 'Admin',
 }
 
 export enum NotificationReadStatus {
