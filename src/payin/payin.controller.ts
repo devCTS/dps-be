@@ -6,13 +6,17 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
 import { PayinAdminService } from './payin-admin.service';
 import { PayinMerchantService } from './payin-merchant.service';
 import { PayinMemberService } from './payin-member.service';
 import { PayinService } from './payin.service';
-import { ChangeCallbackStatusDto } from './dto/change-callback-status.dto';
+import { Roles } from 'src/utils/decorators/roles.decorator';
+import { RolesGuard } from 'src/utils/guard/roles.guard';
+import { Role } from 'src/utils/enum/enum';
+import { UserInReq } from 'src/utils/decorators/user-in-req.decorator';
 
 @Controller('payin')
 export class PayinController {
@@ -29,17 +33,32 @@ export class PayinController {
   }
 
   @Post('admin/paginate')
+  @Roles(Role.SUPER_ADMIN)
+  @UseGuards(RolesGuard)
   adminPayins(@Body() paginateRequestDto: PaginateRequestDto) {
     return this.payinAdminService.paginatePayins(paginateRequestDto);
   }
 
   @Post('merchant/paginate')
-  merchantPayins(@Body() paginateRequestDto: PaginateRequestDto) {
-    return this.payinMerchantService.paginatePayins(paginateRequestDto);
+  @Roles(Role.MERCHANT)
+  @UseGuards(RolesGuard)
+  merchantPayins(
+    @UserInReq() user,
+    @Body() paginateRequestDto: PaginateRequestDto,
+  ) {
+    return this.payinMerchantService.paginatePayins(
+      user.id,
+      paginateRequestDto,
+    );
   }
 
   @Post('member/paginate')
-  memberPayins(@Body() paginateRequestDto: PaginateRequestDto) {
+  @Roles(Role.MEMBER)
+  @UseGuards(RolesGuard)
+  memberPayins(
+    @UserInReq() user,
+    @Body() paginateRequestDto: PaginateRequestDto,
+  ) {
     return this.payinMemberService.paginatePayins(paginateRequestDto);
   }
 
@@ -49,16 +68,22 @@ export class PayinController {
   }
 
   @Get('admin/:id')
+  @Roles(Role.SUPER_ADMIN)
+  @UseGuards(RolesGuard)
   getPayinOrderDetailsAdmin(@Param('id') id: string) {
     return this.payinAdminService.getPayinDetails(id);
   }
 
   @Get('merchant/:id')
+  @Roles(Role.MERCHANT)
+  @UseGuards(RolesGuard)
   getPayinOrderDetailsMerchant(@Param('id') id: string) {
     return this.payinMerchantService.getPayinDetails(id);
   }
 
   @Get('member/:id')
+  @Roles(Role.MEMBER)
+  @UseGuards(RolesGuard)
   getPayinOrderDetailsMember(@Param('id') id: string) {
     return this.payinMemberService.getPayinDetails(id);
   }

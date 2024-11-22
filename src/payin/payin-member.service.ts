@@ -37,8 +37,8 @@ export class PayinMemberService {
       startDate,
       endDate,
       sortBy,
-      userId,
       forBulletin,
+      userId,
     } = paginateRequestDto;
 
     const skip = (pageNumber - 1) * pageSize;

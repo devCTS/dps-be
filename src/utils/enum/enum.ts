@@ -106,3 +106,12 @@ export enum NotificationType {
   TOPUP_REJETCED = 'topup_rejected',
   PAYIN_FOR_VERIFY = 'payin_for_verify',
 }
+
+export enum Role {
+  USER = 'user',
+  SUPER_ADMIN = 'super_admin',
+  SUB_ADMIN = 'sub_admin',
+  MEMBER = 'member',
+  MERCHANT = 'merchant',
+  agent = 'agent',
+}

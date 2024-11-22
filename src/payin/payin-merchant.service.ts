@@ -29,8 +29,8 @@ export class PayinMerchantService {
     private transactionUpdateRepository: Repository<TransactionUpdate>,
   ) {}
 
-  async paginatePayins(paginateRequestDto: PaginateRequestDto) {
-    const { search, pageSize, pageNumber, startDate, endDate, sortBy, userId } =
+  async paginatePayins(userId, paginateRequestDto: PaginateRequestDto) {
+    const { search, pageSize, pageNumber, startDate, endDate, sortBy } =
       paginateRequestDto;
 
     const skip = (pageNumber - 1) * pageSize;

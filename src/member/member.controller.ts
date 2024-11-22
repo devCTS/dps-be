@@ -14,13 +14,8 @@ import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
 import { RegisterDto } from './dto/register.dto';
 import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
-import { Roles } from 'src/roles/roles.decorator';
-import { Role } from 'src/roles/roles.enum';
-import { JwtGuard } from 'src/services/jwt/jwt.guard';
-import { RolesGuard } from 'src/roles/roles.guard';
 import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 import { IdentityService } from 'src/identity/identity.service';
-import { PayoutService } from 'src/payout/payout.service';
 import { PayoutMemberService } from 'src/payout/payout-member.service';
 import { VerifyWithdrawalPasswordDto } from './dto/verify-withdrawal-password.dto';
 

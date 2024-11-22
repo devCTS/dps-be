@@ -14,7 +14,6 @@ import { ServicesModule } from './services/services.module';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { ExportModule } from './export/export.module';
 import { SystemConfigModule } from './system-config/system-config.module';
-import { RolesModule } from './roles/roles.module';
 
 import { AgentModule } from './agent/agent.module';
 import { AgentReferralModule } from './agent-referral/agent-referral.module';
@@ -37,6 +36,7 @@ import { AlertModule } from './alert/alert.module';
 import { FundRecordModule } from './fund-record/fund-record.module';
 import { UserDetailsModule } from './user-details/user-details.module';
 import { OverviewModule } from './overview/overview.module';
+import { UserInterceptor } from './utils/interceptor/user.interceptor';
 
 @Module({
   imports: [
@@ -69,7 +69,6 @@ import { OverviewModule } from './overview/overview.module';
     ServicesModule,
     ExportModule,
     SystemConfigModule,
-    RolesModule,
     AgentModule,
     AgentReferralModule,
     MemberReferralModule,
@@ -98,6 +97,10 @@ import { OverviewModule } from './overview/overview.module';
     {
       provide: APP_INTERCEPTOR,
       useClass: ClassSerializerInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: UserInterceptor,
     },
   ],
 })
