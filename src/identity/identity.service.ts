@@ -316,14 +316,6 @@ export class IdentityService {
     return { jwt, type: identity.userType };
   }
 
-  findAll() {
-    return `This action returns all identity`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} identity`;
-  }
-
   async updateLogin(id: number, newEmail: string, newPassword: string) {
     const hashedPassword = this.jwtService.getHashPassword(newPassword);
 
