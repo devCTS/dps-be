@@ -54,7 +54,10 @@ export class FundRecordService {
     private readonly agentService: AgentService,
   ) {}
 
-  async paginateFundRecords(paginateRequestDto: PaginateRequestDto) {
+  async paginateFundRecords(
+    paginateRequestDto: PaginateRequestDto,
+    userEmail = null,
+  ) {
     const {
       search,
       pageSize,
@@ -63,7 +66,6 @@ export class FundRecordService {
       endDate,
       sortBy,
       balanceType,
-      userEmail,
     } = paginateRequestDto;
 
     const skip = (pageNumber - 1) * pageSize;

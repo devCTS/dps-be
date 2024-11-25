@@ -3,16 +3,13 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
-  Delete,
   Query,
   Put,
   UseGuards,
 } from '@nestjs/common';
 import { PayoutService } from './payout.service';
 import { CreatePayoutDto } from './dto/create-payout.dto';
-import { UpdatePayoutDto } from './dto/update-payout.dto';
 import { PayoutAdminService } from './payout-admin.service';
 import { PayoutMemberService } from './payout-member.service';
 import { PayoutMerchantService } from './payout-merchant.service';
