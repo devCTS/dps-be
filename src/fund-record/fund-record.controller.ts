@@ -31,11 +31,13 @@ export class FundRecordController {
   }
 
   @Post('/admin-adjustment')
+  @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
   async adminAdjustment(@Body() requestBody: CreateSettlementDto) {
     return await this.fundRecordService.adminAdjustment(requestBody);
   }
 
   @Post('/member-adjustment')
+  @Roles(Role.MEMBER)
   async memberAdjustment(@Body() requestBody: MemberSettlementDto) {
     return await this.fundRecordService.memberAdjustment(requestBody);
   }
