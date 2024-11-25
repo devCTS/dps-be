@@ -20,7 +20,7 @@ import { AdminResponseDto } from './dto/admin-response.dto';
 import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
 import { IdentityService } from 'src/identity/identity.service';
 import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
-import { PayoutService } from 'src/payout/payout.service';
+import { UserInReq } from 'src/utils/decorators/user-in-req.decorator';
 
 @Controller('admin')
 export class AdminController {
@@ -35,18 +35,23 @@ export class AdminController {
     return this.adminService.create(createAdminDto);
   }
 
-  @Get()
-  findAll() {
-    return this.adminService.findAll();
-  }
+  // @Get()
+  // findAll() {
+  //   return this.adminService.findAll();
+  // }
 
   @Get('profile/:id')
   getProfile(@Param('id', ParseIntPipe) id: number) {
     return this.adminService.getProfile(id);
   }
 
+  @Get()
+  findOne(@UserInReq() user) {
+    return this.adminService.findOne(+user.id);
+  }
+
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOneAdmin(@Param('id') id: string) {
     return this.adminService.findOne(+id);
   }
 
