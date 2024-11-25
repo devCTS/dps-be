@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import { AgentResponseDto } from './dto/agent-response.dto';
 import { CreateAgentDto } from './dto/create-agent.dto';
@@ -17,8 +18,13 @@ import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
 import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 import { IdentityService } from 'src/identity/identity.service';
 import { VerifyWithdrawalPasswordDto } from './dto/verify-withdrawal-password.dto';
+import { RolesGuard } from 'src/utils/guard/roles.guard';
+import { Roles } from 'src/utils/decorators/roles.decorator';
+import { Role } from 'src/utils/enum/enum';
+import { UserInReq } from 'src/utils/decorators/user-in-req.decorator';
 
 @Controller('agent')
+@UseGuards(RolesGuard)
 export class AgentController {
   constructor(
     private identityService: IdentityService,
@@ -26,62 +32,77 @@ export class AgentController {
   ) {}
 
   @Post()
+  @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
   create(@Body() createAgentDto: CreateAgentDto): Promise<AgentResponseDto> {
     return this.agentService.create(createAgentDto);
   }
 
-  @Get()
-  findAll(): Promise<AgentResponseDto[]> {
-    return this.agentService.findAll();
-  }
+  // @Get()
+  // @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
+  // findAll(): Promise<AgentResponseDto[]> {
+  //   return this.agentService.findAll();
+  // }
 
-  @Get('profile/:id')
-  getProfile(@Param('id', ParseIntPipe) id: number): Promise<AgentResponseDto> {
-    return this.agentService.getProfile(id);
+  @Get()
+  @Roles(Role.AGENT)
+  getProfile(@UserInReq() user): Promise<AgentResponseDto> {
+    return this.agentService.findOne(user.id);
   }
 
   @Get(':id')
+  @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
   findOne(@Param('id') id: string): Promise<AgentResponseDto> {
     return this.agentService.findOne(+id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAgentDto: UpdateAgentDto) {
+  @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
+  updateAgent(@Param('id') id: string, @Body() updateAgentDto: UpdateAgentDto) {
     return this.agentService.update(+id, updateAgentDto);
   }
 
   @Delete(':id')
+  @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
   remove(@Param('id') id: string): Promise<HttpStatus> {
     return this.agentService.remove(+id);
   }
 
   @Post('paginate')
+  @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
   paginate(@Body() paginateRequestDto: PaginateRequestDto) {
     return this.agentService.paginate(paginateRequestDto);
   }
 
-  @Post('change-password/:id')
+  @Post('change-password')
+  @Roles(Role.AGENT)
   changePassword(
+    @UserInReq() user,
     @Body() changePasswordDto: ChangePasswordDto,
-    @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.agentService.changePassword(changePasswordDto, id);
+    return this.agentService.changePassword(changePasswordDto, user.id);
   }
 
-  @Post('change-withdrawal-password/:id')
+  @Post('change-withdrawal-password')
+  @Roles(Role.AGENT)
   changeWithdrawalPassword(
+    @UserInReq() user,
     @Body() changePasswordDto: ChangePasswordDto,
-    @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.agentService.changeWithdrawalPassword(changePasswordDto, id);
+    return this.agentService.changeWithdrawalPassword(
+      changePasswordDto,
+      user.id,
+    );
   }
 
   @Post('verify-withdrawal-password')
+  @Roles(Role.AGENT)
   verifyWithdrawalPassword(
+    @UserInReq() user,
     @Body() verifyWithdrawalPasswordDto: VerifyWithdrawalPasswordDto,
   ) {
     return this.agentService.verifyWithdrawalPassword(
       verifyWithdrawalPasswordDto,
+      user.id,
     );
   }
 }

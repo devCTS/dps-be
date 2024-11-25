@@ -455,8 +455,9 @@ export class AgentService {
 
   async verifyWithdrawalPassword(
     verifyWithdrawalPasswordDto: VerifyWithdrawalPasswordDto,
+    id: number,
   ) {
-    const { id, password } = verifyWithdrawalPasswordDto;
+    const { password } = verifyWithdrawalPasswordDto;
 
     const merchant = await this.agentRepository.findOneBy({ id });
 
