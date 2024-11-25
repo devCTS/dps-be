@@ -108,7 +108,6 @@ export enum NotificationType {
 }
 
 export enum Role {
-  USER = 'user',
   SUPER_ADMIN = 'super_admin',
   SUB_ADMIN = 'sub_admin',
   MEMBER = 'member',
