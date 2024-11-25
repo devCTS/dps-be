@@ -13,6 +13,7 @@ import { CreateNotificationDto } from './dto/create-notification.dto';
 import { Roles } from 'src/utils/decorators/roles.decorator';
 import { Role } from 'src/utils/enum/enum';
 import { RolesGuard } from 'src/utils/guard/roles.guard';
+import { UserInReq } from 'src/utils/decorators/user-in-req.decorator';
 
 @Controller('notification')
 export class NotificationController {
@@ -25,23 +26,20 @@ export class NotificationController {
     return this.notificationService.create(createNotificationDto);
   }
 
-  @Get(':id')
+  @Get()
   @Roles(Role.ALL)
   @UseGuards(RolesGuard)
-  getMyNotifications(@Param('id', ParseIntPipe) id: number) {
-    return this.notificationService.getMyNotifications(id);
+  getMyNotifications(@UserInReq() user) {
+    return this.notificationService.getMyNotifications(+user.id);
   }
 
   @Put('mark-read/:id')
   @Roles(Role.ALL)
   @UseGuards(RolesGuard)
   markNotificationRead(
-    @Param('id') id: number,
+    @UserInReq() user,
     @Body() body: { notificationsIds: number[] },
   ) {
-    return this.notificationService.markNotificationRead({
-      id,
-      notificationsIds: body.notificationsIds,
-    });
+    return this.notificationService.markNotificationRead(user.id, body);
   }
 }

@@ -583,8 +583,9 @@ export class MemberService {
 
   async verifyWithdrawalPassword(
     verifyWithdrawalPasswordDto: VerifyWithdrawalPasswordDto,
+    id,
   ) {
-    const { id, password } = verifyWithdrawalPasswordDto;
+    const { password } = verifyWithdrawalPasswordDto;
 
     const merchant = await this.memberRepository.findOneBy({ id });
 

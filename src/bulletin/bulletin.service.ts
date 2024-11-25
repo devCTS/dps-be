@@ -12,7 +12,7 @@ export class BulletinService {
     private payinMemberService: PayinMemberService,
   ) {}
 
-  async getGrabOrders() {
+  async getGrabOrders(userId) {
     const dto: PaginateRequestDto = {
       search: '',
       pageSize: Number.MAX_SAFE_INTEGER,
@@ -38,7 +38,7 @@ export class BulletinService {
     return allOrders.sort((a, b) => b.updatedAt - a.updatedAt);
   }
 
-  async getPendingOrders(id: number) {
+  async getPendingOrders(id: number, userId: number) {
     const dto: PaginateRequestDto = {
       search: '',
       pageSize: Number.MAX_SAFE_INTEGER,
@@ -52,7 +52,7 @@ export class BulletinService {
     };
 
     const payinOrders: any[] = (
-      await this.payinMemberService.paginatePayins({
+      await this.payinMemberService.paginatePayins(userId, {
         ...dto,
         forBulletin: true,
       })

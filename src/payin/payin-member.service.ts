@@ -29,7 +29,7 @@ export class PayinMemberService {
     private transactionUpdateRepository: Repository<TransactionUpdate>,
   ) {}
 
-  async paginatePayins(paginateRequestDto: PaginateRequestDto) {
+  async paginatePayins(userId, paginateRequestDto: PaginateRequestDto) {
     const {
       search,
       pageSize,
@@ -38,7 +38,6 @@ export class PayinMemberService {
       endDate,
       sortBy,
       forBulletin,
-      userId,
     } = paginateRequestDto;
 
     const skip = (pageNumber - 1) * pageSize;
