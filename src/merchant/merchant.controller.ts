@@ -20,8 +20,10 @@ import { VerifyWithdrawalPasswordDto } from './dto/verify-withdrawal-password.dt
 import { Roles } from 'src/utils/decorators/roles.decorator';
 import { Role } from 'src/utils/enum/enum';
 import { RolesGuard } from 'src/utils/guard/roles.guard';
+import { UserInReq } from 'src/utils/decorators/user-in-req.decorator';
 
 @Controller('merchant')
+@UseGuards(RolesGuard)
 export class MerchantController {
   constructor(
     private readonly merchantService: MerchantService,
@@ -31,35 +33,30 @@ export class MerchantController {
 
   @Post()
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MERCHANT)
-  @UseGuards(RolesGuard)
   create(@Body() createMerchantDto: CreateMerchantDto) {
     return this.merchantService.create(createMerchantDto);
   }
 
-  @Get()
-  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
-  @UseGuards(RolesGuard)
-  findAll() {
-    return this.merchantService.findAll();
-  }
+  // @Get()
+  // @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
+  // findAll() {
+  //   return this.merchantService.findAll();
+  // }
 
-  @Get('profile/:id')
-  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MERCHANT)
-  @UseGuards(RolesGuard)
-  getProfile(@Param('id', ParseIntPipe) id: number) {
-    return this.merchantService.getProfile(id);
+  @Get()
+  @Roles(Role.MERCHANT)
+  getProfile(@UserInReq() user) {
+    return this.merchantService.getProfile(user.id);
   }
 
   @Get(':id')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MERCHANT)
-  @UseGuards(RolesGuard)
   findOne(@Param('id') id: string) {
     return this.merchantService.findOne(+id);
   }
 
   @Patch(':id')
-  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MERCHANT)
-  @UseGuards(RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   update(
     @Param('id') id: string,
     @Body() updateMerchantDto: UpdateMerchantDto,
@@ -68,61 +65,59 @@ export class MerchantController {
   }
 
   @Delete(':id')
-  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MERCHANT)
-  @UseGuards(RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   remove(@Param('id') id: string) {
     return this.merchantService.remove(+id);
   }
 
   @Post('paginate')
-  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MERCHANT)
-  @UseGuards(RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   paginate(@Body() paginateRequestDto: PaginateRequestDto) {
     return this.merchantService.paginate(paginateRequestDto);
   }
 
-  @Post('change-password/:id')
-  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MERCHANT)
-  @UseGuards(RolesGuard)
+  @Post('change-password')
+  @Roles(Role.MERCHANT)
   changePassword(
+    @UserInReq() user,
     @Body() changePasswordDto: ChangePasswordDto,
-    @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.merchantService.changePassword(changePasswordDto, id);
+    return this.merchantService.changePassword(changePasswordDto, user.id);
   }
 
-  @Post('change-withdrawal-password/:id')
+  @Post('change-withdrawal-password')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MERCHANT)
-  @UseGuards(RolesGuard)
   changeWithdrawalPassword(
     @Body() changePasswordDto: ChangePasswordDto,
-    @Param('id', ParseIntPipe) id: number,
+    @UserInReq() user,
   ) {
-    return this.merchantService.changeWithdrawalPassword(changePasswordDto, id);
+    return this.merchantService.changeWithdrawalPassword(
+      changePasswordDto,
+      user.id,
+    );
   }
 
   @Post('payouts/paginate')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MERCHANT)
-  @UseGuards(RolesGuard)
   paginatePayouts(@Body() paginateRequestDto: PaginateRequestDto) {
     return this.payoutMerchantService.paginate(paginateRequestDto);
   }
 
   @Get('payout/:id')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MERCHANT)
-  @UseGuards(RolesGuard)
   getPayoutDetails(@Param('id') id: string) {
     return this.payoutMerchantService.getPayoutDetails(id);
   }
 
   @Post('verify-withdrawal-password')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MERCHANT)
-  @UseGuards(RolesGuard)
   verifyWithdrawalPassword(
+    @UserInReq() user,
     @Body() verifyWithdrawalPasswordDto: VerifyWithdrawalPasswordDto,
   ) {
     return this.merchantService.verifyWithdrawalPassword(
       verifyWithdrawalPasswordDto,
+      user.id,
     );
   }
 }
