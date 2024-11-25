@@ -50,7 +50,7 @@ export class MerchantController {
   }
 
   @Get(':id')
-  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MERCHANT)
+  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   findOne(@Param('id') id: string) {
     return this.merchantService.findOne(+id);
   }
@@ -97,17 +97,17 @@ export class MerchantController {
     );
   }
 
-  @Post('payouts/paginate')
-  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MERCHANT)
-  paginatePayouts(@Body() paginateRequestDto: PaginateRequestDto) {
-    return this.payoutMerchantService.paginate(paginateRequestDto);
-  }
+  // @Post('payouts/paginate')
+  // @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MERCHANT)
+  // paginatePayouts(@Body() paginateRequestDto: PaginateRequestDto) {
+  //   return this.payoutMerchantService.paginate(paginateRequestDto);
+  // }
 
-  @Get('payout/:id')
-  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MERCHANT)
-  getPayoutDetails(@Param('id') id: string) {
-    return this.payoutMerchantService.getPayoutDetails(id);
-  }
+  // @Get('payout/:id')
+  // @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MERCHANT)
+  // getPayoutDetails(@Param('id') id: string) {
+  //   return this.payoutMerchantService.getPayoutDetails(id);
+  // }
 
   @Post('verify-withdrawal-password')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MERCHANT)
