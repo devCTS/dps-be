@@ -16,6 +16,9 @@ import { SignInDto } from './dto/signin.dto';
 import { SignUpDto } from './dto/singup.dto';
 import { VerifyOtpDto } from './dto/verifyotp.dto';
 import { ForgotPasswordDto } from './dto/forgotPassword.dto';
+import { Role } from 'src/utils/enum/enum';
+import { RolesGuard } from 'src/utils/guard/roles.guard';
+import { Roles } from 'src/utils/decorators/roles.decorator';
 
 @Controller('identity')
 export class IdentityController {
@@ -46,27 +49,23 @@ export class IdentityController {
     return this.identityService.verifyOtpForForgotPassword(verifyOtpDto);
   }
 
-  @Get()
-  findAll() {
-    return this.identityService.findAll();
-  }
-
-  @Get('/:id')
-  findOne(@Param('id') id: string) {
-    return this.identityService.findOne(+id);
-  }
-
   @Put('current-balance/:id')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ALL)
   getCurrentBalance(@Param('id') id: string) {
     return this.identityService.getCurrentBalalnce(id);
   }
 
   @Put('user-details/current-balance/:id')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ALL)
   getUserCurrentBalance(@Param('id') id: string, @Body() body) {
     return this.identityService.getUserCurrentBalance(+id, body);
   }
 
   @Put('user-details/current-quota/:sendingMemberId')
+  @UseGuards(RolesGuard)
+  @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN, Role.MEMBER)
   getmemberCurrentQuotas(
     @Param('sendingMemberId') sendingMemberId: string,
     @Body() body,

@@ -204,6 +204,19 @@ export class AdminService {
   }
 
   async loadSuperAdmin() {
+    const superAdmin = await this.adminRepository.findOne({
+      where: {
+        identity: {
+          email: process.env.SUPER_ADMIN_EMAIL,
+        },
+      },
+      relations: ['identity'],
+    });
+
+    if (superAdmin)
+      throw new ConflictException(
+        'Default configurations are already created.',
+      );
     await this.create(getSuperAdminData());
   }
 
