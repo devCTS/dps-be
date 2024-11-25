@@ -28,7 +28,7 @@ export class MemberReferralController {
   }
 
   @Get()
-  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MEMBER)
+  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   @UseGuards(RolesGuard)
   findAll() {
     return this.memberReferralService.findAll();

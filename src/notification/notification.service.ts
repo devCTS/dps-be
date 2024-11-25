@@ -62,8 +62,11 @@ export class NotificationService {
     }));
   }
 
-  async markNotificationRead(markNotificationReadDto: MarkNotificationReadDto) {
-    const { id, notificationsIds } = markNotificationReadDto;
+  async markNotificationRead(
+    id,
+    markNotificationReadDto: MarkNotificationReadDto,
+  ) {
+    const { notificationsIds } = markNotificationReadDto;
     const member = await this.memberRepository.findOneBy({ id });
 
     if (!member) throw new NotFoundException('Member not found.');

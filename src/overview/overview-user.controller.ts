@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, UseGuards } from '@nestjs/common';
 import { OverviewUserService } from './overview-user.service';
 import { Roles } from 'src/utils/decorators/roles.decorator';
 import { Role } from 'src/utils/enum/enum';
