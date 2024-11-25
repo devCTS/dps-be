@@ -114,4 +114,5 @@ export enum Role {
   MERCHANT = 'merchant',
   SUB_MERCHANT = 'sub_merchant',
   agent = 'agent',
+  ALL = 'all',
 }

@@ -20,6 +20,8 @@ export class RolesGuard implements CanActivate {
 
     if (!requiredRoles) throw new ForbiddenException('User role is missing!');
 
+    if (requiredRoles.includes('all')) return true;
+
     const request = context.switchToHttp().getRequest();
     const token = request.headers.authorization;
 
