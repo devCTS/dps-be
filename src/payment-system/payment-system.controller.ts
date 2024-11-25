@@ -10,6 +10,7 @@ import {
   UnauthorizedException,
   Req,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { PaymentSystemService } from './payment-system.service';
@@ -21,9 +22,11 @@ import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { Repository } from 'typeorm';
 import { PayinService } from 'src/payin/payin.service';
 import { Payin } from 'src/payin/entities/payin.entity';
-import { ChannelName, OrderStatus } from 'src/utils/enum/enum';
+import { ChannelName, OrderStatus, Role } from 'src/utils/enum/enum';
 import { Config } from 'src/channel/entity/config.entity';
 import { GetPayPageDto } from './dto/getPayPage.dto';
+import { Roles } from 'src/utils/decorators/roles.decorator';
+import { RolesGuard } from 'src/utils/guard/roles.guard';
 
 @Controller('payment-system')
 export class PaymentSystemController {
@@ -39,6 +42,8 @@ export class PaymentSystemController {
   ) {}
 
   @Get('check-status/:transactionId/:userId')
+  @Roles(Role.ALL)
+  @UseGuards(RolesGuard)
   checkStatus(
     @Req() req: Request,
     @Res() res,
@@ -49,6 +54,8 @@ export class PaymentSystemController {
   }
 
   @Post('checkout/:integrationId')
+  @Roles(Role.ALL)
+  @UseGuards(RolesGuard)
   async getCheckout(
     @Param('integrationId') integrationId: string,
     @Body() body: { requestOrigin: string },
@@ -91,6 +98,8 @@ export class PaymentSystemController {
   }
 
   @Post('create-payment-order')
+  @Roles(Role.ALL)
+  @UseGuards(RolesGuard)
   async createPaymentOrder(
     @Body() createPaymentOrderDto: CreatePaymentOrderDto,
     @Res() response: Response,
@@ -99,6 +108,8 @@ export class PaymentSystemController {
   }
 
   @Get('member-channel/:payinOrderId')
+  @Roles(Role.ALL)
+  @UseGuards(RolesGuard)
   async getMemberChannelPage(@Param('payinOrderId') payinOrderId: string) {
     const payin = await this.payinRepository.findOne({
       where: { systemOrderId: payinOrderId },
@@ -162,6 +173,8 @@ export class PaymentSystemController {
   }
 
   @Get('status/:payinOrderId')
+  @Roles(Role.ALL)
+  @UseGuards(RolesGuard)
   async getPaymentStatus(@Param('payinOrderId') payinOrderId: string) {
     const payinOrder = await this.payinRepository.findOneBy({
       systemOrderId: payinOrderId,
@@ -178,6 +191,8 @@ export class PaymentSystemController {
   }
 
   @Post('submit-payment/:payinOrderId')
+  @Roles(Role.ALL)
+  @UseGuards(RolesGuard)
   async submitPayment(
     @Param('payinOrderId') payinOrderId: string,
     @Body() submitPaymentOrderDto: SubmitPaymentOrderDto,
@@ -191,21 +206,29 @@ export class PaymentSystemController {
   }
 
   @Post()
+  @Roles(Role.ALL)
+  @UseGuards(RolesGuard)
   getPayPage(@Body() getPayPageDto: GetPayPageDto) {
     return this.service.getPayPage(getPayPageDto);
   }
 
   @Post('razorpay/:orderId')
+  @Roles(Role.ALL)
+  @UseGuards(RolesGuard)
   getRazorPayOrderDetails(@Param('orderId') orderId: string) {
     return this.service.getOrderDetails(orderId);
   }
 
   @Post('razorpay-payment/verification')
+  @Roles(Role.ALL)
+  @UseGuards(RolesGuard)
   razorpayPaymentVerification(@Body() paymentData: any) {
     return this.service.paymentVerification(paymentData);
   }
 
   @Post('make-gateway-payout')
+  @Roles(Role.ALL)
+  @UseGuards(RolesGuard)
   makeGatewayPayout(@Body() body) {
     return this.service.makeGatewayPayout(body);
   }

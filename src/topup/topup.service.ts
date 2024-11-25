@@ -529,14 +529,6 @@ export class TopupService {
     return await this.topupRepository.findOneBy({ systemOrderId: id });
   }
 
-  update(id: number, updateTopupDto: UpdateTopupDto) {
-    return `This action updates a #${id} topup`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} topup`;
-  }
-
   formatChannelDetails = (value) => {
     if (value?.upiId)
       return {

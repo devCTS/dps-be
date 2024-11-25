@@ -584,12 +584,4 @@ export class PayoutService {
   async findOne(id: string) {
     return await this.payoutRepository.findOneBy({ systemOrderId: id });
   }
-
-  update(id: number, updatePayoutDto: UpdatePayoutDto) {
-    return `This action updates a #${id} payout`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} payout`;
-  }
 }

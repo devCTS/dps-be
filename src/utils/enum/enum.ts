@@ -113,6 +113,6 @@ export enum Role {
   MEMBER = 'member',
   MERCHANT = 'merchant',
   SUB_MERCHANT = 'sub_merchant',
-  agent = 'agent',
+  AGENT = 'agent',
   ALL = 'all',
 }
