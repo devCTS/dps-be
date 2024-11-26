@@ -9,20 +9,37 @@ import { RolesGuard } from 'src/utils/guard/roles.guard';
 import { Role } from 'src/utils/enum/enum';
 import { Roles } from 'src/utils/decorators/roles.decorator';
 import { UserInReq } from 'src/utils/decorators/user-in-req.decorator';
+import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Controller('fund-record')
 @UseGuards(RolesGuard)
 export class FundRecordController {
-  constructor(private readonly fundRecordService: FundRecordService) {}
+  constructor(
+    @InjectRepository(Submerchant)
+    private readonly submerchantRepository: Repository<Submerchant>,
+    private readonly fundRecordService: FundRecordService,
+  ) {}
 
   @Post('/paginate')
-  @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
+  @Roles(Role.ALL)
   async paginateFundRecords(
     @Body() paginateRequestBody: PaginateRequestDto,
     @UserInReq() user,
   ) {
+    let subMerchant = null;
     let email = user?.email;
-    if (!user.type?.includes('admin')) email = null;
+
+    if (user.type?.includes('admin')) email = null;
+
+    if (user?.type?.includes('SUB')) {
+      subMerchant = await this.submerchantRepository.findOne({
+        where: { id: user.id },
+        relations: ['merchant', 'merchant.identity'],
+      });
+      email = subMerchant.merchant.identity.email;
+    }
 
     return await this.fundRecordService.paginateFundRecords(
       paginateRequestBody,

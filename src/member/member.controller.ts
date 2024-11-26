@@ -111,19 +111,19 @@ export class MemberController {
     return this.memberService.changePassword(changePasswordDto, user.id);
   }
 
-  @Post('payouts/paginate')
-  @Roles(Role.MEMBER)
-  @UseGuards(RolesGuard)
-  paginatePayouts(@Body() paginateRequestDto: PaginateRequestDto) {
-    return this.payoutMemberService.paginate(paginateRequestDto);
-  }
+  // @Post('payouts/paginate')
+  // @Roles(Role.MEMBER)
+  // @UseGuards(RolesGuard)
+  // paginatePayouts(@Body() paginateRequestDto: PaginateRequestDto) {
+  //   return this.payoutMemberService.paginate(paginateRequestDto);
+  // }
 
-  @Get('payout/:id')
-  @Roles(Role.MEMBER)
-  @UseGuards(RolesGuard)
-  getPayoutDetails(@Param('id') id: string) {
-    return this.payoutMemberService.getPayoutDetails(id);
-  }
+  // @Get('payout/:id')
+  // @Roles(Role.MEMBER)
+  // @UseGuards(RolesGuard)
+  // getPayoutDetails(@Param('id') id: string) {
+  //   return this.payoutMemberService.getPayoutDetails(id);
+  // }
 
   @Post('verify-withdrawal-password')
   @Roles(Role.MEMBER)

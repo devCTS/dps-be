@@ -16,11 +16,15 @@ import { Roles } from 'src/utils/decorators/roles.decorator';
 import { RolesGuard } from 'src/utils/guard/roles.guard';
 import { Role } from 'src/utils/enum/enum';
 import { UserInReq } from 'src/utils/decorators/user-in-req.decorator';
+import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Controller('payin')
-@UseGuards(RolesGuard)
 export class PayinController {
   constructor(
+    @InjectRepository(Submerchant)
+    private readonly submerchantRepository: Repository<Submerchant>,
     private payinAdminService: PayinAdminService,
     private payinMemberService: PayinMemberService,
     private payinMerchantService: PayinMerchantService,
@@ -28,31 +32,45 @@ export class PayinController {
   ) {}
 
   @Post()
-  @Roles(Role.ALL)
   create(@Body() createPayinDto) {
     return this.payinService.create(createPayinDto);
   }
 
   @Post('admin/paginate')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
+  @UseGuards(RolesGuard)
   adminPayins(@Body() paginateRequestDto: PaginateRequestDto) {
     return this.payinAdminService.paginatePayins(paginateRequestDto);
   }
 
   @Post('merchant/paginate')
   @Roles(Role.MERCHANT, Role.SUB_MERCHANT)
-  merchantPayins(
+  @UseGuards(RolesGuard)
+  async merchantPayins(
     @UserInReq() user,
     @Body() paginateRequestDto: PaginateRequestDto,
   ) {
+    const isSubMerchant = user?.type?.includes('SUB');
+
+    let subMerchant = null;
+
+    if (isSubMerchant)
+      subMerchant = await this.submerchantRepository.findOne({
+        where: { id: user.id },
+        relations: ['merchant'],
+      });
+
+    const merchantId = subMerchant ? subMerchant.merchant.id : user.id;
+
     return this.payinMerchantService.paginatePayins(
-      user.id,
+      +merchantId,
       paginateRequestDto,
     );
   }
 
   @Post('member/paginate')
   @Roles(Role.MEMBER)
+  @UseGuards(RolesGuard)
   memberPayins(
     @UserInReq() user,
     @Body() paginateRequestDto: PaginateRequestDto,
@@ -62,54 +80,55 @@ export class PayinController {
 
   @Get()
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
+  @UseGuards(RolesGuard)
   getAllPayins() {
     return this.payinService.findAll();
   }
 
   @Get('admin/:id')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
+  @UseGuards(RolesGuard)
   getPayinOrderDetailsAdmin(@Param('id') id: string) {
     return this.payinAdminService.getPayinDetails(id);
   }
 
   @Get('merchant/:id')
   @Roles(Role.MERCHANT)
+  @UseGuards(RolesGuard)
   getPayinOrderDetailsMerchant(@Param('id') id: string) {
     return this.payinMerchantService.getPayinDetails(id);
   }
 
   @Get('member/:id')
   @Roles(Role.MEMBER)
+  @UseGuards(RolesGuard)
   getPayinOrderDetailsMember(@Param('id') id: string) {
     return this.payinMemberService.getPayinDetails(id);
   }
 
   @Post('update-status-assigned')
-  @Roles(Role.ALL)
   updatePayinStatusToAssigned(@Body() body) {
     return this.payinService.updatePayinStatusToAssigned(body);
   }
 
   @Post('update-status-complete')
-  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
+  // @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
+  // @UseGuards(RolesGuard)
   updatePayinStatusToCompleted(@Body() body) {
     return this.payinService.updatePayinStatusToComplete(body);
   }
 
   @Post('update-status-failed')
-  @Roles(Role.ALL)
   updatePayinStatusToFailed(@Body() body) {
     return this.payinService.updatePayinStatusToFailed(body);
   }
 
   @Post('update-status-submitted')
-  @Roles(Role.ALL)
   updatePayinStatusToSubmitted(@Body() body) {
     return this.payinService.updatePayinStatusToSubmitted(body);
   }
 
   @Put('success-callback/:id')
-  @Roles(Role.ALL)
   handleCallbackStatusSuccess(@Param('id') id: string) {
     return this.payinService.handleCallbackStatusSuccess(id);
   }

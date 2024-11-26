@@ -65,7 +65,10 @@ export class WithdrawalAgentService {
     };
   }
 
-  async paginateWithdrawals(paginateRequestDto: PaginateRequestDto) {
+  async paginateWithdrawals(
+    paginateRequestDto: PaginateRequestDto,
+    userId: number,
+  ) {
     const {
       search,
       pageSize,
@@ -74,7 +77,7 @@ export class WithdrawalAgentService {
       endDate,
       sortBy,
       forBulletin,
-      userId,
+      // userId,
     } = paginateRequestDto;
 
     const skip = (pageNumber - 1) * pageSize;

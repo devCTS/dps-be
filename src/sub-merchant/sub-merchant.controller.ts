@@ -18,31 +18,37 @@ import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 import { Roles } from 'src/utils/decorators/roles.decorator';
 import { Role } from 'src/utils/enum/enum';
 import { RolesGuard } from 'src/utils/guard/roles.guard';
+import { UserInReq } from 'src/utils/decorators/user-in-req.decorator';
+import { Repository } from 'typeorm';
+import { Submerchant } from './entities/sub-merchant.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Controller('sub-merchant')
 export class SubMerchantController {
   constructor(
+    @InjectRepository(Submerchant)
+    private readonly submerchantRepository: Repository<Submerchant>,
     private readonly subMerchantService: SubMerchantService,
     private identityService: IdentityService,
   ) {}
 
+  // @Get()
+  // findAll() {
+  //   return this.subMerchantService.findAll();
+  // }
+
+  // @Get('profile/:id')
+  // @Roles(Role.MERCHANT, Role.SUPER_ADMIN, Role.SUPER_ADMIN, Role.SUB_MERCHANT)
+  // @UseGuards(RolesGuard)
+  // getProfile(@Param('id', ParseIntPipe) id: number) {
+  //   return this.subMerchantService.getProfile(id);
+  // }
+
   @Get()
-  findAll() {
-    return this.subMerchantService.findAll();
-  }
-
-  @Get('profile/:id')
-  @Roles(Role.MERCHANT, Role.SUPER_ADMIN, Role.SUPER_ADMIN, Role.SUB_MERCHANT)
+  @Roles(Role.MERCHANT, Role.SUB_MERCHANT)
   @UseGuards(RolesGuard)
-  getProfile(@Param('id', ParseIntPipe) id: number) {
-    return this.subMerchantService.getProfile(id);
-  }
-
-  @Get(':id')
-  @Roles(Role.MERCHANT, Role.SUPER_ADMIN, Role.SUPER_ADMIN, Role.SUB_MERCHANT)
-  @UseGuards(RolesGuard)
-  findOne(@Param('id') id: number) {
-    return this.subMerchantService.findOne(+id);
+  findOne(@UserInReq() user) {
+    return this.subMerchantService.findOne(+user.id);
   }
 
   @Patch(':id')
@@ -62,14 +68,26 @@ export class SubMerchantController {
     return this.subMerchantService.remove(+id);
   }
 
-  @Post(':merchantId/paginate')
-  @Roles(Role.MERCHANT, Role.SUPER_ADMIN, Role.SUPER_ADMIN, Role.SUB_MERCHANT)
+  @Post('paginate')
+  @Roles(Role.MERCHANT, Role.SUB_MERCHANT)
   @UseGuards(RolesGuard)
-  paginate(
-    @Param('merchantId') id: number,
+  async paginate(
+    @UserInReq() user,
     @Body() paginateRequestDto: PaginateRequestDto,
   ) {
-    return this.subMerchantService.paginate(id, paginateRequestDto);
+    const isSubMerchant = user?.type?.includes('SUB');
+
+    let subMerchant = null;
+
+    if (isSubMerchant)
+      subMerchant = await this.submerchantRepository.findOne({
+        where: { id: user.id },
+        relations: ['merchant'],
+      });
+
+    const merchantId = subMerchant ? subMerchant.merchant.id : user.id;
+
+    return this.subMerchantService.paginate(+merchantId, paginateRequestDto);
   }
 
   @Post(':merchantId')

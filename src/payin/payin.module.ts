@@ -20,6 +20,7 @@ import { Member } from 'src/member/entities/member.entity';
 import { AgentModule } from 'src/agent/agent.module';
 import { FundRecordModule } from 'src/fund-record/fund-record.module';
 import { NotificationModule } from 'src/notification/notification.module';
+import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { NotificationModule } from 'src/notification/notification.module';
       Merchant,
       TransactionUpdate,
       Member,
+      Submerchant,
     ]),
     TransactionUpdatesModule,
     EndUserModule,

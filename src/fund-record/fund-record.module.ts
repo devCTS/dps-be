@@ -11,6 +11,7 @@ import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { MerchantModule } from 'src/merchant/merchant.module';
 import { Agent } from 'src/agent/entities/agent.entity';
 import { FundRecord } from './entities/fund-record.entity';
+import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { FundRecord } from './entities/fund-record.entity';
       Member,
       Merchant,
       Agent,
+      Submerchant,
     ]),
     MemberModule,
     AgentModule,

@@ -19,6 +19,7 @@ import {
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
 import { roundOffAmount } from 'src/utils/utils';
+import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
 
 @Injectable()
 export class PayinMerchantService {

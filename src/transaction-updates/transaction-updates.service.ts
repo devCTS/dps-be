@@ -28,14 +28,17 @@ export class TransactionUpdatesService {
     private readonly topupRepository: Repository<Topup>,
   ) {}
 
-  async paginateCommissionsAndProfits(paginateRequestDto: PaginateRequestDto) {
+  async paginateCommissionsAndProfits(
+    paginateRequestDto: PaginateRequestDto,
+    userEmail,
+  ) {
     const {
       startDate,
       endDate,
       search,
       pageNumber,
       pageSize,
-      userEmail,
+      // userEmail,
       sortBy,
     } = paginateRequestDto;
 

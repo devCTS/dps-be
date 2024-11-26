@@ -10,7 +10,7 @@ import { JwtModule } from 'src/services/jwt/jwt.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Submerchant, Merchant]),
+    TypeOrmModule.forFeature([Submerchant, Merchant, Submerchant]),
     IdentityModule,
     MerchantModule,
     JwtModule,

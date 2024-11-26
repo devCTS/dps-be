@@ -31,25 +31,4 @@ export class UploadController {
   ) {
     return this.uploadService.upload(file, payinOrderId);
   }
-
-  @Get()
-  @Roles(Role.ALL)
-  @UseGuards(RolesGuard)
-  findAll() {
-    return this.uploadService.findAll();
-  }
-
-  @Get(':id')
-  @Roles(Role.ALL)
-  @UseGuards(RolesGuard)
-  findOne(@Param('id') id: string) {
-    return this.uploadService.findOne(+id);
-  }
-
-  @Delete(':id')
-  @Roles(Role.ALL)
-  @UseGuards(RolesGuard)
-  remove(@Param('id') id: string) {
-    return this.uploadService.remove(+id);
-  }
 }

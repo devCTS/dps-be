@@ -16,6 +16,7 @@ import { Topup } from 'src/topup/entities/topup.entity';
 import { OverviewAdminController } from './overview-admin.controller';
 import { SystemConfigModule } from 'src/system-config/system-config.module';
 import { SystemConfigService } from 'src/system-config/system-config.service';
+import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { SystemConfigService } from 'src/system-config/system-config.service';
       Payin,
       Payout,
       Topup,
+      Submerchant,
     ]),
     SystemConfigModule,
   ],

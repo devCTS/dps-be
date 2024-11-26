@@ -19,10 +19,18 @@ import { ForgotPasswordDto } from './dto/forgotPassword.dto';
 import { Role } from 'src/utils/enum/enum';
 import { RolesGuard } from 'src/utils/guard/roles.guard';
 import { Roles } from 'src/utils/decorators/roles.decorator';
+import { UserInReq } from 'src/utils/decorators/user-in-req.decorator';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
+import { Repository } from 'typeorm';
 
 @Controller('identity')
 export class IdentityController {
-  constructor(private readonly identityService: IdentityService) {}
+  constructor(
+    @InjectRepository(Submerchant)
+    private readonly submerchantRepository: Repository<Submerchant>,
+    private readonly identityService: IdentityService,
+  ) {}
 
   @Post('sign-in')
   async signIn(@Body() signinDto: SignInDto) {
@@ -49,11 +57,25 @@ export class IdentityController {
     return this.identityService.verifyOtpForForgotPassword(verifyOtpDto);
   }
 
-  @Put('current-balance/:id')
+  @Put('current-balance')
   @UseGuards(RolesGuard)
   @Roles(Role.ALL)
-  getCurrentBalance(@Param('id') id: string) {
-    return this.identityService.getCurrentBalalnce(id);
+  async getCurrentBalance(@UserInReq() user) {
+    const isSubMerchant = user?.type?.includes('SUB');
+
+    let subMerchant = null;
+
+    if (isSubMerchant)
+      subMerchant = await this.submerchantRepository.findOne({
+        where: { id: user.id },
+        relations: ['merchant', 'merchant.identity'],
+      });
+
+    const userEmail = subMerchant
+      ? subMerchant.merchant.identity.email
+      : user.emil;
+
+    return this.identityService.getCurrentBalalnce(userEmail);
   }
 
   @Put('user-details/current-balance/:id')

@@ -6,6 +6,7 @@ import { Member } from 'src/member/entities/member.entity';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { Payin } from 'src/payin/entities/payin.entity';
 import { Payout } from 'src/payout/entities/payout.entity';
+import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
 import { Topup } from 'src/topup/entities/topup.entity';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import {
@@ -25,6 +26,8 @@ export class OverviewUserService {
     private readonly agentRepository: Repository<Agent>,
     @InjectRepository(Merchant)
     private readonly merchantRepository: Repository<Merchant>,
+    @InjectRepository(Submerchant)
+    private readonly submerchantRepository: Repository<Submerchant>,
     @InjectRepository(Member)
     private readonly memberRepository: Repository<Member>,
     @InjectRepository(Payin)

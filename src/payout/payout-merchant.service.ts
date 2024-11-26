@@ -33,7 +33,11 @@ export class PayoutMerchantService {
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
   ) {}
 
-  async paginate(paginateRequestDto: PaginateRequestDto, showPending = false) {
+  async paginate(
+    paginateRequestDto: PaginateRequestDto,
+    userId,
+    showPending = false,
+  ) {
     const {
       search,
       pageSize,
@@ -41,7 +45,7 @@ export class PayoutMerchantService {
       startDate,
       endDate,
       sortBy,
-      userId,
+      // userId,
       forBulletin,
     } = paginateRequestDto;
 
@@ -139,9 +143,17 @@ export class PayoutMerchantService {
   async paginateMerchantUsers(
     paginateRequestDto: PaginateRequestDto,
     searchSuggestion: string,
+    userId: number,
   ) {
-    const { search, pageSize, pageNumber, startDate, endDate, sortBy, userId } =
-      paginateRequestDto;
+    const {
+      search,
+      pageSize,
+      pageNumber,
+      startDate,
+      endDate,
+      sortBy,
+      //  userId
+    } = paginateRequestDto;
 
     const skip = (pageNumber - 1) * pageSize;
     const take = pageSize;

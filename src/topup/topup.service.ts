@@ -521,10 +521,6 @@ export class TopupService {
     return HttpStatus.OK;
   }
 
-  findAll() {
-    return `This action returns all topup`;
-  }
-
   async findOne(id: string) {
     return await this.topupRepository.findOneBy({ systemOrderId: id });
   }

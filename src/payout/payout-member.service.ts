@@ -28,7 +28,11 @@ export class PayoutMemberService {
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
   ) {}
 
-  async paginate(paginateRequestDto: PaginateRequestDto, showPending = false) {
+  async paginate(
+    paginateRequestDto: PaginateRequestDto,
+    userId,
+    showPending = false,
+  ) {
     const {
       search,
       pageSize,
@@ -36,7 +40,7 @@ export class PayoutMemberService {
       startDate,
       endDate,
       sortBy,
-      userId,
+      // userId,
       forBulletin,
       forPendingOrder,
     } = paginateRequestDto;

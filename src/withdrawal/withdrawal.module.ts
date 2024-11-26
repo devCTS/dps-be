@@ -22,6 +22,7 @@ import { PaymentSystemModule } from 'src/payment-system/payment-system.module';
 import { ChannelSettings } from 'src/gateway/entities/channel-settings.entity';
 import { FundRecordModule } from 'src/fund-record/fund-record.module';
 import { AlertModule } from 'src/alert/alert.module';
+import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { AlertModule } from 'src/alert/alert.module';
       Identity,
       TransactionUpdate,
       ChannelSettings,
+      Submerchant,
     ]),
     IdentityModule,
     TransactionUpdatesModule,

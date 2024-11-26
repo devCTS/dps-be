@@ -22,13 +22,13 @@ export class AlertController {
   constructor(private alertService: AlertService) {}
 
   @Post('create')
-  @Roles(Role.ALL)
+  @Roles(Role.MERCHANT, Role.MEMBER, Role.AGENT)
   create(@Body() alertCreateDto: AlertCreateDto) {
     return this.alertService.create(alertCreateDto);
   }
 
   @Post()
-  @Roles(Role.ALL)
+  @Roles(Role.MERCHANT, Role.MEMBER, Role.AGENT)
   getMyAlerts(@UserInReq() user, @Body() body: { userType: Users }) {
     return this.alertService.getMyAlerts({
       id: user.id,
@@ -37,7 +37,7 @@ export class AlertController {
   }
 
   @Put('mark-read')
-  @Roles(Role.ALL)
+  @Roles(Role.MERCHANT, Role.MEMBER, Role.AGENT)
   markAlertRead(@Body() body: { alertId: number }) {
     return this.alertService.markAlertRead(body.alertId);
   }

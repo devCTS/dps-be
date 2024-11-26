@@ -20,6 +20,7 @@ import { PaymentSystemModule } from 'src/payment-system/payment-system.module';
 import { FundRecordModule } from 'src/fund-record/fund-record.module';
 import { NotificationModule } from 'src/notification/notification.module';
 import { AlertModule } from 'src/alert/alert.module';
+import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { AlertModule } from 'src/alert/alert.module';
       Merchant,
       Member,
       TransactionUpdate,
+      Submerchant,
     ]),
     TransactionUpdatesModule,
     EndUserModule,

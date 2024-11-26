@@ -15,9 +15,16 @@ export class TransactionUpdatesController {
   @Post('commissions/paginate')
   @Roles(Role.ALL)
   @UseGuards(RolesGuard)
-  allCommissions(@Body() paginateRequestDto: PaginateRequestDto) {
+  allCommissions(
+    @Body() paginateRequestDto: PaginateRequestDto,
+    @UserInReq() user,
+  ) {
+    let email = user?.email;
+    if (user.type?.includes('admin')) email = null;
+
     return this.transactionUpdatesService.paginateCommissionsAndProfits(
       paginateRequestDto,
+      email,
     );
   }
 }

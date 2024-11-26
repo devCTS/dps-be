@@ -17,10 +17,17 @@ import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
 import { Roles } from 'src/utils/decorators/roles.decorator';
 import { Role } from 'src/utils/enum/enum';
 import { RolesGuard } from 'src/utils/guard/roles.guard';
+import { UserInReq } from 'src/utils/decorators/user-in-req.decorator';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
+import { Repository } from 'typeorm';
 
 @Controller('payout')
 export class PayoutController {
   constructor(
+    @InjectRepository(Submerchant)
+    private readonly submerchantRepository: Repository<Submerchant>,
+
     private readonly payoutService: PayoutService,
     private readonly payoutAdminService: PayoutAdminService,
     private readonly payoutMemberService: PayoutMemberService,
@@ -28,21 +35,26 @@ export class PayoutController {
   ) {}
 
   @Post()
-  @Roles(Role.MERCHANT)
+  @Roles(Role.MERCHANT, Role.SUB_MERCHANT)
   @UseGuards(RolesGuard)
-  create(@Body() createPayoutDto: CreatePayoutDto) {
-    return this.payoutService.create(createPayoutDto);
-  }
+  async create(@Body() createPayoutDto: CreatePayoutDto, @UserInReq() user) {
+    const isSubMerchant = user?.type?.includes('SUB');
 
-  @Get()
-  @Roles(Role.SUB_ADMIN, Role.SUB_ADMIN)
-  @UseGuards(RolesGuard)
-  findAll() {
-    return this.payoutService.findAll();
+    let subMerchant = null;
+
+    if (isSubMerchant)
+      subMerchant = await this.submerchantRepository.findOne({
+        where: { id: user.id },
+        relations: ['merchant'],
+      });
+
+    const merchantId = subMerchant ? subMerchant.merchant.id : user.id;
+
+    return this.payoutService.create(createPayoutDto, merchantId);
   }
 
   @Get(':id')
-  @Roles(Role.ALL)
+  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   @UseGuards(RolesGuard)
   findOne(@Param('id') id: string) {
     return this.payoutService.findOne(id);
@@ -56,30 +68,62 @@ export class PayoutController {
   }
 
   @Post('merchant/paginate')
-  @Roles(Role.MERCHANT, Role.SUPER_ADMIN, Role.SUPER_ADMIN)
+  @Roles(Role.MERCHANT, Role.SUB_MERCHANT)
   @UseGuards(RolesGuard)
-  merchantPayouts(@Body() paginateRequestDto: PaginateRequestDto) {
-    return this.payoutMerchantService.paginate(paginateRequestDto);
+  async merchantPayouts(
+    @Body() paginateRequestDto: PaginateRequestDto,
+    @UserInReq() user,
+  ) {
+    const isSubMerchant = user?.type?.includes('SUB');
+
+    let subMerchant = null;
+
+    if (isSubMerchant)
+      subMerchant = await this.submerchantRepository.findOne({
+        where: { id: user.id },
+        relations: ['merchant'],
+      });
+
+    const merchantId = subMerchant ? subMerchant.merchant.id : user.id;
+
+    return this.payoutMerchantService.paginate(paginateRequestDto, +merchantId);
   }
 
   @Post('merchant-user/paginate')
-  @Roles(Role.MERCHANT)
+  @Roles(Role.MERCHANT, Role.SUB_MERCHANT)
   @UseGuards(RolesGuard)
-  merchantUserPayouts(
+  async merchantUserPayouts(
     @Body() paginateRequestDto: PaginateRequestDto,
     @Query('searchSuggestion') searchSuggestion: any,
+    @UserInReq() user,
   ) {
+    const isSubMerchant = user?.type?.includes('SUB');
+
+    let subMerchant = null;
+
+    if (isSubMerchant)
+      subMerchant = await this.submerchantRepository.findOne({
+        where: { id: user.id },
+        relations: ['merchant'],
+      });
+
+    const merchantId = subMerchant ? subMerchant.merchant.id : user.id;
+
     return this.payoutMerchantService.paginateMerchantUsers(
       paginateRequestDto,
       searchSuggestion,
+      +merchantId,
     );
   }
 
   @Post('member/paginate')
-  @Roles(Role.MEMBER, Role.SUPER_ADMIN, Role.SUPER_ADMIN)
+  @Roles(Role.MEMBER)
   @UseGuards(RolesGuard)
-  memberPayouts(@Body() paginateRequestDto: PaginateRequestDto) {
-    return this.payoutMemberService.paginate(paginateRequestDto);
+  memberPayouts(
+    @Body() paginateRequestDto: PaginateRequestDto,
+    @UserInReq() user,
+  ) {
+    return this.payoutMemberService.paginate(paginateRequestDto, user.id);
   }
 
   @Get('admin/:id')
@@ -90,7 +134,7 @@ export class PayoutController {
   }
 
   @Get('merchant/:id')
-  @Roles(Role.MERCHANT)
+  @Roles(Role.MERCHANT, Role.SUB_MERCHANT)
   @UseGuards(RolesGuard)
   getPayoutOrderDetailsMerchant(@Param('id') id: string) {
     return this.payoutMerchantService.getPayoutDetails(id);
@@ -104,7 +148,7 @@ export class PayoutController {
   }
 
   @Post('update-status-assigned')
-  @Roles(Role.ALL)
+  @Roles(Role.MEMBER)
   @UseGuards(RolesGuard)
   updatePayoutStatusToAssigned(@Body() body) {
     return this.payoutService.updatePayoutStatusToAssigned(body);
@@ -118,22 +162,20 @@ export class PayoutController {
   }
 
   @Post('update-status-failed')
-  @Roles(Role.ALL)
+  @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
   @UseGuards(RolesGuard)
   updatePayoutStatusToFailed(@Body() body) {
     return this.payoutService.updatePayoutStatusToFailed(body);
   }
 
   @Post('update-status-submitted')
-  @Roles(Role.ALL)
+  @Roles(Role.MEMBER)
   @UseGuards(RolesGuard)
   updatePayoutStatusToSubmitted(@Body() body) {
     return this.payoutService.updatePayoutStatusToSubmitted(body);
   }
 
   @Put('success-notification/:id')
-  @Roles(Role.ALL)
-  @UseGuards(RolesGuard)
   handleNotificationStatusSuccess(@Param('id') id: string) {
     return this.payoutService.handleNotificationStatusSuccess(id);
   }

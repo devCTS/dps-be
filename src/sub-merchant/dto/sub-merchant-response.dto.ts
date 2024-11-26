@@ -27,34 +27,32 @@ export class SubMerchantResponseDto {
   id: number;
 
   @Expose()
-  @IsBoolean()
   enabled: boolean;
 
   @Expose()
-  @DateFormat()
   createdAt: Date;
 
   @Expose()
-  @DateFormat()
   updatedAt: Date;
 
   @Expose()
-  @IsBoolean()
   permissionSubmitPayouts: boolean;
 
   @Expose()
-  @IsBoolean()
   permissionSubmitWithdrawals: boolean;
 
   @Expose()
-  @IsBoolean()
   permissionUpdateWithdrawalProfiles: boolean;
 
-  @IsString()
-  @IsNotEmpty()
+  @Expose()
+  @Transform(({ obj }) => obj.merchantName, {
+    toClassOnly: true,
+  })
   merchantName: string;
 
-  @IsString()
-  @IsNotEmpty()
+  @Expose()
+  @Transform(({ obj }) => obj.businessName, {
+    toClassOnly: true,
+  })
   businessName: string;
 }

@@ -26,11 +26,11 @@ export class BulletinService {
     };
 
     const topupOrders: any[] = (
-      await this.topupMemberService.paginate(dto)
+      await this.topupMemberService.paginate(dto, userId)
     ).data.map((order) => ({ ...order, type: 'topup' }));
 
     const payoutOrders: any[] = (
-      await this.payoutMemberService.paginate(dto)
+      await this.payoutMemberService.paginate(dto, userId)
     ).data.map((order) => ({ ...order, type: 'payout' }));
 
     const allOrders: any[] = [...topupOrders, ...payoutOrders];
@@ -59,11 +59,11 @@ export class BulletinService {
     ).data.map((order) => ({ ...order, type: 'payin' }));
 
     const topupOrders: any[] = (
-      await this.topupMemberService.paginate(dto)
+      await this.topupMemberService.paginate(dto, userId)
     ).data.map((order) => ({ ...order, type: 'topup' }));
 
     const payoutOrders: any[] = (
-      await this.payoutMemberService.paginate(dto)
+      await this.payoutMemberService.paginate(dto, userId)
     ).data.map((order) => ({ ...order, type: 'payout' }));
 
     const allOrders: any[] = [...payinOrders, ...topupOrders, ...payoutOrders];

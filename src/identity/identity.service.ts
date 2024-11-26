@@ -12,7 +12,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Identity } from './entities/identity.entity';
 import { In, Repository } from 'typeorm';
 import { SignInDto } from './dto/signin.dto';
-import { extractToken, generateRandomOTP, verifyToken } from 'src/utils/utils';
+import {
+  extractToken,
+  generateRandomOTP,
+  roundOffAmount,
+  verifyToken,
+} from 'src/utils/utils';
 import { SignUpDto } from './dto/singup.dto';
 import { VerifyOtpDto } from './dto/verifyotp.dto';
 import { ForgotPasswordDto } from './dto/forgotPassword.dto';
@@ -361,10 +366,10 @@ export class IdentityService {
     let outstandingBalance = 0;
     let currentBalance = 0;
 
-    if (identity.member) currentBalance = identity.member.balance;
-    if (identity.agent) currentBalance = identity.agent.balance;
+    if (identity?.member) currentBalance = identity.member.balance;
+    if (identity?.agent) currentBalance = identity.agent.balance;
 
-    if (identity.merchant) {
+    if (identity?.merchant) {
       currentBalance = identity.merchant.balance;
       const pendingBalancePayoutRows = await this.payoutRepository.find({
         where: {
@@ -393,7 +398,7 @@ export class IdentityService {
       outstandingBalance +
       pendingBalanceWithdrawalRows.reduce((acc, curr) => acc + curr.amount, 0);
 
-    return currentBalance - outstandingBalance;
+    return roundOffAmount(currentBalance - outstandingBalance);
   }
 
   //   async getUserIdByIdentity(identityId) {
@@ -463,7 +468,7 @@ export class IdentityService {
 
     if (!user) throw new NotFoundException('User not found!');
 
-    return user.balance;
+    return roundOffAmount(user.balance);
   }
 
   async getMembersQuota(sendingMemberId, body) {
@@ -483,8 +488,8 @@ export class IdentityService {
       throw new NotFoundException('Receiving member not found!');
 
     return {
-      sendingMemberQuota: sendingMember.quota,
-      receivingMemberQuota: receivingMember.quota,
+      sendingMemberQuota: roundOffAmount(sendingMember.quota),
+      receivingMemberQuota: roundOffAmount(receivingMember.quota),
     };
   }
 }

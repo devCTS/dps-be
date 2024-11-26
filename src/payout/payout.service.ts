@@ -69,9 +69,15 @@ export class PayoutService {
     private readonly alertService: AlertService,
   ) {}
 
-  async create(payoutDetails: CreatePayoutDto) {
-    const { name, email, merchantId, channelDetails, channel, mobile } =
-      payoutDetails;
+  async create(payoutDetails: CreatePayoutDto, merchantId: number) {
+    const {
+      name,
+      email,
+      // merchantId,
+      channelDetails,
+      channel,
+      mobile,
+    } = payoutDetails;
 
     // let endUserData = await this.endUserRepository.findOneBy({ email });
 
@@ -575,10 +581,6 @@ export class PayoutService {
     });
 
     return HttpStatus.OK;
-  }
-
-  findAll() {
-    return `This action returns all payout`;
   }
 
   async findOne(id: string) {

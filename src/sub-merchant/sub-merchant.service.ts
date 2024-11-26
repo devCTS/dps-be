@@ -79,8 +79,13 @@ export class SubMerchantService {
     const businessName = result.merchant.businessName;
     const merchantName = `${result.merchant.firstName} ${result.merchant.lastName}`;
 
-    const data = plainToInstance(SubMerchantResponseDto, result);
-    return { ...data, businessName, merchantName };
+    const resultDto = {
+      ...result,
+      businessName,
+      merchantName,
+    };
+
+    return plainToInstance(SubMerchantResponseDto, resultDto);
   }
 
   async update(

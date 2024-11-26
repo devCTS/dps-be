@@ -3,21 +3,19 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
-  Delete,
   Put,
   UseGuards,
 } from '@nestjs/common';
 import { TopupService } from './topup.service';
 import { CreateTopupDto } from './dto/create-topup.dto';
-import { UpdateTopupDto } from './dto/update-topup.dto';
 import { TopupAdminService } from './topup-admin.service';
 import { TopupMemberService } from './topup-member.service';
 import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
 import { Roles } from 'src/utils/decorators/roles.decorator';
 import { Role } from 'src/utils/enum/enum';
 import { RolesGuard } from 'src/utils/guard/roles.guard';
+import { UserInReq } from 'src/utils/decorators/user-in-req.decorator';
 
 @Controller('topup')
 export class TopupController {
@@ -28,21 +26,12 @@ export class TopupController {
   ) {}
 
   @Post()
-  @Roles(Role.ALL)
-  @UseGuards(RolesGuard)
   create(@Body() createTopupDto: CreateTopupDto) {
     return this.topupService.create(createTopupDto);
   }
 
-  @Get()
-  @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
-  @UseGuards(RolesGuard)
-  findAll() {
-    return this.topupService.findAll();
-  }
-
   @Get('current-topup-details')
-  @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN, Role.MEMBER)
+  @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
   @UseGuards(RolesGuard)
   getCurrentTopupDetails() {
     return this.topupService.getCurrentTopupDetails();
@@ -63,10 +52,13 @@ export class TopupController {
   }
 
   @Post('member/paginate')
-  @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN, Role.MEMBER)
+  @Roles(Role.MEMBER)
   @UseGuards(RolesGuard)
-  memberPayins(@Body() paginateRequestDto: PaginateRequestDto) {
-    return this.topupMemberService.paginate(paginateRequestDto);
+  memberPayins(
+    @Body() paginateRequestDto: PaginateRequestDto,
+    @UserInReq() user,
+  ) {
+    return this.topupMemberService.paginate(paginateRequestDto, +user.id);
   }
 
   @Get('admin/:id')
@@ -77,7 +69,7 @@ export class TopupController {
   }
 
   @Get('member/:id')
-  @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN, Role.MEMBER)
+  @Roles(Role.MEMBER)
   @UseGuards(RolesGuard)
   getPayinOrderDetailsMember(@Param('id') id: string) {
     return this.topupMemberService.getTopupDetails(id);
@@ -112,8 +104,6 @@ export class TopupController {
   }
 
   @Put('success-notification/:id')
-  @Roles(Role.ALL)
-  @UseGuards(RolesGuard)
   handleNotificationStatusSuccess(@Param('id') id: string) {
     return this.topupService.handleNotificationStatusSuccess(id);
   }
