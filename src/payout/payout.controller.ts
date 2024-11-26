@@ -176,6 +176,8 @@ export class PayoutController {
   }
 
   @Put('success-notification/:id')
+  @Roles(Role.AGENT, Role.MERCHANT, Role.MEMBER)
+  @UseGuards(RolesGuard)
   handleNotificationStatusSuccess(@Param('id') id: string) {
     return this.payoutService.handleNotificationStatusSuccess(id);
   }

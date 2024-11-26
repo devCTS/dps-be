@@ -35,7 +35,7 @@ export class WithdrawalController {
   ) {}
 
   @Post()
-  @Roles(Role.MERCHANT, Role.AGENT, Role.MEMBER)
+  @Roles(Role.MERCHANT, Role.AGENT, Role.MEMBER, Role.SUB_MERCHANT)
   @UseGuards(RolesGuard)
   create(@Body() createWithdrawalDto: CreateWithdrawalDto) {
     return this.withdrawalService.create(createWithdrawalDto);
@@ -101,7 +101,7 @@ export class WithdrawalController {
   }
 
   @Get('merchant/:id')
-  @Roles(Role.MERCHANT)
+  @Roles(Role.MERCHANT, Role.SUB_MERCHANT)
   @UseGuards(RolesGuard)
   getOrderDetailsForMerchant(@Param('id') id: string) {
     return this.withdrawalMerchantService.getOrderDetails(id);
@@ -135,10 +135,22 @@ export class WithdrawalController {
   }
 
   @Get('merchant-channel-details')
-  @Roles(Role.MERCHANT)
+  @Roles(Role.MERCHANT, Role.SUB_MERCHANT)
   @UseGuards(RolesGuard)
-  getChannelProfileDetailsForMerchant(@UserInReq() user) {
-    return this.withdrawalMerchantService.getChannelProfileDetails(+user.id);
+  async getChannelProfileDetailsForMerchant(@UserInReq() user) {
+    const isSubMerchant = user?.type?.includes('SUB');
+
+    let subMerchant = null;
+
+    if (isSubMerchant)
+      subMerchant = await this.submerchantRepository.findOne({
+        where: { id: user.id },
+        relations: ['merchant'],
+      });
+
+    const merchantId = subMerchant ? subMerchant.merchant.id : user.id;
+
+    return this.withdrawalMerchantService.getChannelProfileDetails(+merchantId);
   }
 
   @Get('agent-channel-details/:id')
@@ -173,6 +185,8 @@ export class WithdrawalController {
   }
 
   @Put('success-notification/:id')
+  @Roles(Role.AGENT, Role.MERCHANT, Role.MEMBER)
+  @UseGuards(RolesGuard)
   handleNotificationStatusSuccess(@Param('id') id: string) {
     return this.withdrawalService.handleNotificationStatusSuccess(id);
   }
