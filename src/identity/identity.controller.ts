@@ -10,6 +10,7 @@ import {
   UseGuards,
   Req,
   Put,
+  Request,
 } from '@nestjs/common';
 import { IdentityService } from './identity.service';
 import { SignInDto } from './dto/signin.dto';
@@ -33,8 +34,9 @@ export class IdentityController {
   ) {}
 
   @Post('sign-in')
-  async signIn(@Body() signinDto: SignInDto) {
-    return await this.identityService.signin(signinDto);
+  async signIn(@Request() request, @Body() signinDto: SignInDto) {
+    const clientIp = request.connection.remoteAddress.substring(7);
+    return await this.identityService.signin(signinDto, clientIp);
   }
 
   @Post('sign-up')

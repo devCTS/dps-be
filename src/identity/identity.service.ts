@@ -30,7 +30,7 @@ import { IP } from './entities/ip.entity';
 import { Agent } from 'src/agent/entities/agent.entity';
 import { Payout } from 'src/payout/entities/payout.entity';
 import { Withdrawal } from 'src/withdrawal/entities/withdrawal.entity';
-import { OrderStatus, WithdrawalOrderStatus } from 'src/utils/enum/enum';
+import { OrderStatus, Role, WithdrawalOrderStatus } from 'src/utils/enum/enum';
 import { send } from 'process';
 
 type MemberContext = {
@@ -159,12 +159,33 @@ export class IdentityService {
     return identity;
   }
 
-  async signin(signinDto: SignInDto) {
+  async signin(signinDto: SignInDto, clientIp?: string) {
     const identity = await this.identityRepository.findOne({
       where: { email: signinDto.email },
     });
+
     if (!identity) {
       throw new UnauthorizedException('User name or password is incorrect');
+    }
+
+    if (identity.userType.toLocaleLowerCase() === Role.MERCHANT) {
+      let whiteListedIps = [];
+      const merchant = await this.merchantRepository.findOne({
+        where: {
+          identity,
+        },
+        relations: ['identity', 'identity.ips'],
+      });
+
+      if (merchant.identity.ips.length > 0) {
+        merchant.identity.ips.forEach((item) =>
+          whiteListedIps.push(item.value),
+        );
+
+        if (!whiteListedIps.includes(clientIp)) {
+          throw new ForbiddenException('Ip restricted');
+        }
+      }
     }
 
     const password = signinDto.password;
