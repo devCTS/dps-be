@@ -20,7 +20,7 @@ export class TransactionUpdatesController {
     @UserInReq() user,
   ) {
     let email = user?.email;
-    if (user.type?.includes('admin')) email = null;
+    if (user.type?.includes('ADMIN')) email = null;
 
     return this.transactionUpdatesService.paginateCommissionsAndProfits(
       paginateRequestDto,

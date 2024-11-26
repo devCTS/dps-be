@@ -31,7 +31,7 @@ export class FundRecordController {
     let subMerchant = null;
     let email = user?.email;
 
-    if (user.type?.includes('admin')) email = null;
+    if (user.type?.includes('ADMIN')) email = null;
 
     if (user?.type?.includes('SUB')) {
       subMerchant = await this.submerchantRepository.findOne({
