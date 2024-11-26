@@ -109,7 +109,7 @@ export class PayoutService {
         channel,
         mobile,
         name,
-        userId: uniqid(),
+        userId,
         merchant,
       });
     }
