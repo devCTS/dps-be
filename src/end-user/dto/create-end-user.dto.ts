@@ -1,4 +1,5 @@
 import { IsOptional, IsString } from 'class-validator';
+import { Merchant } from 'src/merchant/entities/merchant.entity';
 
 export class CreateEndUserDto {
   @IsString()
@@ -19,4 +20,6 @@ export class CreateEndUserDto {
   @IsString()
   @IsOptional()
   channelDetails?: string;
+
+  merchant: Merchant;
 }

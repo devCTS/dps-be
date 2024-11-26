@@ -2,14 +2,11 @@ import {
   Entity,
   Column,
   PrimaryGeneratedColumn,
-  ManyToOne,
   OneToMany,
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
   OneToOne,
-  BeforeInsert,
-  BeforeUpdate,
 } from 'typeorm';
 import { PayinMode } from './payinMode.entity';
 import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
@@ -17,6 +14,7 @@ import { Identity } from 'src/identity/entities/identity.entity';
 import { AgentReferral } from 'src/agent-referral/entities/agent-referral.entity';
 import { Payout } from 'src/payout/entities/payout.entity';
 import { Payin } from 'src/payin/entities/payin.entity';
+import { EndUser } from 'src/end-user/entities/end-user.entity';
 
 @Entity()
 export class Merchant {
@@ -113,6 +111,9 @@ export class Merchant {
 
   @OneToMany(() => Payout, (payout) => payout.merchant)
   payout: Payout[];
+
+  @OneToMany(() => EndUser, (endUser) => endUser.merchant)
+  endUser: Payout[];
 
   @Column({ type: 'float', default: 0 })
   balance: number;

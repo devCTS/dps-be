@@ -76,27 +76,23 @@ export class PayinService {
       },
       relations: ['identity'],
     });
-
     if (!merchant)
       throw new InternalServerErrorException('Merchant not found!');
 
-    let endUser = await this.endUserRepository.findOneBy({ userId });
+    let endUser = await this.endUserRepository.findOne({
+      where: { userId, merchant: { id: merchant.id } },
+      relations: ['merchant'],
+    });
 
-    if (!endUser) {
-      try {
-        endUser = await this.endUserService.create({
-          email: userEmail,
-          mobile: userMobileNumber,
-          name: userName,
-          channel,
-          userId,
-        });
-        if (!endUser)
-          throw new InternalServerErrorException('Unable to create end-user!');
-      } catch (e) {
-        console.log(e.toString());
-      }
-    }
+    if (!endUser)
+      endUser = await this.endUserService.create({
+        email: userEmail,
+        mobile: userMobileNumber,
+        name: userName,
+        channel,
+        userId,
+        merchant,
+      });
 
     const payin = await this.payinRepository.save({
       merchantOrderId: orderId,
