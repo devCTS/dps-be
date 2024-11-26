@@ -73,7 +73,7 @@ export class IdentityController {
 
     const userEmail = subMerchant
       ? subMerchant.merchant.identity.email
-      : user.emil;
+      : user.email;
 
     return this.identityService.getCurrentBalalnce(userEmail);
   }

@@ -70,25 +70,8 @@ export class PayoutService {
   ) {}
 
   async create(payoutDetails: CreatePayoutDto, merchantId: number) {
-    const {
-      name,
-      email,
-      // merchantId,
-      channelDetails,
-      channel,
-      mobile,
-    } = payoutDetails;
-
-    // let endUserData = await this.endUserRepository.findOneBy({ email });
-
-    const endUserData = await this.endUserService.create({
-      email,
-      channelDetails,
-      channel,
-      mobile,
-      name,
-      userId: uniqid(),
-    });
+    const { name, email, channelDetails, channel, mobile, userId } =
+      payoutDetails;
 
     const merchant = await this.merchantRepository.findOne({
       where: {
@@ -96,6 +79,40 @@ export class PayoutService {
       },
       relations: ['identity'],
     });
+    if (!merchant) throw new NotFoundException('Merchant not found!');
+
+    let endUserData = await this.endUserRepository.findOne({
+      where: { userId, merchant: { id: merchantId } },
+    });
+
+    if (endUserData) {
+      const parsedChannedDetails = JSON.parse(endUserData.channelDetails);
+
+      if (!parsedChannedDetails[channel]) {
+        parsedChannedDetails[channel] = JSON.parse(channelDetails);
+      } else {
+        delete parsedChannedDetails[channel];
+        parsedChannedDetails[channel] = JSON.parse(channelDetails);
+      }
+
+      await this.endUserRepository.update(endUserData.id, {
+        channelDetails: JSON.stringify(parsedChannedDetails),
+      });
+    } else {
+      const parsedChannelDetails = {
+        [channel]: JSON.parse(channelDetails),
+      };
+
+      endUserData = await this.endUserService.create({
+        email,
+        channelDetails: JSON.stringify(parsedChannelDetails),
+        channel,
+        mobile,
+        name,
+        userId: uniqid(),
+        merchant,
+      });
+    }
 
     const payout = await this.payoutRepository.save({
       ...payoutDetails,

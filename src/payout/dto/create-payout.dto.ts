@@ -46,4 +46,7 @@ export class CreatePayoutDto {
   @IsOptional()
   @IsNumber()
   memberId?: number;
+
+  @IsString()
+  userId: string;
 }
