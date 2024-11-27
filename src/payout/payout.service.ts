@@ -97,6 +97,9 @@ export class PayoutService {
 
       await this.endUserRepository.update(endUserData.id, {
         channelDetails: JSON.stringify(parsedChannedDetails),
+        name,
+        mobile,
+        email,
       });
     } else {
       const parsedChannelDetails = {
