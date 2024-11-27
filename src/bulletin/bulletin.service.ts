@@ -26,11 +26,11 @@ export class BulletinService {
     };
 
     const topupOrders: any[] = (
-      await this.topupMemberService.paginate(dto, userId)
+      await this.topupMemberService.paginate(dto)
     ).data.map((order) => ({ ...order, type: 'topup' }));
 
     const payoutOrders: any[] = (
-      await this.payoutMemberService.paginate(dto, userId)
+      await this.payoutMemberService.paginate(dto)
     ).data.map((order) => ({ ...order, type: 'payout' }));
 
     const allOrders: any[] = [...topupOrders, ...payoutOrders];

@@ -38,7 +38,7 @@ export class AlertController {
 
   @Put('mark-read')
   @Roles(Role.MERCHANT, Role.MEMBER, Role.AGENT)
-  markAlertRead(@Body() body: { alertId: number }) {
-    return this.alertService.markAlertRead(body.alertId);
+  markAlertRead(@Body() body: { id: number }) {
+    return this.alertService.markAlertRead(body.id);
   }
 }

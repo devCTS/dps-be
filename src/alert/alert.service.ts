@@ -88,9 +88,7 @@ export class AlertService {
       },
     });
 
-    if (!myAlerts || myAlerts.length === 0) {
-      throw new NotFoundException('No ALerts found');
-    }
+    if (!myAlerts || myAlerts.length === 0) return [];
 
     return myAlerts.map((item) => ({
       id: item.id,

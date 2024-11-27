@@ -30,7 +30,7 @@ export class PayoutMemberService {
 
   async paginate(
     paginateRequestDto: PaginateRequestDto,
-    userId,
+    userId = null,
     showPending = false,
   ) {
     const {

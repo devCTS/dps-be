@@ -94,19 +94,19 @@ export const getTextForAlert = (type: AlertType, data: any) => {
 
   switch (type) {
     case AlertType.PAYOUT_FAILED:
-      text = ``;
+      text = `Your payout order (#${data?.orderId}) of amount ${data?.amount} has been failed.`;
       break;
     case AlertType.PAYOUT_SUCCESS:
-      text = ``;
+      text = `Your payout order (#${data?.orderId}) of amount ${data?.amount} has been completed.`;
       break;
     case AlertType.WITHDRAWAL_COMPLETE:
-      text = ``;
+      text = `Your withdrawal order (#${data?.orderId}) of amount ${data?.amount} has been completed.`;
       break;
     case AlertType.WITHDRAWAL_FAILED:
-      text = ``;
+      text = `Your withdrawal order (#${data?.orderId}) of amount ${data?.amount} has been failed.`;
       break;
     case AlertType.WITHDRAWAL_REJECTED:
-      text = ``;
+      text = `Your withdrawal order (#${data?.orderId}) of amount ${data?.amount} has been rejected.`;
       break;
     default:
       break;
