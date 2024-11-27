@@ -466,19 +466,20 @@ export class IdentityService {
   async getUserCurrentBalance(userId, body) {
     const { userType } = body;
 
-    let user;
+    let amount;
 
     switch (userType) {
       case 'MERCHANT':
-        user = await this.merchantRepository.findOneBy({ id: userId });
+        amount = (await this.merchantRepository.findOneBy({ id: userId }))
+          .balance;
         break;
 
       case 'MEMBER':
-        user = await this.memberRepository.findOneBy({ id: userId });
+        amount = (await this.memberRepository.findOneBy({ id: userId })).quota;
         break;
 
       case 'AGENT':
-        user = await this.agentRepository.findOneBy({ id: userId });
+        amount = (await this.agentRepository.findOneBy({ id: userId })).balance;
         break;
 
       default:
@@ -487,9 +488,9 @@ export class IdentityService {
         );
     }
 
-    if (!user) throw new NotFoundException('User not found!');
+    if (!amount) throw new NotFoundException('User not found!');
 
-    return roundOffAmount(user.balance);
+    return roundOffAmount(amount);
   }
 
   async getMembersQuota(sendingMemberId, body) {

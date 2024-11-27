@@ -345,7 +345,7 @@ export class PayinService {
       where: {
         systemOrderId: id,
       },
-      relations: ['member'],
+      relations: ['member', 'user'],
     });
     if (!payinOrderDetails) throw new NotFoundException('Order not found');
 
@@ -442,6 +442,16 @@ export class PayinService {
         status: OrderStatus.COMPLETE,
       },
     );
+
+    const endUser = await this.endUserRepository.findOne({
+      where: {
+        id: payinOrderDetails.user.id,
+      },
+    });
+
+    await this.endUserRepository.update(endUser.id, {
+      totalPayinAmount: endUser.totalPayinAmount + payinOrderDetails.amount,
+    });
 
     return HttpStatus.OK;
   }
