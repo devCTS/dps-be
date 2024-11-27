@@ -84,6 +84,9 @@ export class PayinService {
       relations: ['merchant'],
     });
 
+    if (endUser?.isBlacklisted)
+      throw new NotAcceptableException('This user is currently blacklisted!');
+
     if (!endUser)
       endUser = await this.endUserService.create({
         email: userEmail,

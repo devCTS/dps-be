@@ -5,6 +5,7 @@ import { PayinMode } from '../entities/payinMode.entity';
 import { TransformPayinModeDetails } from 'src/utils/decorators/payin-mode.decorator';
 import { TransformChannelProfileFields } from 'src/utils/decorators/channel-profile.decorator';
 import { ChannelProfileDto } from 'src/utils/dtos/channel-profile.dto';
+import { roundOffAmount } from 'src/utils/utils';
 
 @Exclude()
 export class MerchantResponseDto {
@@ -117,5 +118,8 @@ export class MerchantResponseDto {
   numberOfRangesOrRatio?: number;
 
   @Expose()
+  @Transform(({ obj }) => roundOffAmount(obj.balance), {
+    toClassOnly: true,
+  })
   balance: number;
 }

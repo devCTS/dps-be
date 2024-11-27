@@ -43,7 +43,7 @@ export class RolesGuard implements CanActivate {
         relations: ['identity', 'identity.ips'],
       });
 
-      if (merchant.identity.ips.length === 0) return;
+      if (merchant.identity.ips.length === 0) return true;
 
       let whiteListedIps = [];
 

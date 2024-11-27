@@ -2,6 +2,7 @@ import { Exclude, Expose, Transform } from 'class-transformer';
 import { Identity } from 'src/identity/entities/identity.entity';
 import { DateFormat } from 'src/utils/decorators/dateformat.decorator';
 import { ChannelProfileDto } from 'src/utils/dtos/channel-profile.dto';
+import { roundOffAmount } from 'src/utils/utils';
 
 @Exclude()
 export class AgentResponseDto {
@@ -63,5 +64,8 @@ export class AgentResponseDto {
   channelProfile: ChannelProfileDto;
 
   @Expose()
+  @Transform(({ obj }) => roundOffAmount(obj.balance), {
+    toClassOnly: true,
+  })
   balance: number;
 }

@@ -14,12 +14,13 @@ import {
 } from 'src/utils/dtos/paginate.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MemberReferral } from './entities/member-referral.entity';
-import { Between, ILike, Repository } from 'typeorm';
+import { Between, ILike, In, Not, Repository } from 'typeorm';
 import { Member } from 'src/member/entities/member.entity';
-import { OrderStatus } from 'src/utils/enum/enum';
 
 @Injectable()
 export class MemberReferralService {
+  referralLimit = 2;
+
   constructor(
     @InjectRepository(MemberReferral)
     private readonly memberReferralRepository: Repository<MemberReferral>,
@@ -39,8 +40,23 @@ export class MemberReferralService {
       referredMemberTopupCommission,
     } = createMemberReferralDto;
 
-    const member = await this.memberRepository.findOneBy({ id: memberId });
+    const member = await this.memberRepository.findOne({
+      where: { id: memberId },
+    });
     if (!member) throw new NotFoundException('Member not found!');
+
+    const currentReferralCount = await this.memberReferralRepository.count({
+      where: {
+        member: { id: member.id },
+        status: In(['approved', 'pending', 'utilized']),
+      },
+      relations: ['member'],
+    });
+
+    if (currentReferralCount >= this.referralLimit)
+      throw new NotAcceptableException(
+        `You can only generate maxiumum ${this.referralLimit} referral codes.`,
+      );
 
     await this.memberReferralRepository.save({
       referralCode,

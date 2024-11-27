@@ -86,14 +86,14 @@ export class PayoutService {
     });
 
     if (endUserData) {
+      if (endUserData.isBlacklisted)
+        throw new NotAcceptableException('This user is currently blacklisted!');
+
       const parsedChannedDetails = JSON.parse(endUserData.channelDetails);
 
-      if (!parsedChannedDetails[channel]) {
-        parsedChannedDetails[channel] = JSON.parse(channelDetails);
-      } else {
-        delete parsedChannedDetails[channel];
-        parsedChannedDetails[channel] = JSON.parse(channelDetails);
-      }
+      if (parsedChannedDetails[channel]) delete parsedChannedDetails[channel];
+
+      parsedChannedDetails[channel] = JSON.parse(channelDetails);
 
       await this.endUserRepository.update(endUserData.id, {
         channelDetails: JSON.stringify(parsedChannedDetails),

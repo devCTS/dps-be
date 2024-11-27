@@ -10,7 +10,7 @@ import { CreateAgentReferralDto } from './dto/create-agent-referral.dto';
 import { UpdateAgentReferralDto } from './dto/update-agent-referral.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AgentReferral } from './entities/agent-referral.entity';
-import { Between, ILike, Repository } from 'typeorm';
+import { Between, ILike, In, Not, Repository } from 'typeorm';
 import { Agent } from 'src/agent/entities/agent.entity';
 import {
   PaginateRequestDto,
@@ -21,6 +21,8 @@ import { Merchant } from 'src/merchant/entities/merchant.entity';
 
 @Injectable()
 export class AgentReferralService {
+  referralLimit = 5;
+
   constructor(
     @InjectRepository(AgentReferral)
     private readonly agentReferralRepository: Repository<AgentReferral>,
@@ -41,8 +43,23 @@ export class AgentReferralService {
       agentId,
     } = createAgentReferralDto;
 
-    const agent = await this.agentRepository.findOneBy({ id: agentId });
+    const agent = await this.agentRepository.findOne({
+      where: { id: agentId },
+    });
     if (!agent) throw new NotFoundException('Agent not found!');
+
+    const currentReferralCount = await this.agentReferralRepository.count({
+      where: {
+        agent: { id: agent.id },
+        status: In(['approved', 'pending', 'utilized']),
+      },
+      relations: ['agent'],
+    });
+
+    if (currentReferralCount >= this.referralLimit)
+      throw new NotAcceptableException(
+        `Your referral limit of ${this.referralLimit} is completed!`,
+      );
 
     const referralCodeExists = await this.agentReferralRepository.findOneBy({
       referralCode,
