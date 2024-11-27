@@ -275,6 +275,7 @@ export class PayoutMerchantService {
       name: endUser.name,
       mobile: endUser.mobile,
       email: endUser.email,
+      channelDetails: endUser.channelDetails,
     };
   }
 }
