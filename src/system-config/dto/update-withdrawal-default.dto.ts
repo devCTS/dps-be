@@ -1,5 +1,5 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { IsNumber } from 'class-validator';
+import { IsNumber, Min } from 'class-validator';
 
 export class WithdrawalDefaultsDto {
   @IsNumber()
@@ -10,6 +10,10 @@ export class WithdrawalDefaultsDto {
 
   @IsNumber()
   minWithdrawalAmount: number;
+
+  @IsNumber()
+  @Min(1)
+  frozenAmountThreshold: number;
 }
 
 export class UpdateWithdrawalDefaultsDto extends PartialType(

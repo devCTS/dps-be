@@ -26,5 +26,6 @@ export const systemConfigData = () => {
     withdrawalRate: 0.5,
     minWithdrawalAmount: 150,
     maxWithdrawalAmount: 2500,
+    frozenAmountThreshold: 2,
   };
 };
