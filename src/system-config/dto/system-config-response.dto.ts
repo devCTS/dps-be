@@ -124,4 +124,7 @@ export class SystemConfigResponseDto {
 
   @Expose()
   maxWithdrawalAmount: number;
+
+  @Expose()
+  frozenAmountThreshold: number;
 }
