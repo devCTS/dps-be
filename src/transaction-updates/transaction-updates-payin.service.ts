@@ -16,6 +16,7 @@ export class TransactionUpdatesPayinService {
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
     @InjectRepository(Identity)
     private readonly identityRepository: Repository<Identity>,
+
     private readonly agentReferralService: AgentReferralService,
     private readonly memberReferralService: MemberReferralService,
     private readonly systemConfigService: SystemConfigService,
@@ -34,6 +35,7 @@ export class TransactionUpdatesPayinService {
       rate = 0, // service rate / commission rates
       amount = 0, // total service fee / commissions
       after = 0;
+    let isAgentMember = null;
 
     if (forMember) {
       // Member Quota - member selected for payment
@@ -50,6 +52,33 @@ export class TransactionUpdatesPayinService {
         amount = (orderAmount / 100) * rate;
         before = referral.balance;
         after = before + amount;
+        isAgentMember = true;
+
+        const identity = await this.identityRepository.findOne({
+          where: { email: referral.email },
+          relations: ['merchant', 'member', 'agent'],
+        });
+
+        // Add quota
+        const transactionUpdate = {
+          orderType,
+          userType: UserTypeForTransactionUpdates.MEMBER_QUOTA,
+          rate,
+          amount: roundOffAmount((orderAmount / 100) * rate),
+          before: roundOffAmount(referral.quota),
+          after: roundOffAmount(referral.quota + amount),
+          name: `${referral.firstName} ${referral.lastName}`,
+          isAgentOf:
+            referral.children?.length > 0
+              ? `${referral.children[0]?.firstName} ${referral.children[0]?.lastName}`
+              : null,
+          isAgentMember: true,
+          payoutOrder: orderDetails,
+          systemOrderId,
+          user: identity,
+        };
+
+        await this.transactionUpdateRepository.save(transactionUpdate);
       }
     } else {
       switch (referral.agentType) {
@@ -93,6 +122,7 @@ export class TransactionUpdatesPayinService {
           : null,
       payinOrder: orderDetails,
       systemOrderId,
+      isAgentMember,
       user: identity,
     };
 

@@ -34,6 +34,9 @@ export class TransactionUpdate {
   @Column({ nullable: true })
   isAgentOf: string;
 
+  @Column({ nullable: true })
+  isAgentMember: boolean;
+
   @Column({ nullable: true, type: 'float' })
   rate: number;
 

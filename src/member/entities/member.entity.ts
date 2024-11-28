@@ -7,14 +7,11 @@ import {
   Entity,
   Column,
   PrimaryGeneratedColumn,
-  ManyToOne,
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
   OneToOne,
   OneToMany,
-  BeforeInsert,
-  BeforeUpdate,
 } from 'typeorm';
 
 @Entity()
@@ -62,15 +59,6 @@ export class Member {
   @Column({ nullable: true })
   telegramId: string;
 
-  @Column({ type: 'float' })
-  withdrawalRate: number;
-
-  @Column({ type: 'float' })
-  minWithdrawalAmount: number;
-
-  @Column({ type: 'float' })
-  maxWithdrawalAmount: number;
-
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
@@ -97,14 +85,12 @@ export class Member {
   @Column({ type: 'float', default: 0 })
   quota: number;
 
+  // commissions
   @Column({ type: 'float', default: 0 })
   balance: number;
 
   @Column({ default: false })
   isOnline: boolean;
-
-  @Column()
-  withdrawalPassword: string;
 
   @Column({ nullable: true })
   selfRegistered: boolean;

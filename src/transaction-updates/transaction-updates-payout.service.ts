@@ -3,7 +3,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { UpdateTransactionUpdateDto } from './dto/update-transaction-update.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { OrderType, UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
+import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
 import { AgentReferralService } from 'src/agent-referral/agent-referral.service';
 import { Identity } from 'src/identity/entities/identity.entity';
 import { MemberReferralService } from 'src/member-referral/member-referral.service';
@@ -35,6 +35,7 @@ export class TransactionUpdatesPayoutService {
       rate = 0, // service rate / commission rates
       amount = 0, // total service fee / commissions
       after = 0;
+    let isAgentMember = null;
 
     if (forMember) {
       // Member Quota - member selected for payment
@@ -51,6 +52,33 @@ export class TransactionUpdatesPayoutService {
         amount = (orderAmount / 100) * rate;
         before = referral.balance;
         after = before + amount;
+        isAgentMember = true;
+
+        const identity = await this.identityRepository.findOne({
+          where: { email: referral.email },
+          relations: ['merchant', 'member', 'agent'],
+        });
+
+        // Add quota
+        const transactionUpdate = {
+          orderType,
+          userType: UserTypeForTransactionUpdates.MEMBER_QUOTA,
+          rate,
+          amount: roundOffAmount((orderAmount / 100) * rate),
+          before: roundOffAmount(referral.quota),
+          after: roundOffAmount(referral.quota + amount),
+          name: `${referral.firstName} ${referral.lastName}`,
+          isAgentOf:
+            referral.children?.length > 0
+              ? `${referral.children[0]?.firstName} ${referral.children[0]?.lastName}`
+              : null,
+          isAgentMember: true,
+          payoutOrder: orderDetails,
+          systemOrderId,
+          user: identity,
+        };
+
+        await this.transactionUpdateRepository.save(transactionUpdate);
       }
     } else {
       switch (referral.agentType) {
@@ -93,6 +121,7 @@ export class TransactionUpdatesPayoutService {
           ? `${referral.children[0]?.firstName} ${referral.children[0]?.lastName}`
           : null,
       payoutOrder: orderDetails,
+      isAgentMember,
       systemOrderId,
       user: identity,
     };

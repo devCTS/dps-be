@@ -8,9 +8,6 @@ import {
   UserTypeForTransactionUpdates,
   WithdrawalMadeOn,
 } from 'src/utils/enum/enum';
-import { AgentReferralService } from 'src/agent-referral/agent-referral.service';
-import { Identity } from 'src/identity/entities/identity.entity';
-import { MemberReferralService } from 'src/member-referral/member-referral.service';
 import { SystemConfigService } from 'src/system-config/system-config.service';
 
 @Injectable()
@@ -82,7 +79,6 @@ export class TransactionUpdatesWithdrawalService {
     gatewayName = GatewayName.PHONEPE,
   }) {
     const mapUserType = {
-      MEMBER: UserTypeForTransactionUpdates.MEMBER_BALANCE,
       MERCHANT: UserTypeForTransactionUpdates.MERCHANT_BALANCE,
       AGENT: UserTypeForTransactionUpdates.AGENT_BALANCE,
       gateway_fee: UserTypeForTransactionUpdates.GATEWAY_FEE,

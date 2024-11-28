@@ -56,9 +56,13 @@ export class WithdrawalService {
     private readonly alertService: AlertService,
   ) {}
 
-  async create(createWithdrawalDto: CreateWithdrawalDto) {
-    const { channel, channelDetails, withdrawalAmount, email } =
-      createWithdrawalDto;
+  async create(createWithdrawalDto: CreateWithdrawalDto, email) {
+    const {
+      channel,
+      channelDetails,
+      withdrawalAmount,
+      // email
+    } = createWithdrawalDto;
 
     const user = await this.identityRepository.findOneBy({
       email,

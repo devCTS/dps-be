@@ -17,7 +17,6 @@ export class TransactionUpdatesTopupService {
     @InjectRepository(Identity)
     private readonly identityRepository: Repository<Identity>,
     private readonly memberReferralService: MemberReferralService,
-    private readonly systemConfigService: SystemConfigService,
   ) {}
 
   async processReferral(
@@ -47,6 +46,32 @@ export class TransactionUpdatesTopupService {
       amount = (orderAmount / 100) * rate;
       before = referral.balance;
       after = before + amount;
+
+      const identity = await this.identityRepository.findOne({
+        where: { email: referral.email },
+        relations: ['merchant', 'member', 'agent'],
+      });
+
+      // Add quota
+      const transactionUpdate = {
+        orderType,
+        userType: UserTypeForTransactionUpdates.MEMBER_QUOTA,
+        rate,
+        amount: roundOffAmount((orderAmount / 100) * rate),
+        before: roundOffAmount(referral.quota),
+        after: roundOffAmount(referral.quota + amount),
+        name: `${referral.firstName} ${referral.lastName}`,
+        isAgentOf:
+          referral.children?.length > 0
+            ? `${referral.children[0]?.firstName} ${referral.children[0]?.lastName}`
+            : null,
+        isAgentMember: true,
+        payoutOrder: orderDetails,
+        systemOrderId,
+        user: identity,
+      };
+
+      await this.transactionUpdateRepository.save(transactionUpdate);
     }
 
     const identity = await this.identityRepository.findOne({

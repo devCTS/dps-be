@@ -63,18 +63,10 @@ function TransformBalancesAndProfit() {
   return Transform(
     ({ value }) => {
       const mappedValues = value.map((item) => {
-        const roleMapping = {
-          agent_balance: 'agent',
-          member_balance: 'agent',
-          member_quota: 'member',
-        };
-
-        const role = roleMapping[item.userType] || item.userType;
-
         switch (item.userType) {
           case UserTypeForTransactionUpdates.AGENT_BALANCE:
             return {
-              role,
+              role: 'agent',
               name: item.name,
               commissionRate: item.rate,
               commissionAmount: roundOffAmount(item.amount),
@@ -85,28 +77,27 @@ function TransformBalancesAndProfit() {
             };
 
           case UserTypeForTransactionUpdates.MEMBER_QUOTA:
-            return {
-              role,
-              name: item.name,
-              commissionRate: item.rate,
-              commissionAmount: roundOffAmount(item.amount),
-              quotaEarned: roundOffAmount(item.after - item.before),
-              quotaBefore: roundOffAmount(item.before),
-              quotaAfter: roundOffAmount(item.after),
-            };
-
-          case UserTypeForTransactionUpdates.MEMBER_BALANCE:
-            return {
-              role,
-              name: item.name,
-              commissionRate: item.rate,
-              commissionAmount: roundOffAmount(item.amount),
-              balanceEarned: roundOffAmount(item.after - item.before),
-              balanceBefore: roundOffAmount(item.before),
-              balanceAfter: roundOffAmount(item.after),
-              isAgentOf: item.isAgentOf,
-              isMember: true,
-            };
+            return item.isAgentMember
+              ? {
+                  role: 'agent',
+                  name: item.name,
+                  commissionRate: item.rate,
+                  commissionAmount: roundOffAmount(item.amount),
+                  balanceEarned: roundOffAmount(item.after - item.before, true),
+                  balanceBefore: roundOffAmount(item.before),
+                  balanceAfter: roundOffAmount(item.after),
+                  isAgentOf: item.isAgentOf,
+                  isMember: true,
+                }
+              : {
+                  role: 'member',
+                  name: item.name,
+                  commissionRate: item.rate,
+                  commissionAmount: roundOffAmount(item.amount),
+                  quotaEarned: roundOffAmount(item.after - item.before, true),
+                  quotaBefore: roundOffAmount(item.before),
+                  quotaAfter: roundOffAmount(item.after),
+                };
 
           default:
             return;

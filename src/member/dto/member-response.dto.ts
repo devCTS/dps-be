@@ -51,15 +51,6 @@ export class MemberResponseDto {
   dailyTotalPayoutLimit: number;
 
   @Expose()
-  withdrawalRate: number;
-
-  @Expose()
-  minWithdrawalAmount: number;
-
-  @Expose()
-  maxWithdrawalAmount: number;
-
-  @Expose()
   @DateFormat()
   createdAt: Date;
 

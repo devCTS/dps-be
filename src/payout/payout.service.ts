@@ -7,14 +7,12 @@ import {
   NotAcceptableException,
   NotFoundException,
 } from '@nestjs/common';
-import { UpdatePayoutDto } from './dto/update-payout.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Payout } from './entities/payout.entity';
 import { In, MoreThan, Repository } from 'typeorm';
 
 import {
   AlertType,
-  GatewayName,
   NotificationStatus,
   NotificationType,
   OrderStatus,
@@ -56,6 +54,7 @@ export class PayoutService {
     private readonly merchantRepository: Repository<Merchant>,
     @InjectRepository(TransactionUpdate)
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
+
     private readonly transactionUpdatePayoutService: TransactionUpdatesPayoutService,
     private readonly endUserService: EndUserService,
     private readonly memberService: MemberService,
@@ -65,6 +64,7 @@ export class PayoutService {
     private readonly paymentSystemService: PaymentSystemService,
     private readonly fundRecordService: FundRecordService,
     private readonly notificationService: NotificationService,
+
     @Inject(forwardRef(() => AlertService))
     private readonly alertService: AlertService,
   ) {}
