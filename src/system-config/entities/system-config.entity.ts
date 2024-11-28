@@ -90,4 +90,7 @@ export class SystemConfig {
 
   @Column({ type: 'float', default: 0 })
   systemProfit: number;
+
+  @Column({ type: 'number', default: 2 })
+  frozenAmountThreshold: number;
 }
