@@ -42,7 +42,7 @@ export class AgentReferralController {
   @Get('/tree/:userId')
   @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN, Role.AGENT)
   getReferralTreeOfUser(@Param('userId') userId: string) {
-    return this.agentReferralService.getReferralTreeOfUser(+userId);
+    return this.agentReferralService.getReferralTreeOfUser(userId);
   }
 
   @Get('/referral/:code')
@@ -54,7 +54,7 @@ export class AgentReferralController {
   @Get(':id')
   @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN, Role.AGENT)
   findOne(@Param('id') id: string) {
-    return this.agentReferralService.findOne(+id);
+    return this.agentReferralService.findOne(id);
   }
 
   @Patch(':id')
@@ -63,13 +63,13 @@ export class AgentReferralController {
     @Param('id') id: string,
     @Body() updateAgentReferralDto: UpdateAgentReferralDto,
   ) {
-    return this.agentReferralService.update(+id, updateAgentReferralDto);
+    return this.agentReferralService.update(id, updateAgentReferralDto);
   }
 
   @Delete(':id')
   @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
   remove(@Param('id') id: string) {
-    return this.agentReferralService.remove(+id);
+    return this.agentReferralService.remove(id);
   }
 
   @Delete()

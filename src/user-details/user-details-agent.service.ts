@@ -43,7 +43,7 @@ export class UserDetailsAgentService {
     private readonly fundRecordRepository: Repository<FundRecord>,
   ) {}
 
-  async getAgentDetails(userId: number) {
+  async getAgentDetails(userId: string) {
     const agent = await this.agentRepository.findOne({
       where: { id: userId },
       relations: ['identity', 'agentReferral'],

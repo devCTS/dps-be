@@ -22,7 +22,7 @@ export class UserDetailsController {
   @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
   @UseGuards(RolesGuard)
   getAdminDetails(@Param('userId') userId: string) {
-    return this.userDetailsAdminService.getAdminDetails(+userId);
+    return this.userDetailsAdminService.getAdminDetails(userId);
   }
 
   // AGENT
@@ -30,7 +30,7 @@ export class UserDetailsController {
   @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
   @UseGuards(RolesGuard)
   getAgentDetails(@Param('userId') userId: string) {
-    return this.userDetailsAgentService.getAgentDetails(+userId);
+    return this.userDetailsAgentService.getAgentDetails(userId);
   }
 
   @Post('agent/withdrawals/paginate')
@@ -59,7 +59,7 @@ export class UserDetailsController {
   @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
   @UseGuards(RolesGuard)
   getMemberDetails(@Param('userId') userId: string) {
-    return this.userDetailsMemberService.getMemberDetails(+userId);
+    return this.userDetailsMemberService.getMemberDetails(userId);
   }
 
   @Post('member/payins/paginate')
@@ -109,7 +109,7 @@ export class UserDetailsController {
   @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
   @UseGuards(RolesGuard)
   getMerchantDetails(@Param('userId') userId: string) {
-    return this.userDetailsMerchantService.getMerchantDetails(+userId);
+    return this.userDetailsMerchantService.getMerchantDetails(userId);
   }
 
   @Post('merchant/payins/paginate')

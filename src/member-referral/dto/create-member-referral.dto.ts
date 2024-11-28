@@ -5,7 +5,7 @@ export class CreateMemberReferralDto {
   referralCode: string;
 
   @IsNumber()
-  memberId: number;
+  memberId: string;
 
   @IsNumber()
   payinCommission: number;

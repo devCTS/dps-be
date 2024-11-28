@@ -82,7 +82,7 @@ export class AdminService {
     return plainToInstance(AdminResponseDto, results);
   }
 
-  async findOne(id: number): Promise<AdminResponseDto> {
+  async findOne(id: string): Promise<AdminResponseDto> {
     const results = await this.adminRepository.findOne({
       where: { id: id },
       relations: ['identity'],
@@ -92,7 +92,7 @@ export class AdminService {
   }
 
   async update(
-    id: number,
+    id: string,
     updateAdminDto: UpdateAdminDto,
   ): Promise<HttpStatus> {
     const email = updateAdminDto.email;
@@ -125,7 +125,7 @@ export class AdminService {
     return HttpStatus.OK;
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const admin = await this.adminRepository.findOne({
       where: { id: id },
       relations: ['identity'], // Ensure you load the identity relation
@@ -242,7 +242,7 @@ export class AdminService {
     };
   }
 
-  async getProfile(id: number) {
+  async getProfile(id: string) {
     const profile = await this.findOne(id);
     if (!profile.enabled) {
       throw new UnauthorizedException('Unauthorized.');
@@ -251,7 +251,7 @@ export class AdminService {
     return profile;
   }
 
-  async changePassword(changePasswordDto: ChangePasswordDto, id: number) {
+  async changePassword(changePasswordDto: ChangePasswordDto, id: string) {
     const adminData = await this.adminRepository.findOne({
       where: { id },
       relations: ['identity'],

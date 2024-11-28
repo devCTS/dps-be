@@ -17,8 +17,8 @@ import {
 
 @Entity()
 export class Agent {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @OneToOne(() => Identity, (identity) => identity.agent)
   @JoinColumn({ name: 'identity_id' })

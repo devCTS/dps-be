@@ -72,8 +72,8 @@ export class PaginateRequestDto {
   endDate?: string;
 
   @IsOptional()
-  @IsNumber()
-  userId?: number;
+  @IsString()
+  userId?: string;
 
   @IsOptional()
   @IsString()

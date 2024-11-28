@@ -36,7 +36,7 @@ export class SubMerchantService {
   ) {}
 
   async create(
-    merchantId: number,
+    merchantId: string,
     createSubMerchantDto: CreateSubMerchantDto,
   ): Promise<any> {
     const { email, password } = createSubMerchantDto;
@@ -71,7 +71,7 @@ export class SubMerchantService {
     return plainToInstance(SubMerchantResponseDto, results);
   }
 
-  async findOne(id: number): Promise<SubMerchantResponseDto> {
+  async findOne(id: string): Promise<SubMerchantResponseDto> {
     let result = await this.subMerchantRepository.findOne({
       where: { id },
       relations: ['identity', 'merchant'],
@@ -89,7 +89,7 @@ export class SubMerchantService {
   }
 
   async update(
-    id: number,
+    id: string,
     updateSubMerchantDto: UpdateSubMerchantDto,
   ): Promise<HttpStatus> {
     const email = updateSubMerchantDto.email;
@@ -121,7 +121,7 @@ export class SubMerchantService {
     return HttpStatus.OK;
   }
 
-  async remove(id: number): Promise<HttpStatus> {
+  async remove(id: string): Promise<HttpStatus> {
     const subMerchant = await this.subMerchantRepository.findOne({
       where: { id },
       relations: ['identity', 'merchant'],
@@ -223,7 +223,7 @@ export class SubMerchantService {
     };
   }
 
-  async getProfile(id: number) {
+  async getProfile(id: string) {
     const profile = await this.findOne(id);
     if (!profile.enabled) {
       throw new UnauthorizedException('Unauthorized.');
@@ -232,7 +232,7 @@ export class SubMerchantService {
     return profile;
   }
 
-  async changePassword(changePasswordDto: ChangePasswordDto, id: number) {
+  async changePassword(changePasswordDto: ChangePasswordDto, id: string) {
     const subMerchantData = await this.subMerchantRepository.findOne({
       where: { id },
       relations: ['identity'],

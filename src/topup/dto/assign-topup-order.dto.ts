@@ -5,7 +5,7 @@ export class AssignTopupOrderDto {
   @IsNotEmpty()
   id: string;
 
-  @IsNumber()
+  @IsString()
   @IsNotEmpty()
-  memberId: number;
+  memberId: string;
 }

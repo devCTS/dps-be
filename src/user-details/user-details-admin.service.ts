@@ -10,7 +10,7 @@ export class UserDetailsAdminService {
     private readonly adminRepository: Repository<Admin>,
   ) {}
 
-  async getAdminDetails(userId: number) {
+  async getAdminDetails(userId: string) {
     const admin = await this.adminRepository.findOne({
       where: { id: userId },
       relations: ['identity'],

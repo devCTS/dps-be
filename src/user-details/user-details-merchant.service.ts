@@ -44,7 +44,7 @@ export class UserDetailsMerchantService {
     private readonly fundRecordRepository: Repository<FundRecord>,
   ) {}
 
-  async getMerchantDetails(userId: number) {
+  async getMerchantDetails(userId: string) {
     const merchant = await this.merchantRepository.findOne({
       where: { id: userId },
       relations: ['identity'],

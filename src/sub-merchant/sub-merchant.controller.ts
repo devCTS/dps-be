@@ -48,24 +48,24 @@ export class SubMerchantController {
   @Roles(Role.MERCHANT, Role.SUB_MERCHANT)
   @UseGuards(RolesGuard)
   findOne(@UserInReq() user) {
-    return this.subMerchantService.findOne(+user.id);
+    return this.subMerchantService.findOne(user.id);
   }
 
   @Patch(':id')
   @Roles(Role.MERCHANT, Role.SUPER_ADMIN, Role.SUPER_ADMIN, Role.SUB_MERCHANT)
   @UseGuards(RolesGuard)
   update(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Body() updateSubMerchantDto: UpdateSubMerchantDto,
   ) {
-    return this.subMerchantService.update(+id, updateSubMerchantDto);
+    return this.subMerchantService.update(id, updateSubMerchantDto);
   }
 
   @Delete(':id')
   @Roles(Role.MERCHANT, Role.SUPER_ADMIN, Role.SUPER_ADMIN, Role.SUB_MERCHANT)
   @UseGuards(RolesGuard)
-  remove(@Param('id') id: number) {
-    return this.subMerchantService.remove(+id);
+  remove(@Param('id') id: string) {
+    return this.subMerchantService.remove(id);
   }
 
   @Post('paginate')
@@ -94,7 +94,7 @@ export class SubMerchantController {
   @Roles(Role.MERCHANT, Role.SUPER_ADMIN, Role.SUPER_ADMIN)
   @UseGuards(RolesGuard)
   create(
-    @Param('merchantId') id: number,
+    @Param('merchantId') id: string,
     @Body() createSubMerchantDto: CreateSubMerchantDto,
   ) {
     return this.subMerchantService.create(id, createSubMerchantDto);
@@ -105,7 +105,7 @@ export class SubMerchantController {
   @UseGuards(RolesGuard)
   changePassword(
     @Body() changePasswordDto: ChangePasswordDto,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseIntPipe) id: string,
   ) {
     return this.subMerchantService.changePassword(changePasswordDto, id);
   }

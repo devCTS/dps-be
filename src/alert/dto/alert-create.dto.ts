@@ -10,8 +10,8 @@ import { AlertReadStatus, AlertType, Users } from 'src/utils/enum/enum';
 
 export class AlertCreateDto {
   @IsNotEmpty()
-  @IsNumber()
-  for: number;
+  @IsString()
+  for: string;
 
   @IsNotEmpty()
   @IsEnum(Users)

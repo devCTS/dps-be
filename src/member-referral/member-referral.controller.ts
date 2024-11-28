@@ -45,7 +45,7 @@ export class MemberReferralController {
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MEMBER)
   @UseGuards(RolesGuard)
   getReferralTreeOfUser(@Param('userId') userId: string) {
-    return this.memberReferralService.getReferralTreeOfUser(+userId);
+    return this.memberReferralService.getReferralTreeOfUser(userId);
   }
 
   @Get('/referral/:code')

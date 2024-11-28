@@ -2,7 +2,7 @@ import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateAgentReferralDto {
   @IsNumber()
-  agentId: number;
+  agentId: string;
 
   @IsString()
   agentType: 'agent' | 'merchant';

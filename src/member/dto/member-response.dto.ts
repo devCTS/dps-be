@@ -27,7 +27,7 @@ export class MemberResponseDto {
   telegramId: string;
 
   @Expose()
-  id: number;
+  id: string;
 
   @Expose()
   enabled: boolean;

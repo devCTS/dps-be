@@ -47,7 +47,7 @@ export class UserDetailsMemberService {
     private readonly fundRecordRepository: Repository<FundRecord>,
   ) {}
 
-  async getMemberDetails(userId: number) {
+  async getMemberDetails(userId: string) {
     const member = await this.memberRepository.findOne({
       where: { id: userId },
       relations: ['identity', 'memberReferral'],

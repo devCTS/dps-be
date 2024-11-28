@@ -16,8 +16,8 @@ import {
 
 @Entity()
 export class Member {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @OneToOne(() => Identity, (identity) => identity.member)
   @JoinColumn({ name: 'identity' })

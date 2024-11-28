@@ -2,8 +2,8 @@ import { IsEnum, IsNumber, IsString } from 'class-validator';
 import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
 
 export class CreateSettlementDto {
-  @IsNumber()
-  userId: number;
+  @IsString()
+  userId: string;
 
   @IsNumber()
   amount: number;
@@ -16,8 +16,8 @@ export class CreateSettlementDto {
 }
 
 export class MemberSettlementDto {
-  @IsNumber()
-  sendingMemberId: number;
+  @IsString()
+  sendingMemberId: string;
 
   @IsNumber()
   amount: number;

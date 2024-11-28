@@ -13,7 +13,7 @@ export class Alert {
   id: number;
 
   @Column()
-  for: number;
+  for: string;
 
   @Column({ nullable: true, type: 'enum', enum: AlertType })
   type: AlertType;

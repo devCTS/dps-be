@@ -79,7 +79,7 @@ export class AlertService {
     return HttpStatus.CREATED;
   }
 
-  async getMyAlerts({ id, userType }: { id: number; userType: Users }) {
+  async getMyAlerts({ id, userType }: { id: string; userType: Users }) {
     const myAlerts = await this.alertRepository.find({
       where: {
         for: id,

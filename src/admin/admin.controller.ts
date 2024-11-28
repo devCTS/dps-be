@@ -48,19 +48,19 @@ export class AdminController {
   @Get()
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   findOne(@UserInReq() user) {
-    return this.adminService.findOne(+user.id);
+    return this.adminService.findOne(user.id);
   }
 
   @Get(':id')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   findOneAdmin(@Param('id') id: string) {
-    return this.adminService.findOne(+id);
+    return this.adminService.findOne(id);
   }
 
   @Patch(':id')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   update(@Param('id') id: string, @Body() updateAdminDto: UpdateAdminDto) {
-    return this.adminService.update(+id, updateAdminDto);
+    return this.adminService.update(id, updateAdminDto);
   }
 
   // @Delete(':id')
@@ -80,7 +80,7 @@ export class AdminController {
     @Body() changePasswordDto: ChangePasswordDto,
     @UserInReq() user,
   ) {
-    return this.adminService.changePassword(changePasswordDto, +user.id);
+    return this.adminService.changePassword(changePasswordDto, user.id);
   }
 
   // @Post('payouts/paginate')

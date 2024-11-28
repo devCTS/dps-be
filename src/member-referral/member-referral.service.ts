@@ -326,7 +326,7 @@ export class MemberReferralService {
     };
   }
 
-  async getReferralTreeOfUser(userId: number) {
+  async getReferralTreeOfUser(userId: string) {
     const referralTree = await this.getReferralTree();
     if (!referralTree) {
       const member = await this.memberRepository.findOne({
@@ -352,7 +352,7 @@ export class MemberReferralService {
     return await this.trimTreeToUser(referralTree, userId);
   }
 
-  private async trimTreeToUser(tree: any, userId: number): Promise<any> {
+  private async trimTreeToUser(tree: any, userId: string): Promise<any> {
     if (tree.uniqueId === userId)
       return {
         id: tree.id,

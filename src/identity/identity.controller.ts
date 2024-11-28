@@ -84,7 +84,7 @@ export class IdentityController {
   @UseGuards(RolesGuard)
   @Roles(Role.ALL)
   getUserCurrentBalance(@Param('id') id: string, @Body() body) {
-    return this.identityService.getUserCurrentBalance(+id, body);
+    return this.identityService.getUserCurrentBalance(id, body);
   }
 
   @Put('user-details/current-quota/:sendingMemberId')

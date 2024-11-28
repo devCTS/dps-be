@@ -19,7 +19,7 @@ import { TransformTransactionDetails } from './payin-admin-response.dto';
 @Exclude()
 export class PayinMerchantResponseDto {
   @Expose()
-  id: number;
+  id: string;
 
   @Expose()
   systemOrderId: string;

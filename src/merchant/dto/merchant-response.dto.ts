@@ -27,7 +27,7 @@ export class MerchantResponseDto {
   phone: string;
 
   @Expose()
-  id: number;
+  id: string;
 
   @Expose()
   enabled: boolean;

@@ -90,7 +90,7 @@ export class IdentityService {
   }
 
   async getUser(
-    identityId: number,
+    identityId: string,
     role:
       | 'MERCHANT'
       | 'SUB_MERCHANT'
@@ -313,7 +313,7 @@ export class IdentityService {
     } else throw new UnauthorizedException('Provided OTP is incorrect.');
   }
 
-  async changePassword(changePasswordDto: ChangePasswordDto, id: number) {
+  async changePassword(changePasswordDto: ChangePasswordDto, id: string) {
     const existingIdentity = await this.identityRepository.findOne({
       where: { id: id },
     });
@@ -342,7 +342,7 @@ export class IdentityService {
     return { jwt, type: identity.userType };
   }
 
-  async updateLogin(id: number, newEmail: string, newPassword: string) {
+  async updateLogin(id: string, newEmail: string, newPassword: string) {
     const hashedPassword = this.jwtService.getHashPassword(newPassword);
 
     await this.identityRepository.update(
@@ -351,7 +351,7 @@ export class IdentityService {
     );
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     await this.identityRepository.delete(id);
   }
 
@@ -463,7 +463,7 @@ export class IdentityService {
   //     return currentBalance - outstandingBalance;
   //   }
 
-  async getUserCurrentBalance(userId, body) {
+  async getUserCurrentBalance(userId: string, body) {
     const { userType } = body;
 
     let amount = 0;
@@ -491,7 +491,7 @@ export class IdentityService {
     return roundOffAmount(amount);
   }
 
-  async getMembersQuota(sendingMemberId, body) {
+  async getMembersQuota(sendingMemberId: string, body) {
     const { receivingMemberEmail } = body;
 
     const sendingMember = await this.memberRepository.findOneBy({

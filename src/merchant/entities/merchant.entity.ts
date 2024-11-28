@@ -18,8 +18,8 @@ import { EndUser } from 'src/end-user/entities/end-user.entity';
 
 @Entity()
 export class Merchant {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @OneToOne(() => Identity, (identity) => identity.merchant)
   @JoinColumn({ name: 'identity' })

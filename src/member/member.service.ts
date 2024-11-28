@@ -209,7 +209,7 @@ export class MemberService {
     return plainToInstance(MemberResponseDto, results);
   }
 
-  async findOne(id: number): Promise<any> {
+  async findOne(id: string): Promise<any> {
     const results = await this.memberRepository.findOne({
       where: { id },
       relations: [
@@ -223,7 +223,7 @@ export class MemberService {
     return plainToInstance(MemberResponseDto, results);
   }
 
-  async update(id: number, updateDto: UpdateMemberDto): Promise<HttpStatus> {
+  async update(id: string, updateDto: UpdateMemberDto): Promise<HttpStatus> {
     const memberData = await this.memberRepository.findOneBy({ id });
 
     if (!memberData) throw new NotFoundException('Member not found.');
@@ -305,7 +305,7 @@ export class MemberService {
     return HttpStatus.OK;
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const member = await this.memberRepository.findOne({
       where: { id: id },
       relations: ['identity'], // Ensure you load the identity relation
@@ -401,7 +401,7 @@ export class MemberService {
     };
   }
 
-  async getProfile(id: number) {
+  async getProfile(id: string) {
     const profile = await this.findOne(id);
     if (!profile.enabled) {
       throw new UnauthorizedException('Unauthorized.');
@@ -410,7 +410,7 @@ export class MemberService {
     return profile;
   }
 
-  async changePassword(changePasswordDto: ChangePasswordDto, id: number) {
+  async changePassword(changePasswordDto: ChangePasswordDto, id: string) {
     const membaeData = await this.memberRepository.findOne({
       where: { id },
       relations: ['identity'],

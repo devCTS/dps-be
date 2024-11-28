@@ -7,7 +7,7 @@ import { roundOffAmount } from 'src/utils/utils';
 @Exclude()
 export class AgentResponseDto {
   @Expose()
-  id: number;
+  id: string;
 
   @Expose()
   firstName: string;

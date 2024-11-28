@@ -12,8 +12,8 @@ import {
 
 @Entity()
 export class Submerchant {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @ManyToOne(() => Merchant, (merchant) => merchant.submerchants, {
     onDelete: 'CASCADE',

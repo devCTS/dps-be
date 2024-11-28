@@ -14,8 +14,8 @@ import {
 
 @Entity()
 export class EndUser {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   userId: string;

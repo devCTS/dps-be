@@ -40,28 +40,28 @@ export class MemberController {
   @Roles(Role.MEMBER)
   @UseGuards(RolesGuard)
   findOneForMember(@UserInReq() user) {
-    return this.memberService.findOne(+user.id);
+    return this.memberService.findOne(user.id);
   }
 
   @Get(':id')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MEMBER)
   @UseGuards(RolesGuard)
   findOne(@Param('id') id: string) {
-    return this.memberService.findOne(+id);
+    return this.memberService.findOne(id);
   }
 
   @Patch()
   @Roles(Role.MEMBER)
   @UseGuards(RolesGuard)
   updateForMember(@UserInReq() user, @Body() updateMemberDto: UpdateMemberDto) {
-    return this.memberService.update(+user.id, updateMemberDto);
+    return this.memberService.update(user.id, updateMemberDto);
   }
 
   @Patch(':id')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   @UseGuards(RolesGuard)
   update(@Param('id') id: string, @Body() updateMemberDto: UpdateMemberDto) {
-    return this.memberService.update(+id, updateMemberDto);
+    return this.memberService.update(id, updateMemberDto);
   }
 
   @Post('paginate')

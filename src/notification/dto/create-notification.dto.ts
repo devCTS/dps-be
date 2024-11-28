@@ -17,7 +17,7 @@ export class CreateNotificationDto {
   @IsObject()
   data: any;
 
-  @IsNumber()
+  @IsString()
   @IsOptional()
-  for: number | null;
+  for: string | null;
 }

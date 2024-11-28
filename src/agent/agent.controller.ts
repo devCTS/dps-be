@@ -56,25 +56,25 @@ export class AgentController {
     @UserInReq() user,
     @Body() updateAgentChannelDto: UpdateAgentChannelDto,
   ) {
-    return this.agentService.updateChannels(+user.id, updateAgentChannelDto);
+    return this.agentService.updateChannels(user.id, updateAgentChannelDto);
   }
 
   @Get(':id')
   @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
   findOne(@Param('id') id: string): Promise<AgentResponseDto> {
-    return this.agentService.findOne(+id);
+    return this.agentService.findOne(id);
   }
 
   @Patch(':id')
   @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
   updateAgent(@Param('id') id: string, @Body() updateAgentDto: UpdateAgentDto) {
-    return this.agentService.update(+id, updateAgentDto);
+    return this.agentService.update(id, updateAgentDto);
   }
 
   @Delete(':id')
   @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
   remove(@Param('id') id: string): Promise<HttpStatus> {
-    return this.agentService.remove(+id);
+    return this.agentService.remove(id);
   }
 
   @Post('paginate')

@@ -133,7 +133,7 @@ export class AgentService {
   }
 
   // Find one by id
-  async findOne(id: number): Promise<AgentResponseDto> {
+  async findOne(id: string): Promise<AgentResponseDto> {
     const results = await this.agentRepository.findOne({
       where: { id: id },
       relations: [
@@ -162,7 +162,7 @@ export class AgentService {
   }
 
   // Get profile by id
-  async getProfile(id: number) {
+  async getProfile(id: string) {
     const profile = await this.findOne(id);
     if (!profile.enabled) {
       throw new UnauthorizedException('Unauthorized.');
@@ -173,7 +173,7 @@ export class AgentService {
 
   // Update agent
   async update(
-    id: number,
+    id: string,
     updateAgentDto: UpdateAgentDto,
   ): Promise<HttpStatus> {
     const email = updateAgentDto.email;
@@ -253,7 +253,7 @@ export class AgentService {
   }
 
   async updateChannels(
-    id: number,
+    id: string,
     updateAgentChannelDto: UpdateAgentChannelDto,
   ) {
     const channelProfile = updateAgentChannelDto.channelProfile;
@@ -314,7 +314,7 @@ export class AgentService {
   }
 
   // Remove agent by ID
-  async remove(id: number): Promise<HttpStatus> {
+  async remove(id: string): Promise<HttpStatus> {
     const agent = await this.agentRepository.findOne({
       where: { id: id },
       relations: ['identity'], // Ensure you load the identity relation
@@ -411,7 +411,7 @@ export class AgentService {
     };
   }
 
-  async changePassword(changePasswordDto: ChangePasswordDto, id: number) {
+  async changePassword(changePasswordDto: ChangePasswordDto, id: string) {
     const agentData = await this.agentRepository.findOne({
       where: { id },
       relations: ['identity'],
@@ -427,7 +427,7 @@ export class AgentService {
 
   async changeWithdrawalPassword(
     changePasswordDto: ChangePasswordDto,
-    id: number,
+    id: string,
   ) {
     const agentData = await this.agentRepository.findOne({
       where: { id },
@@ -516,7 +516,7 @@ export class AgentService {
 
   async verifyWithdrawalPassword(
     verifyWithdrawalPasswordDto: VerifyWithdrawalPasswordDto,
-    id: number,
+    id: string,
   ) {
     const { password } = verifyWithdrawalPasswordDto;
 

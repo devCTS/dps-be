@@ -54,7 +54,7 @@ export class NotificationService {
     }
   }
 
-  async getMyNotifications(id: number) {
+  async getMyNotifications(id: string) {
     const member = await this.memberRepository.findOneBy({ id });
 
     if (!member) throw new NotFoundException('Member not found.');
@@ -76,7 +76,7 @@ export class NotificationService {
   }
 
   async markNotificationRead(
-    id: number,
+    id: string,
     markNotificationReadDto: MarkNotificationReadDto,
   ) {
     const { notificationsIds } = markNotificationReadDto;

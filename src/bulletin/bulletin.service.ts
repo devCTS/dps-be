@@ -38,7 +38,7 @@ export class BulletinService {
     return allOrders.sort((a, b) => b.updatedAt - a.updatedAt);
   }
 
-  async getPendingOrders(id: number, userId: number) {
+  async getPendingOrders(id: string, userId: string) {
     const dto: PaginateRequestDto = {
       search: '',
       pageSize: Number.MAX_SAFE_INTEGER,

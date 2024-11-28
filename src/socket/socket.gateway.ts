@@ -91,7 +91,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     data: any;
     type: NotificationType;
     id: number;
-    memberId: number;
+    memberId: string;
   }) {
     // const membersRooms = [...this.userRooms.values()].filter((item) =>
     //   item.includes('Member'),
@@ -102,7 +102,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleSendNotification(notificationData: {
-    for: number;
+    for: string;
     userType: Users;
     type: NotificationType;
     data: any;
@@ -130,7 +130,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleSendAlert(alertData: {
-    for: number;
+    for: string;
     userType: Users;
     data: any;
     type: AlertType;

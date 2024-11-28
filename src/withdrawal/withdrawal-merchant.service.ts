@@ -31,7 +31,7 @@ export class WithdrawalMerchantService {
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
   ) {}
 
-  async getChannelProfileDetails(id: number) {
+  async getChannelProfileDetails(id: string) {
     const merchant = await this.merchantRepository.findOne({
       where: {
         id,

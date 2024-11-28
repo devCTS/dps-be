@@ -24,7 +24,7 @@ export class SubMerchantResponseDto {
   phone: string;
 
   @Expose()
-  id: number;
+  id: string;
 
   @Expose()
   enabled: boolean;

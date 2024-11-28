@@ -31,7 +31,7 @@ export class WithdrawalAgentService {
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
   ) {}
 
-  async getChannelProfileDetails(id: number) {
+  async getChannelProfileDetails(id: string) {
     const agent = await this.agentRepository.findOne({
       where: {
         id,

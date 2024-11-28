@@ -19,7 +19,7 @@ import { TransformTransactionDetails } from './payin-admin-response.dto';
 @Exclude()
 export class PayinMemberResponseDto {
   @Expose()
-  id: number;
+  id: string;
 
   @Expose()
   systemOrderId: string;
@@ -53,7 +53,7 @@ export class PayinMemberResponseDto {
 
 export class PayinDetailsMemberResDto {
   @Expose()
-  id: number;
+  id: string;
 
   @Expose()
   systemOrderId: string;

@@ -13,7 +13,7 @@ import { CreateDateColumn } from 'typeorm';
 @Exclude()
 export class PayinAdminResponseDto {
   @Expose()
-  id: number;
+  id: string;
 
   @Expose()
   systemOrderId: string;
@@ -76,7 +76,7 @@ export class PayinAdminResponseDto {
 @Exclude()
 export class PayinDetailsAdminResDto {
   @Expose()
-  id: number;
+  id: string;
 
   @Expose()
   systemOrderId: string;

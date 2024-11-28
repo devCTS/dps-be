@@ -16,9 +16,9 @@ export class AssignPayoutOrderDto {
   paymentMode: PaymentMadeOn;
 
   @IsOptional()
-  @IsNumber()
+  @IsString()
   @IsNotEmpty()
-  memberId?: number;
+  memberId?: string;
 
   @IsNumber()
   @IsNotEmpty()

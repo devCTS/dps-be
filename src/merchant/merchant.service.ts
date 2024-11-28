@@ -227,7 +227,7 @@ export class MerchantService {
     return plainToInstance(MerchantResponseDto, results);
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const results = await this.merchantRepository.findOne({
       where: { id },
       relations: [
@@ -255,7 +255,7 @@ export class MerchantService {
     });
   }
 
-  async update(id: number, updateDto: UpdateMerchantDto) {
+  async update(id: string, updateDto: UpdateMerchantDto) {
     const channelProfile = updateDto.channelProfile;
     const payinChannels = updateDto.payinChannels;
     const payoutChannels = updateDto.payoutChannels;
@@ -375,7 +375,7 @@ export class MerchantService {
   }
 
   async updateChannels(
-    id: number,
+    id: string,
     updateMerchantChannelDto: UpdateMerchantChannelDto,
   ) {
     const channelProfile = updateMerchantChannelDto.channelProfile;
@@ -435,7 +435,7 @@ export class MerchantService {
     return HttpStatus.OK;
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const merchant = await this.merchantRepository.findOne({
       where: { id: id },
       relations: ['identity', 'submerchants'], // Ensure you load the identity relation
@@ -456,7 +456,7 @@ export class MerchantService {
   }
 
   async updatePayinModeDetails(
-    merchantId: number,
+    merchantId: string,
     modeType: 'DEFAULT' | 'PROPORTIONAL' | 'AMOUNT RANGE',
     numberOfRangesOrRatio?: number,
     rangeDtos?: RangeDto[],
@@ -508,7 +508,7 @@ export class MerchantService {
     }
   }
 
-  async deletePayinMode(merchantId: number): Promise<void> {
+  async deletePayinMode(merchantId: string): Promise<void> {
     // Find the PayinMode entity
     const payinMode = await this.payinModeRepository.findOne({
       where: { merchant: { id: merchantId } },
@@ -624,7 +624,7 @@ export class MerchantService {
     };
   }
 
-  async getProfile(id: number) {
+  async getProfile(id: string) {
     const profile = await this.findOne(id);
     if (!profile.enabled) {
       throw new UnauthorizedException('Unauthorized.');
@@ -633,7 +633,7 @@ export class MerchantService {
     return profile;
   }
 
-  async changePassword(changePasswordDto: ChangePasswordDto, id: number) {
+  async changePassword(changePasswordDto: ChangePasswordDto, id: string) {
     const merchantData = await this.merchantRepository.findOne({
       where: { id },
       relations: ['identity'],
@@ -649,7 +649,7 @@ export class MerchantService {
 
   async changeWithdrawalPassword(
     changePasswordDto: ChangePasswordDto,
-    id: number,
+    id: string,
   ) {
     const merchantData = await this.merchantRepository.findOne({
       where: { id },
@@ -740,7 +740,7 @@ export class MerchantService {
 
   async verifyWithdrawalPassword(
     verifyWithdrawalPasswordDto: VerifyWithdrawalPasswordDto,
-    id: number,
+    id: string,
   ) {
     const { password } = verifyWithdrawalPasswordDto;
 

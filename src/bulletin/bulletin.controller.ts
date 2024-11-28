@@ -13,7 +13,7 @@ export class BulletinController {
   }
 
   @Get('pending-orders/:id')
-  getPendingOrders(@Param('id') id: number, @UserInReq() user) {
+  getPendingOrders(@Param('id') id: string, @UserInReq() user) {
     return this.bulletinService.getPendingOrders(id, user.userId);
   }
 }

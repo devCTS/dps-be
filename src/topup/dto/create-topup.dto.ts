@@ -22,6 +22,6 @@ export class CreateTopupDto {
   channelDetails: any;
 
   @IsOptional()
-  @IsNumber()
-  memberId?: number;
+  @IsString()
+  memberId?: string;
 }

@@ -23,7 +23,7 @@ export class Notification {
   updatedAt: Date;
 
   @Column({ nullable: true })
-  for: number;
+  for: string;
 
   @Column({ nullable: true, type: 'enum', enum: NotificationType })
   type: NotificationType;

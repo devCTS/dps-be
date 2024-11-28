@@ -55,7 +55,7 @@ export class MerchantController {
   @Get(':id')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   findOne(@Param('id') id: string) {
-    return this.merchantService.findOne(+id);
+    return this.merchantService.findOne(id);
   }
 
   @Patch('channels')
@@ -66,7 +66,7 @@ export class MerchantController {
     @Body() updateMerchantChannelDto: UpdateMerchantChannelDto,
   ) {
     return this.merchantService.updateChannels(
-      +user.id,
+      user.id,
       updateMerchantChannelDto,
     );
   }
@@ -77,13 +77,13 @@ export class MerchantController {
     @Param('id') id: string,
     @Body() updateMerchantDto: UpdateMerchantDto,
   ) {
-    return this.merchantService.update(+id, updateMerchantDto);
+    return this.merchantService.update(id, updateMerchantDto);
   }
 
   @Delete(':id')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   remove(@Param('id') id: string) {
-    return this.merchantService.remove(+id);
+    return this.merchantService.remove(id);
   }
 
   @Post('paginate')

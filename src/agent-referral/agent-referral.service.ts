@@ -109,7 +109,7 @@ export class AgentReferralService {
     };
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const agentReferral = await this.agentReferralRepository.findOneBy({ id });
 
     return {
@@ -128,7 +128,7 @@ export class AgentReferralService {
     return agentReferral;
   }
 
-  async update(id: number, updateAgentReferralDto: UpdateAgentReferralDto) {
+  async update(id: string, updateAgentReferralDto: UpdateAgentReferralDto) {
     const agentReferral = await this.agentReferralRepository.findOneBy({ id });
     if (!agentReferral) throw new NotFoundException();
 
@@ -171,7 +171,7 @@ export class AgentReferralService {
       );
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const agentReferral = await this.agentReferralRepository.findOneBy({ id });
 
     if (agentReferral) await this.agentReferralRepository.remove(agentReferral);
@@ -332,7 +332,7 @@ export class AgentReferralService {
     };
   }
 
-  async getReferralTreeOfUser(userId: number) {
+  async getReferralTreeOfUser(userId: string) {
     const referralTree = await this.getReferralTree();
     if (!referralTree) {
       const merchant = await this.merchantRepository.findOne({
@@ -357,7 +357,7 @@ export class AgentReferralService {
     return await this.trimTreeToUser(referralTree, userId);
   }
 
-  private async trimTreeToUser(tree: any, userId: number): Promise<any> {
+  private async trimTreeToUser(tree: any, userId: string): Promise<any> {
     if (tree.uniqueId === userId)
       return {
         id: tree.id,

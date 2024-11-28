@@ -137,14 +137,14 @@ export class WithdrawalController {
 
     const merchantId = subMerchant ? subMerchant.merchant.id : user.id;
 
-    return this.withdrawalMerchantService.getChannelProfileDetails(+merchantId);
+    return this.withdrawalMerchantService.getChannelProfileDetails(merchantId);
   }
 
   @Get('agent-channel-details/:id')
   @Roles(Role.AGENT)
   @UseGuards(RolesGuard)
   getChannelProfileDetailsForAgent(@UserInReq() user) {
-    return this.withdrawalAgentService.getChannelProfileDetails(+user.id);
+    return this.withdrawalAgentService.getChannelProfileDetails(user.id);
   }
 
   @Post('update-status-complete')

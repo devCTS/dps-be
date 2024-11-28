@@ -58,7 +58,7 @@ export class TopupController {
     @Body() paginateRequestDto: PaginateRequestDto,
     @UserInReq() user,
   ) {
-    return this.topupMemberService.paginate(paginateRequestDto, +user.id);
+    return this.topupMemberService.paginate(paginateRequestDto, user.id);
   }
 
   @Get('admin/:id')

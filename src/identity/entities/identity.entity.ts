@@ -22,8 +22,8 @@ import { FundRecord } from 'src/fund-record/entities/fund-record.entity';
 
 @Entity()
 export class Identity {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ unique: true })
   email: string;

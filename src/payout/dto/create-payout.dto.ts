@@ -40,12 +40,12 @@ export class CreatePayoutDto {
   mobile: string;
 
   @IsNotEmpty()
-  @IsNumber()
-  merchantId: number;
+  @IsString()
+  merchantId: string;
 
   @IsOptional()
-  @IsNumber()
-  memberId?: number;
+  @IsString()
+  memberId?: string;
 
   @IsString()
   userId: string;

@@ -12,8 +12,8 @@ import {
 
 @Entity()
 export class Admin {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @OneToOne(() => Identity, (identity) => identity.admin)
   @JoinColumn({ name: 'identity_id' })

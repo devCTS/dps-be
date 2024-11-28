@@ -69,7 +69,7 @@ export class PayoutService {
     private readonly alertService: AlertService,
   ) {}
 
-  async create(payoutDetails: CreatePayoutDto, merchantId: number) {
+  async create(payoutDetails: CreatePayoutDto, merchantId: string) {
     const { name, email, channelDetails, channel, mobile, userId } =
       payoutDetails;
 
