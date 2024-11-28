@@ -21,23 +21,36 @@ export class NotificationService {
   ) {}
 
   async create(createNotificationDto: CreateNotificationDto) {
-    const { for: memberId, type, data } = createNotificationDto;
+    const { type, data } = createNotificationDto;
+
+    const onlineMembers = await this.memberRepository.find({
+      where: {
+        isOnline: true,
+      },
+    });
 
     try {
-      const createdNotification = await this.notificationRepository.save(
-        createNotificationDto,
-      );
-      this.socketGateway.handleSendNotification({
-        for: memberId,
-        userType: Users.MEMBER,
-        type,
-        data,
-        id: createdNotification.id,
+      const notifications = onlineMembers.map(async (member) => {
+        const createdNotification = await this.notificationRepository.save({
+          ...createNotificationDto,
+          for: member.id,
+        });
+
+        await this.socketGateway.handleSendNotification({
+          for: member.id,
+          userType: Users.MEMBER,
+          type,
+          data,
+          id: createdNotification.id,
+        });
       });
+
+      await Promise.all(notifications);
 
       return HttpStatus.CREATED;
     } catch (error) {
-      console.log(error);
+      console.error('Error creating notifications:', error);
+      throw new Error('Failed to create notifications');
     }
   }
 
@@ -63,7 +76,7 @@ export class NotificationService {
   }
 
   async markNotificationRead(
-    id,
+    id: number,
     markNotificationReadDto: MarkNotificationReadDto,
   ) {
     const { notificationsIds } = markNotificationReadDto;

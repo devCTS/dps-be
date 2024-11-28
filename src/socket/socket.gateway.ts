@@ -85,17 +85,19 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     data,
     type,
     id,
+    memberId,
   }: {
     text: string;
     data: any;
     type: NotificationType;
     id: number;
+    memberId: number;
   }) {
-    const membersRooms = [...this.userRooms.values()].filter((item) =>
-      item.includes('Member'),
-    );
+    // const membersRooms = [...this.userRooms.values()].filter((item) =>
+    //   item.includes('Member'),
+    // );
     this.server
-      .to(membersRooms)
+      .to(`Member_${memberId}`)
       .emit('newNotification', { data, text, type, date: new Date(), id: id });
   }
 
@@ -112,7 +114,13 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
       notificationData.type === NotificationType.GRAB_PAYOUT ||
       notificationData.type === NotificationType.GRAB_TOPUP
     ) {
-      this.handleBroadcastUsers({ text, data, type, id });
+      this.handleBroadcastUsers({
+        text,
+        data,
+        type,
+        id,
+        memberId: notificationData.for,
+      });
     } else {
       const roomId = `Member_${notificationData.for}`;
       this.server
