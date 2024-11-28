@@ -78,6 +78,8 @@ export class SystemConfigService {
       take: 1,
     });
 
+    if (!latestResult.length) return null;
+
     const channels = await this.getTopupChannels();
 
     const {
@@ -102,6 +104,8 @@ export class SystemConfigService {
       },
       take: 1,
     });
+
+    if (!latestResult.length) return null;
 
     const {
       defaultPayinGateway,
