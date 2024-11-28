@@ -12,7 +12,6 @@ import { SystemConfig } from './entities/system-config.entity';
 
 import { Identity } from 'src/identity/entities/identity.entity';
 
-import { CreateSystemConfigDto } from './dto/create-system-config.dto';
 import { UpdateGatewaysTimeoutsDto } from './dto/update-gateways-timeouts.dto';
 import { UpdateCurrencyDto } from './dto/update-currency.dto';
 import { UpdateTopupConfigDto } from './dto/update-topup-config.dto';
@@ -81,9 +80,18 @@ export class SystemConfigService {
 
     const channels = await this.getTopupChannels();
 
+    const {
+      defaultPayinGateway,
+      defaultPayoutGateway,
+      defaultWithdrawalGateway,
+    } = latestResult[0];
+
     return plainToInstance(SystemConfigResponseDto, {
       ...latestResult[0],
       channelProfile: channels,
+      defaultPayinGateway: JSON.parse(defaultPayinGateway),
+      defaultPayoutGateway: JSON.parse(defaultPayoutGateway),
+      defaultWithdrawalGateway: JSON.parse(defaultWithdrawalGateway),
     });
   }
 
@@ -93,19 +101,20 @@ export class SystemConfigService {
         createdAt: 'DESC',
       },
       take: 1,
-      relations: withRelations
-        ? [
-            // 'defaultPayinGateway',
-            // 'defaultPayoutGateway',
-            // 'defaultWithdrawalGateway',
-            // 'defaultTopupChannels',
-            // 'defaultTopupChannels.field',
-            // 'defaultTopupChannels.field.channel',
-          ]
-        : [],
     });
 
-    return latestResult[0];
+    const {
+      defaultPayinGateway,
+      defaultPayoutGateway,
+      defaultWithdrawalGateway,
+    } = latestResult[0];
+
+    return {
+      ...latestResult[0],
+      defaultPayinGateway: JSON.parse(defaultPayinGateway),
+      defaultPayoutGateway: JSON.parse(defaultPayoutGateway),
+      defaultWithdrawalGateway: JSON.parse(defaultWithdrawalGateway),
+    };
   }
 
   async updateGatewaysAndTimeouts(
@@ -123,9 +132,9 @@ export class SystemConfigService {
 
     if (!latestResult) {
       await this.systemConfigRepository.save({
-        defaultPayinGateway,
-        defaultPayoutGateway,
-        defaultWithdrawalGateway,
+        defaultPayinGateway: JSON.stringify(defaultPayinGateway),
+        defaultPayoutGateway: JSON.stringify(defaultPayoutGateway),
+        defaultWithdrawalGateway: JSON.stringify(defaultWithdrawalGateway),
         payinTimeout,
         payoutTimeout,
       });
@@ -143,9 +152,9 @@ export class SystemConfigService {
     delete latestResult.updatedAt;
 
     const newSystemConfig = this.systemConfigRepository.save({
-      defaultPayinGateway,
-      defaultPayoutGateway,
-      defaultWithdrawalGateway,
+      defaultPayinGateway: JSON.stringify(defaultPayinGateway),
+      defaultPayoutGateway: JSON.stringify(defaultPayoutGateway),
+      defaultWithdrawalGateway: JSON.stringify(defaultWithdrawalGateway),
       payinTimeout,
       payoutTimeout,
       ...latestResult,

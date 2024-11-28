@@ -23,14 +23,14 @@ export class SystemConfig {
   @Column({ nullable: true })
   currency: string;
 
-  @Column({ nullable: true, default: GatewayName.RAZORPAY })
-  defaultPayinGateway: GatewayName;
+  @Column({ nullable: true })
+  defaultPayinGateway: string;
 
-  @Column({ nullable: true, default: GatewayName.RAZORPAY })
-  defaultWithdrawalGateway: GatewayName;
+  @Column({ nullable: true })
+  defaultWithdrawalGateway: string;
 
-  @Column({ nullable: true, default: GatewayName.RAZORPAY })
-  defaultPayoutGateway: GatewayName;
+  @Column({ nullable: true })
+  defaultPayoutGateway: string;
 
   // Topup Configurations
   @Column({ nullable: true })

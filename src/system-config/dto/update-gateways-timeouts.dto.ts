@@ -1,15 +1,14 @@
-import { IsEnum, IsNumber } from 'class-validator';
-import { GatewayName } from 'src/utils/enum/enum';
+import { IsNumber, IsObject } from 'class-validator';
 
 export class UpdateGatewaysTimeoutsDto {
-  @IsEnum(GatewayName)
-  defaultPayinGateway: GatewayName;
+  @IsObject()
+  defaultPayinGateway: object;
 
-  @IsEnum(GatewayName)
-  defaultPayoutGateway: GatewayName;
+  @IsObject()
+  defaultPayoutGateway: object;
 
-  @IsEnum(GatewayName)
-  defaultWithdrawalGateway: GatewayName;
+  @IsObject()
+  defaultWithdrawalGateway: object;
 
   @IsNumber()
   payinTimeout: number;

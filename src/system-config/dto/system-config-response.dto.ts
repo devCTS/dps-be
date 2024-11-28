@@ -55,13 +55,13 @@ function TransformChannelProfileFields() {
 export class SystemConfigResponseDto {
   // Gateways and Timeouts
   @Expose()
-  defaultPayinGateway: number;
+  defaultPayinGateway: object;
 
   @Expose()
-  defaultPayoutGateway: number;
+  defaultPayoutGateway: object;
 
   @Expose()
-  defaultWithdrawalGateway: number;
+  defaultWithdrawalGateway: object;
 
   @Expose()
   payinTimeout: number;

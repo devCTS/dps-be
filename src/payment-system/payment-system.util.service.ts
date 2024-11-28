@@ -209,36 +209,36 @@ export class PaymentSystemUtilService {
     amount,
     priority: GatewayName | null = null,
   ) {
-    let selectedGateway =
-      priority ||
-      (await this.systemConfigService.findLatest()).defaultPayinGateway;
+    let selectedGateway;
+    // let selectedGateway =
+    //   priority ||
+    //   (await this.systemConfigService.findLatest()).defaultPayinGateway;
 
-    const alternateGateway =
-      selectedGateway === GatewayName.RAZORPAY
-        ? GatewayName.PHONEPE
-        : GatewayName.RAZORPAY;
+    // const alternateGateway =
+    //   selectedGateway === GatewayName.RAZORPAY
+    //     ? GatewayName.PHONEPE
+    //     : GatewayName.RAZORPAY;
 
-    const isSelectedGatewayEnabled = await this.checkGatewayAndChannelEnabled(
-      selectedGateway,
-      channelName,
-    );
+    // const isSelectedGatewayEnabled = await this.checkGatewayAndChannelEnabled(
+    //   selectedGateway,
+    //   channelName,
+    // );
 
-    if (!isSelectedGatewayEnabled) {
-      selectedGateway = alternateGateway;
-      const isSelectedGatewayEnabled = await this.checkGatewayAndChannelEnabled(
-        selectedGateway,
-        channelName,
-      );
+    // if (!isSelectedGatewayEnabled) {
+    //   selectedGateway = alternateGateway;
+    //   const isSelectedGatewayEnabled = await this.checkGatewayAndChannelEnabled(
+    //     selectedGateway,
+    //     channelName,
+    //   );
 
-      if (!isSelectedGatewayEnabled) {
-        while (true) {
-          const selectedMember = await this.getMemberForPayin(
-            channelName,
-            amount,
-          );
-          if (selectedMember) return selectedMember;
-          await new Promise((resolve) => setTimeout(resolve, 500));
-        }
+    if (true) {
+      while (true) {
+        const selectedMember = await this.getMemberForPayin(
+          channelName,
+          amount,
+        );
+        if (selectedMember) return selectedMember;
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
     }
 
