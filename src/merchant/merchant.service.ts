@@ -11,7 +11,10 @@ import {
   RangeDto,
   RatioDto,
 } from './dto/create-merchant.dto';
-import { UpdateMerchantDto } from './dto/update-merchant.dto';
+import {
+  UpdateMerchantChannelDto,
+  UpdateMerchantDto,
+} from './dto/update-merchant.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Merchant } from './entities/merchant.entity';
 import { Repository, Between, Not } from 'typeorm';
@@ -367,6 +370,67 @@ export class MerchantService {
       amountRanges,
       ratios,
     );
+
+    return HttpStatus.OK;
+  }
+
+  async updateChannels(
+    id: number,
+    updateMerchantChannelDto: UpdateMerchantChannelDto,
+  ) {
+    const channelProfile = updateMerchantChannelDto.channelProfile;
+
+    const merchant = await this.merchantRepository.findOne({
+      where: { id },
+      relations: ['identity'], // Explicitly specify the relations
+    });
+
+    if (!merchant) throw new NotFoundException('Merchant not found.');
+
+    // Deleting all existing Data
+    await this.upiRepository.delete({
+      identity: {
+        id: merchant.identity.id,
+      },
+    });
+    await this.eWalletRepository.delete({
+      identity: {
+        id: merchant.identity.id,
+      },
+    });
+    await this.netBankingRepository.delete({
+      identity: {
+        id: merchant.identity.id,
+      },
+    });
+
+    // Adding all the channels
+    if (channelProfile?.upi && channelProfile.upi.length > 0) {
+      for (const element of channelProfile.upi) {
+        await this.upiRepository.save({
+          ...element,
+          identity: merchant.identity,
+        });
+      }
+    }
+
+    if (channelProfile?.eWallet) {
+      for (const element of channelProfile.eWallet) {
+        await this.eWalletRepository.save({
+          ...element,
+          identity: merchant.identity,
+        });
+      }
+    }
+
+    if (channelProfile?.netBanking) {
+      for (const element of channelProfile.netBanking) {
+        await this.netBankingRepository.save({
+          ...element,
+          identity: merchant.identity,
+        });
+      }
+    }
 
     return HttpStatus.OK;
   }

@@ -12,7 +12,10 @@ import {
 } from '@nestjs/common';
 import { MerchantService } from './merchant.service';
 import { CreateMerchantDto } from './dto/create-merchant.dto';
-import { UpdateMerchantDto } from './dto/update-merchant.dto';
+import {
+  UpdateMerchantChannelDto,
+  UpdateMerchantDto,
+} from './dto/update-merchant.dto';
 import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
 import { IdentityService } from 'src/identity/identity.service';
 import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
@@ -53,6 +56,19 @@ export class MerchantController {
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   findOne(@Param('id') id: string) {
     return this.merchantService.findOne(+id);
+  }
+
+  @Patch('channels')
+  @UseGuards(RolesGuard)
+  @Roles(Role.MERCHANT)
+  updateAgentChannels(
+    @UserInReq() user,
+    @Body() updateMerchantChannelDto: UpdateMerchantChannelDto,
+  ) {
+    return this.merchantService.updateChannels(
+      +user.id,
+      updateMerchantChannelDto,
+    );
   }
 
   @Patch(':id')
