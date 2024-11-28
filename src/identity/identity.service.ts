@@ -466,7 +466,7 @@ export class IdentityService {
   async getUserCurrentBalance(userId, body) {
     const { userType } = body;
 
-    let amount;
+    let amount = 0;
 
     switch (userType) {
       case 'MERCHANT':
@@ -487,8 +487,6 @@ export class IdentityService {
           'User type must be - MERCHANT, MEMBER or AGENT',
         );
     }
-
-    if (!amount) throw new NotFoundException('User not found!');
 
     return roundOffAmount(amount);
   }
