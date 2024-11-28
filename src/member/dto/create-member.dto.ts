@@ -72,15 +72,6 @@ export class CreateMemberDto {
   @Min(0)
   dailyTotalPayoutLimit: number;
 
-  @IsNumber()
-  withdrawalRate: number;
-
-  @IsNumber()
-  minWithdrawalAmount: number;
-
-  @IsNumber()
-  maxWithdrawalAmount: number;
-
   @IsOptional()
   @Type(() => ChannelProfileDto)
   @ValidateNested({ each: true })
@@ -89,8 +80,4 @@ export class CreateMemberDto {
   @IsOptional()
   @IsBoolean()
   isOnline: boolean;
-
-  @IsNotEmpty()
-  @IsString()
-  withdrawalPassword: string;
 }

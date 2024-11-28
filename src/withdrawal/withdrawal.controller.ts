@@ -9,7 +9,6 @@ import {
 } from '@nestjs/common';
 import { WithdrawalService } from './withdrawal.service';
 import { CreateWithdrawalDto } from './dto/create-withdrawal.dto';
-import { WithdrawalMemberService } from './withdrawal-member.service';
 import { WithdrawalMerchantService } from './withdrawal-merchant.service';
 import { WithdrawalAgentService } from './withdrawal-agent.service';
 import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
@@ -28,17 +27,32 @@ export class WithdrawalController {
     @InjectRepository(Submerchant)
     private readonly submerchantRepository: Repository<Submerchant>,
     private readonly withdrawalService: WithdrawalService,
-    private readonly withdrawalMemberService: WithdrawalMemberService,
     private readonly withdrawalMerchantService: WithdrawalMerchantService,
     private readonly withdrawalAgentService: WithdrawalAgentService,
     private readonly withdrawalAdminService: WithdrawalAdminService,
   ) {}
 
   @Post()
-  @Roles(Role.MERCHANT, Role.AGENT, Role.MEMBER, Role.SUB_MERCHANT)
+  @Roles(Role.MERCHANT, Role.AGENT, Role.SUB_MERCHANT)
   @UseGuards(RolesGuard)
-  create(@Body() createWithdrawalDto: CreateWithdrawalDto) {
-    return this.withdrawalService.create(createWithdrawalDto);
+  async create(
+    @Body() createWithdrawalDto: CreateWithdrawalDto,
+    @UserInReq() user,
+  ) {
+    const isSubMerchant = user?.type?.includes('SUB');
+
+    let subMerchant = null;
+    let email;
+
+    if (isSubMerchant)
+      subMerchant = await this.submerchantRepository.findOne({
+        where: { id: user.id },
+        relations: ['merchant'],
+      });
+
+    email = subMerchant ? subMerchant.merchant.email : user.email;
+
+    return this.withdrawalService.create(createWithdrawalDto, email);
   }
 
   @Post('admin/paginate')
@@ -53,26 +67,6 @@ export class WithdrawalController {
   @UseGuards(RolesGuard)
   getOrderDetailsForAdmin(@Param('id') id: string) {
     return this.withdrawalAdminService.getOrderDetails(id);
-  }
-
-  @Post('member/paginate')
-  @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN, Role.MEMBER)
-  @UseGuards(RolesGuard)
-  memberPayins(
-    @Body() paginateRequestDto: PaginateRequestDto,
-    @UserInReq() user,
-  ) {
-    return this.withdrawalMemberService.paginateWithdrawals(
-      paginateRequestDto,
-      +user.id,
-    );
-  }
-
-  @Get('member/:id')
-  @Roles(Role.MEMBER)
-  @UseGuards(RolesGuard)
-  getOrderDetailsForMember(@Param('id') id: string) {
-    return this.withdrawalMemberService.getOrderDetails(id);
   }
 
   @Post('merchant/paginate')
@@ -127,13 +121,6 @@ export class WithdrawalController {
     return this.withdrawalAgentService.getOrderDetails(id);
   }
 
-  @Get('member-channel-details')
-  @Roles(Role.MEMBER)
-  @UseGuards(RolesGuard)
-  getChannelProfileDetailsForMember(@UserInReq() user) {
-    return this.withdrawalMemberService.getChannelProfileDetails(+user.id);
-  }
-
   @Get('merchant-channel-details')
   @Roles(Role.MERCHANT, Role.SUB_MERCHANT)
   @UseGuards(RolesGuard)
@@ -185,7 +172,7 @@ export class WithdrawalController {
   }
 
   @Put('success-notification/:id')
-  @Roles(Role.AGENT, Role.MERCHANT, Role.MEMBER)
+  @Roles(Role.AGENT, Role.MERCHANT)
   @UseGuards(RolesGuard)
   handleNotificationStatusSuccess(@Param('id') id: string) {
     return this.withdrawalService.handleNotificationStatusSuccess(id);

@@ -150,6 +150,7 @@ export class PayoutMemberService {
 
     const userChannelName = orderDetails.user.channel;
     let transactionDetails = null;
+
     if (
       userChannelName === ChannelName.UPI &&
       orderDetails.status === OrderStatus.ASSIGNED

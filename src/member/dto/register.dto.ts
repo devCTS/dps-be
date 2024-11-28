@@ -22,11 +22,6 @@ export class RegisterDto {
   password: string;
 
   @IsString()
-  @IsNotEmpty()
-  @IsValidPassword()
-  withDrawalPassword: string;
-
-  @IsString()
   @IsOptional()
   referralCode?: string;
 

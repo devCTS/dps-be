@@ -1,13 +1,9 @@
-import { EndUser } from 'src/end-user/entities/end-user.entity';
 import { Member } from 'src/member/entities/member.entity';
-import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import {
   ChannelName,
-  GatewayName,
   NotificationStatus,
   OrderStatus,
-  PaymentMadeOn,
 } from 'src/utils/enum/enum';
 import {
   Column,

@@ -93,21 +93,10 @@ function TransformBalancesAndProfit() {
   return Transform(
     ({ value }) => {
       const mappedValues = value.map((item) => {
-        const roleMapping = {
-          agent_balance: 'agent',
-          merchant_balance: 'merchant',
-          member_balance: 'agent',
-          system_profit: 'system',
-          member_quota: 'member',
-          gateway_fee: 'gateway',
-        };
-
-        const role = roleMapping[item.userType] || item.userType;
-
         switch (item.userType) {
           case UserTypeForTransactionUpdates.MERCHANT_BALANCE:
             return {
-              role,
+              role: 'merchant',
               name: item.name,
               serviceRate: item.rate,
               serviceFee: roundOffAmount(item.amount),
@@ -118,7 +107,7 @@ function TransformBalancesAndProfit() {
 
           case UserTypeForTransactionUpdates.AGENT_BALANCE:
             return {
-              role,
+              role: 'agent',
               name: item.name,
               commissionRate: item.rate,
               commissionAmount: roundOffAmount(item.amount),
@@ -129,32 +118,31 @@ function TransformBalancesAndProfit() {
             };
 
           case UserTypeForTransactionUpdates.MEMBER_QUOTA:
-            return {
-              role,
-              name: item.name,
-              commissionRate: item.rate,
-              commissionAmount: roundOffAmount(item.amount),
-              quotaEarned: roundOffAmount(item.after - item.before, true),
-              quotaBefore: roundOffAmount(item.before),
-              quotaAfter: roundOffAmount(item.after),
-            };
-
-          case UserTypeForTransactionUpdates.MEMBER_BALANCE:
-            return {
-              role,
-              name: item.name,
-              commissionRate: item.rate,
-              commissionAmount: roundOffAmount(item.amount),
-              balanceEarned: roundOffAmount(item.after - item.before, true),
-              balanceBefore: roundOffAmount(item.before),
-              balanceAfter: roundOffAmount(item.after),
-              isAgentOf: item.isAgentOf,
-              isMember: true,
-            };
+            return item.isAgentMember
+              ? {
+                  role: 'agent',
+                  name: item.name,
+                  commissionRate: item.rate,
+                  commissionAmount: roundOffAmount(item.amount),
+                  balanceEarned: roundOffAmount(item.after - item.before, true),
+                  balanceBefore: roundOffAmount(item.before),
+                  balanceAfter: roundOffAmount(item.after),
+                  isAgentOf: item.isAgentOf,
+                  isMember: true,
+                }
+              : {
+                  role: 'member',
+                  name: item.name,
+                  commissionRate: item.rate,
+                  commissionAmount: roundOffAmount(item.amount),
+                  quotaEarned: roundOffAmount(item.after - item.before, true),
+                  quotaBefore: roundOffAmount(item.before),
+                  quotaAfter: roundOffAmount(item.after),
+                };
 
           case UserTypeForTransactionUpdates.SYSTEM_PROFIT:
             return {
-              role,
+              role: 'system',
               profit: roundOffAmount(item.after - item.before),
               balanceBefore: roundOffAmount(item.before),
               balanceAfter: roundOffAmount(item.after),
@@ -162,7 +150,7 @@ function TransformBalancesAndProfit() {
 
           case UserTypeForTransactionUpdates.GATEWAY_FEE:
             return {
-              role,
+              role: 'gateway',
               name: item.name,
               upstreamFee: roundOffAmount(item.amount),
               upstreamRate: item.rate,

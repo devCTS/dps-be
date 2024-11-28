@@ -4,7 +4,6 @@ import { WithdrawalController } from './withdrawal.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Withdrawal } from './entities/withdrawal.entity';
 import { Member } from 'src/member/entities/member.entity';
-import { WithdrawalMemberService } from './withdrawal-member.service';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { WithdrawalAgentService } from './withdrawal-agent.service';
 import { WithdrawalAdminService } from './withdrawal-admin.service';
@@ -49,7 +48,6 @@ import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
   controllers: [WithdrawalController],
   providers: [
     WithdrawalService,
-    WithdrawalMemberService,
     WithdrawalAgentService,
     WithdrawalAdminService,
     WithdrawalMerchantService,
