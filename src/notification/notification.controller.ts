@@ -33,7 +33,7 @@ export class NotificationController {
     return this.notificationService.getMyNotifications(+user.id);
   }
 
-  @Put('mark-read/:id')
+  @Put('mark-read')
   @Roles(Role.ALL)
   @UseGuards(RolesGuard)
   markNotificationRead(
