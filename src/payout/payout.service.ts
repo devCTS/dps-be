@@ -97,6 +97,9 @@ export class PayoutService {
 
       await this.endUserRepository.update(endUserData.id, {
         channelDetails: JSON.stringify(parsedChannedDetails),
+        name,
+        mobile,
+        email,
       });
     } else {
       const parsedChannelDetails = {
@@ -333,11 +336,12 @@ export class PayoutService {
 
   async updatePayoutStatusToComplete(body) {
     const { id } = body;
+
     const payoutOrderDetails = await this.payoutRepository.findOne({
       where: {
         systemOrderId: id,
       },
-      relations: ['member', 'merchant'],
+      relations: ['member', 'merchant', 'user'],
     });
     if (!payoutOrderDetails) throw new NotFoundException('Order not found');
 
@@ -451,6 +455,16 @@ export class PayoutService {
         amount: payoutOrderDetails.amount,
         channel: payoutOrderDetails.channel,
       },
+    });
+
+    const endUser = await this.endUserRepository.findOne({
+      where: {
+        id: payoutOrderDetails.user.id,
+      },
+    });
+
+    await this.endUserRepository.update(endUser.id, {
+      totalPayoutAmount: endUser.totalPayoutAmount + payoutOrderDetails.amount,
     });
 
     return HttpStatus.OK;

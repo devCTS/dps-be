@@ -142,53 +142,33 @@ export class PayoutMerchantService {
 
   async paginateMerchantUsers(
     paginateRequestDto: PaginateRequestDto,
-    searchSuggestion: string,
     userId: number,
   ) {
-    const {
-      search,
-      pageSize,
-      pageNumber,
-      startDate,
-      endDate,
-      sortBy,
-      //  userId
-    } = paginateRequestDto;
+    const { search, pageSize, pageNumber, startDate, endDate, sortBy } =
+      paginateRequestDto;
 
     const skip = (pageNumber - 1) * pageSize;
     const take = pageSize;
 
-    const queryBuilder = this.payoutRepository
-      .createQueryBuilder('payout')
-      .leftJoinAndSelect('payout.merchant', 'merchant')
-      .leftJoinAndSelect('payout.user', 'user')
-      .leftJoinAndSelect('payout.member', 'member')
-      .leftJoinAndSelect('member.identity', 'identity')
+    const queryBuilder = this.endUserRepository
+      .createQueryBuilder('endUser')
+      .leftJoinAndSelect('endUser.merchant', 'merchant')
       .skip(skip)
       .take(take);
 
-    if (searchSuggestion)
-      queryBuilder.andWhere(`user.name ILIKE :search`, {
-        search: `%${searchSuggestion}%`,
+    if (userId) queryBuilder.andWhere('merchant.id = :userId', { userId });
+
+    if (search)
+      queryBuilder.andWhere(`CONCAT(endUser.name) ILIKE :search`, {
+        search: `%${search}%`,
       });
 
-    if (userId && !searchSuggestion)
-      queryBuilder.andWhere('merchant.id = :userId', { userId });
-
-    if (search && !searchSuggestion)
-      queryBuilder.andWhere(
-        `CONCAT(payout.systemOrderId, ' ', user.name) ILIKE :search`,
-        {
-          search: `%${search}%`,
-        },
-      );
-
-    if (startDate && endDate && !searchSuggestion) {
+    if (startDate && endDate) {
       const parsedStartDate = parseStartDate(startDate);
       const parsedEndDate = parseEndDate(endDate);
 
       queryBuilder.andWhere(
-        'payout.created_at BETWEEN :startDate AND :endDate',
+        'endUser.created_at BETWEEN :startDate AND :endDate',
         {
           startDate: parsedStartDate,
           endDate: parsedEndDate,
@@ -198,8 +178,8 @@ export class PayoutMerchantService {
 
     if (sortBy)
       sortBy === 'latest'
-        ? queryBuilder.orderBy('payout.createdAt', 'DESC')
-        : queryBuilder.orderBy('payout.createdAt', 'ASC');
+        ? queryBuilder.orderBy('endUser.createdAt', 'DESC')
+        : queryBuilder.orderBy('endUser.createdAt', 'ASC');
 
     const [rows, total] = await queryBuilder.getManyAndCount();
 
@@ -209,12 +189,13 @@ export class PayoutMerchantService {
     const dtos = await Promise.all(
       rows.map(async (row) => {
         return {
-          name: row.user.name,
-          channel: row.user.channel,
-          channelDetails: row.user.channelDetails,
-          email: row.user.email,
-          mobile: row.user.mobile,
-          orderId: row.systemOrderId,
+          name: row.name,
+          channel: row.channel,
+          channelDetails: row.channelDetails,
+          email: row.email,
+          mobile: row.mobile,
+          totalPayinAmount: row.totalPayinAmount,
+          totalPayoutAmount: row.totalPayoutAmount,
         };
       }),
     );
@@ -280,5 +261,21 @@ export class PayoutMerchantService {
     } catch (error) {
       throw new InternalServerErrorException();
     }
+  }
+
+  async confirmAndGetEndUserDetails(userId) {
+    const endUser = await this.endUserRepository.findOne({
+      where: {
+        userId,
+      },
+    });
+    if (!endUser) throw new NotFoundException('User with this ID not found!');
+
+    return {
+      name: endUser.name,
+      mobile: endUser.mobile,
+      email: endUser.email,
+      channelDetails: endUser.channelDetails,
+    };
   }
 }

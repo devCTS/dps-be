@@ -94,7 +94,6 @@ export class PayoutController {
   @UseGuards(RolesGuard)
   async merchantUserPayouts(
     @Body() paginateRequestDto: PaginateRequestDto,
-    @Query('searchSuggestion') searchSuggestion: any,
     @UserInReq() user,
   ) {
     const isSubMerchant = user?.type?.includes('SUB');
@@ -111,9 +110,15 @@ export class PayoutController {
 
     return this.payoutMerchantService.paginateMerchantUsers(
       paginateRequestDto,
-      searchSuggestion,
       +merchantId,
     );
+  }
+
+  @Get('merchant-user/details/:userId')
+  @Roles(Role.MERCHANT, Role.SUB_MERCHANT)
+  @UseGuards(RolesGuard)
+  async merchantUserDetails(@Param('userId') userId: string) {
+    return this.payoutMerchantService.confirmAndGetEndUserDetails(userId);
   }
 
   @Post('member/paginate')
