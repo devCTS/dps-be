@@ -13,7 +13,7 @@ import {
 import { AgentResponseDto } from './dto/agent-response.dto';
 import { CreateAgentDto } from './dto/create-agent.dto';
 import { AgentService } from './agent.service';
-import { UpdateAgentDto } from './dto/update-agent.dto';
+import { UpdateAgentChannelDto, UpdateAgentDto } from './dto/update-agent.dto';
 import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
 import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 import { IdentityService } from 'src/identity/identity.service';
@@ -47,6 +47,16 @@ export class AgentController {
   @Roles(Role.AGENT)
   getProfile(@UserInReq() user): Promise<AgentResponseDto> {
     return this.agentService.findOne(user.id);
+  }
+
+  @Patch('channels')
+  @UseGuards(RolesGuard)
+  @Roles(Role.AGENT)
+  updateAgentChannels(
+    @UserInReq() user,
+    @Body() updateAgentChannelDto: UpdateAgentChannelDto,
+  ) {
+    return this.agentService.updateChannels(+user.id, updateAgentChannelDto);
   }
 
   @Get(':id')

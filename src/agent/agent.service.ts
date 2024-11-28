@@ -11,7 +11,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, Not } from 'typeorm';
 import { AgentResponseDto } from './dto/agent-response.dto';
 import { plainToInstance } from 'class-transformer';
-import { UpdateAgentDto } from './dto/update-agent.dto';
+import { UpdateAgentChannelDto, UpdateAgentDto } from './dto/update-agent.dto';
 import {
   PaginateRequestDto,
   parseEndDate,
@@ -247,6 +247,67 @@ export class AgentService {
         email,
         password,
       );
+    }
+
+    return HttpStatus.OK;
+  }
+
+  async updateChannels(
+    id: number,
+    updateAgentChannelDto: UpdateAgentChannelDto,
+  ) {
+    const channelProfile = updateAgentChannelDto.channelProfile;
+
+    const agent = await this.agentRepository.findOne({
+      where: { id },
+      relations: ['identity'], // Explicitly specify the relations
+    });
+
+    if (!agent) throw new NotFoundException('Agent not found.');
+
+    // Deleting all existing Data
+    await this.upiRepository.delete({
+      identity: {
+        id: agent.identity.id,
+      },
+    });
+    await this.eWalletRepository.delete({
+      identity: {
+        id: agent.identity.id,
+      },
+    });
+    await this.netBankingRepository.delete({
+      identity: {
+        id: agent.identity.id,
+      },
+    });
+
+    // Adding all the channels
+    if (channelProfile?.upi && channelProfile.upi.length > 0) {
+      for (const element of channelProfile.upi) {
+        await this.upiRepository.save({
+          ...element,
+          identity: agent.identity,
+        });
+      }
+    }
+
+    if (channelProfile?.eWallet) {
+      for (const element of channelProfile.eWallet) {
+        await this.eWalletRepository.save({
+          ...element,
+          identity: agent.identity,
+        });
+      }
+    }
+
+    if (channelProfile?.netBanking) {
+      for (const element of channelProfile.netBanking) {
+        await this.netBankingRepository.save({
+          ...element,
+          identity: agent.identity,
+        });
+      }
     }
 
     return HttpStatus.OK;
