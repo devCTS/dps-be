@@ -89,8 +89,14 @@ export class MemberResponseDto {
   quota: number;
 
   @Expose()
-  @Transform(({ obj }) => obj?.firstName + ' ' + obj?.lastName, {
-    toClassOnly: true,
-  })
+  @Transform(
+    ({ obj }) =>
+      obj?.memberReferral?.member?.firstName +
+      ' ' +
+      obj?.memberReferral?.member?.lastName,
+    {
+      toClassOnly: true,
+    },
+  )
   memberReferral: string;
 }

@@ -327,6 +327,8 @@ export class MemberService {
     // .leftJoinAndSelect('identity.profile', 'profile'); // Join with profile through identity
     // Sort records by created_at from latest to oldest
     query.leftJoinAndSelect('member.memberReferral', 'memberReferral');
+    query.leftJoinAndSelect('memberReferral.referredMember', 'referredMember');
+    query.leftJoinAndSelect('memberReferral.member', 'childMember');
 
     const search = paginateDto.search;
     const pageSize = paginateDto.pageSize;
@@ -363,6 +365,7 @@ export class MemberService {
 
     // Execute query
     const [rows, total] = await query.getManyAndCount();
+
     const dtos = plainToInstance(MemberResponseDto, rows);
 
     const startRecord = skip + 1;
