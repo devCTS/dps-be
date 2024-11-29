@@ -1,14 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  ParseIntPipe,
-  Patch,
-  Post,
-  Put,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Post, Put, UseGuards } from '@nestjs/common';
 import { AlertCreateDto } from './dto/alert-create.dto';
 import { AlertService } from './alert.service';
 import { Role, Users } from 'src/utils/enum/enum';
@@ -22,13 +12,25 @@ export class AlertController {
   constructor(private alertService: AlertService) {}
 
   @Post('create')
-  @Roles(Role.MERCHANT, Role.MEMBER, Role.AGENT)
+  @Roles(
+    Role.MERCHANT,
+    Role.MEMBER,
+    Role.AGENT,
+    Role.SUB_ADMIN,
+    Role.SUPER_ADMIN,
+  )
   create(@Body() alertCreateDto: AlertCreateDto) {
     return this.alertService.create(alertCreateDto);
   }
 
   @Post()
-  @Roles(Role.MERCHANT, Role.MEMBER, Role.AGENT)
+  @Roles(
+    Role.MERCHANT,
+    Role.MEMBER,
+    Role.AGENT,
+    Role.SUB_ADMIN,
+    Role.SUPER_ADMIN,
+  )
   getMyAlerts(@UserInReq() user, @Body() body: { userType: Users }) {
     return this.alertService.getMyAlerts({
       id: user.id,
@@ -37,7 +39,13 @@ export class AlertController {
   }
 
   @Put('mark-read')
-  @Roles(Role.MERCHANT, Role.MEMBER, Role.AGENT)
+  @Roles(
+    Role.MERCHANT,
+    Role.MEMBER,
+    Role.AGENT,
+    Role.SUB_ADMIN,
+    Role.SUPER_ADMIN,
+  )
   markAlertRead(@Body() body: { id: number }) {
     return this.alertService.markAlertRead(body.id);
   }

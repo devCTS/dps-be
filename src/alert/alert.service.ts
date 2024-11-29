@@ -49,22 +49,16 @@ export class AlertService {
 
     let user;
 
-    if (userType === Users.MEMBER) {
+    if (userType === Users.MEMBER)
       user = await this.memberRepository.findOneBy({ id: userId });
-      if (!user) {
-        throw new NotFoundException('Member not found.');
-      }
-    } else if (userType === Users.MERCHANT) {
+    else if (userType === Users.MERCHANT)
       user = await this.merchantRepository.findOneBy({ id: userId });
-      if (!user) {
-        throw new NotFoundException('Merchant not found.');
-      }
-    } else if (userType === Users.AGENT) {
+    else if (userType === Users.AGENT)
       user = await this.agentRepository.findOneBy({ id: userId });
-      if (!user) {
-        throw new NotFoundException('Agent not found.');
-      }
-    }
+    else if (userType === Users.ADMIN)
+      user = await this.adminRepository.findOneBy({ id: userId });
+
+    if (!user) throw new NotFoundException(`${userType} not found.`);
 
     const createdAlert = await this.alertRepository.save(alertCreateDto);
 

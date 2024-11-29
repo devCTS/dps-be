@@ -91,6 +91,9 @@ export class SystemConfig {
   @Column({ type: 'float', default: 0 })
   systemProfit: number;
 
+  @Column({ nullable: true })
+  userPayinLimit: number;
+
   @Column({ default: 2 })
   frozenAmountThreshold: number;
 }

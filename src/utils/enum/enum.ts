@@ -77,6 +77,7 @@ export enum Users {
   MERCHANT = 'Merchant',
   AGENT = 'Agent',
   MEMBER = 'Member',
+  ADMIN = 'Admin',
 }
 
 export enum NotificationReadStatus {
@@ -95,6 +96,7 @@ export enum AlertType {
   WITHDRAWAL_FAILED = 'withdrawal_failed',
   PAYOUT_SUCCESS = 'payout_success',
   PAYOUT_FAILED = 'payout_failed',
+  USER_PAYIN_LIMIT = 'user_payin_limit',
 }
 
 export enum NotificationType {
