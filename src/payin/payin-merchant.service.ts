@@ -113,7 +113,7 @@ export class PayinMerchantService {
   async getPayinDetails(id: string) {
     try {
       const orderDetails = await this.payinRepository.findOne({
-        where: { systemOrderId: id },
+        where: { merchantOrderId: id },
         relations: ['user', 'merchant', 'member'],
       });
       if (!orderDetails) throw new NotFoundException('Order not found.');
