@@ -58,4 +58,10 @@ export class AdminAllPayoutResponseDto {
 
   @Expose()
   receipt: string;
+
+  @Expose()
+  createdAt: Date;
+
+  @Expose()
+  updatedAt: Date;
 }
