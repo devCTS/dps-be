@@ -14,7 +14,7 @@ export class PayinMerchantResponseDto {
   @Expose()
   id: number;
 
-  @Exclude()
+  @Expose()
   systemOrderId: string;
 
   @Expose()
@@ -63,7 +63,7 @@ export class PayinMerchantOrderResDto {
   @Expose()
   id: number;
 
-  @Exclude()
+  @Expose()
   systemOrderId: string;
 
   @Expose()
