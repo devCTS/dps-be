@@ -122,4 +122,10 @@ export class MerchantResponseDto {
     toClassOnly: true,
   })
   balance: number;
+
+  @Expose()
+  withdrawalsCompleted: number;
+
+  @Expose()
+  frozenAmount: number;
 }

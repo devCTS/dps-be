@@ -16,6 +16,7 @@ import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-
 import { ChannelModule } from 'src/channel/channel.module';
 import { Payout } from 'src/payout/entities/payout.entity';
 import { Withdrawal } from 'src/withdrawal/entities/withdrawal.entity';
+import { SystemConfigModule } from 'src/system-config/system-config.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { Withdrawal } from 'src/withdrawal/entities/withdrawal.entity';
     forwardRef(() => PayoutModule),
     TransactionUpdatesModule,
     ChannelModule,
+    SystemConfigModule,
   ],
   controllers: [MerchantController],
   providers: [MerchantService],

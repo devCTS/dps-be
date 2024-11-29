@@ -49,7 +49,7 @@ export class PayinMerchantService {
     if (userId) queryBuilder.andWhere('merchant.id = :userId', { userId });
 
     if (search)
-      queryBuilder.andWhere(`CONCAT(payin.systemOrderId) ILIKE :search`, {
+      queryBuilder.andWhere(`CONCAT(payin.merchantOrderId) ILIKE :search`, {
         search: `%${search}%`,
       });
 
@@ -113,7 +113,7 @@ export class PayinMerchantService {
   async getPayinDetails(id: string) {
     try {
       const orderDetails = await this.payinRepository.findOne({
-        where: { systemOrderId: id },
+        where: { merchantOrderId: id },
         relations: ['user', 'merchant', 'member'],
       });
       if (!orderDetails) throw new NotFoundException('Order not found.');

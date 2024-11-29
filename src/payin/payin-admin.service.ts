@@ -38,6 +38,9 @@ export class PayinAdminService {
       filterMadeVia,
       filterAmountLower,
       filterAmountUpper,
+      filterMemberSearch,
+      filterGatewayArray,
+      filterMerchantSearch,
     } = paginateRequestDto;
 
     const skip = (pageNumber - 1) * pageSize;
@@ -97,6 +100,28 @@ export class PayinAdminService {
       queryBuilder.andWhere('payin.payinMadeOn = :filterMadeVia', {
         filterMadeVia: filterMadeVia,
       });
+
+      if (filterMadeVia === 'MEMBER')
+        queryBuilder.andWhere(
+          `CONCAT(member.firstName, ' ', member.lastName) ILIKE :search`,
+          {
+            search: `%${filterMemberSearch}%`,
+          },
+        );
+
+      if (filterMadeVia === 'GATEWAY')
+        queryBuilder.andWhere('payin.gatewayName IN (:...filterGatewayArray)', {
+          filterGatewayArray: filterGatewayArray,
+        });
+    }
+
+    if (filterMerchantSearch) {
+      queryBuilder.andWhere(
+        `CONCAT(merchant.firstName, ' ', merchant.lastName) ILIKE :search`,
+        {
+          search: `%${filterMerchantSearch}%`,
+        },
+      );
     }
 
     // Apply filterAmountLower and filterAmountUpper filters
@@ -105,6 +130,7 @@ export class PayinAdminService {
         filterAmountLower,
       });
     }
+
     if (filterAmountUpper !== undefined && filterAmountUpper !== null) {
       queryBuilder.andWhere('payin.amount <= :filterAmountUpper', {
         filterAmountUpper,
