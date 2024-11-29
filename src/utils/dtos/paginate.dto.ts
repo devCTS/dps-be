@@ -13,6 +13,7 @@ import { Type } from 'class-transformer';
 import { BadRequestException } from '@nestjs/common';
 import {
   ChannelName,
+  GatewayName,
   OrderStatus,
   SortedBy,
   UserTypeForTransactionUpdates,
@@ -116,4 +117,14 @@ export class PaginateRequestDto {
   @IsOptional()
   @IsEnum(UserTypeForTransactionUpdates)
   balanceType?: UserTypeForTransactionUpdates;
+
+  @IsOptional()
+  @IsString()
+  filterMemberSearch?: string;
+
+  @IsOptional()
+  filterGatewayArray?: GatewayName[];
+
+  @IsOptional()
+  filterMerchantSearch?: string;
 }

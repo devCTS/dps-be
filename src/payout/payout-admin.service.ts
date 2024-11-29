@@ -37,6 +37,9 @@ export class PayoutAdminService {
       filterMadeVia,
       filterAmountLower,
       filterAmountUpper,
+      filterMemberSearch,
+      filterMerchantSearch,
+      filterGatewayArray,
     } = paginateRequestDto;
 
     const skip = (pageNumber - 1) * pageSize;
@@ -99,6 +102,31 @@ export class PayoutAdminService {
       queryBuilder.andWhere('payout.payoutMadeVia = :filterMadeVia', {
         filterMadeVia: filterMadeVia,
       });
+
+      if (filterMadeVia === 'MEMBER')
+        queryBuilder.andWhere(
+          `CONCAT(member.firstName, ' ', member.lastName) ILIKE :search`,
+          {
+            search: `%${filterMemberSearch}%`,
+          },
+        );
+
+      if (filterMadeVia === 'GATEWAY')
+        queryBuilder.andWhere(
+          'payout.gatewayName IN (:...filterGatewayArray)',
+          {
+            filterGatewayArray: filterGatewayArray,
+          },
+        );
+    }
+
+    if (filterMerchantSearch) {
+      queryBuilder.andWhere(
+        `CONCAT(merchant.firstName, ' ', merchant.lastName) ILIKE :search`,
+        {
+          search: `%${filterMerchantSearch}%`,
+        },
+      );
     }
 
     // Apply filterAmountLower and filterAmountUpper filters

@@ -1,12 +1,5 @@
 import { Exclude, Expose, Transform } from 'class-transformer';
-import {
-  IsDate,
-  IsEnum,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+
 import {
   CallBackStatus,
   ChannelName,
@@ -21,7 +14,7 @@ export class PayinMerchantResponseDto {
   @Expose()
   id: number;
 
-  @Expose()
+  @Exclude()
   systemOrderId: string;
 
   @Expose()
@@ -70,7 +63,7 @@ export class PayinMerchantOrderResDto {
   @Expose()
   id: number;
 
-  @Expose()
+  @Exclude()
   systemOrderId: string;
 
   @Expose()

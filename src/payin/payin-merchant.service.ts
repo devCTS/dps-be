@@ -49,7 +49,7 @@ export class PayinMerchantService {
     if (userId) queryBuilder.andWhere('merchant.id = :userId', { userId });
 
     if (search)
-      queryBuilder.andWhere(`CONCAT(payin.systemOrderId) ILIKE :search`, {
+      queryBuilder.andWhere(`CONCAT(payin.merchantOrderId) ILIKE :search`, {
         search: `%${search}%`,
       });
 

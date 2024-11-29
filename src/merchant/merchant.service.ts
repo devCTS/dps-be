@@ -1,5 +1,9 @@
 import { systemConfigData } from './../system-config/data/system-config.data';
-import { SortedBy, UserTypeForTransactionUpdates } from './../utils/enum/enum';
+import {
+  SortedBy,
+  UserTypeForTransactionUpdates,
+  WithdrawalOrderStatus,
+} from './../utils/enum/enum';
 import {
   HttpStatus,
   Injectable,
@@ -39,8 +43,7 @@ import { NetBanking } from 'src/channel/entity/net-banking.entity';
 import { EWallet } from 'src/channel/entity/e-wallet.entity';
 import * as uniqid from 'uniqid';
 import { VerifyWithdrawalPasswordDto } from './dto/verify-withdrawal-password.dto';
-import { Payout } from 'src/payout/entities/payout.entity';
-import { Withdrawal } from 'src/withdrawal/entities/withdrawal.entity';
+import { SystemConfigService } from 'src/system-config/system-config.service';
 
 @Injectable()
 export class MerchantService {
@@ -75,6 +78,7 @@ export class MerchantService {
     private readonly identityService: IdentityService,
     private readonly jwtService: JwtService,
     private readonly agentReferralService: AgentReferralService,
+    private readonly systemConfigService: SystemConfigService,
   ) {}
 
   async create(createMerchantDto: CreateMerchantDto) {
@@ -565,11 +569,9 @@ export class MerchantService {
 
   async paginate(paginateDto: PaginateRequestDto) {
     const query = this.merchantRepository.createQueryBuilder('merchant');
-    // query.orderBy('admin.created_at', 'DESC');
-    // Add relation to the identity entity
-    query.leftJoinAndSelect('merchant.identity', 'identity'); // Join with identity
-    // .leftJoinAndSelect('identity.profile', 'profile'); // Join with profile through identity
-    // Sort records by created_at from latest to oldest
+
+    query.leftJoinAndSelect('merchant.identity', 'identity');
+    query.leftJoinAndSelect('identity.withdrawal', 'withdrawal');
 
     const search = paginateDto.search;
     const pageSize = paginateDto.pageSize;
@@ -607,7 +609,32 @@ export class MerchantService {
     // Execute query
     const [rows, total] = await query.getManyAndCount();
 
-    const dtos = plainToInstance(MerchantResponseDto, rows);
+    const { frozenAmountThreshold } =
+      await this.systemConfigService.findLatest();
+
+    const payload = rows.map((row) => {
+      return {
+        ...row,
+        withdrawalsCompleted: row.identity.withdrawal.reduce((prev, curr) => {
+          if (curr.status === WithdrawalOrderStatus.COMPLETE)
+            prev += curr.amount;
+          return prev;
+        }, 0),
+        frozenAmount: row.identity.withdrawal.reduce((prev, curr) => {
+          if (curr.status === WithdrawalOrderStatus.PENDING) {
+            const currentDate = new Date();
+            const withdrawalDate = new Date(curr.createdAt);
+            const diffInTime = currentDate.getTime() - withdrawalDate.getTime();
+            const diffInDays = diffInTime / (1000 * 3600 * 24);
+
+            if (diffInDays > frozenAmountThreshold) prev += curr.amount;
+          }
+          return prev;
+        }, 0),
+      };
+    });
+
+    const dtos = plainToInstance(MerchantResponseDto, payload);
 
     const startRecord = skip + 1;
     const endRecord = Math.min(skip + pageSize, total);
