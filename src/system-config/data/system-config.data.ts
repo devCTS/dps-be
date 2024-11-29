@@ -36,5 +36,6 @@ export const systemConfigData = () => {
     minWithdrawalAmount: 150,
     maxWithdrawalAmount: 2500,
     frozenAmountThreshold: 2,
+    userPayinLimit: 1000,
   };
 };
