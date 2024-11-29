@@ -1,7 +1,8 @@
-import { Exclude, Expose, Transform, Type } from 'class-transformer';
+import { MemberReferral } from 'src/member-referral/entities/member-referral.entity';
+import { Exclude, Expose, Transform } from 'class-transformer';
 import { Identity } from 'src/identity/entities/identity.entity';
 import { DateFormat } from 'src/utils/decorators/dateformat.decorator';
-import { ChannelProfileDto, UpiDto } from 'src/utils/dtos/channel-profile.dto';
+import { ChannelProfileDto } from 'src/utils/dtos/channel-profile.dto';
 import { roundOffAmount } from 'src/utils/utils';
 
 @Exclude()
@@ -86,4 +87,10 @@ export class MemberResponseDto {
     toClassOnly: true,
   })
   quota: number;
+
+  @Expose()
+  @Transform(({ obj }) => obj?.firstName + ' ' + obj?.lastName, {
+    toClassOnly: true,
+  })
+  memberReferral: string;
 }
