@@ -7,6 +7,7 @@ import { TransformChannelProfileFields } from 'src/utils/decorators/channel-prof
 import { ChannelProfileDto } from 'src/utils/dtos/channel-profile.dto';
 import { roundOffAmount } from 'src/utils/utils';
 import { AmountRangePayinMode } from '../entities/amountRangePayinMode.entity';
+import { ProportionalPayinMode } from '../entities/proportionalPayinMode.entity';
 
 @Exclude()
 export class MerchantResponseDto {
@@ -144,4 +145,18 @@ export class MerchantResponseDto {
     { toClassOnly: true },
   )
   amountRangeRange: AmountRangePayinMode[];
+
+  @Expose()
+  @Transform(
+    ({ obj }) => {
+      return (
+        obj?.payinModeDetails?.proportionalRange.map((item) => ({
+          ratio: item.ratio,
+          gateway: item.gateway,
+        })) || []
+      );
+    },
+    { toClassOnly: true },
+  )
+  propotionRatio: ProportionalPayinMode[];
 }
