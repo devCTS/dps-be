@@ -12,7 +12,7 @@ export class AmountRangePayinMode {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'integer' })
+  @Column({ type: 'bigint' })
   lower: number;
 
   @Column({ type: 'bigint' })
