@@ -72,7 +72,7 @@ export class EndUserService {
 
     if (search) {
       query.andWhere(
-        `CONCAT(merchant.first_name, ' ', member.last_name, ' ', endUser.name) ILIKE :search`,
+        `CONCAT(merchant.first_name, ' ', merchant.last_name, ' ', endUser.name) ILIKE :search`,
         { search: `%${search}%` },
       );
     }
