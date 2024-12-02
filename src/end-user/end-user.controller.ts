@@ -17,7 +17,7 @@ export class EndUserController {
   }
 
   @Put('toggle-blacklisted:/id')
-  toggleBlacklisted(@Param() id: number) {
+  toggleBlacklisted(@Param('id') id: number) {
     return this.endUserService.toggleBlacklisted(+id);
   }
 }
