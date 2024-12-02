@@ -521,16 +521,16 @@ export class MerchantService {
 
     if (payinMode) {
       // Delete related ProportionalPayinMode entities
-      if (payinMode.proportionalRange.length > 0) {
+      if (payinMode?.proportionalRange.length > 0) {
         await this.proportionalRepository.delete(
           payinMode.proportionalRange.map((mode) => mode.id),
         );
       }
 
       // Delete related AmountRangePayinMode entities
-      if (payinMode.amountRangeRange.length > 0) {
+      if (payinMode?.amountRangeRange.length > 0) {
         await this.amountRangeRepository.delete(
-          payinMode.amountRangeRange.map((range) => range.id),
+          payinMode?.amountRangeRange.map((range) => range.id),
         );
       }
 

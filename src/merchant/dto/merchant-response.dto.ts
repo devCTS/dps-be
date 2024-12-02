@@ -1,4 +1,4 @@
-import { Exclude, Expose, Transform } from 'class-transformer';
+import { Exclude, Expose, plainToClass, Transform } from 'class-transformer';
 import { DateFormat } from 'src/utils/decorators/dateformat.decorator';
 import { TransformChannelList } from 'src/utils/decorators/channel-list.decorator';
 import { PayinMode } from '../entities/payinMode.entity';
@@ -6,6 +6,7 @@ import { TransformPayinModeDetails } from 'src/utils/decorators/payin-mode.decor
 import { TransformChannelProfileFields } from 'src/utils/decorators/channel-profile.decorator';
 import { ChannelProfileDto } from 'src/utils/dtos/channel-profile.dto';
 import { roundOffAmount } from 'src/utils/utils';
+import { AmountRangePayinMode } from '../entities/amountRangePayinMode.entity';
 
 @Exclude()
 export class MerchantResponseDto {
@@ -128,4 +129,19 @@ export class MerchantResponseDto {
 
   @Expose()
   frozenAmount: number;
+
+  @Expose()
+  @Transform(
+    ({ obj }) => {
+      return (
+        obj?.payinModeDetails?.amountRangeRange.map((item) => ({
+          ...item,
+          lower: parseInt(item.lower),
+          upper: parseInt(item.upper),
+        })) || []
+      );
+    },
+    { toClassOnly: true },
+  )
+  amountRangeRange: AmountRangePayinMode[];
 }

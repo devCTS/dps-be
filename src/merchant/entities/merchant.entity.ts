@@ -98,7 +98,7 @@ export class Merchant {
   updatedAt: Date;
 
   @OneToOne(() => PayinMode, (payinMode) => payinMode.merchant)
-  payinModeDetails: PayinMode[];
+  payinModeDetails: PayinMode;
 
   @OneToMany(() => Submerchant, (submerchant) => submerchant.merchant)
   submerchants: Submerchant[];
