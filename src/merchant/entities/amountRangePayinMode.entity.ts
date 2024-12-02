@@ -15,7 +15,7 @@ export class AmountRangePayinMode {
   @Column({ type: 'integer' })
   lower: number;
 
-  @Column({ type: 'integer' })
+  @Column({ type: 'bigint' })
   upper: number;
 
   @Column({ type: 'enum', enum: ['member', 'phonepe', 'razorpay'] })
