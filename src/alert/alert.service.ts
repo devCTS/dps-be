@@ -131,16 +131,8 @@ export class AlertService {
       .createQueryBuilder('alert')
       .andWhere('alert.userType = :userType', { userType: Users.ADMIN });
 
-    const search = paginateDto.search;
     const pageSize = paginateDto.pageSize;
     const pageNumber = paginateDto.pageNumber;
-    const sortBy = paginateDto.sortBy;
-
-    // if (search)
-    //   query.andWhere(
-    //     `CONCAT(alert.first_name, ' ', alert.last_name) ILIKE :search`,
-    //     { search: `%${search}%` },
-    //   );
 
     if (paginateDto.startDate && paginateDto.endDate) {
       const startDate = parseStartDate(paginateDto.startDate);
@@ -151,11 +143,6 @@ export class AlertService {
         endDate,
       });
     }
-
-    if (sortBy)
-      sortBy === 'latest'
-        ? query.orderBy('alert.createdAt', 'DESC')
-        : query.orderBy('alert.createdAt', 'ASC');
 
     const skip = (pageNumber - 1) * pageSize;
     query.skip(skip).take(pageSize);
@@ -175,6 +162,7 @@ export class AlertService {
 
         return {
           id: endUser?.id,
+          userId: endUser?.userId,
           name: endUser?.name,
           email: endUser?.email,
           mobile: endUser.mobile,
