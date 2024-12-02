@@ -16,7 +16,8 @@ export class EndUserController {
     return this.endUserService.paginate(paginateRequestDto);
   }
 
-  @Put('toggle-blacklisted:/id')
+  @Put('toggle-blacklisted/:id')
+  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   toggleBlacklisted(@Param('id') id: number) {
     return this.endUserService.toggleBlacklisted(+id);
   }
