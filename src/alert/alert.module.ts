@@ -10,10 +10,11 @@ import { Alert } from './entities/alert.entity';
 import { SocketModule } from 'src/socket/socket.module';
 import { WithdrawalModule } from 'src/withdrawal/withdrawal.module';
 import { PayoutModule } from 'src/payout/payout.module';
+import { EndUser } from 'src/end-user/entities/end-user.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Admin, Member, Agent, Merchant, Alert]),
+    TypeOrmModule.forFeature([Admin, Member, Agent, Merchant, Alert, EndUser]),
     SocketModule,
     forwardRef(() => WithdrawalModule),
     forwardRef(() => PayoutModule),

@@ -5,6 +5,7 @@ import { Role, Users } from 'src/utils/enum/enum';
 import { RolesGuard } from 'src/utils/guard/roles.guard';
 import { Roles } from 'src/utils/decorators/roles.decorator';
 import { UserInReq } from 'src/utils/decorators/user-in-req.decorator';
+import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
 
 @Controller('alert')
 @UseGuards(RolesGuard)
@@ -21,6 +22,12 @@ export class AlertController {
   )
   create(@Body() alertCreateDto: AlertCreateDto) {
     return this.alertService.create(alertCreateDto);
+  }
+
+  @Post('paginate')
+  @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
+  paginate(@Body() body: PaginateRequestDto) {
+    return this.alertService.paginate(body);
   }
 
   @Post()

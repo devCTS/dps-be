@@ -4,9 +4,8 @@ import {
   IsNumber,
   IsObject,
   IsOptional,
-  IsString,
 } from 'class-validator';
-import { AlertReadStatus, AlertType, Users } from 'src/utils/enum/enum';
+import { AlertType, Users } from 'src/utils/enum/enum';
 
 export class AlertCreateDto {
   @IsNotEmpty()

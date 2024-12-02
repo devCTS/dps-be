@@ -23,6 +23,12 @@ import { SocketGateway } from 'src/socket/socket.gateway';
 import { getTextForAlert } from 'src/utils/utils';
 import { WithdrawalService } from 'src/withdrawal/withdrawal.service';
 import { PayoutService } from 'src/payout/payout.service';
+import {
+  PaginateRequestDto,
+  parseEndDate,
+  parseStartDate,
+} from 'src/utils/dtos/paginate.dto';
+import { EndUser } from 'src/end-user/entities/end-user.entity';
 
 @Injectable()
 export class AlertService {
@@ -37,6 +43,8 @@ export class AlertService {
     private agentRepository: Repository<Agent>,
     @InjectRepository(Member)
     private memberRepository: Repository<Member>,
+    @InjectRepository(EndUser)
+    private endUserRepository: Repository<EndUser>,
 
     private socketGateway: SocketGateway,
     private withdrawalService: WithdrawalService,
@@ -116,5 +124,81 @@ export class AlertService {
     }
 
     return HttpStatus.OK;
+  }
+
+  async paginate(paginateDto: PaginateRequestDto) {
+    const query = this.alertRepository
+      .createQueryBuilder('alert')
+      .andWhere('alert.userType = :userType', { userType: Users.ADMIN });
+
+    const search = paginateDto.search;
+    const pageSize = paginateDto.pageSize;
+    const pageNumber = paginateDto.pageNumber;
+    const sortBy = paginateDto.sortBy;
+
+    // if (search)
+    //   query.andWhere(
+    //     `CONCAT(alert.first_name, ' ', alert.last_name) ILIKE :search`,
+    //     { search: `%${search}%` },
+    //   );
+
+    if (paginateDto.startDate && paginateDto.endDate) {
+      const startDate = parseStartDate(paginateDto.startDate);
+      const endDate = parseEndDate(paginateDto.endDate);
+
+      query.andWhere('alert.created_at BETWEEN :startDate AND :endDate', {
+        startDate,
+        endDate,
+      });
+    }
+
+    if (sortBy)
+      sortBy === 'latest'
+        ? query.orderBy('alert.createdAt', 'DESC')
+        : query.orderBy('alert.createdAt', 'ASC');
+
+    const skip = (pageNumber - 1) * pageSize;
+    query.skip(skip).take(pageSize);
+
+    const [rows, total] = await query.getManyAndCount();
+
+    const dtos = await Promise.all(
+      rows.map(async (row) => {
+        const userId = row?.data?.userId;
+
+        const endUser = await this.endUserRepository.findOne({
+          where: {
+            id: userId,
+          },
+          relations: ['merchant'],
+        });
+
+        return {
+          id: endUser?.id,
+          name: endUser?.name,
+          email: endUser?.email,
+          mobile: endUser.mobile,
+          merchant: {
+            id: endUser?.merchant?.id,
+            name:
+              endUser?.merchant?.firstName + ' ' + endUser?.merchant?.lastName,
+          },
+          alertData: row?.data,
+        };
+      }),
+    );
+
+    const startRecord = skip + 1;
+    const endRecord = Math.min(skip + pageSize, total);
+
+    return {
+      total,
+      page: pageNumber,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+      startRecord,
+      endRecord,
+      data: dtos,
+    };
   }
 }
