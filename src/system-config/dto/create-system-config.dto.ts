@@ -6,9 +6,10 @@ import {
   IsArray,
   ValidateNested,
   IsEnum,
+  IsObject,
 } from 'class-validator';
 import { ChannelProfileDto } from 'src/utils/dtos/channel-profile.dto';
-import { GatewayName } from 'src/utils/enum/enum';
+import { GatewayName, ServiceRateType } from 'src/utils/enum/enum';
 
 export class CreateSystemConfigDto {
   // Gateways and Timeouts
@@ -63,11 +64,11 @@ export class CreateSystemConfigDto {
   maximumDailyPayoutAmountForMember: number;
 
   // Merchant Defaults
-  @IsNumber()
-  payinServiceRateForMerchant: number;
+  @IsObject()
+  payinServiceRateForMerchant: ServiceRateType;
 
-  @IsNumber()
-  payoutServiceRateForMerchant: number;
+  @IsObject()
+  payoutServiceRateForMerchant: ServiceRateType;
 
   @IsNumber()
   minimumPayoutAmountForMerchant: number;

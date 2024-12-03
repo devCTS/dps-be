@@ -1,3 +1,4 @@
+import { ServiceRateType } from './../../utils/enum/enum';
 import { GatewayName } from 'src/utils/enum/enum';
 
 export const systemConfigData = () => {
@@ -28,8 +29,16 @@ export const systemConfigData = () => {
     minWithdrawalAmountForMember: 100,
     maxWithdrawalAmountForMember: 1000,
     maximumDailyPayoutAmountForMember: 5000,
-    payinServiceRateForMerchant: 1.2,
-    payoutServiceRateForMerchant: 0.8,
+    payinServiceRateForMerchant: <ServiceRateType>{
+      mode: 'PERCENTAGE',
+      absoluteAmount: null,
+      percentageAmount: 0.2,
+    },
+    payoutServiceRateForMerchant: <ServiceRateType>{
+      mode: 'PERCENTAGE',
+      absoluteAmount: null,
+      percentageAmount: 0.2,
+    },
     minimumPayoutAmountForMerchant: 200,
     maximumPayoutAmountForMerchant: 2000,
     withdrawalRate: 0.5,

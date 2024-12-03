@@ -1,7 +1,5 @@
-import { GatewayName } from 'src/utils/enum/enum';
+import { ServiceRateType } from 'src/utils/enum/enum';
 import {
-  BeforeInsert,
-  BeforeUpdate,
   Column,
   CreateDateColumn,
   Entity,
@@ -59,11 +57,11 @@ export class SystemConfig {
   maximumDailyPayoutAmountForMember: number;
 
   // Merchant Defaults
-  @Column({ type: 'float', nullable: true })
-  payinServiceRateForMerchant: number;
+  @Column({ type: 'json', nullable: true })
+  payinServiceRateForMerchant: ServiceRateType;
 
-  @Column({ type: 'float', nullable: true })
-  payoutServiceRateForMerchant: number;
+  @Column({ type: 'json', nullable: true })
+  payoutServiceRateForMerchant: ServiceRateType;
 
   @Column({ nullable: true })
   minimumPayoutAmountForMerchant: number;

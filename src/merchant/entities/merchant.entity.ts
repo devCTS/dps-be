@@ -15,6 +15,7 @@ import { AgentReferral } from 'src/agent-referral/entities/agent-referral.entity
 import { Payout } from 'src/payout/entities/payout.entity';
 import { Payin } from 'src/payin/entities/payin.entity';
 import { EndUser } from 'src/end-user/entities/end-user.entity';
+import { ServiceRateType } from 'src/utils/enum/enum';
 
 @Entity()
 export class Merchant {
@@ -64,11 +65,11 @@ export class Merchant {
   @Column({ default: false })
   allowPgBackupForPayout: boolean;
 
-  @Column('float')
-  payinServiceRate: number;
+  @Column('json')
+  payinServiceRate: ServiceRateType;
 
-  @Column('float')
-  payoutServiceRate: number;
+  @Column('json')
+  payoutServiceRate: ServiceRateType;
 
   @Column('float')
   withdrawalServiceRate: number;

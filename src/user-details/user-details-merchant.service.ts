@@ -228,9 +228,7 @@ export class UserDetailsMerchantService {
             ? row.member?.firstName + ' ' + row.member?.lastName
             : null,
           serviceFee: row?.merchant?.payoutServiceRate
-            ? roundOffAmount(
-                (row.amount * row.merchant.payoutServiceRate) / 100,
-              )
+            ? roundOffAmount(transactionUpdate?.amount)
             : 0,
           balanceDebit:
             row.status === OrderStatus.FAILED

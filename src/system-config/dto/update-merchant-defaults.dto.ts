@@ -1,11 +1,12 @@
-import { IsNumber } from 'class-validator';
+import { IsNumber, IsObject } from 'class-validator';
+import { ServiceRateType } from 'src/utils/enum/enum';
 
 export class UpdateMerchantDefaultsDto {
-  @IsNumber()
-  payinServiceRateForMerchant: number;
+  @IsObject()
+  payinServiceRateForMerchant: ServiceRateType;
 
-  @IsNumber()
-  payoutServiceRateForMerchant: number;
+  @IsObject()
+  payoutServiceRateForMerchant: ServiceRateType;
 
   @IsNumber()
   minimumPayoutAmountForMerchant: number;

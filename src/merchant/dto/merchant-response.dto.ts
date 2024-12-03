@@ -8,6 +8,7 @@ import { ChannelProfileDto } from 'src/utils/dtos/channel-profile.dto';
 import { roundOffAmount } from 'src/utils/utils';
 import { AmountRangePayinMode } from '../entities/amountRangePayinMode.entity';
 import { ProportionalPayinMode } from '../entities/proportionalPayinMode.entity';
+import { ServiceRateType } from 'src/utils/enum/enum';
 
 @Exclude()
 export class MerchantResponseDto {
@@ -67,10 +68,10 @@ export class MerchantResponseDto {
   allowPgBackupForPayout: boolean;
 
   @Expose()
-  payinServiceRate: number;
+  payinServiceRate: ServiceRateType;
 
   @Expose()
-  payoutServiceRate: number;
+  payoutServiceRate: ServiceRateType;
 
   @Expose()
   withdrawalServiceRate: number;

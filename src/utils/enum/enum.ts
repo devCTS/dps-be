@@ -118,3 +118,9 @@ export enum Role {
   AGENT = 'agent',
   ALL = 'all',
 }
+
+export interface ServiceRateType {
+  mode: 'ABSOLUTE' | 'PERCENTAGE' | 'COMBINATION';
+  absoluteAmount: number;
+  percentageAmount: number;
+}

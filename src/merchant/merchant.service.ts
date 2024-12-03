@@ -1,6 +1,4 @@
-import { systemConfigData } from './../system-config/data/system-config.data';
 import {
-  SortedBy,
   UserTypeForTransactionUpdates,
   WithdrawalOrderStatus,
 } from './../utils/enum/enum';

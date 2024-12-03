@@ -14,9 +14,11 @@ import {
   IsIP,
   IsInt,
   IsIn,
+  IsObject,
 } from 'class-validator';
 import { IsValidPassword } from 'src/utils/decorators/validPassword.decorator';
 import { ChannelProfileDto } from 'src/utils/dtos/channel-profile.dto';
+import { ServiceRateType } from 'src/utils/enum/enum';
 
 export class RangeDto {
   @IsInt()
@@ -101,13 +103,11 @@ export class CreateMerchantDto {
   @IsNotEmpty()
   allowPgBackupForPayout: boolean;
 
-  @IsNumber()
-  @Min(0)
-  payinServiceRate: number;
+  @IsObject()
+  payinServiceRate: ServiceRateType;
 
-  @IsNumber()
-  @Min(0)
-  payoutServiceRate: number;
+  @IsObject()
+  payoutServiceRate: ServiceRateType;
 
   @IsNumber()
   @Min(0)
