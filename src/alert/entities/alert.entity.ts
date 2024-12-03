@@ -12,7 +12,7 @@ export class Alert {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ nullable: true })
   for: number;
 
   @Column({ nullable: true, type: 'enum', enum: AlertType })

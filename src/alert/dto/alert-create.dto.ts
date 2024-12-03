@@ -8,9 +8,9 @@ import {
 import { AlertType, Users } from 'src/utils/enum/enum';
 
 export class AlertCreateDto {
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumber()
-  for: number;
+  for: number | null;
 
   @IsNotEmpty()
   @IsEnum(Users)

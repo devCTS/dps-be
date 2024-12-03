@@ -139,7 +139,18 @@ export class AlertService {
         startDate,
         endDate,
       });
+    } else {
+      const today = new Date();
+      const startDate = new Date(today);
+      startDate.setDate(today.getDate() - 9);
+
+      query.andWhere('alert.created_at BETWEEN :startDate AND :endDate', {
+        startDate: startDate,
+        endDate: today,
+      });
     }
+
+    query.orderBy('alert.created_at', 'DESC');
 
     const rows = await query.getMany();
 
@@ -154,13 +165,13 @@ export class AlertService {
           payinAmount: row?.data?.totalPayinAmount,
           payoutAmount: row?.data?.totalPayoutAmount,
           merchant: row?.data?.merchant,
-          createdAt: row?.data?.createdAt,
+          date: row?.data?.createdAt,
         };
       }),
     );
 
     const groupedByDate = dtos.reduce((acc, dto) => {
-      const dateKey = dto.createdAt.toISOString().split('T')[0];
+      const dateKey = dto?.date?.split('T')[0];
 
       if (!acc[dateKey]) acc[dateKey] = [];
 
@@ -169,6 +180,8 @@ export class AlertService {
       return acc;
     }, {});
 
-    return groupedByDate;
+    return {
+      data: groupedByDate,
+    };
   }
 }
