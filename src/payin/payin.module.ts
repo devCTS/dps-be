@@ -21,6 +21,7 @@ import { AgentModule } from 'src/agent/agent.module';
 import { FundRecordModule } from 'src/fund-record/fund-record.module';
 import { NotificationModule } from 'src/notification/notification.module';
 import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
+import { AlertModule } from 'src/alert/alert.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
     TransactionUpdatesModule,
     FundRecordModule,
     NotificationModule,
+    AlertModule,
   ],
   controllers: [PayinController],
   providers: [

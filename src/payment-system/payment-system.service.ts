@@ -131,6 +131,7 @@ export class PaymentSystemService {
       gatewayServiceRate: !isMember ? paymentDetails.upstreamFee : null,
       memberPaymentDetails: isMember ? paymentDetails[0] : null,
       gatewayName: !isMember ? selectedPaymentMode : null,
+      userId: createPaymentOrderDto.userId,
     };
     await this.payinService.updatePayinStatusToAssigned(body);
 

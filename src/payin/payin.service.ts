@@ -10,11 +10,13 @@ import { Repository } from 'typeorm';
 import * as uniqid from 'uniqid';
 import { Payin } from './entities/payin.entity';
 import {
+  AlertType,
   CallBackStatus,
   NotificationType,
   OrderStatus,
   OrderType,
   PaymentMadeOn,
+  Users,
   UserTypeForTransactionUpdates,
 } from 'src/utils/enum/enum';
 import { TransactionUpdatesPayinService } from 'src/transaction-updates/transaction-updates-payin.service';
@@ -30,6 +32,7 @@ import { CreatePaymentOrderDto } from 'src/payment-system/dto/createPaymentOrder
 import { EndUser } from 'src/end-user/entities/end-user.entity';
 import { FundRecordService } from 'src/fund-record/fund-record.service';
 import { NotificationService } from 'src/notification/notification.service';
+import { AlertService } from 'src/alert/alert.service';
 
 @Injectable()
 export class PayinService {
@@ -53,6 +56,7 @@ export class PayinService {
     private readonly agentService: AgentService,
     private readonly fundRecordService: FundRecordService,
     private readonly notificationService: NotificationService,
+    private readonly alertService: AlertService,
   ) {}
 
   async create(payinDetails: CreatePaymentOrderDto) {
@@ -117,6 +121,7 @@ export class PayinService {
   async updatePayinStatusToAssigned(body) {
     const {
       id,
+      userId,
       paymentMode,
       memberId,
       gatewayServiceRate,
@@ -140,12 +145,56 @@ export class PayinService {
 
     const payinOrderDetails = await this.payinRepository.findOne({
       where: { systemOrderId: id },
-      relations: ['merchant', 'member'],
+      relations: [
+        'merchant',
+        'member',
+        'merchant.endUser',
+        'merchant.endUser.payin',
+      ],
     });
     if (!payinOrderDetails) throw new NotFoundException('Order not found');
 
     if (payinOrderDetails.status !== OrderStatus.INITIATED)
       throw new NotAcceptableException('order status is not initiated!');
+
+    if (paymentMode === PaymentMadeOn.GATEWAY) {
+      const { endUserPayinLimit } = await this.systemConfigService.findLatest();
+
+      const endUser = payinOrderDetails.merchant.endUser.find(
+        (user) => (user.userId = userId),
+      );
+
+      if (endUser) {
+        const totalPayinAmountUsingGateways = endUser.payin.reduce(
+          (prev, curr) => {
+            if (curr.payinMadeOn === PaymentMadeOn.GATEWAY) prev += curr.amount;
+            return prev;
+          },
+          0,
+        );
+
+        if (totalPayinAmountUsingGateways > endUserPayinLimit)
+          await this.alertService.create({
+            for: null,
+            userType: Users.ADMIN,
+            type: AlertType.USER_PAYIN_LIMIT,
+            data: {
+              id: endUser?.id,
+              userId: endUser?.userId,
+              userName: endUser?.name,
+              userEmail: endUser?.email,
+              userMobile: endUser?.mobile,
+              payinAmount: endUser?.totalPayinAmount,
+              payoutAmount: endUser?.totalPayoutAmount,
+              merchant:
+                payinOrderDetails?.merchant?.firstName +
+                ' ' +
+                payinOrderDetails?.merchant?.lastName,
+              createdAt: payinOrderDetails?.createdAt,
+            },
+          });
+      }
+    }
 
     let member;
     if (paymentMode === PaymentMadeOn.MEMBER)

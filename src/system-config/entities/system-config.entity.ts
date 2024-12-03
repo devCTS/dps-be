@@ -92,7 +92,7 @@ export class SystemConfig {
   systemProfit: number;
 
   @Column({ nullable: true })
-  userPayinLimit: number;
+  endUserPayinLimit: number;
 
   @Column({ default: 2 })
   frozenAmountThreshold: number;

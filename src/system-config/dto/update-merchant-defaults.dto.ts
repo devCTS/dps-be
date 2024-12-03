@@ -12,4 +12,7 @@ export class UpdateMerchantDefaultsDto {
 
   @IsNumber()
   maximumPayoutAmountForMerchant: number;
+
+  @IsNumber()
+  endUserPayinLimit: number;
 }

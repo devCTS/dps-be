@@ -354,6 +354,7 @@ export class SystemConfigService {
       payoutServiceRateForMerchant,
       maximumPayoutAmountForMerchant,
       minimumPayoutAmountForMerchant,
+      endUserPayinLimit,
     } = updateMerchantDefaultsDto;
 
     const latestResult = await this.findLatest();
@@ -364,6 +365,7 @@ export class SystemConfigService {
         payoutServiceRateForMerchant,
         maximumPayoutAmountForMerchant,
         minimumPayoutAmountForMerchant,
+        endUserPayinLimit,
       });
 
       return HttpStatus.CREATED;
@@ -379,12 +381,14 @@ export class SystemConfigService {
     delete latestResult.id;
     delete latestResult.createdAt;
     delete latestResult.updatedAt;
+    delete latestResult.endUserPayinLimit;
 
     const newSystemConfig = await this.systemConfigRepository.save({
       payinServiceRateForMerchant,
       payoutServiceRateForMerchant,
       maximumPayoutAmountForMerchant,
       minimumPayoutAmountForMerchant,
+      endUserPayinLimit,
       ...latestResult,
     });
 

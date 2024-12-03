@@ -127,4 +127,7 @@ export class SystemConfigResponseDto {
 
   @Expose()
   frozenAmountThreshold: number;
+
+  @Expose()
+  endUserPayinLimit: number;
 }

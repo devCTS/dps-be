@@ -113,7 +113,7 @@ export class Merchant {
   payout: Payout[];
 
   @OneToMany(() => EndUser, (endUser) => endUser.merchant)
-  endUser: Payout[];
+  endUser: EndUser[];
 
   @Column({ type: 'float', default: 0 })
   balance: number;

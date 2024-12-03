@@ -131,9 +131,6 @@ export class AlertService {
       .createQueryBuilder('alert')
       .andWhere('alert.userType = :userType', { userType: Users.ADMIN });
 
-    const pageSize = paginateDto.pageSize;
-    const pageNumber = paginateDto.pageNumber;
-
     if (paginateDto.startDate && paginateDto.endDate) {
       const startDate = parseStartDate(paginateDto.startDate);
       const endDate = parseEndDate(paginateDto.endDate);
@@ -144,49 +141,34 @@ export class AlertService {
       });
     }
 
-    const skip = (pageNumber - 1) * pageSize;
-    query.skip(skip).take(pageSize);
-
-    const [rows, total] = await query.getManyAndCount();
+    const rows = await query.getMany();
 
     const dtos = await Promise.all(
       rows.map(async (row) => {
-        const userId = row?.data?.userId;
-
-        const endUser = await this.endUserRepository.findOne({
-          where: {
-            id: userId,
-          },
-          relations: ['merchant'],
-        });
-
         return {
-          id: endUser?.id,
-          userId: endUser?.userId,
-          name: endUser?.name,
-          email: endUser?.email,
-          mobile: endUser.mobile,
-          merchant: {
-            id: endUser?.merchant?.id,
-            name:
-              endUser?.merchant?.firstName + ' ' + endUser?.merchant?.lastName,
-          },
-          alertData: row?.data,
+          id: row?.data?.id,
+          userId: row?.data?.userId,
+          userName: row?.data?.name,
+          userEmail: row?.data?.email,
+          userMobile: row?.data?.mobile,
+          payinAmount: row?.data?.totalPayinAmount,
+          payoutAmount: row?.data?.totalPayoutAmount,
+          merchant: row?.data?.merchant,
+          createdAt: row?.data?.createdAt,
         };
       }),
     );
 
-    const startRecord = skip + 1;
-    const endRecord = Math.min(skip + pageSize, total);
+    const groupedByDate = dtos.reduce((acc, dto) => {
+      const dateKey = dto.createdAt.toISOString().split('T')[0];
 
-    return {
-      total,
-      page: pageNumber,
-      pageSize,
-      totalPages: Math.ceil(total / pageSize),
-      startRecord,
-      endRecord,
-      data: dtos,
-    };
+      if (!acc[dateKey]) acc[dateKey] = [];
+
+      acc[dateKey].push(dto);
+
+      return acc;
+    }, {});
+
+    return groupedByDate;
   }
 }
