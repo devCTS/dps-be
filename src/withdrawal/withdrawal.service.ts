@@ -50,10 +50,11 @@ export class WithdrawalService {
     private readonly merchantService: MerchantService,
     private readonly agentService: AgentService,
     private readonly systemConfigService: SystemConfigService,
-    private readonly paymentSystemService: PaymentSystemService,
     private readonly fundRecordService: FundRecordService,
     @Inject(forwardRef(() => AlertService))
     private readonly alertService: AlertService,
+    @Inject(forwardRef(() => PaymentSystemService))
+    private readonly paymentSystemService: PaymentSystemService,
   ) {}
 
   async create(createWithdrawalDto: CreateWithdrawalDto, email) {
