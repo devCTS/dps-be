@@ -63,20 +63,28 @@ export class AlertService {
       user = await this.merchantRepository.findOneBy({ id: userId });
     else if (userType === Users.AGENT)
       user = await this.agentRepository.findOneBy({ id: userId });
-    else if (userType === Users.ADMIN)
-      user = await this.adminRepository.findOneBy({ id: userId });
 
-    if (!user) throw new NotFoundException(`${userType} not found.`);
+    if (!user && userId) throw new NotFoundException(`${userType} not found.`);
 
     const createdAlert = await this.alertRepository.save(alertCreateDto);
 
-    this.socketGateway.handleSendAlert({
-      for: userId,
-      userType,
-      type: alertCreateDto.type,
-      data: alertCreateDto.data,
-      id: createdAlert.id,
-    });
+    console.log(createdAlert.data);
+
+    if (AlertType.USER_PAYIN_LIMIT === alertCreateDto.type) {
+      this.socketGateway.handleSendAlertsToAllAdmins({
+        data: alertCreateDto.data,
+        type: alertCreateDto.type,
+        id: createdAlert.id,
+      });
+    } else {
+      this.socketGateway.handleSendAlert({
+        for: userId,
+        userType,
+        type: alertCreateDto.type,
+        data: alertCreateDto.data,
+        id: createdAlert.id,
+      });
+    }
 
     return HttpStatus.CREATED;
   }
@@ -166,6 +174,8 @@ export class AlertService {
           payoutAmount: row?.data?.totalPayoutAmount,
           merchant: row?.data?.merchant,
           date: row?.data?.createdAt,
+          payinAmountUsingGateways: row?.data?.payinAmountUsingGateways,
+          currentPayinOrderAmount: row?.data?.currentPayinOrderAmount,
         };
       }),
     );

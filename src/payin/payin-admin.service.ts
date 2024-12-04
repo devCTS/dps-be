@@ -274,6 +274,7 @@ export class PayinAdminService {
       return {
         id: merchant.id,
         name: merchant.firstName + ' ' + merchant.lastName,
+        integrationId: merchant.integrationId,
       };
     });
 

@@ -165,9 +165,18 @@ export class PayinService {
       );
 
       if (endUser) {
+        const currentTime = new Date();
+        const twentyFourHoursAgo = new Date(
+          currentTime.getTime() - 24 * 60 * 60 * 1000,
+        );
+
         const totalPayinAmountUsingGateways = endUser.payin.reduce(
           (prev, curr) => {
-            if (curr.payinMadeOn === PaymentMadeOn.GATEWAY) prev += curr.amount;
+            if (
+              curr.payinMadeOn === PaymentMadeOn.GATEWAY &&
+              new Date(curr.createdAt) >= twentyFourHoursAgo
+            )
+              prev += curr.amount;
             return prev;
           },
           0,
@@ -191,6 +200,8 @@ export class PayinService {
                 ' ' +
                 payinOrderDetails?.merchant?.lastName,
               createdAt: payinOrderDetails?.createdAt,
+              payinAmountUsingGateways: totalPayinAmountUsingGateways,
+              currentPayinOrderAmount: payinOrderDetails.amount,
             },
           });
       }

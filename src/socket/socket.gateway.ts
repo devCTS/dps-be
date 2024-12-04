@@ -93,12 +93,27 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     id: number;
     memberId: number;
   }) {
-    // const membersRooms = [...this.userRooms.values()].filter((item) =>
-    //   item.includes('Member'),
-    // );
     this.server
       .to(`Member_${memberId}`)
       .emit('newNotification', { data, text, type, date: new Date(), id: id });
+  }
+
+  async handleSendAlertsToAllAdmins({
+    data,
+    type,
+    id,
+  }: {
+    data: any;
+    type: AlertType;
+    id: number;
+  }) {
+    const adminRooms = [...this.userRooms.values()].filter((item) =>
+      item.includes('Admin'),
+    );
+
+    this.server
+      .to(adminRooms)
+      .emit('newAlert', { data, type, date: new Date(), id: id });
   }
 
   async handleSendNotification(notificationData: {
