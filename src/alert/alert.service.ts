@@ -68,8 +68,6 @@ export class AlertService {
 
     const createdAlert = await this.alertRepository.save(alertCreateDto);
 
-    console.log(createdAlert.data);
-
     if (AlertType.USER_PAYIN_LIMIT === alertCreateDto.type) {
       this.socketGateway.handleSendAlertsToAllAdmins({
         data: alertCreateDto.data,

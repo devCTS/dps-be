@@ -114,8 +114,6 @@ export class TransactionUpdatesTopupService {
     const referrals =
       await this.memberReferralService.getReferralTreeOfUser(userId);
 
-    console.log(referrals, userId);
-
     await this.processReferral(
       referrals,
       orderType,
