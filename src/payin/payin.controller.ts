@@ -132,4 +132,18 @@ export class PayinController {
   handleCallbackStatusSuccess(@Param('id') id: string) {
     return this.payinService.handleCallbackStatusSuccess(id);
   }
+
+  @Get('merchant-list')
+  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
+  @UseGuards(RolesGuard)
+  getMerchantList() {
+    return this.payinAdminService.getMerchantList();
+  }
+
+  @Get('enduser-suggestions/:id')
+  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
+  @UseGuards(RolesGuard)
+  getEnduserIdSuggestions(@Param('id') id: number) {
+    return this.payinAdminService.getEndUserIdSuggestions(id);
+  }
 }

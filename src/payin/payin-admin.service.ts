@@ -15,12 +15,15 @@ import {
 } from './dto/payin-admin-response.dto';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
+import { Merchant } from 'src/merchant/entities/merchant.entity';
 
 @Injectable()
 export class PayinAdminService {
   constructor(
     @InjectRepository(Payin)
     private payinRepository: Repository<Payin>,
+    @InjectRepository(Merchant)
+    private merchantRepository: Repository<Merchant>,
     @InjectRepository(TransactionUpdate)
     private transactionUpdateRepository: Repository<TransactionUpdate>,
   ) {}
@@ -261,5 +264,32 @@ export class PayinAdminService {
       total,
       data: dtos,
     };
+  }
+
+  async getMerchantList() {
+    const merchants = await this.merchantRepository.find();
+    if (!merchants) return [];
+
+    const data = merchants.map((merchant) => {
+      return {
+        id: merchant.id,
+        name: merchant.firstName + ' ' + merchant.lastName,
+      };
+    });
+
+    return data;
+  }
+
+  async getEndUserIdSuggestions(merchantId: number) {
+    const merchant = await this.merchantRepository.findOne({
+      where: {
+        id: merchantId,
+      },
+      relations: ['endUser'],
+    });
+    if (!merchant) throw new NotFoundException('Merchant not found!');
+    if (!merchant.endUser.length) return [];
+
+    return merchant.endUser.map((user) => user.userId);
   }
 }

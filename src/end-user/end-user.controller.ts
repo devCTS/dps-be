@@ -1,5 +1,13 @@
 import { EndUserService } from 'src/end-user/end-user.service';
-import { Body, Controller, Param, Post, Put, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import { Roles } from 'src/utils/decorators/roles.decorator';
 import { Role } from 'src/utils/enum/enum';
 import { RolesGuard } from 'src/utils/guard/roles.guard';
@@ -20,5 +28,11 @@ export class EndUserController {
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   toggleBlacklisted(@Param('id') id: number) {
     return this.endUserService.toggleBlacklisted(+id);
+  }
+
+  @Get('/:id')
+  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
+  getEndUserDetails(@Param('id') id: number) {
+    return this.endUserService.getEndUserDetails(id);
   }
 }

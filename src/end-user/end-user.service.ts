@@ -123,4 +123,18 @@ export class EndUserService {
 
     return HttpStatus.OK;
   }
+
+  async getEndUserDetails(id: number) {
+    const endUser = await this.endUserRepository.findOne({
+      where: { id },
+    });
+    if (!endUser) throw new NotFoundException('End user not found!');
+
+    return {
+      userName: endUser.name,
+      userId: endUser.userId,
+      userEmail: endUser.email,
+      userMobile: endUser.mobile,
+    };
+  }
 }
