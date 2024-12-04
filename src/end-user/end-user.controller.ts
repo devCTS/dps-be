@@ -32,7 +32,7 @@ export class EndUserController {
 
   @Get('/:id')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
-  getEndUserDetails(@Param('id') id: number) {
+  getEndUserDetails(@Param('id') id: string) {
     return this.endUserService.getEndUserDetails(id);
   }
 }

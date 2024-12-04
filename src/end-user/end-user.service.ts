@@ -124,9 +124,9 @@ export class EndUserService {
     return HttpStatus.OK;
   }
 
-  async getEndUserDetails(id: number) {
+  async getEndUserDetails(id: string) {
     const endUser = await this.endUserRepository.findOne({
-      where: { id },
+      where: { userId: id },
     });
     if (!endUser) throw new NotFoundException('End user not found!');
 
