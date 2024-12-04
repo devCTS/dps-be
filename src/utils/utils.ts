@@ -1,7 +1,7 @@
 import { HttpStatus } from '@nestjs/common';
 import * as bycrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
-import { AlertType, NotificationType } from './enum/enum';
+import { AlertType, NotificationType, ServiceRateType } from './enum/enum';
 
 // Encrypt password or match password
 export const encryptPassword = async (password: string): Promise<string> => {
@@ -130,4 +130,22 @@ export const monthNames = () => {
     'November',
     'December',
   ];
+};
+
+export const calculateServiceAmountForMerchant = (
+  orderAmount: number,
+  serviceRate: ServiceRateType,
+) => {
+  if (!orderAmount || !serviceRate) return 0;
+
+  if (serviceRate.mode === 'ABSOLUTE') return serviceRate.absoluteAmount;
+
+  if (serviceRate.mode === 'PERCENTAGE')
+    return (orderAmount / 100) * serviceRate.percentageAmount;
+
+  if (serviceRate.mode === 'COMBINATION') {
+    const percentageAmount = (orderAmount / 100) * serviceRate.percentageAmount;
+
+    return percentageAmount + serviceRate.absoluteAmount;
+  }
 };

@@ -40,6 +40,9 @@ export class TransactionUpdate {
   @Column({ nullable: true, type: 'float' })
   rate: number;
 
+  @Column({ nullable: true, type: 'float' })
+  absoluteAmount: number;
+
   @Column({ type: 'float', nullable: true })
   amount: number;
 

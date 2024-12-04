@@ -7,7 +7,10 @@ import { AgentReferralService } from 'src/agent-referral/agent-referral.service'
 import { Identity } from 'src/identity/entities/identity.entity';
 import { MemberReferralService } from 'src/member-referral/member-referral.service';
 import { SystemConfigService } from 'src/system-config/system-config.service';
-import { roundOffAmount } from 'src/utils/utils';
+import {
+  calculateServiceAmountForMerchant,
+  roundOffAmount,
+} from 'src/utils/utils';
 
 @Injectable()
 export class TransactionUpdatesPayinService {
@@ -34,7 +37,8 @@ export class TransactionUpdatesPayinService {
     let before = 0,
       rate = 0, // service rate / commission rates
       amount = 0, // total service fee / commissions
-      after = 0;
+      after = 0,
+      absoluteAmount = 0;
     let isAgentMember = null;
 
     if (forMember) {
@@ -84,8 +88,13 @@ export class TransactionUpdatesPayinService {
       switch (referral.agentType) {
         case 'merchant':
           userType = UserTypeForTransactionUpdates.MERCHANT_BALANCE;
-          rate = referral.merchantPayinServiceRate;
-          amount = (orderAmount / 100) * rate;
+          rate = referral.merchantPayinServiceRate?.percentageAmount || 0;
+          absoluteAmount =
+            referral.merchantPayinServiceRate?.asoluteAmount || 0;
+          amount = calculateServiceAmountForMerchant(
+            orderAmount,
+            referral.merchantPayinServiceRate,
+          );
           before = referral.balance;
           after = before + orderAmount - amount;
           break;
@@ -112,6 +121,7 @@ export class TransactionUpdatesPayinService {
       orderType,
       userType,
       rate,
+      absoluteAmount,
       amount: roundOffAmount(amount),
       before: roundOffAmount(before),
       after: roundOffAmount(after),
