@@ -275,13 +275,16 @@ export class PayinService {
   async updatePayinStatusToSubmitted(body) {
     const { id, transactionId, transactionReceipt } = body;
 
-    if (!transactionId && !transactionReceipt)
+    if (!id) throw new NotAcceptableException('System order ID missing!');
+    if (!transactionId || !transactionReceipt)
       throw new NotAcceptableException('Transaction ID or receipt missing!');
 
-    const payinOrderDetails = await this.payinRepository.findOneBy({
-      systemOrderId: id,
+    const payinOrderDetails = await this.payinRepository.findOne({
+      where: {
+        systemOrderId: id,
+      },
+      relations: ['member'],
     });
-
     if (!payinOrderDetails) throw new NotFoundException('Order not found');
 
     if (payinOrderDetails.status !== OrderStatus.ASSIGNED)
@@ -298,7 +301,7 @@ export class PayinService {
 
     if (payinOrderDetails.payinMadeOn === PaymentMadeOn.MEMBER)
       await this.notificationService.create({
-        for: payinOrderDetails.member.id,
+        for: payinOrderDetails.member?.id,
         type: NotificationType.PAYIN_FOR_VERIFY,
         data: {
           orderId: payinOrderDetails.systemOrderId,
