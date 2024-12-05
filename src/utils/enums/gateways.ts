@@ -1,0 +1,5 @@
+export enum Gateway {
+  PHONEPE = 'PHONEPE',
+  RAZORPAY = 'RAZORPAY',
+  MEMBER_CHANNEL = 'MEMBER_CHANNEL',
+}

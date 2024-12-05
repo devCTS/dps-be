@@ -1,0 +1,7 @@
+export enum Users {
+  MERCHANT = 'MERCHANT',
+  AGENT = 'AGENT',
+  MEMBER = 'MEMBER',
+  ADMIN = 'ADMIN',
+  SUB_MERCHANT = 'SUB_MERCHANT',
+}
