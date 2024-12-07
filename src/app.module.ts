@@ -2,10 +2,16 @@ import { ClassSerializerInterceptor, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { UsersModule } from './users/users.module';
+import { IntegrationsModule } from './integrations/integrations.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { UserInterceptor } from './utils/interceptor/user.interceptor';
+import { RolesGuard } from './utils/guard/roles.guard';
+import { AuthModule } from './auth/auth.module';
+import { SettingsModule } from './settings/settings.module';
 
 @Module({
   imports: [
@@ -30,6 +36,10 @@ import { UsersModule } from './users/users.module';
       inject: [ConfigService],
     }),
     UsersModule,
+    IntegrationsModule,
+    DashboardModule,
+    AuthModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [
@@ -38,10 +48,14 @@ import { UsersModule } from './users/users.module';
       provide: APP_INTERCEPTOR,
       useClass: ClassSerializerInterceptor,
     },
-    // {
-    //   provide: APP_INTERCEPTOR,
-    //   useClass: UserInterceptor,
-    // },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: UserInterceptor,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
   ],
 })
 export class AppModule {}

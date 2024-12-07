@@ -8,10 +8,14 @@ import {
   JoinColumn,
   ManyToOne,
   OneToOne,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 
 @Entity()
 export class SubMerchant {
+  @PrimaryGeneratedColumn()
+  sno: number;
+
   @OneToOne(() => Identity, (identity) => identity.submerchant)
   @JoinColumn()
   identity: Identity;

@@ -3,6 +3,14 @@ import { SubMerchant } from 'src/users/sub-merchant/entities/sub-merchant.entity
 import { Channels } from 'src/utils/enums/channels';
 import { Gateway } from 'src/utils/enums/gateways';
 import { PayinMode } from 'src/utils/enums/misc';
+import { ChannelProfile } from 'src/utils/interfaces/channel-profile';
+import { FeeModeDetails } from 'src/utils/interfaces/fee-mode';
+import {
+  MerchantPayoutInfo,
+  MerchantServiceInfo,
+  UserWithdrawalInfo,
+} from 'src/utils/interfaces/order-info';
+import { PayinModeDetails } from 'src/utils/interfaces/payin-mode';
 import {
   Column,
   CreateDateColumn,
@@ -11,73 +19,19 @@ import {
   JoinColumn,
   OneToOne,
   OneToMany,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
-
-interface FeeModeDetails {
-  mode: 'ABSOLUTE' | 'PERCENTAGE' | 'COMBINATION';
-  absoluteAmount: number;
-  percentageAmount: number;
-}
-
-interface Range {
-  lower: number;
-  upper: number;
-  gateway: Gateway;
-}
-
-interface Ratio {
-  ratio: number;
-  gateway: Gateway;
-}
-
-interface PayinModeDetails {
-  type: PayinMode;
-  entries: number;
-  ranges: Range[];
-  ratios: Ratio[];
-}
-
-interface ChannelProfile {
-  upi: {
-    upiId: string;
-    mobile: string;
-    isBusinessUpi: boolean;
-  };
-  netbanking: {
-    accountNumber: string;
-    ifsc: string;
-    bankName: string;
-    beneficiaryName: string;
-  };
-  eWallet: { app: string; mobile: string };
-}
-
-interface UserWithdrawalInfo {
-  pending: number;
-  frozen: number;
-  complete: number;
-  failed: number;
-}
-
-interface MerchantPayoutInfo {
-  pending: number;
-  complete: number;
-  failed: number;
-}
-
-interface MerchantServiceInfo {
-  payin: number;
-  payout: number;
-  withdrawal: number;
-}
 
 @Entity()
 export class Merchant {
+  @PrimaryGeneratedColumn()
+  id: number;
+
   @OneToOne(() => Identity, (identity) => identity.merchant)
   @JoinColumn({ name: 'identity' })
   identity: Identity;
 
-  @Column({ type: 'float', default: 0 })
+  @Column({ default: 0 })
   balance: number;
 
   @Column({ unique: true })
@@ -89,7 +43,7 @@ export class Merchant {
   @Column()
   businessName: string;
 
-  @Column()
+  @Column({ nullable: true, default: null })
   agent: string;
 
   @Column()
@@ -147,19 +101,19 @@ export class Merchant {
   })
   payinMode: PayinModeDetails;
 
-  @Column('json')
+  @Column({ type: 'json', default: null })
   channelProfile: ChannelProfile;
 
-  @Column('json')
+  @Column({ type: 'json', default: null })
   withdrawalInfo: UserWithdrawalInfo;
 
-  @Column('json')
+  @Column({ type: 'json', default: null })
   payoutInfo: MerchantPayoutInfo;
 
-  @Column('json')
+  @Column({ type: 'json', default: null })
   serviceInfo: MerchantServiceInfo;
 
-  @Column('float')
+  @Column({ default: 0 })
   payinIncome: number;
 
   @OneToMany(() => SubMerchant, (submerchant) => submerchant.merchant)

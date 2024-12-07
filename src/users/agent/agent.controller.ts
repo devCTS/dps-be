@@ -1,34 +1,41 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { AgentService } from './agent.service';
-import { CreateAgentDto } from './dto/create-agent.dto';
-import { UpdateAgentDto } from './dto/update-agent.dto';
+import { IdentityService } from '../identity/identity.service';
+import { CreateAgentDto } from './dto/request/create-agent.dto';
+import { UpdateAgentDto } from './dto/request/update-agent.dto';
 
 @Controller('agent')
 export class AgentController {
-  constructor(private readonly agentService: AgentService) {}
+  constructor(
+    private readonly service: AgentService,
+    private readonly identityService: IdentityService,
+  ) {}
 
   @Post()
   create(@Body() createAgentDto: CreateAgentDto) {
-    return this.agentService.create(createAgentDto);
+    return this.service.create(createAgentDto);
   }
 
   @Get()
   findAll() {
-    return this.agentService.findAll();
+    return this.service.findAll();
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.agentService.findOne(+id);
+    return this.identityService.getUserDetails(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateAgentDto: UpdateAgentDto) {
-    return this.agentService.update(+id, updateAgentDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.agentService.remove(+id);
+    return this.service.update(id, updateAgentDto);
   }
 }

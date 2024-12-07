@@ -1,34 +1,45 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { MerchantService } from './merchant.service';
-import { CreateMerchantDto } from './dto/create-merchant.dto';
-import { UpdateMerchantDto } from './dto/update-merchant.dto';
+
+import { IdentityService } from '../identity/identity.service';
+import { UpdateMerchantDto } from './dto/request/update-merchant.dto';
+import { CreateMerchantDto } from './dto/request/create-merchant.dto';
 
 @Controller('merchant')
 export class MerchantController {
-  constructor(private readonly merchantService: MerchantService) {}
+  constructor(
+    private readonly service: MerchantService,
+    private readonly identityService: IdentityService,
+  ) {}
 
   @Post()
   create(@Body() createMerchantDto: CreateMerchantDto) {
-    return this.merchantService.create(createMerchantDto);
+    return this.service.create(createMerchantDto);
   }
 
   @Get()
   findAll() {
-    return this.merchantService.findAll();
+    return this.service.findAll();
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.merchantService.findOne(+id);
+    return this.identityService.getUserDetails(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateMerchantDto: UpdateMerchantDto) {
-    return this.merchantService.update(+id, updateMerchantDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.merchantService.remove(+id);
+  update(
+    @Param('id') id: string,
+    @Body() updateMerchantDto: UpdateMerchantDto,
+  ) {
+    return this.service.update(id, updateMerchantDto);
   }
 }

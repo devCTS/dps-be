@@ -5,3 +5,8 @@ export enum Users {
   ADMIN = 'ADMIN',
   SUB_MERCHANT = 'SUB_MERCHANT',
 }
+
+export enum AdminRoles {
+  SUPER_ADMIN = 'SUPER_ADMIN',
+  SUB_ADMIN = 'SUB_ADMIN',
+}

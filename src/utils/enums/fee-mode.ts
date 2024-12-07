@@ -1,0 +1,5 @@
+export enum FeeMode {
+  ABSOLUTE = 'ABSOLUTE',
+  PERCENTAGE = 'PERCENTAGE',
+  COMBINATION = 'COMBINATION',
+}

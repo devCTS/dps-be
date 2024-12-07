@@ -1,10 +1,12 @@
 import { Identity } from 'src/users/identity/entities/identity.entity';
+import { ChannelProfile } from 'src/utils/interfaces/channel-profile';
 import {
   Column,
   CreateDateColumn,
   Entity,
   JoinColumn,
   OneToOne,
+  PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
@@ -15,14 +17,20 @@ interface CommissionInfo {
 
 @Entity()
 export class Agent {
+  @PrimaryGeneratedColumn()
+  sno: number;
+
   @OneToOne(() => Identity, (identity) => identity.agent)
   @JoinColumn({ name: 'identity' })
   identity: Identity;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, default: null })
   agent: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'json', nullable: true, default: null })
+  agentCommissionRates: any;
+
+  @Column({ nullable: true, default: null })
   teamId: string;
 
   @Column()
@@ -40,7 +48,10 @@ export class Agent {
   @Column({ type: 'float', default: 0 })
   balance: number;
 
-  @Column('json')
+  @Column({ type: 'json', nullable: true, default: null })
+  channelProfile: ChannelProfile;
+
+  @Column({ type: 'json', nullable: true, default: null })
   commissions: CommissionInfo;
 
   // Referred any other

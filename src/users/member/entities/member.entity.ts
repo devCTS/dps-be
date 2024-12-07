@@ -5,6 +5,7 @@ import {
   Entity,
   JoinColumn,
   OneToOne,
+  PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
@@ -15,15 +16,21 @@ interface CommissionInfo {
 
 @Entity()
 export class Member {
+  @PrimaryGeneratedColumn()
+  sno: number;
+
   @OneToOne(() => Identity, (identity) => identity.member)
   @JoinColumn({ name: 'identity' })
   identity: Identity;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, default: null })
   agent: string;
 
-  @Column()
+  @Column({ nullable: true, default: null })
   teamId: string;
+
+  @Column({ type: 'json', nullable: true, default: null })
+  agentCommissionRates: any;
 
   @Column()
   payinCommissionRate: number;
@@ -40,10 +47,10 @@ export class Member {
   @Column()
   dailyTotalPayoutLimit: number;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, default: null })
   telegramId: string;
 
-  // inclusive of commissions
+  // quota balance + commission balance
   @Column({ type: 'float', default: 0 })
   quota: number;
 
@@ -51,10 +58,10 @@ export class Member {
   @Column({ type: 'float', default: 0 })
   balance: number;
 
-  @Column('json')
+  @Column({ type: 'json', default: null })
   quotaCommissions: CommissionInfo;
 
-  @Column('json')
+  @Column({ type: 'json', default: null })
   agentCommissions: CommissionInfo;
 
   @Column({ default: false })
