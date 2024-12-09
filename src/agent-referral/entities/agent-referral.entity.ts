@@ -37,7 +37,7 @@ export class AgentReferral {
   agentType: 'merchant' | 'agent';
 
   @Column({
-    enum: ['pending', 'rejected', 'approved', 'utilized'],
+    enum: ['pending', 'utilized'],
     default: 'pending',
   })
   status: string;

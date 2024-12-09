@@ -48,7 +48,7 @@ export class MemberReferralService {
     const currentReferralCount = await this.memberReferralRepository.count({
       where: {
         member: { id: member.id },
-        status: In(['approved', 'pending', 'utilized']),
+        status: In(['pending', 'utilized']),
       },
       relations: ['member'],
     });
@@ -76,7 +76,7 @@ export class MemberReferralService {
     const isValidCode = await this.memberReferralRepository.findOne({
       where: {
         referralCode,
-        status: 'approved',
+        status: 'pending',
       },
     });
 

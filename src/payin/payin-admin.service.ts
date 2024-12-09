@@ -16,6 +16,7 @@ import {
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
+import { Member } from 'src/member/entities/member.entity';
 
 @Injectable()
 export class PayinAdminService {
@@ -24,6 +25,8 @@ export class PayinAdminService {
     private payinRepository: Repository<Payin>,
     @InjectRepository(Merchant)
     private merchantRepository: Repository<Merchant>,
+    @InjectRepository(Member)
+    private memberRepository: Repository<Member>,
     @InjectRepository(TransactionUpdate)
     private transactionUpdateRepository: Repository<TransactionUpdate>,
   ) {}
@@ -275,6 +278,20 @@ export class PayinAdminService {
         id: merchant.id,
         name: merchant.firstName + ' ' + merchant.lastName,
         integrationId: merchant.integrationId,
+      };
+    });
+
+    return data;
+  }
+
+  async getMemberList() {
+    const members = await this.memberRepository.find();
+    if (!members) return [];
+
+    const data = members.map((member) => {
+      return {
+        id: member.id,
+        name: member.firstName + ' ' + member.lastName,
       };
     });
 
