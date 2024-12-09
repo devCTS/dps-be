@@ -9,6 +9,7 @@ import { AgentReferralModule } from 'src/agent-referral/agent-referral.module';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { TransactionUpdatesModule } from 'src/transaction-updates/transaction-updates.module';
 import { ChannelModule } from 'src/channel/channel.module';
+import { OrganizationModule } from 'src/organization/organization.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ChannelModule } from 'src/channel/channel.module';
     AgentReferralModule,
     TransactionUpdatesModule,
     ChannelModule,
+    OrganizationModule,
   ],
   providers: [AgentService],
   controllers: [AgentController],

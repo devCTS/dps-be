@@ -11,6 +11,7 @@ import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-
 import { TransactionUpdatesModule } from 'src/transaction-updates/transaction-updates.module';
 import { ChannelModule } from 'src/channel/channel.module';
 import { Topup } from 'src/topup/entities/topup.entity';
+import { TeamModule } from 'src/team/team.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { Topup } from 'src/topup/entities/topup.entity';
     forwardRef(() => PayoutModule),
     TransactionUpdatesModule,
     ChannelModule,
+    TeamModule,
   ],
   controllers: [MemberController],
   providers: [MemberService],

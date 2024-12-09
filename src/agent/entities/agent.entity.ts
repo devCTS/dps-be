@@ -1,6 +1,7 @@
 import { IsNotEmpty, IsNumber } from 'class-validator';
 import { AgentReferral } from 'src/agent-referral/entities/agent-referral.entity';
 import { Identity } from 'src/identity/entities/identity.entity';
+import { Organization } from 'src/organization/entities/organization';
 import {
   Entity,
   Column,
@@ -67,4 +68,8 @@ export class Agent {
 
   @Column({ type: 'float', default: 0 })
   balance: number;
+
+  // for organization
+  @OneToOne(() => Organization, (organisation) => organisation.leader)
+  organization: Organization;
 }

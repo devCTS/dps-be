@@ -37,6 +37,8 @@ import { FundRecordModule } from './fund-record/fund-record.module';
 import { UserDetailsModule } from './user-details/user-details.module';
 import { OverviewModule } from './overview/overview.module';
 import { UserInterceptor } from './utils/interceptor/user.interceptor';
+import { TeamModule } from './team/team.module';
+import { OrganizationModule } from './organization/organization.module';
 
 @Module({
   imports: [
@@ -90,6 +92,8 @@ import { UserInterceptor } from './utils/interceptor/user.interceptor';
     FundRecordModule,
     UserDetailsModule,
     OverviewModule,
+    TeamModule,
+    OrganizationModule,
   ],
   controllers: [AppController],
   providers: [

@@ -2,6 +2,7 @@ import { Identity } from 'src/identity/entities/identity.entity';
 import { MemberReferral } from 'src/member-referral/entities/member-referral.entity';
 import { Payin } from 'src/payin/entities/payin.entity';
 import { Payout } from 'src/payout/entities/payout.entity';
+import { Team } from 'src/team/entities/team.entity';
 import { Topup } from 'src/topup/entities/topup.entity';
 import {
   Entity,
@@ -94,4 +95,8 @@ export class Member {
 
   @Column({ nullable: true })
   selfRegistered: boolean;
+
+  // for team leader
+  @OneToOne(() => Team, (team) => team.teamLeader)
+  team: Team;
 }
