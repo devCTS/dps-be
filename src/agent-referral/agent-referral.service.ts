@@ -51,7 +51,7 @@ export class AgentReferralService {
     const currentReferralCount = await this.agentReferralRepository.count({
       where: {
         agent: { id: agent.id },
-        status: In(['approved', 'pending', 'utilized']),
+        status: In(['pending', 'utilized']),
       },
       relations: ['agent'],
     });
@@ -85,7 +85,7 @@ export class AgentReferralService {
       where: {
         referralCode,
         agentType,
-        status: 'approved',
+        status: 'pending',
       },
     });
 
