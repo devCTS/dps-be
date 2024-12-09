@@ -19,6 +19,7 @@ import { UserInReq } from 'src/utils/decorators/user-in-req.decorator';
 import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { CreatePaymentOrderDtoAdmin } from 'src/payment-system/dto/createPaymentOrder.dto';
 
 @Controller('payin')
 export class PayinController {
@@ -34,6 +35,13 @@ export class PayinController {
   @Post()
   create(@Body() createPayinDto) {
     return this.payinService.create(createPayinDto);
+  }
+
+  @Post('create-by-admin')
+  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
+  @UseGuards(RolesGuard)
+  createAndAssign(@Body() createPayinDto: CreatePaymentOrderDtoAdmin) {
+    return this.payinService.createAndAssign(createPayinDto);
   }
 
   @Post('admin/paginate')

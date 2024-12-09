@@ -12,6 +12,7 @@ import { Payin } from './entities/payin.entity';
 import {
   AlertType,
   CallBackStatus,
+  ChannelName,
   NotificationType,
   OrderStatus,
   OrderType,
@@ -28,7 +29,10 @@ import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-
 import { MemberService } from 'src/member/member.service';
 import { MerchantService } from 'src/merchant/merchant.service';
 import { AgentService } from 'src/agent/agent.service';
-import { CreatePaymentOrderDto } from 'src/payment-system/dto/createPaymentOrder.dto';
+import {
+  CreatePaymentOrderDto,
+  CreatePaymentOrderDtoAdmin,
+} from 'src/payment-system/dto/createPaymentOrder.dto';
 import { EndUser } from 'src/end-user/entities/end-user.entity';
 import { FundRecordService } from 'src/fund-record/fund-record.service';
 import { NotificationService } from 'src/notification/notification.service';
@@ -114,6 +118,91 @@ export class PayinService {
         systemOrderId: payin.systemOrderId,
         userId: merchant.identity.id,
       });
+
+    return payin;
+  }
+
+  async createAndAssign(payinDetails: CreatePaymentOrderDtoAdmin) {
+    const {
+      userId,
+      userEmail,
+      userName,
+      userMobileNumber,
+      orderId,
+      amount,
+      merchantId,
+      memberId,
+    } = payinDetails;
+
+    let channel = ChannelName.UPI;
+
+    if (!merchantId || !memberId)
+      throw new NotFoundException('Merchant ID or Member ID missing!');
+
+    const merchant = await this.merchantRepository.findOne({
+      where: {
+        id: merchantId,
+      },
+      relations: ['identity'],
+    });
+    if (!merchant)
+      throw new InternalServerErrorException('Merchant not found!');
+
+    let endUser = await this.endUserRepository.findOne({
+      where: { userId, merchant: { id: merchant.id } },
+      relations: ['merchant'],
+    });
+
+    if (endUser?.isBlacklisted)
+      throw new NotAcceptableException('This user is currently blacklisted!');
+
+    if (!endUser)
+      endUser = await this.endUserService.create({
+        email: userEmail,
+        mobile: userMobileNumber,
+        name: userName,
+        channel,
+        userId,
+        merchant,
+      });
+
+    const payin = await this.payinRepository.save({
+      merchantOrderId: orderId,
+      user: endUser,
+      systemOrderId: uniqid(),
+      merchant,
+      amount,
+      channel,
+    });
+
+    if (payin)
+      await this.transactionUpdateService.create({
+        orderDetails: payin,
+        orderType: OrderType.PAYIN,
+        systemOrderId: payin.systemOrderId,
+        userId: merchant.identity.id,
+      });
+
+    const member = await this.memberRepository.findOne({
+      where: { id: memberId },
+      relations: [
+        'identity',
+        'identity.upi',
+        'identity.eWallet',
+        'identity.netBanking',
+      ],
+    });
+
+    await this.updatePayinStatusToAssigned({
+      id: payin.systemOrderId,
+      userId: endUser.id,
+      paymentMode: PaymentMadeOn.MEMBER,
+      memberId: memberId,
+      memberPaymentDetails:
+        member?.identity.upi[0] ||
+        member?.identity?.eWallet[0] ||
+        member?.identity?.netBanking[0],
+    });
 
     return payin;
   }
