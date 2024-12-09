@@ -47,8 +47,15 @@ export class SubMerchantController {
   @Get()
   @Roles(Role.MERCHANT, Role.SUB_MERCHANT)
   @UseGuards(RolesGuard)
-  findOne(@UserInReq() user) {
+  findOneUser(@UserInReq() user) {
     return this.subMerchantService.findOne(+user.id);
+  }
+
+  @Get(':id')
+  @Roles(Role.MERCHANT, Role.SUB_MERCHANT)
+  @UseGuards(RolesGuard)
+  findOne(@Param('id') id: number) {
+    return this.subMerchantService.findOne(+id);
   }
 
   @Patch(':id')

@@ -15,6 +15,7 @@ import { Withdrawal } from 'src/withdrawal/entities/withdrawal.entity';
 import { Topup } from 'src/topup/entities/topup.entity';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { FundRecord } from 'src/fund-record/entities/fund-record.entity';
+import { SystemConfigModule } from 'src/system-config/system-config.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { FundRecord } from 'src/fund-record/entities/fund-record.entity';
       TransactionUpdate,
       FundRecord,
     ]),
+    SystemConfigModule,
   ],
   controllers: [UserDetailsController],
   providers: [

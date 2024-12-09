@@ -4,6 +4,7 @@ import {
   IsEnum,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsString,
 } from 'class-validator';
 import { ChannelName } from 'src/utils/enum/enum';
@@ -40,4 +41,36 @@ export class CreatePaymentOrderDto {
 
   @IsEnum(['sandbox', 'live'])
   environment: 'sandbox' | 'live';
+}
+
+export class CreatePaymentOrderDtoAdmin {
+  @IsNumber()
+  @IsNotEmpty()
+  amount: number;
+
+  @IsString()
+  @IsNotEmpty()
+  orderId: string;
+
+  @IsNotEmpty()
+  userId: string;
+
+  @IsNotEmpty()
+  @IsOptional()
+  merchantId: number;
+
+  @IsNotEmpty()
+  @IsOptional()
+  memberId: number;
+
+  @IsEmail()
+  @IsNotEmpty()
+  userEmail: string;
+
+  @IsString()
+  @IsNotEmpty()
+  userName: string;
+
+  @IsNotEmpty()
+  userMobileNumber: string;
 }

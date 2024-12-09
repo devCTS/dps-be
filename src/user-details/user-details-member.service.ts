@@ -50,9 +50,45 @@ export class UserDetailsMemberService {
   async getMemberDetails(userId: number) {
     const member = await this.memberRepository.findOne({
       where: { id: userId },
-      relations: ['identity', 'memberReferral'],
+      relations: ['identity', 'memberReferral', 'referredMember'],
     });
     if (!member) throw new NotFoundException('Request member not found!');
+
+    const transactionUpdatesMember =
+      await this.transactionUpdateRepository.find({
+        where: {
+          user: { id: member.identity.id },
+        },
+        relations: ['user'],
+      });
+
+    const transactionEntries = transactionUpdatesMember.reduce(
+      (prev, curr) => {
+        if (curr.pending === false && curr.before !== curr.after) {
+          if (curr.userType === UserTypeForTransactionUpdates.MEMBER_QUOTA) {
+            if (curr.orderType === OrderType.PAYIN)
+              prev.payinCommission += curr.amount;
+
+            if (curr.orderType === OrderType.PAYOUT)
+              prev.payoutCommission += curr.amount;
+
+            if (curr.orderType === OrderType.TOPUP)
+              prev.topupCommission += curr.amount;
+          }
+
+          if (curr.userType === UserTypeForTransactionUpdates.MEMBER_BALANCE)
+            prev.referralCommission += curr.amount;
+        }
+
+        return prev;
+      },
+      {
+        payinCommission: 0,
+        payoutCommission: 0,
+        topupCommission: 0,
+        referralCommission: 0,
+      },
+    );
 
     return {
       name: member.firstName + ' ' + member.lastName,
@@ -61,12 +97,21 @@ export class UserDetailsMemberService {
       phone: member.phone,
       joinedOn: member.createdAt,
       status: member.enabled,
-      balance: member.balance,
-      quota: member.quota,
       referral:
         member?.memberReferral?.member?.firstName +
           ' ' +
           member?.memberReferral?.member?.lastName || 'None',
+      balance: roundOffAmount(member.balance),
+      quota: roundOffAmount(member.quota),
+      referralsCount: member?.referredMember?.filter(
+        (code) => code.status === 'utilized',
+      )?.length,
+      payinCommissions: roundOffAmount(transactionEntries.payinCommission),
+      payoutCommissions: roundOffAmount(transactionEntries.payoutCommission),
+      topupCommissions: roundOffAmount(transactionEntries.topupCommission),
+      referralCommissions: roundOffAmount(
+        transactionEntries.referralCommission,
+      ),
     };
   }
 
