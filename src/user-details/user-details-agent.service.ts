@@ -23,6 +23,7 @@ import { Payout } from 'src/payout/entities/payout.entity';
 import { Topup } from 'src/topup/entities/topup.entity';
 import { FundRecordAdminResponseDto } from 'src/fund-record/dto/paginate-response.dto';
 import { FundRecord } from 'src/fund-record/entities/fund-record.entity';
+import { SystemConfigService } from 'src/system-config/system-config.service';
 
 @Injectable()
 export class UserDetailsAgentService {
@@ -41,14 +42,52 @@ export class UserDetailsAgentService {
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
     @InjectRepository(FundRecord)
     private readonly fundRecordRepository: Repository<FundRecord>,
+    private readonly systemConfigService: SystemConfigService,
   ) {}
 
   async getAgentDetails(userId: number) {
     const agent = await this.agentRepository.findOne({
       where: { id: userId },
-      relations: ['identity', 'agentReferral'],
+      relations: [
+        'identity',
+        'agentReferral',
+        'referred',
+        'identity.withdrawal',
+      ],
     });
     if (!agent) throw new NotFoundException('Request agent not found!');
+
+    const { frozenAmountThreshold } =
+      await this.systemConfigService.findLatest();
+
+    const transactionUpdatesAgent = await this.transactionUpdateRepository.find(
+      {
+        where: {
+          user: { id: agent.identity.id },
+        },
+        relations: ['user', 'withdrawalOrder'],
+      },
+    );
+
+    const transactionEntries = transactionUpdatesAgent.reduce(
+      (prev, curr) => {
+        if (curr.pending === false && curr.before !== curr.after) {
+          if (curr.orderType === OrderType.WITHDRAWAL) {
+            prev.withdrawalFee += curr?.amount;
+            prev.withdrawanAmount += curr.withdrawalOrder?.amount;
+          } else {
+            prev.referralCommission += curr?.amount;
+          }
+        }
+
+        return prev;
+      },
+      {
+        withdrawanAmount: 0,
+        withdrawalFee: 0,
+        referralCommission: 0,
+      },
+    );
 
     return {
       name: agent.firstName + ' ' + agent.lastName,
@@ -57,11 +96,30 @@ export class UserDetailsAgentService {
       phone: agent.phone,
       joinedOn: agent.createdAt,
       status: agent.enabled,
-      balance: agent.balance,
       referral:
         agent?.agentReferral?.agent?.firstName +
           ' ' +
           agent?.agentReferral?.agent?.lastName || 'None',
+      referralsCount: agent?.referred?.filter(
+        (code) => code.status === 'utilized',
+      )?.length,
+      balance: roundOffAmount(agent.balance),
+      withdrawanAmount: roundOffAmount(transactionEntries.withdrawanAmount),
+      withdrawalFee: roundOffAmount(transactionEntries.withdrawalFee),
+      referralCommissions: roundOffAmount(
+        transactionEntries.referralCommission,
+      ),
+      frozenAmount: agent.identity.withdrawal.reduce((prev, curr) => {
+        if (curr.status === WithdrawalOrderStatus.PENDING) {
+          const currentDate = new Date();
+          const withdrawalDate = new Date(curr.createdAt);
+          const diffInTime = currentDate.getTime() - withdrawalDate.getTime();
+          const diffInDays = diffInTime / (1000 * 3600 * 24);
+
+          if (diffInDays > frozenAmountThreshold) prev += curr.amount;
+        }
+        return prev;
+      }, 0),
     };
   }
 

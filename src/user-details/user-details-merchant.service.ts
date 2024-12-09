@@ -17,6 +17,7 @@ import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-
 import { Withdrawal } from 'src/withdrawal/entities/withdrawal.entity';
 import {
   OrderStatus,
+  OrderType,
   UserTypeForTransactionUpdates,
   WithdrawalOrderStatus,
 } from 'src/utils/enum/enum';
@@ -24,6 +25,7 @@ import { MerchantAllPayoutResponseDto } from 'src/payout/dto/paginate-response/m
 import { WithdrawalUserResponseDto } from 'src/withdrawal/dto/withdrawal-user-response.dto';
 import { FundRecord } from 'src/fund-record/entities/fund-record.entity';
 import { FundRecordAdminResponseDto } from 'src/fund-record/dto/paginate-response.dto';
+import { SystemConfigService } from 'src/system-config/system-config.service';
 
 @Injectable()
 export class UserDetailsMerchantService {
@@ -42,14 +44,57 @@ export class UserDetailsMerchantService {
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
     @InjectRepository(FundRecord)
     private readonly fundRecordRepository: Repository<FundRecord>,
+
+    private readonly systemConfigService: SystemConfigService,
   ) {}
 
   async getMerchantDetails(userId: number) {
     const merchant = await this.merchantRepository.findOne({
       where: { id: userId },
-      relations: ['identity'],
+      relations: ['identity', 'payin', 'identity.withdrawal'],
     });
     if (!merchant) throw new NotFoundException('Request merchant not found!');
+
+    const { frozenAmountThreshold } =
+      await this.systemConfigService.findLatest();
+
+    const transactionUpdatesMerchant =
+      await this.transactionUpdateRepository.find({
+        where: {
+          user: { id: merchant.identity.id },
+        },
+        relations: ['user', 'payinOrder', 'payoutOrder', 'withdrawalOrder'],
+      });
+
+    const transactionEntries = transactionUpdatesMerchant.reduce(
+      (prev, curr) => {
+        if (curr.pending === false && curr.after !== curr.before) {
+          if (curr.orderType === OrderType.PAYIN) {
+            prev.payinFee += curr?.amount;
+            prev.payinIncome += curr.payinOrder?.amount;
+          }
+
+          if (curr.orderType === OrderType.PAYIN) {
+            prev.payoutFee += curr?.amount;
+            prev.payoutAmount += curr.payoutOrder?.amount;
+          }
+
+          if (curr.orderType === OrderType.WITHDRAWAL) {
+            prev.withdrawalFee += curr?.amount;
+            prev.withdrawanAmount += curr.withdrawalOrder?.amount;
+          }
+        }
+        return prev;
+      },
+      {
+        payinIncome: 0,
+        payinFee: 0,
+        payoutAmount: 0,
+        payoutFee: 0,
+        withdrawanAmount: 0,
+        withdrawalFee: 0,
+      },
+    );
 
     return {
       name: merchant.firstName + ' ' + merchant.lastName,
@@ -58,11 +103,28 @@ export class UserDetailsMerchantService {
       phone: merchant.phone,
       joinedOn: merchant.createdAt,
       status: merchant.enabled,
-      balance: merchant.balance,
       referral:
         merchant?.agentReferral?.agent?.firstName +
           ' ' +
           merchant?.agentReferral?.agent?.lastName || 'None',
+      balance: roundOffAmount(merchant.balance),
+      payinIncome: roundOffAmount(transactionEntries.payinIncome),
+      payinFee: roundOffAmount(transactionEntries.payinFee),
+      payoutAmount: roundOffAmount(transactionEntries.payoutAmount),
+      payoutFee: roundOffAmount(transactionEntries.payoutFee),
+      withdrawanAmount: roundOffAmount(transactionEntries.withdrawanAmount),
+      withdrawalFee: roundOffAmount(transactionEntries.withdrawalFee),
+      frozenAmount: merchant.identity.withdrawal.reduce((prev, curr) => {
+        if (curr.status === WithdrawalOrderStatus.PENDING) {
+          const currentDate = new Date();
+          const withdrawalDate = new Date(curr.createdAt);
+          const diffInTime = currentDate.getTime() - withdrawalDate.getTime();
+          const diffInDays = diffInTime / (1000 * 3600 * 24);
+
+          if (diffInDays > frozenAmountThreshold) prev += curr.amount;
+        }
+        return prev;
+      }, 0),
     };
   }
 
