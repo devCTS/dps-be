@@ -12,12 +12,15 @@ import { extractToken, verifyToken } from '../utils';
 import { Role } from '../enum/enum';
 import { EntityManager } from 'typeorm';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
+import { Member } from 'src/member/entities/member.entity';
+import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
+import { Agent } from 'src/agent/entities/agent.entity';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    private merchantEntity: EntityManager,
+    private entityManager: EntityManager,
   ) {}
 
   async canActivate(context: ExecutionContext) {
@@ -37,11 +40,17 @@ export class RolesGuard implements CanActivate {
 
     const verifiedToken: any = await verifyToken(extractToken(token));
 
-    if (verifiedToken?.type.toLowerCase() === Role.MERCHANT) {
-      const merchant = await this.merchantEntity.findOne(Merchant, {
+    if (
+      verifiedToken?.type &&
+      verifiedToken?.type.toLowerCase() === Role.MERCHANT
+    ) {
+      const merchant = await this.entityManager.findOne(Merchant, {
         where: { id: verifiedToken.id },
         relations: ['identity', 'identity.ips'],
       });
+
+      if (!merchant.enabled)
+        throw new ForbiddenException('Merchant is disabled.');
 
       if (merchant.identity.ips.length === 0) return true;
 
@@ -52,6 +61,37 @@ export class RolesGuard implements CanActivate {
       if (!whiteListedIps.includes(ip)) {
         throw new ForbiddenException('Ip restricted');
       }
+    }
+
+    if (verifiedToken?.type) {
+      let user = null;
+      switch (verifiedToken.type.toLowerCase()) {
+        case Role.MEMBER:
+          user = await this.entityManager.findOne(Member, {
+            where: { id: verifiedToken.id },
+          });
+
+          break;
+
+        case Role.AGENT:
+          user = await this.entityManager.findOne(Agent, {
+            where: { id: verifiedToken.id },
+          });
+
+          break;
+        case Role.SUB_MERCHANT:
+          user = await this.entityManager.findOne(Submerchant, {
+            where: { id: verifiedToken.id },
+          });
+
+          break;
+
+        default:
+          break;
+      }
+
+      if (user && !user.enabled)
+        throw new ForbiddenException(`${verifiedToken.type} is not enabled.`);
     }
 
     if (requiredRoles.includes('all')) return true;
