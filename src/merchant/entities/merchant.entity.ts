@@ -16,6 +16,8 @@ import { Payout } from 'src/payout/entities/payout.entity';
 import { Payin } from 'src/payin/entities/payin.entity';
 import { EndUser } from 'src/end-user/entities/end-user.entity';
 import { ServiceRateType } from 'src/utils/enum/enum';
+import { Organization } from 'src/organization/entities/organization';
+import { Agent, AgentCommissionsType } from 'src/agent/entities/agent.entity';
 
 @Entity()
 export class Merchant {
@@ -38,8 +40,8 @@ export class Merchant {
   @Column({ nullable: true })
   businessName: string;
 
-  @Column({ nullable: true })
-  referralCode: string;
+  // @Column({ nullable: true })
+  // referralCode: string;
 
   @Column({ default: true })
   enabled: boolean;
@@ -127,4 +129,17 @@ export class Merchant {
 
   @Column({ default: false })
   isOnline: boolean;
+
+  @OneToOne(() => Organization, (organisation) => organisation.leader, {
+    nullable: true,
+  })
+  @JoinColumn()
+  organization: Organization;
+
+  @OneToOne(() => Agent, (agent) => agent.referredMerchant, { nullable: true })
+  @JoinColumn({ name: 'agent' })
+  agent: Agent;
+
+  @Column({ type: 'json', nullable: true })
+  agentCommissions: AgentCommissionsType;
 }

@@ -12,10 +12,18 @@ import { TransactionUpdatesModule } from 'src/transaction-updates/transaction-up
 import { ChannelModule } from 'src/channel/channel.module';
 import { Topup } from 'src/topup/entities/topup.entity';
 import { TeamModule } from 'src/team/team.module';
+import { Team } from 'src/team/entities/team.entity';
+import { MemberReferral } from 'src/member-referral/entities/member-referral.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Member, TransactionUpdate, Topup]),
+    TypeOrmModule.forFeature([
+      Member,
+      TransactionUpdate,
+      Topup,
+      Team,
+      MemberReferral,
+    ]),
     IdentityModule,
     JwtModule,
     MemberReferralModule,

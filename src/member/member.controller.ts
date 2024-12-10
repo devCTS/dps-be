@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   UseGuards,
+  Put,
 } from '@nestjs/common';
 import { MemberService } from './member.service';
 import { CreateMemberDto } from './dto/create-member.dto';
@@ -17,6 +18,7 @@ import { Roles } from 'src/utils/decorators/roles.decorator';
 import { Role } from 'src/utils/enum/enum';
 import { RolesGuard } from 'src/utils/guard/roles.guard';
 import { UserInReq } from 'src/utils/decorators/user-in-req.decorator';
+import { UpdateCommissionRatesDto } from './dto/update-commission-rates.dto';
 
 @Controller('member')
 export class MemberController {
@@ -30,8 +32,6 @@ export class MemberController {
   }
 
   @Post('register')
-  @Roles(Role.MEMBER)
-  @UseGuards(RolesGuard)
   register(@Body() registerDto: RegisterDto) {
     return this.memberService.registerViaSignup(registerDto);
   }
@@ -79,5 +79,11 @@ export class MemberController {
     @UserInReq() user,
   ) {
     return this.memberService.changePassword(changePasswordDto, user.id);
+  }
+
+  @Put('update-commission-rates')
+  @Roles(Role.MEMBER)
+  updateCommissionRates(@Body() requestDto: UpdateCommissionRatesDto) {
+    return this.memberService.updateComissionRates(requestDto);
   }
 }

@@ -1974,15 +1974,21 @@ export class OverviewAdminService {
   }
 
   async getPayinAnalytics(body: FiltersDto) {
-    const { startDate, endDate, mode } = body;
+    const { startDate, endDate, mode, merchantId } = body;
 
     const parsedStartDate = new Date(parseStartDate(startDate));
     const parsedEndDate = new Date(parseEndDate(endDate));
 
+    const whereConditions: any = {};
+
+    if (parsedStartDate && parsedEndDate)
+      whereConditions.createdAt = Between(parsedStartDate, parsedEndDate);
+
+    if (merchantId) whereConditions.merchant = { id: merchantId };
+
     const [payinRows, payinsCount] = await this.payinRepository.findAndCount({
-      where: {
-        createdAt: Between(parsedStartDate, parsedEndDate),
-      },
+      where: whereConditions,
+      relations: ['merchant'],
     });
 
     const payins = payinRows.reduce(
@@ -2071,16 +2077,22 @@ export class OverviewAdminService {
   }
 
   async getPayoutAnalytics(body: FiltersDto) {
-    const { startDate, endDate, mode } = body;
+    const { startDate, endDate, mode, merchantId } = body;
 
     const parsedStartDate = new Date(parseStartDate(startDate));
     const parsedEndDate = new Date(parseEndDate(endDate));
 
+    const whereConditions: any = {};
+
+    if (parsedStartDate && parsedEndDate)
+      whereConditions.createdAt = Between(parsedStartDate, parsedEndDate);
+
+    if (merchantId) whereConditions.merchant = { id: merchantId };
+
     const [payoutRows, payoutsCount] = await this.payoutRepository.findAndCount(
       {
-        where: {
-          createdAt: Between(parsedStartDate, parsedEndDate),
-        },
+        where: whereConditions,
+        relations: ['merchant'],
       },
     );
 

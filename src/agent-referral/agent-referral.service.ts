@@ -249,158 +249,158 @@ export class AgentReferralService {
   }
 
   // Method to fetch and build the referral tree starting from the root member
-  async getReferralTree(): Promise<any> {
-    const rootReferral = await this.agentReferralRepository.findOne({
-      where: {
-        referralCode: null,
-        status: 'utilized',
-      },
-      relations: ['agent', 'agent.identity'],
-    });
+  // async getReferralTree(): Promise<any> {
+  //   const rootReferral = await this.agentReferralRepository.findOne({
+  //     where: {
+  //       referralCode: null,
+  //       status: 'utilized',
+  //     },
+  //     relations: ['agent', 'agent.identity'],
+  //   });
 
-    if (!rootReferral) return null;
+  //   if (!rootReferral) return null;
 
-    const rootAgent = rootReferral.agent;
-    return this.buildTree(rootAgent);
-  }
+  //   const rootAgent = rootReferral.agent;
+  //   return this.buildTree(rootAgent);
+  // }
 
-  // Recursive method to build the tree structure
-  private async buildTree(agent: any): Promise<any> {
-    const referrals = await this.agentReferralRepository.find({
-      where: {
-        agent: { id: agent.id },
-        status: 'utilized',
-      },
-      relations: [
-        'agent',
-        'agent.identity',
-        'referredAgent',
-        'referredAgent.identity',
-        'referredMerchant',
-        'referredMerchant.identity',
-      ],
-    });
+  // // Recursive method to build the tree structure
+  // private async buildTree(agent: any): Promise<any> {
+  //   const referrals = await this.agentReferralRepository.find({
+  //     where: {
+  //       agent: { id: agent.id },
+  //       status: 'utilized',
+  //     },
+  //     relations: [
+  //       'agent',
+  //       'agent.identity',
+  //       'referredAgent',
+  //       'referredAgent.identity',
+  //       'referredMerchant',
+  //       'referredMerchant.identity',
+  //     ],
+  //   });
 
-    const children = await Promise.all(
-      referrals.map(async (referral) => {
-        if (referral.referredAgent) {
-          let childTree = {};
-          if (!agent.integrationId)
-            childTree = await this.buildTree(referral.referredAgent);
-          else return null;
-          return {
-            payinCommission: referral.payinCommission,
-            payoutCommission: referral.payoutCommission,
-            balance: referral.referredAgent.balance,
-            uniqueId: referral.referredAgent.identity.id,
-            ...childTree,
-          };
-        } else if (referral.referredMerchant) {
-          let childTree = {};
-          if (!agent.integrationId)
-            childTree = await this.buildTree(referral.referredMerchant);
-          else return null;
-          return {
-            payinCommission: referral.payinCommission,
-            payoutCommission: referral.payoutCommission,
-            merchantPayinServiceRate: referral.merchantPayinServiceRate,
-            merchantPayoutServiceRate: referral.merchantPayoutServiceRate,
-            balance: referral.referredMerchant.balance,
-            uniqueId: referral.referredMerchant.identity.id,
-            ...childTree,
-          };
-        } else {
-          return null;
-        }
-      }),
-    );
+  //   const children = await Promise.all(
+  //     referrals.map(async (referral) => {
+  //       if (referral.referredAgent) {
+  //         let childTree = {};
+  //         if (!agent.integrationId)
+  //           childTree = await this.buildTree(referral.referredAgent);
+  //         else return null;
+  //         return {
+  //           payinCommission: referral.payinCommission,
+  //           payoutCommission: referral.payoutCommission,
+  //           balance: referral.referredAgent.balance,
+  //           uniqueId: referral.referredAgent.identity.id,
+  //           ...childTree,
+  //         };
+  //       } else if (referral.referredMerchant) {
+  //         let childTree = {};
+  //         if (!agent.integrationId)
+  //           childTree = await this.buildTree(referral.referredMerchant);
+  //         else return null;
+  //         return {
+  //           payinCommission: referral.payinCommission,
+  //           payoutCommission: referral.payoutCommission,
+  //           merchantPayinServiceRate: referral.merchantPayinServiceRate,
+  //           merchantPayoutServiceRate: referral.merchantPayoutServiceRate,
+  //           balance: referral.referredMerchant.balance,
+  //           uniqueId: referral.referredMerchant.identity.id,
+  //           ...childTree,
+  //         };
+  //       } else {
+  //         return null;
+  //       }
+  //     }),
+  //   );
 
-    return {
-      id: agent.id,
-      uniqueId: agent.identity.id,
-      firstName: agent.firstName,
-      lastName: agent.lastName,
-      referralCode: agent.referralCode,
-      email: agent.identity.email,
-      agentType: agent.integrationId ? 'merchant' : 'agent',
-      balance: agent.balance,
-      payinCommission:
-        referrals.length > 0 ? referrals[0].payinCommission : null,
-      payoutCommission:
-        referrals.length > 0 ? referrals[0].payoutCommission : null,
-      children: children.filter((child) => child !== null),
-    };
-  }
+  //   return {
+  //     id: agent.id,
+  //     uniqueId: agent.identity.id,
+  //     firstName: agent.firstName,
+  //     lastName: agent.lastName,
+  //     referralCode: agent.referralCode,
+  //     email: agent.identity.email,
+  //     agentType: agent.integrationId ? 'merchant' : 'agent',
+  //     balance: agent.balance,
+  //     payinCommission:
+  //       referrals.length > 0 ? referrals[0].payinCommission : null,
+  //     payoutCommission:
+  //       referrals.length > 0 ? referrals[0].payoutCommission : null,
+  //     children: children.filter((child) => child !== null),
+  //   };
+  // }
 
-  async getReferralTreeOfUser(userId: number) {
-    const referralTree = await this.getReferralTree();
-    if (!referralTree) {
-      const merchant = await this.merchantRepository.findOne({
-        where: { identity: { id: userId } },
-        relations: ['identity'],
-      });
-      if (!merchant) return null;
+  // async getReferralTreeOfUser(userId: number) {
+  //   const referralTree = await this.getReferralTree();
+  //   if (!referralTree) {
+  //     const merchant = await this.merchantRepository.findOne({
+  //       where: { identity: { id: userId } },
+  //       relations: ['identity'],
+  //     });
+  //     if (!merchant) return null;
 
-      return {
-        id: merchant.id,
-        firstName: merchant.firstName,
-        lastName: merchant.lastName,
-        referralCode: merchant.referralCode,
-        email: merchant.identity.email,
-        agentType: 'merchant',
-        balance: merchant.balance,
-        merchantPayinServiceRate: merchant.payinServiceRate,
-        merchantPayoutServiceRate: merchant.payoutServiceRate,
-        children: [],
-      };
-    }
-    return await this.trimTreeToUser(referralTree, userId);
-  }
+  //     return {
+  //       id: merchant.id,
+  //       firstName: merchant.firstName,
+  //       lastName: merchant.lastName,
+  //       referralCode: merchant.referralCode,
+  //       email: merchant.identity.email,
+  //       agentType: 'merchant',
+  //       balance: merchant.balance,
+  //       merchantPayinServiceRate: merchant.payinServiceRate,
+  //       merchantPayoutServiceRate: merchant.payoutServiceRate,
+  //       children: [],
+  //     };
+  //   }
+  //   return await this.trimTreeToUser(referralTree, userId);
+  // }
 
-  private async trimTreeToUser(tree: any, userId: number): Promise<any> {
-    if (tree.uniqueId === userId)
-      return {
-        id: tree.id,
-        firstName: tree.firstName,
-        lastName: tree.lastName,
-        referralCode: tree.referralCode,
-        email: tree.email,
-        agentType: 'merchant',
-        balance: tree.balance,
-        merchantPayinServiceRate: tree.merchantPayinServiceRate,
-        merchantPayoutServiceRate: tree.merchantPayoutServiceRate,
-        payinCommission: tree.payinCommission,
-        payoutCommission: tree.payoutCommission,
-        children: [],
-      };
+  // private async trimTreeToUser(tree: any, userId: number): Promise<any> {
+  //   if (tree.uniqueId === userId)
+  //     return {
+  //       id: tree.id,
+  //       firstName: tree.firstName,
+  //       lastName: tree.lastName,
+  //       referralCode: tree.referralCode,
+  //       email: tree.email,
+  //       agentType: 'merchant',
+  //       balance: tree.balance,
+  //       merchantPayinServiceRate: tree.merchantPayinServiceRate,
+  //       merchantPayoutServiceRate: tree.merchantPayoutServiceRate,
+  //       payinCommission: tree.payinCommission,
+  //       payoutCommission: tree.payoutCommission,
+  //       children: [],
+  //     };
 
-    const trimmedChildren = await Promise.all(
-      tree.children.map((child: any) => this.trimTreeToUser(child, userId)),
-    );
+  //   const trimmedChildren = await Promise.all(
+  //     tree.children.map((child: any) => this.trimTreeToUser(child, userId)),
+  //   );
 
-    if (trimmedChildren.length > 0)
-      return {
-        ...tree,
-        children: trimmedChildren,
-      };
+  //   if (trimmedChildren.length > 0)
+  //     return {
+  //       ...tree,
+  //       children: trimmedChildren,
+  //     };
 
-    const merchant = await this.merchantRepository.findOne({
-      where: { identity: { id: userId } },
-      relations: ['identity'],
-    });
-    if (!merchant) return null;
+  //   const merchant = await this.merchantRepository.findOne({
+  //     where: { identity: { id: userId } },
+  //     relations: ['identity'],
+  //   });
+  //   if (!merchant) return null;
 
-    return {
-      id: merchant.id,
-      firstName: merchant.firstName,
-      lastName: merchant.lastName,
-      referralCode: merchant.referralCode,
-      email: merchant.identity.email,
-      agentType: 'merchant',
-      balance: merchant.balance,
-      merchantPayinServiceRate: merchant.payinServiceRate,
-      merchantPayoutServiceRate: merchant.payoutServiceRate,
-      children: [],
-    };
-  }
+  //   return {
+  //     id: merchant.id,
+  //     firstName: merchant.firstName,
+  //     lastName: merchant.lastName,
+  //     referralCode: merchant.referralCode,
+  //     email: merchant.identity.email,
+  //     agentType: 'merchant',
+  //     balance: merchant.balance,
+  //     merchantPayinServiceRate: merchant.payinServiceRate,
+  //     merchantPayoutServiceRate: merchant.payoutServiceRate,
+  //     children: [],
+  //   };
+  // }
 }

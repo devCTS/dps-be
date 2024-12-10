@@ -27,6 +27,10 @@ import { NetBanking } from 'src/channel/entity/net-banking.entity';
 import { EWallet } from 'src/channel/entity/e-wallet.entity';
 import { identity } from 'rxjs';
 import { VerifyWithdrawalPasswordDto } from './dto/verify-withdrawal-password.dto';
+import { Organization } from 'src/organization/entities/organization';
+import { OrganizationService } from 'src/organization/organization.service';
+import { AgentReferral } from 'src/agent-referral/entities/agent-referral.entity';
+import { UpdateCommissionRatesDto } from './dto/update-commission-rates.dto';
 
 @Injectable()
 export class AgentService {
@@ -37,16 +41,19 @@ export class AgentService {
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
     @InjectRepository(Upi)
     private readonly upiRepository: Repository<Upi>,
-
     @InjectRepository(NetBanking)
     private readonly netBankingRepository: Repository<NetBanking>,
-
     @InjectRepository(EWallet)
     private readonly eWalletRepository: Repository<EWallet>,
+    @InjectRepository(Organization)
+    private readonly organizationRepository: Repository<Organization>,
+    @InjectRepository(AgentReferral)
+    private readonly agentReferralRepository: Repository<AgentReferral>,
 
     private identityService: IdentityService,
     private jwtService: JwtService,
     private agentReferralService: AgentReferralService,
+    private organizationService: OrganizationService,
   ) {}
 
   // Create Agent
@@ -79,20 +86,42 @@ export class AgentService {
       'AGENT',
     );
 
+    const referralDetails = await this.agentReferralRepository.findOne({
+      where: { referralCode },
+      relations: ['agent', 'agent.organization'],
+    });
+
+    const organizationId = referralDetails.agent?.organization?.organizationId;
+    let organizationSize =
+      referralDetails.agent?.organization?.organizationSize;
+
     // Create and save the Agent
     const agent = this.agentRepository.create({
       identity,
       firstName,
       lastName,
       phone,
-      referralCode: referralCode ? referralCode : null,
+      // referralCode: referralCode ? referralCode : null,
       withdrawalPassword: this.jwtService.getHashPassword(withdrawalPassword),
       minWithdrawalAmount,
       maxWithdrawalAmount,
       withdrawalRate,
+      agent: referralDetails?.agent || null,
+      agentCommissions: referralDetails?.agent?.id
+        ? {
+            payinCommissionRate: referralDetails?.payinCommission,
+            payoutCommissionRate: referralDetails?.payoutCommission,
+          }
+        : null,
     });
 
     const created = await this.agentRepository.save(agent);
+
+    organizationId
+      ? await this.organizationRepository.update(organizationId, {
+          organizationSize: organizationSize++,
+        })
+      : await this.organizationService.createOrganization(created.id);
 
     if (channelProfile?.upi && channelProfile.upi.length > 0) {
       for (const element of channelProfile.upi) {
@@ -458,7 +487,7 @@ export class AgentService {
       where: {
         identity: { id: identityId },
       },
-      relations: ['identity'],
+      relations: ['identity', 'organization'],
     });
 
     if (!agent) throw new NotFoundException('Agent not found!');
@@ -466,6 +495,18 @@ export class AgentService {
     await this.agentRepository.update(agent.id, {
       balance: agent.balance + amount,
     });
+
+    if (agent.organization?.organizationId) {
+      const organization = await this.organizationRepository.findOneBy({
+        organizationId: agent.organization.organizationId,
+      });
+
+      if (organization)
+        await this.organizationRepository.update(organization.organizationId, {
+          totalReferralCommission: (organization.totalReferralCommission +=
+            amount),
+        });
+    }
 
     const updatedAgent = await this.agentRepository.findOne({
       where: { identity: { id: identityId } },
@@ -528,5 +569,17 @@ export class AgentService {
       password,
       merchant.withdrawalPassword,
     );
+  }
+
+  async updateComissionRates(requestDto: UpdateCommissionRatesDto) {
+    const { agentPayinCommissionRate, agentPayoutCommissionRate, agentId } =
+      requestDto;
+
+    await this.agentRepository.update(agentId, {
+      agentCommissions: {
+        payinCommissionRate: agentPayinCommissionRate,
+        payoutCommissionRate: agentPayoutCommissionRate,
+      },
+    });
   }
 }

@@ -13,6 +13,7 @@ import {
   UpdateDateColumn,
   OneToOne,
   OneToMany,
+  ManyToOne,
 } from 'typeorm';
 
 @Entity()
@@ -33,8 +34,8 @@ export class Member {
   @Column({ nullable: true })
   phone: string;
 
-  @Column({ nullable: true })
-  referralCode: string;
+  // @Column({ nullable: true })
+  // referralCode: string; // remove
 
   @Column({ default: true })
   enabled: boolean;
@@ -96,7 +97,19 @@ export class Member {
   @Column({ nullable: true })
   selfRegistered: boolean;
 
-  // for team leader
   @OneToOne(() => Team, (team) => team.teamLeader)
   team: Team;
+
+  @OneToOne(() => Member, { nullable: true })
+  @JoinColumn({ name: 'agent' })
+  agent: Member;
+
+  @Column({ type: 'json', nullable: true })
+  agentCommissions: AgentCommissionsType;
+}
+
+export interface AgentCommissionsType {
+  payinCommissionRate: number;
+  payoutCommissionRate: number;
+  topupCommissionRate: number;
 }

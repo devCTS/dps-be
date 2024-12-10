@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class FiltersDto {
   @IsString()
@@ -10,4 +10,8 @@ export class FiltersDto {
   @IsEnum(['PAYINS', 'PAYOUTS', 'WITHDRAWALS'])
   @IsOptional()
   mode: 'PAYINS' | 'PAYOUTS' | 'WITHDRAWALS' | null;
+
+  @IsOptional()
+  @IsNumber()
+  merchantId?: number;
 }

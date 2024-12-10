@@ -229,9 +229,10 @@ export class TransactionUpdatesPayoutService {
   }) {
     const { amount } = orderDetails;
 
-    const referrals = forMember
-      ? await this.memberReferralService.getReferralTreeOfUser(userId)
-      : await this.agentReferralService.getReferralTreeOfUser(userId);
+    const referrals = null;
+    // forMember
+    //   ? await this.memberReferralService.getReferralTreeOfUser(userId)
+    //   : await this.agentReferralService.getReferralTreeOfUser(userId);
 
     await this.processReferral(
       referrals,

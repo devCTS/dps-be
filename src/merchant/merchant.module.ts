@@ -17,6 +17,9 @@ import { ChannelModule } from 'src/channel/channel.module';
 import { Payout } from 'src/payout/entities/payout.entity';
 import { Withdrawal } from 'src/withdrawal/entities/withdrawal.entity';
 import { SystemConfigModule } from 'src/system-config/system-config.module';
+import { AgentReferral } from 'src/agent-referral/entities/agent-referral.entity';
+import { Organization } from 'src/organization/entities/organization';
+import { OrganizationModule } from 'src/organization/organization.module';
 
 @Module({
   imports: [
@@ -29,6 +32,8 @@ import { SystemConfigModule } from 'src/system-config/system-config.module';
       TransactionUpdate,
       Payout,
       Withdrawal,
+      AgentReferral,
+      Organization,
     ]),
     JwtModule,
     IdentityModule,
@@ -37,6 +42,7 @@ import { SystemConfigModule } from 'src/system-config/system-config.module';
     TransactionUpdatesModule,
     ChannelModule,
     SystemConfigModule,
+    OrganizationModule,
   ],
   controllers: [MerchantController],
   providers: [MerchantService],
