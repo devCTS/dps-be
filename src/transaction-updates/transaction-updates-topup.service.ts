@@ -111,8 +111,8 @@ export class TransactionUpdatesTopupService {
   async create({ orderDetails, orderType, systemOrderId, userId = null }) {
     const { amount } = orderDetails;
 
-    const referrals =
-      await this.memberReferralService.getReferralTreeOfUser(userId);
+    const referrals = null;
+    // await this.memberReferralService.getReferralTreeOfUser(userId);
 
     await this.processReferral(
       referrals,

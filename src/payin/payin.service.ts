@@ -37,6 +37,7 @@ import { EndUser } from 'src/end-user/entities/end-user.entity';
 import { FundRecordService } from 'src/fund-record/fund-record.service';
 import { NotificationService } from 'src/notification/notification.service';
 import { AlertService } from 'src/alert/alert.service';
+import { Team } from 'src/team/entities/team.entity';
 
 @Injectable()
 export class PayinService {
@@ -51,6 +52,8 @@ export class PayinService {
     private readonly endUserRepository: Repository<EndUser>,
     @InjectRepository(TransactionUpdate)
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
+    @InjectRepository(Team)
+    private readonly teamRepository: Repository<Team>,
 
     private readonly transactionUpdateService: TransactionUpdatesPayinService,
     private readonly endUserService: EndUserService,
@@ -494,7 +497,7 @@ export class PayinService {
       where: {
         systemOrderId: id,
       },
-      relations: ['member', 'user'],
+      relations: ['member', 'user', 'member.team'],
     });
     if (!payinOrderDetails) throw new NotFoundException('Order not found');
 

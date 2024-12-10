@@ -33,17 +33,17 @@ export class AgentReferralController {
     return this.agentReferralService.findAll();
   }
 
-  @Get('/tree')
-  @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN, Role.AGENT)
-  getReferralTree() {
-    return this.agentReferralService.getReferralTree();
-  }
+  // @Get('/tree')
+  // @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN, Role.AGENT)
+  // getReferralTree() {
+  //   return this.agentReferralService.getReferralTree();
+  // }
 
-  @Get('/tree/:userId')
-  @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN, Role.AGENT)
-  getReferralTreeOfUser(@Param('userId') userId: string) {
-    return this.agentReferralService.getReferralTreeOfUser(+userId);
-  }
+  // @Get('/tree/:userId')
+  // @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN, Role.AGENT)
+  // getReferralTreeOfUser(@Param('userId') userId: string) {
+  //   return this.agentReferralService.getReferralTreeOfUser(+userId);
+  // }
 
   @Get('/referral/:code')
   @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN, Role.AGENT)

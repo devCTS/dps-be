@@ -1,6 +1,7 @@
 import { IsNotEmpty, IsNumber } from 'class-validator';
 import { AgentReferral } from 'src/agent-referral/entities/agent-referral.entity';
 import { Identity } from 'src/identity/entities/identity.entity';
+import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { Organization } from 'src/organization/entities/organization';
 import {
   Entity,
@@ -31,8 +32,8 @@ export class Agent {
   @Column()
   lastName: string;
 
-  @Column({ nullable: true })
-  referralCode: string;
+  // @Column({ nullable: true })
+  // referralCode: string;
 
   @Column({ default: true })
   enabled: boolean;
@@ -72,4 +73,19 @@ export class Agent {
   // for organization
   @OneToOne(() => Organization, (organisation) => organisation.leader)
   organization: Organization;
+
+  @OneToOne(() => Agent, { nullable: true })
+  @JoinColumn({ name: 'agent' })
+  agent: Agent;
+
+  @Column({ type: 'json', nullable: true })
+  agentCommissions: AgentCommissionsType;
+
+  @OneToOne(() => Merchant, (merchant) => merchant.agent, { nullable: true })
+  referredMerchant: Merchant;
+}
+
+export interface AgentCommissionsType {
+  payinCommissionRate: number;
+  payoutCommissionRate: number;
 }

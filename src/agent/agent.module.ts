@@ -10,10 +10,17 @@ import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-
 import { TransactionUpdatesModule } from 'src/transaction-updates/transaction-updates.module';
 import { ChannelModule } from 'src/channel/channel.module';
 import { OrganizationModule } from 'src/organization/organization.module';
+import { Organization } from 'src/organization/entities/organization';
+import { AgentReferral } from 'src/agent-referral/entities/agent-referral.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Agent, TransactionUpdate]),
+    TypeOrmModule.forFeature([
+      Agent,
+      TransactionUpdate,
+      Organization,
+      AgentReferral,
+    ]),
     IdentityModule,
     JwtModule,
     AgentReferralModule,

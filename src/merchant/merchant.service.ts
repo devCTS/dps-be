@@ -42,6 +42,9 @@ import { EWallet } from 'src/channel/entity/e-wallet.entity';
 import * as uniqid from 'uniqid';
 import { VerifyWithdrawalPasswordDto } from './dto/verify-withdrawal-password.dto';
 import { SystemConfigService } from 'src/system-config/system-config.service';
+import { AgentReferral } from 'src/agent-referral/entities/agent-referral.entity';
+import { Organization } from 'src/organization/entities/organization';
+import { OrganizationService } from 'src/organization/organization.service';
 
 @Injectable()
 export class MerchantService {
@@ -72,11 +75,16 @@ export class MerchantService {
 
     @InjectRepository(EWallet)
     private readonly eWalletRepository: Repository<EWallet>,
+    @InjectRepository(AgentReferral)
+    private readonly agentReferralRepository: Repository<AgentReferral>,
+    @InjectRepository(Organization)
+    private readonly organizationRepository: Repository<Organization>,
 
     private readonly identityService: IdentityService,
     private readonly jwtService: JwtService,
     private readonly agentReferralService: AgentReferralService,
     private readonly systemConfigService: SystemConfigService,
+    private readonly organizationService: OrganizationService,
   ) {}
 
   async create(createMerchantDto: CreateMerchantDto) {
@@ -129,6 +137,15 @@ export class MerchantService {
     const hashedWithdrawalPassword =
       this.jwtService.getHashPassword(withdrawalPassword);
 
+    const referralDetails = await this.agentReferralRepository.findOne({
+      where: { referralCode },
+      relations: ['agent', 'agent.organization'],
+    });
+
+    const organizationId = referralDetails.agent?.organization?.organizationId;
+    let organizationSize =
+      referralDetails.agent?.organization?.organizationSize;
+
     // Create and save the Admin
     const merchant = this.merchantRepository.create({
       identity,
@@ -149,15 +166,29 @@ export class MerchantService {
       payoutServiceRate,
       withdrawalServiceRate,
       phone,
-      referralCode,
+      // referralCode,
       payinMode,
       integrationId: uniqid(),
       withdrawalPassword: hashedWithdrawalPassword,
       payinChannels,
       payoutChannels,
+      organization: referralDetails?.agent?.organization || null,
+      agent: referralDetails?.agent || null,
+      agentCommissions: referralDetails?.agent?.id
+        ? {
+            payinCommissionRate: referralDetails?.payinCommission,
+            payoutCommissionRate: referralDetails?.payoutCommission,
+          }
+        : null,
     });
 
     const createdMerchant = await this.merchantRepository.save(merchant);
+
+    organizationId
+      ? await this.organizationRepository.update(organizationId, {
+          organizationSize: organizationSize++,
+        })
+      : await this.organizationService.createOrganization(createdMerchant.id);
 
     if (channelProfile?.upi && channelProfile.upi.length > 0) {
       for (const element of channelProfile.upi) {

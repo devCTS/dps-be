@@ -253,149 +253,149 @@ export class MemberReferralService {
   }
 
   // Method to fetch and build the referral tree starting from the root member
-  async getReferralTree(): Promise<any> {
-    const rootReferral = await this.memberReferralRepository.findOne({
-      where: {
-        referralCode: null,
-        status: 'utilized',
-      },
-      relations: ['member', 'member.identity'],
-    });
+  // async getReferralTree(): Promise<any> {
+  //   const rootReferral = await this.memberReferralRepository.findOne({
+  //     where: {
+  //       referralCode: null,
+  //       status: 'utilized',
+  //     },
+  //     relations: ['member', 'member.identity'],
+  //   });
 
-    if (!rootReferral) return null;
+  //   if (!rootReferral) return null;
 
-    const rootMember = rootReferral.member;
-    return this.buildTree(rootMember);
-  }
+  //   const rootMember = rootReferral.member;
+  //   return this.buildTree(rootMember);
+  // }
 
   // Recursive method to build the tree structure
-  private async buildTree(member: Member): Promise<any> {
-    const referrals = await this.memberReferralRepository.find({
-      where: {
-        member: { id: member.id },
-        status: 'utilized',
-      },
-      relations: ['referredMember', 'referredMember.identity'],
-    });
+  // private async buildTree(member: Member): Promise<any> {
+  //   const referrals = await this.memberReferralRepository.find({
+  //     where: {
+  //       member: { id: member.id },
+  //       status: 'utilized',
+  //     },
+  //     relations: ['referredMember', 'referredMember.identity'],
+  //   });
 
-    // Recursively build children tree for each referred member
-    const children = await Promise.all(
-      referrals.map(async (referral) => {
-        if (referral.referredMember) {
-          const childTree = await this.buildTree(referral.referredMember);
+  //   // Recursively build children tree for each referred member
+  //   const children = await Promise.all(
+  //     referrals.map(async (referral) => {
+  //       if (referral.referredMember) {
+  //         const childTree = await this.buildTree(referral.referredMember);
 
-          return {
-            id: referral.referredMember.id,
-            uniqueId: referral.referredMember.identity.id,
-            firstName: referral.referredMember.firstName,
-            lastName: referral.referredMember.lastName,
-            referralCode: referral.referredMember.referralCode,
-            email: referral.referredMember.identity.email,
-            payinCommission: referral.payinCommission,
-            payoutCommission: referral.payoutCommission,
-            topupCommission: referral.topupCommission,
-            referredMemberPayinCommission:
-              referral.referredMemberPayinCommission,
-            referredMemberPayoutCommission:
-              referral.referredMemberPayoutCommission,
-            referredMemberTopupCommission:
-              referral.referredMemberTopupCommission,
-            balance: referral.referredMember.balance,
-            quota: referral.referredMember.quota,
+  //         return {
+  //           id: referral.referredMember.id,
+  //           uniqueId: referral.referredMember.identity.id,
+  //           firstName: referral.referredMember.firstName,
+  //           lastName: referral.referredMember.lastName,
+  //           referralCode: referral.referredMember.referralCode,
+  //           email: referral.referredMember.identity.email,
+  //           payinCommission: referral.payinCommission,
+  //           payoutCommission: referral.payoutCommission,
+  //           topupCommission: referral.topupCommission,
+  //           referredMemberPayinCommission:
+  //             referral.referredMemberPayinCommission,
+  //           referredMemberPayoutCommission:
+  //             referral.referredMemberPayoutCommission,
+  //           referredMemberTopupCommission:
+  //             referral.referredMemberTopupCommission,
+  //           balance: referral.referredMember.balance,
+  //           quota: referral.referredMember.quota,
 
-            children: childTree.children,
-          };
-        }
-        return null;
-      }),
-    );
+  //           children: childTree.children,
+  //         };
+  //       }
+  //       return null;
+  //     }),
+  //   );
 
-    return {
-      id: member.id,
-      uniqueId: member.identity.id,
-      firstName: member.firstName,
-      lastName: member.lastName,
-      referralCode: member.referralCode,
-      email: member.identity.email,
-      payinCommission: member.payinCommissionRate,
-      payoutCommission: member.payoutCommissionRate,
-      topupCommission: member.topupCommissionRate,
-      balance: member.balance,
-      quota: member.quota,
-      children: children.filter((child) => child !== null),
-    };
-  }
+  //   return {
+  //     id: member.id,
+  //     uniqueId: member.identity.id,
+  //     firstName: member.firstName,
+  //     lastName: member.lastName,
+  //     referralCode: member.referralCode,
+  //     email: member.identity.email,
+  //     payinCommission: member.payinCommissionRate,
+  //     payoutCommission: member.payoutCommissionRate,
+  //     topupCommission: member.topupCommissionRate,
+  //     balance: member.balance,
+  //     quota: member.quota,
+  //     children: children.filter((child) => child !== null),
+  //   };
+  // }
 
-  async getReferralTreeOfUser(userId: number) {
-    const referralTree = await this.getReferralTree();
-    if (!referralTree) {
-      const member = await this.memberRepository.findOne({
-        where: { identity: { id: userId } },
-        relations: ['identity'],
-      });
-      if (!member) return null;
+  // async getReferralTreeOfUser(userId: number) {
+  //   const referralTree = await this.getReferralTree();
+  //   if (!referralTree) {
+  //     const member = await this.memberRepository.findOne({
+  //       where: { identity: { id: userId } },
+  //       relations: ['identity'],
+  //     });
+  //     if (!member) return null;
 
-      return {
-        id: member.id,
-        firstName: member.firstName,
-        lastName: member.lastName,
-        referralCode: member.referralCode,
-        email: member.identity.email,
-        balance: member.balance,
-        quota: member.quota,
-        payinCommission: member.payinCommissionRate,
-        payoutCommission: member.payoutCommissionRate,
-        topupCommission: member.topupCommissionRate,
-        children: [],
-      };
-    }
-    return await this.trimTreeToUser(referralTree, userId);
-  }
+  //     return {
+  //       id: member.id,
+  //       firstName: member.firstName,
+  //       lastName: member.lastName,
+  //       referralCode: member.referralCode,
+  //       email: member.identity.email,
+  //       balance: member.balance,
+  //       quota: member.quota,
+  //       payinCommission: member.payinCommissionRate,
+  //       payoutCommission: member.payoutCommissionRate,
+  //       topupCommission: member.topupCommissionRate,
+  //       children: [],
+  //     };
+  //   }
+  //   return await this.trimTreeToUser(referralTree, userId);
+  // }
 
-  private async trimTreeToUser(tree: any, userId: number): Promise<any> {
-    if (tree.uniqueId === userId)
-      return {
-        id: tree.id,
-        firstName: tree.firstName,
-        lastName: tree.lastName,
-        referralCode: tree.referralCode,
-        email: tree.email,
-        balance: tree.balance,
-        quota: tree.quota,
-        payinCommission: tree.payinCommission,
-        payoutCommission: tree.payoutCommission,
-        topupCommission: tree.topupCommission,
-        children: [],
-      };
+  // private async trimTreeToUser(tree: any, userId: number): Promise<any> {
+  //   if (tree.uniqueId === userId)
+  //     return {
+  //       id: tree.id,
+  //       firstName: tree.firstName,
+  //       lastName: tree.lastName,
+  //       referralCode: tree.referralCode,
+  //       email: tree.email,
+  //       balance: tree.balance,
+  //       quota: tree.quota,
+  //       payinCommission: tree.payinCommission,
+  //       payoutCommission: tree.payoutCommission,
+  //       topupCommission: tree.topupCommission,
+  //       children: [],
+  //     };
 
-    const trimmedChildren = await Promise.all(
-      tree.children.map((child: any) => this.trimTreeToUser(child, userId)),
-    );
+  //   const trimmedChildren = await Promise.all(
+  //     tree.children.map((child: any) => this.trimTreeToUser(child, userId)),
+  //   );
 
-    if (trimmedChildren.length > 0)
-      return {
-        ...tree,
-        children: trimmedChildren,
-      };
+  //   if (trimmedChildren.length > 0)
+  //     return {
+  //       ...tree,
+  //       children: trimmedChildren,
+  //     };
 
-    const member = await this.memberRepository.findOne({
-      where: { identity: { id: userId } },
-      relations: ['identity'],
-    });
-    if (!member) return null;
+  //   const member = await this.memberRepository.findOne({
+  //     where: { identity: { id: userId } },
+  //     relations: ['identity'],
+  //   });
+  //   if (!member) return null;
 
-    return {
-      id: member.id,
-      firstName: member.firstName,
-      lastName: member.lastName,
-      referralCode: member.referralCode,
-      email: member.identity.email,
-      balance: member.balance,
-      quota: member.quota,
-      payinCommission: member.payinCommissionRate,
-      payoutCommission: member.payoutCommissionRate,
-      topupCommission: member.topupCommissionRate,
-      children: [],
-    };
-  }
+  //   return {
+  //     id: member.id,
+  //     firstName: member.firstName,
+  //     lastName: member.lastName,
+  //     referralCode: member.referralCode,
+  //     email: member.identity.email,
+  //     balance: member.balance,
+  //     quota: member.quota,
+  //     payinCommission: member.payinCommissionRate,
+  //     payoutCommission: member.payoutCommissionRate,
+  //     topupCommission: member.topupCommissionRate,
+  //     children: [],
+  //   };
+  // }
 }

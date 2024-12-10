@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Put,
   UseGuards,
 } from '@nestjs/common';
 import { AgentResponseDto } from './dto/agent-response.dto';
@@ -22,6 +23,7 @@ import { RolesGuard } from 'src/utils/guard/roles.guard';
 import { Roles } from 'src/utils/decorators/roles.decorator';
 import { Role } from 'src/utils/enum/enum';
 import { UserInReq } from 'src/utils/decorators/user-in-req.decorator';
+import { UpdateCommissionRatesDto } from './dto/update-commission-rates.dto';
 
 @Controller('agent')
 @UseGuards(RolesGuard)
@@ -114,5 +116,11 @@ export class AgentController {
       verifyWithdrawalPasswordDto,
       user.id,
     );
+  }
+
+  @Put('update-commission-rates')
+  @Roles(Role.AGENT)
+  updateCommissionRates(@Body() requestDto: UpdateCommissionRatesDto) {
+    return this.agentService.updateComissionRates(requestDto);
   }
 }

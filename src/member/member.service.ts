@@ -27,6 +27,10 @@ import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
 import { Upi } from 'src/channel/entity/upi.entity';
 import { NetBanking } from 'src/channel/entity/net-banking.entity';
 import { EWallet } from 'src/channel/entity/e-wallet.entity';
+import { Team } from 'src/team/entities/team.entity';
+import { TeamService } from 'src/team/team.service';
+import { MemberReferral } from 'src/member-referral/entities/member-referral.entity';
+import { UpdateCommissionRatesDto } from './dto/update-commission-rates.dto';
 
 @Injectable()
 export class MemberService {
@@ -35,19 +39,21 @@ export class MemberService {
     private readonly memberRepository: Repository<Member>,
     @InjectRepository(TransactionUpdate)
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
-
     @InjectRepository(Upi)
     private readonly upiRepository: Repository<Upi>,
-
     @InjectRepository(NetBanking)
     private readonly netBankingRepository: Repository<NetBanking>,
-
     @InjectRepository(EWallet)
     private readonly eWalletRepository: Repository<EWallet>,
+    @InjectRepository(Team)
+    private readonly teamRepository: Repository<Team>,
+    @InjectRepository(MemberReferral)
+    private readonly memberReferralRepository: Repository<MemberReferral>,
 
     private readonly identityService: IdentityService,
     private readonly jwtService: JwtService,
     private readonly memberReferralService: MemberReferralService,
+    private readonly teamService: TeamService,
   ) {}
 
   async create(createMemberDto: CreateMemberDto) {
@@ -82,12 +88,19 @@ export class MemberService {
       'MEMBER',
     );
 
+    const referralDetails = await this.memberReferralRepository.findOne({
+      where: { referralCode },
+      relations: ['member', 'member.team'],
+    });
+
+    const teamId = referralDetails.member?.team?.teamId;
+    let teamSize = referralDetails.member?.team?.teamSize;
+
     // Create and save the Admin
     const member = this.memberRepository.create({
       identity,
       firstName,
       lastName,
-      referralCode,
       phone,
       enabled,
       dailyTotalPayoutLimit,
@@ -97,9 +110,22 @@ export class MemberService {
       singlePayoutUpperLimit,
       topupCommissionRate,
       telegramId,
+      agent: referralDetails?.member || null,
+      agentCommissions: referralDetails?.member?.id
+        ? {
+            payinCommissionRate: referralDetails?.referredMemberPayinCommission,
+            payoutCommissionRate:
+              referralDetails?.referredMemberPayoutCommission,
+            topupCommissionRate: referralDetails?.referredMemberTopupCommission,
+          }
+        : null,
     });
 
     const createdMember = await this.memberRepository.save(member);
+
+    teamId
+      ? await this.teamRepository.update(teamId, { teamSize: teamSize++ })
+      : await this.teamService.createTeam(createdMember.id);
 
     if (channelProfile?.upi) {
       for (const element of channelProfile.upi) {
@@ -161,11 +187,18 @@ export class MemberService {
         'MEMBER',
       );
 
+      const referralDetails = await this.memberReferralRepository.findOne({
+        where: { referralCode },
+        relations: ['member', 'member.team'],
+      });
+
+      const teamId = referralDetails.member?.team?.teamId;
+      let teamSize = referralDetails.member?.team?.teamSize;
+
       const member = this.memberRepository.create({
         identity,
         firstName: verifiedContext.firstName,
         lastName: verifiedContext.lastName,
-        referralCode: registerDto.referralCode,
         phone: '',
         enabled: true,
         dailyTotalPayoutLimit: 10000000,
@@ -175,9 +208,24 @@ export class MemberService {
         singlePayoutUpperLimit: 1000000,
         topupCommissionRate: 4,
         selfRegistered: true,
+        agent: referralDetails?.member || null,
+        agentCommissions: referralDetails?.member?.id
+          ? {
+              payinCommissionRate:
+                referralDetails?.referredMemberPayinCommission,
+              payoutCommissionRate:
+                referralDetails?.referredMemberPayoutCommission,
+              topupCommissionRate:
+                referralDetails?.referredMemberTopupCommission,
+            }
+          : null,
       });
 
       const createdMember = await this.memberRepository.save(member);
+
+      teamId
+        ? await this.teamRepository.update(teamId, { teamSize: teamSize++ })
+        : await this.teamService.createTeam(createdMember.id);
 
       // Update Member Referrals
       if (referralCode)
@@ -439,7 +487,7 @@ export class MemberService {
       where: {
         identity: { id: identityId },
       },
-      relations: ['identity'],
+      relations: ['identity', 'team'],
     });
 
     if (!member) throw new NotFoundException('Member not found!');
@@ -447,6 +495,17 @@ export class MemberService {
     await this.memberRepository.update(member.id, {
       quota: member.quota + amount,
     });
+
+    if (member.team?.teamId) {
+      const team = await this.teamRepository.findOneBy({
+        teamId: member.team.teamId,
+      });
+
+      if (team)
+        await this.teamRepository.update(team.teamId, {
+          totalQuota: (team.totalQuota += amount),
+        });
+    }
 
     const updatedMember = await this.memberRepository.findOne({
       where: { identity: { id: identityId } },
@@ -554,5 +613,24 @@ export class MemberService {
             },
           );
     }
+  }
+
+  async updateComissionRates(requestDto: UpdateCommissionRatesDto) {
+    const {
+      payinCommissionRate,
+      payoutCommissionRate,
+      agentPayinCommissionRate,
+      agentPayoutCommissionRate,
+      memberId,
+    } = requestDto;
+
+    await this.memberRepository.update(memberId, {
+      payinCommissionRate,
+      payoutCommissionRate,
+      agentCommissions: {
+        payinCommissionRate: agentPayinCommissionRate,
+        payoutCommissionRate: agentPayoutCommissionRate,
+      },
+    });
   }
 }

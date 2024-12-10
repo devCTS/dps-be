@@ -34,19 +34,19 @@ export class MemberReferralController {
     return this.memberReferralService.findAll();
   }
 
-  @Get('/tree')
-  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MEMBER)
-  @UseGuards(RolesGuard)
-  getReferralTree() {
-    return this.memberReferralService.getReferralTree();
-  }
+  // @Get('/tree')
+  // @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MEMBER)
+  // @UseGuards(RolesGuard)
+  // getReferralTree() {
+  //   return this.memberReferralService.getReferralTree();
+  // }
 
-  @Get('/tree/:userId')
-  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MEMBER)
-  @UseGuards(RolesGuard)
-  getReferralTreeOfUser(@Param('userId') userId: string) {
-    return this.memberReferralService.getReferralTreeOfUser(+userId);
-  }
+  // @Get('/tree/:userId')
+  // @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MEMBER)
+  // @UseGuards(RolesGuard)
+  // getReferralTreeOfUser(@Param('userId') userId: string) {
+  //   return this.memberReferralService.getReferralTreeOfUser(+userId);
+  // }
 
   @Get('/referral/:code')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MEMBER)
