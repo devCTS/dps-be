@@ -15,6 +15,9 @@ import { TransactionUpdatesTopupService } from './transaction-updates-topup.serv
 import { Payin } from 'src/payin/entities/payin.entity';
 import { Payout } from 'src/payout/entities/payout.entity';
 import { Topup } from 'src/topup/entities/topup.entity';
+import { Agent } from 'src/agent/entities/agent.entity';
+import { Member } from 'src/member/entities/member.entity';
+import { Merchant } from 'src/merchant/entities/merchant.entity';
 
 @Module({
   imports: [
@@ -24,6 +27,9 @@ import { Topup } from 'src/topup/entities/topup.entity';
       Payin,
       Payout,
       Topup,
+      Agent,
+      Member,
+      Merchant,
     ]),
     AgentReferralModule,
     MemberReferralModule,

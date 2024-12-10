@@ -7,16 +7,16 @@ import {
   Entity,
   JoinColumn,
   OneToOne,
-  PrimaryColumn,
+  PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
 export class Organization {
-  @PrimaryColumn('uuid')
+  @PrimaryGeneratedColumn('uuid')
   organizationId: string;
 
-  @Column({ type: 'int', default: 0 })
+  @Column({ type: 'int', default: 2 })
   organizationSize: number;
 
   @Column({ type: 'float', default: 0 })

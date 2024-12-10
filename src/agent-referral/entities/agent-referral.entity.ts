@@ -1,5 +1,6 @@
 import { Agent } from 'src/agent/entities/agent.entity';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
+import { ServiceRateType } from 'src/utils/enum/enum';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -48,11 +49,11 @@ export class AgentReferral {
   @Column('float')
   payoutCommission: number;
 
-  @Column('float', { nullable: true })
-  merchantPayinServiceRate: number;
+  @Column({ nullable: true, type: 'json' })
+  merchantPayinServiceRate: ServiceRateType;
 
-  @Column('float', { nullable: true })
-  merchantPayoutServiceRate: number;
+  @Column({ nullable: true, type: 'json' })
+  merchantPayoutServiceRate: ServiceRateType;
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;

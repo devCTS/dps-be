@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { OrganizationService } from './organization.service';
 import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
 
@@ -14,5 +14,10 @@ export class OrganizationController {
   @Post('paginate')
   async paginate(@Body() paginateRequestDto: PaginateRequestDto) {
     return this.organizationService.paginate(paginateRequestDto);
+  }
+
+  @Get(':id')
+  async getOrganizationTree(@Param('id') id: string) {
+    return this.organizationService.getOrganizationTree(id);
   }
 }

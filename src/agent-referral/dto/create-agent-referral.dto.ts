@@ -1,4 +1,5 @@
 import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { ServiceRateType } from 'src/utils/enum/enum';
 
 export class CreateAgentReferralDto {
   @IsNumber()
@@ -17,10 +18,8 @@ export class CreateAgentReferralDto {
   payoutCommission: number;
 
   @IsOptional()
-  @IsNumber()
-  merchantPayinServiceRate?: number;
+  merchantPayinServiceRate?: ServiceRateType;
 
   @IsOptional()
-  @IsNumber()
-  merchantPayoutServiceRate?: number;
+  merchantPayoutServiceRate?: ServiceRateType;
 }

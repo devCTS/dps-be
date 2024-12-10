@@ -100,12 +100,15 @@ export class Member {
   @OneToOne(() => Team, (team) => team.teamLeader)
   team: Team;
 
+  @Column({ nullable: true })
+  teamId: string;
+
   @OneToOne(() => Member, { nullable: true })
   @JoinColumn({ name: 'agent' })
   agent: Member;
 
   @Column({ type: 'json', nullable: true })
-  agentCommissions: AgentCommissionsType;
+  agentCommissions: AgentCommissionsType | null;
 }
 
 export interface AgentCommissionsType {

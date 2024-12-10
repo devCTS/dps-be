@@ -13,12 +13,16 @@ import {
   parseStartDate,
   parseEndDate,
 } from 'src/utils/dtos/paginate.dto';
+import { Merchant } from 'src/merchant/entities/merchant.entity';
+import { TreeNode } from 'src/utils/enum/enum';
 
 @Injectable()
 export class OrganizationService {
   constructor(
     @InjectRepository(Agent)
     private readonly agentRepository: Repository<Agent>,
+    @InjectRepository(Merchant)
+    private readonly merchantRepository: Repository<Merchant>,
 
     @InjectRepository(Organization)
     private readonly organizationRepository: Repository<Organization>,
@@ -31,8 +35,9 @@ export class OrganizationService {
 
     const organisation = await this.organizationRepository.findOne({
       where: {
-        leader: agent,
+        leader: { id: leaderId },
       },
+      relations: ['leader'],
     });
 
     if (organisation)
@@ -40,6 +45,10 @@ export class OrganizationService {
 
     await this.organizationRepository.save({
       leader: agent,
+    });
+
+    await this.agentRepository.update(agent.id, {
+      organization: organisation,
     });
 
     return HttpStatus.CREATED;
@@ -57,7 +66,7 @@ export class OrganizationService {
 
     if (search)
       query.andWhere(
-        `CONCAT(leader.first_name, ' ', leader.last_name) ILIKE :search`,
+        `CONCAT(leader.first_name, ' ', leader.last_name, ' ', organization.organizationId) ILIKE :search`,
         { search: `%${search}%` },
       );
 
@@ -73,6 +82,8 @@ export class OrganizationService {
         },
       );
     }
+
+    // query.andWhere('organization.organizationSize > 2');
 
     query
       .orderBy('organization.totalReferralCommission', 'ASC')
@@ -94,6 +105,73 @@ export class OrganizationService {
       startRecord,
       endRecord,
       data: rows,
+    };
+  }
+
+  async getOrganizationTree(organizationId: string) {
+    const agentMembers = await this.agentRepository.find({
+      where: {
+        organizationId,
+      },
+      relations: ['agent'],
+    });
+
+    const merchants = await this.merchantRepository.find({
+      where: {
+        organizationId,
+      },
+      relations: ['agent'],
+    });
+
+    return this.buildTree([
+      ...agentMembers,
+      ...merchants.map((mer) => ({ ...mer, isMerchant: true })),
+    ]);
+  }
+
+  buildTree(agents: any[]) {
+    const rootAgent = agents.find((agent) => !agent.agent);
+
+    const getChildren = (parentId: number): TreeNode[] => {
+      const children = agents.filter((agent) => agent.agent?.id === parentId);
+
+      return children.map((obj) => ({
+        id: obj.id,
+        children: getChildren(obj.id),
+        name: obj.firstName + ' ' + obj.lastName,
+        isAgent: !obj.isMerchant,
+        balance: obj.balance,
+        quota: null,
+        serviceRate: obj.isMerchant
+          ? {
+              payin: obj.payinServiceRate,
+              payout: obj.payoutServiceRate,
+            }
+          : null,
+        ratesOfAgent: {
+          payin: obj.agentCommissions.payinCommissionRate,
+          payout: obj.agentCommissions.payoutCommissionRate,
+        },
+        memberRates: null,
+      }));
+    };
+
+    const tree: TreeNode = {
+      id: rootAgent.id,
+      children: getChildren(rootAgent.id),
+      name: rootAgent.firstName + ' ' + rootAgent.lastName,
+      isAgent: true,
+      balance: rootAgent.balance,
+      quota: null,
+      serviceRate: null,
+      ratesOfAgent: null,
+      memberRates: null,
+    };
+
+    return {
+      tree,
+      id: rootAgent.organizationId,
+      name: tree.name,
     };
   }
 }

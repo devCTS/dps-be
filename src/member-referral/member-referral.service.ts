@@ -19,7 +19,7 @@ import { Member } from 'src/member/entities/member.entity';
 
 @Injectable()
 export class MemberReferralService {
-  referralLimit = 2;
+  referralLimit = 5;
 
   constructor(
     @InjectRepository(MemberReferral)

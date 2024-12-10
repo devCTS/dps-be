@@ -124,3 +124,20 @@ export interface ServiceRateType {
   absoluteAmount: number;
   percentageAmount: number;
 }
+
+export interface TreeNode {
+  id: number;
+  children: TreeNode[];
+  name: string;
+  isAgent: boolean;
+  balance: number;
+  quota: number;
+  serviceRate: Rate;
+  ratesOfAgent: Rate;
+  memberRates: Rate;
+}
+
+interface Rate {
+  payin: number;
+  payout: number;
+}

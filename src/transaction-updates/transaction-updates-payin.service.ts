@@ -3,14 +3,13 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
-import { AgentReferralService } from 'src/agent-referral/agent-referral.service';
 import { Identity } from 'src/identity/entities/identity.entity';
-import { MemberReferralService } from 'src/member-referral/member-referral.service';
 import { SystemConfigService } from 'src/system-config/system-config.service';
 import {
   calculateServiceAmountForMerchant,
   roundOffAmount,
 } from 'src/utils/utils';
+import { TransactionUpdatesService } from './transaction-updates.service';
 
 @Injectable()
 export class TransactionUpdatesPayinService {
@@ -20,134 +19,156 @@ export class TransactionUpdatesPayinService {
     @InjectRepository(Identity)
     private readonly identityRepository: Repository<Identity>,
 
-    private readonly agentReferralService: AgentReferralService,
-    private readonly memberReferralService: MemberReferralService,
     private readonly systemConfigService: SystemConfigService,
+    private readonly transactionUpdatesService: TransactionUpdatesService,
   ) {}
 
-  async processReferral(
-    referral,
+  async processReferralMerchant(
+    referralList,
     orderType,
     orderAmount,
     orderDetails,
     systemOrderId,
-    forMember,
   ) {
-    let userType = UserTypeForTransactionUpdates.MERCHANT_BALANCE;
-    let before = 0,
-      rate = 0, // service rate / commission rates
-      amount = 0, // total service fee / commissions
-      after = 0,
-      absoluteAmount = 0;
-    let isAgentMember = null;
+    const getAgentRates = (referee) => {
+      return {
+        payin: referee.agentCommissions?.payinCommissionRate,
+        payout: referee.agentCommissions?.payoutCommissionRate,
+      };
+    };
 
-    if (forMember) {
-      // Member Quota - member selected for payment
-      if (!referral?.children || referral?.children?.length <= 0) {
-        userType = UserTypeForTransactionUpdates.MEMBER_QUOTA;
-        rate = referral.payinCommission;
-        amount = (orderAmount / 100) * rate;
-        before = referral.quota;
-        after = before - orderAmount + amount;
-      } else {
-        // agent members
-        userType = UserTypeForTransactionUpdates.MEMBER_BALANCE;
-        rate = referral.payinCommission;
-        amount = (orderAmount / 100) * rate;
-        before = referral.balance;
-        after = before + amount;
-        isAgentMember = true;
+    for (let i = 0; i < referralList.length; i++) {
+      const element = referralList[i];
+      const prevElement = i > 0 ? referralList[i - 1] : null;
 
-        const identity = await this.identityRepository.findOne({
-          where: { email: referral.email },
-          relations: ['merchant', 'member', 'agent'],
-        });
+      const identity = await this.identityRepository.findOne({
+        where: { email: element.email },
+      });
 
-        // Add quota
-        const transactionUpdate = {
+      const isMerchant = element.isMerchant;
+      const userType = isMerchant
+        ? UserTypeForTransactionUpdates.MERCHANT_BALANCE
+        : UserTypeForTransactionUpdates.AGENT_BALANCE;
+      const isAgentOf = prevElement
+        ? prevElement?.firstName + ' ' + prevElement?.lastName
+        : null;
+      const name = element.firstName + ' ' + element.lastName;
+
+      const rate = isMerchant
+        ? element.payinServiceRate?.percentageAmount
+        : getAgentRates(prevElement).payout;
+
+      const absoluteAmount = isMerchant
+        ? element.payinServiceRate?.absoluteAmount
+        : 0;
+
+      const amount = isMerchant
+        ? calculateServiceAmountForMerchant(
+            orderAmount,
+            element.payinServiceRate,
+          )
+        : (orderAmount / 100) * rate;
+
+      const before = element.balance;
+
+      const after = isMerchant
+        ? before + orderAmount - amount
+        : before + amount;
+
+      const transactionUpdate = {
+        orderType,
+        userType,
+        rate,
+        absoluteAmount,
+        amount: roundOffAmount(amount),
+        before: roundOffAmount(before),
+        after: roundOffAmount(after),
+        name,
+        isAgentOf,
+        payinOrder: orderDetails,
+        systemOrderId,
+        user: identity,
+      };
+
+      await this.transactionUpdateRepository.save(transactionUpdate);
+    }
+  }
+
+  async processReferralMember(
+    referralList,
+    orderType,
+    orderAmount,
+    orderDetails,
+    systemOrderId,
+  ) {
+    const getAgentRates = (referee) => {
+      return {
+        payin: referee.agentCommissions?.payinCommissionRate,
+        payout: referee.agentCommissions?.payoutCommissionRate,
+        topup: referee.agentCommissions?.topupCommissionRate,
+      };
+    };
+
+    for (let i = 0; i < referralList.length; i++) {
+      const element = referralList[i];
+      const prevElement = i > 0 ? referralList[i - 1] : null;
+      const isAgent = i !== 0;
+
+      const identity = await this.identityRepository.findOne({
+        where: { email: element.identity.email },
+      });
+
+      const name = element?.firstName + ' ' + element?.lastName;
+      const userType = UserTypeForTransactionUpdates.MEMBER_QUOTA;
+
+      const rate = !isAgent
+        ? element.payinCommissionRate
+        : getAgentRates(prevElement).payin;
+      const amount = (orderAmount / 100) * rate;
+      const before = element.quota;
+      const after = !isAgent ? before - orderAmount + amount : before + amount;
+      const isAgentOf = prevElement
+        ? prevElement?.firstName + ' ' + prevElement?.lastName
+        : null;
+      const isAgentMember = isAgent;
+
+      const transactionUpdate = {
+        orderType,
+        userType,
+        rate,
+        amount: roundOffAmount(amount),
+        before: roundOffAmount(before),
+        after: roundOffAmount(after),
+        name,
+        isAgentOf,
+        isAgentMember,
+        payinOrder: orderDetails,
+        systemOrderId,
+        user: identity,
+      };
+
+      await this.transactionUpdateRepository.save(transactionUpdate);
+
+      if (isAgent) {
+        // insert row twice for agents - quota and balance
+        const agentTransactionUpdate = {
           orderType,
-          userType: UserTypeForTransactionUpdates.MEMBER_QUOTA,
+          userType: UserTypeForTransactionUpdates.MEMBER_BALANCE,
           rate,
-          amount: roundOffAmount((orderAmount / 100) * rate),
-          before: roundOffAmount(referral.quota),
-          after: roundOffAmount(referral.quota + amount),
-          name: `${referral.firstName} ${referral.lastName}`,
-          isAgentOf:
-            referral.children?.length > 0
-              ? `${referral.children[0]?.firstName} ${referral.children[0]?.lastName}`
-              : null,
-          isAgentMember: true,
-          payoutOrder: orderDetails,
+          amount: roundOffAmount(amount),
+          before: element.balance,
+          after: element.balance + amount,
+          name,
+          isAgentOf,
+          isAgentMember,
+          payinOrder: orderDetails,
           systemOrderId,
           user: identity,
         };
 
-        await this.transactionUpdateRepository.save(transactionUpdate);
-      }
-    } else {
-      switch (referral.agentType) {
-        case 'merchant':
-          userType = UserTypeForTransactionUpdates.MERCHANT_BALANCE;
-          rate = referral.merchantPayinServiceRate?.percentageAmount || 0;
-          absoluteAmount =
-            referral.merchantPayinServiceRate?.asoluteAmount || 0;
-          amount = calculateServiceAmountForMerchant(
-            orderAmount,
-            referral.merchantPayinServiceRate,
-          );
-          before = referral.balance;
-          after = before + orderAmount - amount;
-          break;
-
-        case 'agent':
-          userType = UserTypeForTransactionUpdates.AGENT_BALANCE;
-          rate = referral.payinCommission;
-          amount = (orderAmount / 100) * rate;
-          before = referral.balance;
-          after = before + amount;
-          break;
-
-        default:
-          break;
+        await this.transactionUpdateRepository.save(agentTransactionUpdate);
       }
     }
-
-    const identity = await this.identityRepository.findOne({
-      where: { email: referral.email },
-      relations: ['merchant', 'member', 'agent'],
-    });
-
-    const transactionUpdate = {
-      orderType,
-      userType,
-      rate,
-      absoluteAmount,
-      amount: roundOffAmount(amount),
-      before: roundOffAmount(before),
-      after: roundOffAmount(after),
-      name: `${referral.firstName} ${referral.lastName}`,
-      isAgentOf:
-        referral?.children?.length > 0
-          ? `${referral?.children[0]?.firstName} ${referral?.children[0]?.lastName}`
-          : null,
-      payinOrder: orderDetails,
-      systemOrderId,
-      isAgentMember,
-      user: identity,
-    };
-
-    await this.transactionUpdateRepository.save(transactionUpdate);
-
-    // Recursively call the same for rest of the children
-    if (referral?.children && referral.children?.length > 0)
-      await this.processReferral(
-        referral?.children[0],
-        orderType,
-        orderAmount,
-        orderDetails,
-        systemOrderId,
-        forMember,
-      );
   }
 
   async addSystemProfit(orderDetails, orderType, systemOrderId) {
@@ -231,19 +252,29 @@ export class TransactionUpdatesPayinService {
   }) {
     const { amount } = orderDetails;
 
-    const referrals = null;
-    // forMember
-    //   ? await this.memberReferralService.getReferralTreeOfUser(userId)
-    //   : await this.agentReferralService.getReferralTreeOfUser(userId);
+    if (forMember) {
+      const referralList =
+        await this.transactionUpdatesService.getMemberAgentsLine(userId);
 
-    await this.processReferral(
-      referrals,
-      orderType,
-      amount,
-      orderDetails,
-      systemOrderId,
-      forMember,
-    );
+      await this.processReferralMember(
+        referralList,
+        orderType,
+        amount,
+        orderDetails,
+        systemOrderId,
+      );
+    } else {
+      const referralList =
+        await this.transactionUpdatesService.getMerchantAgentsLine(userId);
+
+      await this.processReferralMerchant(
+        referralList,
+        orderType,
+        amount,
+        orderDetails,
+        systemOrderId,
+      );
+    }
 
     await this.addSystemProfit(orderDetails, orderType, systemOrderId);
 

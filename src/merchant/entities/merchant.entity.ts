@@ -136,6 +136,9 @@ export class Merchant {
   @JoinColumn()
   organization: Organization;
 
+  @Column({ nullable: true })
+  organizationId: string;
+
   @OneToOne(() => Agent, (agent) => agent.referredMerchant, { nullable: true })
   @JoinColumn({ name: 'agent' })
   agent: Agent;

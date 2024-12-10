@@ -74,6 +74,9 @@ export class Agent {
   @OneToOne(() => Organization, (organisation) => organisation.leader)
   organization: Organization;
 
+  @Column({ nullable: true })
+  organizationId: string;
+
   @OneToOne(() => Agent, { nullable: true })
   @JoinColumn({ name: 'agent' })
   agent: Agent;

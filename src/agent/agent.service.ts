@@ -91,9 +91,9 @@ export class AgentService {
       relations: ['agent', 'agent.organization'],
     });
 
-    const organizationId = referralDetails.agent?.organization?.organizationId;
+    const organizationId = referralDetails?.agent?.organization?.organizationId;
     let organizationSize =
-      referralDetails.agent?.organization?.organizationSize;
+      referralDetails?.agent?.organization?.organizationSize;
 
     // Create and save the Agent
     const agent = this.agentRepository.create({
@@ -117,11 +117,13 @@ export class AgentService {
 
     const created = await this.agentRepository.save(agent);
 
-    organizationId
-      ? await this.organizationRepository.update(organizationId, {
-          organizationSize: organizationSize++,
-        })
-      : await this.organizationService.createOrganization(created.id);
+    if (referralCode) {
+      organizationId
+        ? await this.organizationRepository.update(organizationId, {
+            organizationSize: organizationSize++,
+          })
+        : await this.organizationService.createOrganization(created.id);
+    }
 
     if (channelProfile?.upi && channelProfile.upi.length > 0) {
       for (const element of channelProfile.upi) {

@@ -93,8 +93,8 @@ export class MemberService {
       relations: ['member', 'member.team'],
     });
 
-    const teamId = referralDetails.member?.team?.teamId;
-    let teamSize = referralDetails.member?.team?.teamSize;
+    const teamId = referralDetails?.member?.team?.teamId || null;
+    let teamSize = referralDetails?.member?.team?.teamSize || 0;
 
     // Create and save the Admin
     const member = this.memberRepository.create({
@@ -123,9 +123,11 @@ export class MemberService {
 
     const createdMember = await this.memberRepository.save(member);
 
-    teamId
-      ? await this.teamRepository.update(teamId, { teamSize: teamSize++ })
-      : await this.teamService.createTeam(createdMember.id);
+    if (referralCode) {
+      teamId
+        ? await this.teamRepository.update(teamId, { teamSize: teamSize++ })
+        : await this.teamService.createTeam(createdMember.id);
+    }
 
     if (channelProfile?.upi) {
       for (const element of channelProfile.upi) {

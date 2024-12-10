@@ -53,8 +53,17 @@ export const extractToken = (token: string) => {
 
 export const roundOffAmount = (amount, makeAbsolute = false) => {
   if (!amount) return 0;
-  const truncatedAmount = Math.round(amount * 100) / 100;
-  return makeAbsolute ? Math.abs(truncatedAmount) : truncatedAmount;
+
+  const [decimalAmount, floatingAmount] = amount.toString().split('.');
+  if (!floatingAmount)
+    return makeAbsolute
+      ? Math.abs(Number(decimalAmount))
+      : Number(decimalAmount);
+
+  const truncatedFloatingAmount = floatingAmount.substring(0, 2);
+  const finalAmount = Number(decimalAmount + '.' + truncatedFloatingAmount);
+
+  return makeAbsolute ? Math.abs(finalAmount) : finalAmount;
 };
 
 export const getTextForNotification = (type: NotificationType, data: any) => {

@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { TeamService } from './team.service';
 import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
 
@@ -14,5 +14,11 @@ export class TeamController {
   @Post('paginate')
   async paginate(@Body() paginateRequestDto: PaginateRequestDto) {
     return this.teamService.paginate(paginateRequestDto);
+  }
+
+  @Get(':id')
+  async getTeamTree(@Param('id') id: string) {
+    console.log(id);
+    return this.teamService.getTeamTree(id);
   }
 }

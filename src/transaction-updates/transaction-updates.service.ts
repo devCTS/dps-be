@@ -14,6 +14,9 @@ import { roundOffAmount } from 'src/utils/utils';
 import { Payin } from 'src/payin/entities/payin.entity';
 import { Payout } from 'src/payout/entities/payout.entity';
 import { Topup } from 'src/topup/entities/topup.entity';
+import { Member } from 'src/member/entities/member.entity';
+import { Agent } from 'src/agent/entities/agent.entity';
+import { Merchant } from 'src/merchant/entities/merchant.entity';
 
 @Injectable()
 export class TransactionUpdatesService {
@@ -26,6 +29,12 @@ export class TransactionUpdatesService {
     private readonly payoutRepository: Repository<Payout>,
     @InjectRepository(Topup)
     private readonly topupRepository: Repository<Topup>,
+    @InjectRepository(Member)
+    private readonly memberRepository: Repository<Member>,
+    @InjectRepository(Agent)
+    private readonly agentRepository: Repository<Agent>,
+    @InjectRepository(Merchant)
+    private readonly merchantRepository: Repository<Merchant>,
   ) {}
 
   async paginateCommissionsAndProfits(
@@ -251,5 +260,73 @@ export class TransactionUpdatesService {
       total,
       data: dtos,
     };
+  }
+
+  transformAgent(agent: Member | Agent, referee: any) {
+    return {
+      id: agent?.id,
+      name: agent?.firstName + ' ' + agent?.lastName,
+      email: agent?.identity?.email,
+      isAgentOf: referee?.firstName + ' ' + referee?.lastName,
+      payinCommissionRate: referee?.agentCommissions?.payinCommissionRate,
+      payoutCommissionRate: referee?.agentCommissions?.payoutCommissionRate,
+      topupCommissionRate: referee?.agentCommissions?.topupCommissionRate,
+    };
+  }
+
+  async getMemberAgentsLine(identityId) {
+    const member = await this.memberRepository.findOne({
+      where: { identity: { id: identityId } },
+      relations: ['agent', 'identity'],
+    });
+
+    let nextAgent = member?.agent;
+    let allAgents = [member];
+    let currentMember = member;
+
+    while (nextAgent) {
+      const memberAgent = await this.memberRepository.findOne({
+        where: {
+          id: nextAgent?.id,
+        },
+        relations: ['agent', 'identity'],
+      });
+
+      allAgents.push(memberAgent);
+
+      currentMember = memberAgent;
+      nextAgent = memberAgent?.agent;
+    }
+
+    return allAgents;
+  }
+
+  async getMerchantAgentsLine(identityId) {
+    const merchant: any = await this.merchantRepository.findOne({
+      where: { identity: { id: identityId } },
+      relations: ['agent', 'identity'],
+    });
+
+    merchant.isMerchant = true;
+
+    let nextAgent = merchant?.agent;
+    let allAgents: any = [merchant];
+    let current: any = merchant;
+
+    while (nextAgent) {
+      const merchantAgent = await this.agentRepository.findOne({
+        where: {
+          id: nextAgent?.id,
+        },
+        relations: ['agent', 'identity'],
+      });
+
+      allAgents.push(merchantAgent);
+
+      current = merchantAgent;
+      nextAgent = merchantAgent?.agent;
+    }
+
+    return allAgents;
   }
 }

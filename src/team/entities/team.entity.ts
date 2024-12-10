@@ -5,16 +5,16 @@ import {
   Entity,
   JoinColumn,
   OneToOne,
-  PrimaryColumn,
+  PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
 export class Team {
-  @PrimaryColumn('uuid')
+  @PrimaryGeneratedColumn('uuid')
   teamId: string;
 
-  @Column({ type: 'int', default: 0 })
+  @Column({ type: 'int', default: 2 })
   teamSize: number;
 
   @Column({ type: 'float', default: 0 })

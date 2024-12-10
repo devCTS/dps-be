@@ -142,9 +142,9 @@ export class MerchantService {
       relations: ['agent', 'agent.organization'],
     });
 
-    const organizationId = referralDetails.agent?.organization?.organizationId;
+    const organizationId = referralDetails?.agent?.organization?.organizationId;
     let organizationSize =
-      referralDetails.agent?.organization?.organizationSize;
+      referralDetails?.agent?.organization?.organizationSize;
 
     // Create and save the Admin
     const merchant = this.merchantRepository.create({
@@ -184,11 +184,15 @@ export class MerchantService {
 
     const createdMerchant = await this.merchantRepository.save(merchant);
 
-    organizationId
-      ? await this.organizationRepository.update(organizationId, {
-          organizationSize: organizationSize++,
-        })
-      : await this.organizationService.createOrganization(createdMerchant.id);
+    if (referralCode) {
+      organizationId
+        ? await this.organizationRepository.update(organizationId, {
+            organizationSize: organizationSize++,
+          })
+        : await this.organizationService.createOrganization(
+            referralDetails?.agent?.id,
+          );
+    }
 
     if (channelProfile?.upi && channelProfile.upi.length > 0) {
       for (const element of channelProfile.upi) {
