@@ -166,6 +166,12 @@ export class FundRecordService {
       });
 
     for (const row of transactionUpdateEntries) {
+      const memberAgentBalance =
+        row.isAgentMember &&
+        row.userType === UserTypeForTransactionUpdates.MEMBER_BALANCE;
+
+      if (memberAgentBalance) return;
+
       const fundRecordEntry = {
         orderType: OrderType.PAYIN,
         name: row.name,
@@ -177,7 +183,13 @@ export class FundRecordService {
         serviceFee: row.amount || 0,
         orderAmount,
         user: row.user,
-        description: getDescription(),
+        description: getDescription({
+          type: OrderType.PAYIN,
+          userType: row.userType,
+          userAmount: row.amount,
+          orderAmount: orderAmount,
+          isAgentMember: row.isAgentMember,
+        }),
       };
 
       await this.fundRecordRepository.save(fundRecordEntry);
@@ -207,7 +219,12 @@ export class FundRecordService {
         serviceFee: row.amount || 0,
         orderAmount,
         user: row.user,
-        description: getDescription(),
+        description: getDescription({
+          type: OrderType.PAYOUT,
+          userType: row.userType,
+          userAmount: row.amount,
+          orderAmount: orderAmount,
+        }),
       };
 
       await this.fundRecordRepository.save(fundRecordEntry);
@@ -237,7 +254,12 @@ export class FundRecordService {
         serviceFee: row.amount || 0,
         orderAmount,
         user: row.user,
-        description: getDescription(),
+        description: getDescription({
+          type: OrderType.WITHDRAWAL,
+          userType: row.userType,
+          userAmount: row.amount,
+          orderAmount: orderAmount,
+        }),
       };
 
       await this.fundRecordRepository.save(fundRecordEntry);
@@ -267,7 +289,12 @@ export class FundRecordService {
         serviceFee: row.amount || 0,
         orderAmount,
         user: row.user,
-        description: getDescription(),
+        description: getDescription({
+          type: OrderType.TOPUP,
+          userType: row.userType,
+          userAmount: row.amount,
+          orderAmount: orderAmount,
+        }),
       };
 
       await this.fundRecordRepository.save(fundRecordEntry);
@@ -292,6 +319,13 @@ export class FundRecordService {
         });
         if (!merchant) throw new NotFoundException('User not found!');
 
+        user = await this.merchantRepository.findOneBy({
+          id: merchant.id,
+        });
+
+        before = user.balance;
+        after = operation === 'DECREMENT' ? before - amount : before + amount;
+
         await this.merchantService.updateBalance(
           merchant.identity.id,
           '0',
@@ -299,21 +333,21 @@ export class FundRecordService {
           false,
         );
 
-        user = await this.merchantRepository.findOneBy({
-          id: merchant.id,
-        });
-
-        before = user.balance;
-        after = before + amount;
-
         break;
 
-      case UserTypeForTransactionUpdates.MEMBER_BALANCE:
+        // case UserTypeForTransactionUpdates.MEMBER_BALANCE:
         const memberBal = await this.memberRepository.findOne({
           where: { id: userId },
           relations: ['identity'],
         });
         if (!memberBal) throw new NotFoundException('User not found!');
+
+        user = await this.memberRepository.findOneBy({
+          id: memberBal.id,
+        });
+
+        before = user.balance;
+        after = operation === 'DECREMENT' ? before - amount : before + amount;
 
         await this.memberService.updateBalance(
           memberBal.identity.id,
@@ -321,13 +355,6 @@ export class FundRecordService {
           amountAfterOperation,
           false,
         );
-
-        user = await this.memberRepository.findOneBy({
-          id: memberBal.id,
-        });
-
-        before = user.balance;
-        after = before + amount;
 
         break;
 
@@ -338,19 +365,19 @@ export class FundRecordService {
         });
         if (!memberQuota) throw new NotFoundException('User not found!');
 
+        user = await this.memberRepository.findOneBy({
+          id: memberQuota.id,
+        });
+
+        before = user.quota;
+        after = operation === 'DECREMENT' ? before - amount : before + amount;
+
         await this.memberService.updateQuota(
           memberQuota.identity.id,
           '0',
           amountAfterOperation,
           false,
         );
-
-        user = await this.memberRepository.findOneBy({
-          id: memberQuota.id,
-        });
-
-        before = user.quota;
-        after = before + amount;
 
         break;
 
@@ -361,19 +388,19 @@ export class FundRecordService {
         });
         if (!agent) throw new NotFoundException('User not found!');
 
+        user = await this.agentRepository.findOneBy({
+          id: agent.id,
+        });
+
+        before = user.balance;
+        after = operation === 'DECREMENT' ? before - amount : before + amount;
+
         await this.agentService.updateBalance(
           agent.identity.id,
           '0',
           amountAfterOperation,
           false,
         );
-
-        user = await this.agentRepository.findOneBy({
-          id: agent.id,
-        });
-
-        before = user.balance;
-        after = before + amount;
 
         break;
 
@@ -392,7 +419,12 @@ export class FundRecordService {
       serviceFee: 0,
       orderAmount: amount,
       user,
-      description: getDescription(),
+      description: getDescription({
+        type: OrderType.ADMIN_ADJUSTMENT,
+        userType: balanceType,
+        orderAmount: amount,
+        userAmount: amount,
+      }),
     };
 
     await this.fundRecordRepository.save(fundRecordEntry);
@@ -427,18 +459,25 @@ export class FundRecordService {
       -amount,
       false,
     );
+
     await this.fundRecordRepository.save({
       orderType: OrderType.ADMIN_ADJUSTMENT,
       name: sendingMember?.firstName + ' ' + sendingMember?.lastName,
       balanceType: UserTypeForTransactionUpdates.MEMBER_QUOTA,
       systemOrderId: uniqid(),
       before: sendingMember.quota,
-      after: sendingMember.quota + amount,
+      after: sendingMember.quota - amount,
       amount: 0,
       serviceFee: 0,
       orderAmount: amount,
       user: sendingMember.identity,
-      description: getDescription(),
+      description: getDescription({
+        type: OrderType.MEMBER_adjustment,
+        userType: UserTypeForTransactionUpdates.MEMBER_QUOTA,
+        userAmount: amount,
+        orderAmount: amount,
+        isSendingMember: true,
+      }),
     });
 
     // Add in receiving member
@@ -448,6 +487,7 @@ export class FundRecordService {
       amount,
       false,
     );
+
     await this.fundRecordRepository.save({
       orderType: OrderType.ADMIN_ADJUSTMENT,
       name: receivingMember?.firstName + ' ' + receivingMember?.lastName,
@@ -459,7 +499,12 @@ export class FundRecordService {
       serviceFee: 0,
       orderAmount: amount,
       user: receivingMember.identity,
-      description: getDescription(),
+      description: getDescription({
+        type: OrderType.MEMBER_adjustment,
+        userType: UserTypeForTransactionUpdates.MEMBER_QUOTA,
+        userAmount: amount,
+        orderAmount: amount,
+      }),
     });
 
     return HttpStatus.OK;
