@@ -29,6 +29,8 @@ export class RolesGuard implements CanActivate {
       context.getHandler(),
     );
 
+    if (requiredRoles.includes('all')) return true;
+
     if (!requiredRoles) throw new ForbiddenException('User role is missing!');
 
     const request = context.switchToHttp().getRequest();
@@ -93,8 +95,6 @@ export class RolesGuard implements CanActivate {
       if (user && !user.enabled)
         throw new ForbiddenException(`${verifiedToken.type} is not enabled.`);
     }
-
-    if (requiredRoles.includes('all')) return true;
 
     const userRole = verifiedToken?.type;
 
