@@ -38,10 +38,10 @@ export class TeamService {
     });
     if (team) throw new ConflictException('Team already exists.');
 
-    await this.teamRepository.save({ teamLeader: member });
+    const createdTeam = await this.teamRepository.save({ teamLeader: member });
 
     await this.memberRepository.update(member.id, {
-      team: team,
+      teamId: createdTeam.teamId,
     });
 
     return HttpStatus.CREATED;
