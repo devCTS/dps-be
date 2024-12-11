@@ -99,4 +99,7 @@ export class MemberResponseDto {
     },
   )
   memberReferral: string;
+
+  @Expose()
+  teamId: string;
 }
