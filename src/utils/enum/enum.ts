@@ -129,6 +129,7 @@ export interface TreeNode {
   id: number;
   children: TreeNode[];
   name: string;
+  email: string;
   isAgent: boolean;
   balance: number;
   quota: number;

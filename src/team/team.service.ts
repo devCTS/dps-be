@@ -101,7 +101,7 @@ export class TeamService {
       where: {
         teamId,
       },
-      relations: ['agent'],
+      relations: ['agent', 'identity'],
     });
 
     return this.buildTree(teamMembers);
@@ -109,6 +109,8 @@ export class TeamService {
 
   buildTree(members: Member[]) {
     const rootMember = members.find((member) => !member.agent);
+
+    console.log({ rootMember, members });
 
     const getChildren = (parentId: number): TreeNode[] => {
       const children = members.filter(
@@ -119,6 +121,7 @@ export class TeamService {
         id: obj.id,
         children: getChildren(obj.id),
         name: obj.firstName + ' ' + obj.lastName,
+        email: obj.identity?.email,
         isAgent: false,
         balance: null,
         quota: obj.quota,
@@ -138,6 +141,7 @@ export class TeamService {
       id: rootMember.id,
       children: getChildren(rootMember.id),
       name: rootMember.firstName + ' ' + rootMember.lastName,
+      email: rootMember.identity?.email,
       isAgent: false,
       balance: null,
       quota: rootMember.quota,

@@ -1,3 +1,4 @@
+import { identity } from 'rxjs';
 import {
   ConflictException,
   HttpStatus,
@@ -113,14 +114,14 @@ export class OrganizationService {
       where: {
         organizationId,
       },
-      relations: ['agent'],
+      relations: ['agent', 'identity'],
     });
 
     const merchants = await this.merchantRepository.find({
       where: {
         organizationId,
       },
-      relations: ['agent'],
+      relations: ['agent', 'identity'],
     });
 
     return this.buildTree([
@@ -139,6 +140,7 @@ export class OrganizationService {
         id: obj.id,
         children: getChildren(obj.id),
         name: obj.firstName + ' ' + obj.lastName,
+        email: obj.identity?.email,
         isAgent: !obj.isMerchant,
         balance: obj.balance,
         quota: null,
@@ -160,6 +162,7 @@ export class OrganizationService {
       id: rootAgent.id,
       children: getChildren(rootAgent.id),
       name: rootAgent.firstName + ' ' + rootAgent.lastName,
+      email: rootAgent?.identity?.email,
       isAgent: true,
       balance: rootAgent.balance,
       quota: null,
