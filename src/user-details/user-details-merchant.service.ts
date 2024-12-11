@@ -103,8 +103,9 @@ export class UserDetailsMerchantService {
       phone: merchant.phone,
       joinedOn: merchant.createdAt,
       status: merchant.enabled,
-      referral:
-        merchant?.agent?.firstName + ' ' + merchant?.agent?.lastName || 'None',
+      referral: merchant?.agent
+        ? merchant?.agent?.firstName + ' ' + merchant?.agent?.lastName
+        : 'None',
       organizationId: merchant?.organizationId,
       balance: roundOffAmount(merchant.balance),
       payinIncome: roundOffAmount(transactionEntries.payinIncome),

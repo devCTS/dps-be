@@ -738,6 +738,8 @@ export class MerchantService {
   }
 
   async updateBalance(identityId, systemOrderId, amount, failed) {
+    console.log({ identityId });
+
     const merchant = await this.merchantRepository.findOne({
       where: {
         identity: { id: identityId },
@@ -746,6 +748,8 @@ export class MerchantService {
     });
 
     if (!merchant) throw new NotFoundException('Merchant not found!');
+
+    console.log('2');
 
     await this.merchantRepository.update(merchant.id, {
       balance: merchant.balance + amount,

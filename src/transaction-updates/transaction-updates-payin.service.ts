@@ -1,3 +1,4 @@
+import { identity } from 'rxjs';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -42,7 +43,7 @@ export class TransactionUpdatesPayinService {
       const prevElement = i > 0 ? referralList[i - 1] : null;
 
       const identity = await this.identityRepository.findOne({
-        where: { email: element.email },
+        where: { email: element.identity.email },
       });
 
       const isMerchant = element.isMerchant;

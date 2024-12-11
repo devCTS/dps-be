@@ -493,6 +493,7 @@ export class PayinService {
 
   async updatePayinStatusToComplete(body) {
     const { id } = body;
+
     const payinOrderDetails = await this.payinRepository.findOne({
       where: {
         systemOrderId: id,

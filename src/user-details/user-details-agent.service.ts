@@ -97,8 +97,9 @@ export class UserDetailsAgentService {
       phone: agent.phone,
       joinedOn: agent.createdAt,
       status: agent.enabled,
-      referral:
-        agent?.agent?.firstName + ' ' + agent?.agent?.lastName || 'None',
+      referral: agent?.agent
+        ? agent?.agent?.firstName + ' ' + agent?.agent?.lastName
+        : 'None',
       referralsCount: agent?.referred?.filter(
         (code) => code.status === 'utilized',
       )?.length,

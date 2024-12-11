@@ -46,7 +46,7 @@ export class TransactionUpdatesPayoutService {
       const prevElement = i > 0 ? referralList[i - 1] : null;
 
       const identity = await this.identityRepository.findOne({
-        where: { email: element.email },
+        where: { email: element.identity.email },
       });
 
       const userType = UserTypeForTransactionUpdates.MERCHANT_BALANCE;

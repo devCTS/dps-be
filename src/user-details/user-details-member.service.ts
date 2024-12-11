@@ -97,8 +97,9 @@ export class UserDetailsMemberService {
       phone: member.phone,
       joinedOn: member.createdAt,
       status: member.enabled,
-      referral:
-        member?.agent?.firstName + ' ' + member?.agent?.lastName || 'None',
+      referral: member?.agent
+        ? member?.agent?.firstName + ' ' + member?.agent?.lastName
+        : 'None',
       teamId: member?.teamId,
       balance: roundOffAmount(member.balance),
       quota: roundOffAmount(member.quota),
