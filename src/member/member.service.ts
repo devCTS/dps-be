@@ -31,6 +31,7 @@ import { Team } from 'src/team/entities/team.entity';
 import { TeamService } from 'src/team/team.service';
 import { MemberReferral } from 'src/member-referral/entities/member-referral.entity';
 import { UpdateCommissionRatesDto } from './dto/update-commission-rates.dto';
+import { SystemConfigService } from 'src/system-config/system-config.service';
 
 @Injectable()
 export class MemberService {
@@ -54,6 +55,7 @@ export class MemberService {
     private readonly jwtService: JwtService,
     private readonly memberReferralService: MemberReferralService,
     private readonly teamService: TeamService,
+    private readonly systemConfigService: SystemConfigService,
   ) {}
 
   async create(createMemberDto: CreateMemberDto) {
@@ -113,10 +115,9 @@ export class MemberService {
       agent: referralDetails?.member || null,
       agentCommissions: referralDetails?.member?.id
         ? {
-            payinCommissionRate: referralDetails?.referredMemberPayinCommission,
-            payoutCommissionRate:
-              referralDetails?.referredMemberPayoutCommission,
-            topupCommissionRate: referralDetails?.referredMemberTopupCommission,
+            payinCommissionRate: referralDetails?.payinCommission,
+            payoutCommissionRate: referralDetails?.payoutCommission,
+            topupCommissionRate: referralDetails?.topupCommission,
           }
         : null,
     });
@@ -189,6 +190,15 @@ export class MemberService {
         'MEMBER',
       );
 
+      const {
+        payinCommissionRateForMember,
+        payoutCommissionRateForMember,
+        topupCommissionRateForMember,
+        maximumDailyPayoutAmountForMember,
+        maximumPayoutAmountForMember,
+        minimumPayoutAmountForMember,
+      } = await this.systemConfigService.findLatest();
+
       const referralDetails = await this.memberReferralRepository.findOne({
         where: { referralCode },
         relations: ['member', 'member.team'],
@@ -203,22 +213,30 @@ export class MemberService {
         lastName: verifiedContext.lastName,
         phone: '',
         enabled: true,
-        dailyTotalPayoutLimit: 10000000,
-        payinCommissionRate: 3,
-        payoutCommissionRate: 1,
-        singlePayoutLowerLimit: 10,
-        singlePayoutUpperLimit: 1000000,
-        topupCommissionRate: 4,
+
+        payinCommissionRate: referralCode
+          ? referralDetails?.referredMemberPayinCommission
+          : payinCommissionRateForMember,
+
+        payoutCommissionRate: referralCode
+          ? referralDetails?.referredMemberPayoutCommission
+          : payoutCommissionRateForMember,
+
+        topupCommissionRate: referralCode
+          ? referralDetails?.referredMemberTopupCommission
+          : topupCommissionRateForMember,
+
+        singlePayoutLowerLimit: minimumPayoutAmountForMember || 100,
+        singlePayoutUpperLimit: maximumPayoutAmountForMember || 10000,
+        dailyTotalPayoutLimit: maximumDailyPayoutAmountForMember || 10000,
+
         selfRegistered: true,
         agent: referralDetails?.member || null,
         agentCommissions: referralDetails?.member?.id
           ? {
-              payinCommissionRate:
-                referralDetails?.referredMemberPayinCommission,
-              payoutCommissionRate:
-                referralDetails?.referredMemberPayoutCommission,
-              topupCommissionRate:
-                referralDetails?.referredMemberTopupCommission,
+              payinCommissionRate: referralDetails?.payinCommission,
+              payoutCommissionRate: referralDetails?.payoutCommission,
+              topupCommissionRate: referralDetails?.topupCommission,
             }
           : null,
       });

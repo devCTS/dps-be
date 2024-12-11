@@ -50,7 +50,7 @@ export class UserDetailsMemberService {
   async getMemberDetails(userId: number) {
     const member = await this.memberRepository.findOne({
       where: { id: userId },
-      relations: ['identity', 'memberReferral', 'referredMember'],
+      relations: ['identity', 'memberReferral', 'referredMember', 'agent'],
     });
     if (!member) throw new NotFoundException('Request member not found!');
 
@@ -98,9 +98,8 @@ export class UserDetailsMemberService {
       joinedOn: member.createdAt,
       status: member.enabled,
       referral:
-        member?.memberReferral?.member?.firstName +
-          ' ' +
-          member?.memberReferral?.member?.lastName || 'None',
+        member?.agent?.firstName + ' ' + member?.agent?.lastName || 'None',
+      teamId: member?.teamId,
       balance: roundOffAmount(member.balance),
       quota: roundOffAmount(member.quota),
       referralsCount: member?.referredMember?.filter(

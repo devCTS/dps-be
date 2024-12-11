@@ -14,6 +14,7 @@ import { Topup } from 'src/topup/entities/topup.entity';
 import { TeamModule } from 'src/team/team.module';
 import { Team } from 'src/team/entities/team.entity';
 import { MemberReferral } from 'src/member-referral/entities/member-referral.entity';
+import { SystemConfigModule } from 'src/system-config/system-config.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { MemberReferral } from 'src/member-referral/entities/member-referral.ent
     TransactionUpdatesModule,
     ChannelModule,
     TeamModule,
+    SystemConfigModule,
   ],
   controllers: [MemberController],
   providers: [MemberService],

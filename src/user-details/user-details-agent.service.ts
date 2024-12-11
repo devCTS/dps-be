@@ -53,6 +53,7 @@ export class UserDetailsAgentService {
         'agentReferral',
         'referred',
         'identity.withdrawal',
+        'agent',
       ],
     });
     if (!agent) throw new NotFoundException('Request agent not found!');
@@ -97,12 +98,11 @@ export class UserDetailsAgentService {
       joinedOn: agent.createdAt,
       status: agent.enabled,
       referral:
-        agent?.agentReferral?.agent?.firstName +
-          ' ' +
-          agent?.agentReferral?.agent?.lastName || 'None',
+        agent?.agent?.firstName + ' ' + agent?.agent?.lastName || 'None',
       referralsCount: agent?.referred?.filter(
         (code) => code.status === 'utilized',
       )?.length,
+      organizationId: agent?.organizationId,
       balance: roundOffAmount(agent.balance),
       withdrawanAmount: roundOffAmount(transactionEntries.withdrawanAmount),
       withdrawalFee: roundOffAmount(transactionEntries.withdrawalFee),

@@ -51,7 +51,7 @@ export class UserDetailsMerchantService {
   async getMerchantDetails(userId: number) {
     const merchant = await this.merchantRepository.findOne({
       where: { id: userId },
-      relations: ['identity', 'payin', 'identity.withdrawal'],
+      relations: ['identity', 'payin', 'identity.withdrawal', 'agent'],
     });
     if (!merchant) throw new NotFoundException('Request merchant not found!');
 
@@ -104,9 +104,8 @@ export class UserDetailsMerchantService {
       joinedOn: merchant.createdAt,
       status: merchant.enabled,
       referral:
-        merchant?.agentReferral?.agent?.firstName +
-          ' ' +
-          merchant?.agentReferral?.agent?.lastName || 'None',
+        merchant?.agent?.firstName + ' ' + merchant?.agent?.lastName || 'None',
+      organizationId: merchant?.organizationId,
       balance: roundOffAmount(merchant.balance),
       payinIncome: roundOffAmount(transactionEntries.payinIncome),
       payinFee: roundOffAmount(transactionEntries.payinFee),
