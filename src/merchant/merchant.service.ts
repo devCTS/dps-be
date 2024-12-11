@@ -142,7 +142,8 @@ export class MerchantService {
       relations: ['agent', 'agent.organization'],
     });
 
-    const organizationId = referralDetails?.agent?.organization?.organizationId;
+    const organizationId =
+      referralDetails?.agent?.organization?.organizationId || null;
     let organizationSize =
       referralDetails?.agent?.organization?.organizationSize;
 
@@ -180,6 +181,7 @@ export class MerchantService {
             payoutCommissionRate: referralDetails?.payoutCommission,
           }
         : null,
+      organizationId: organizationId || null,
     });
 
     const createdMerchant = await this.merchantRepository.save(merchant);

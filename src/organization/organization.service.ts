@@ -43,12 +43,12 @@ export class OrganizationService {
     if (organisation)
       throw new ConflictException('Organization already exists.');
 
-    await this.organizationRepository.save({
+    const createdOrganization = await this.organizationRepository.save({
       leader: agent,
     });
 
     await this.agentRepository.update(agent.id, {
-      organization: organisation,
+      organizationId: createdOrganization.organizationId,
     });
 
     return HttpStatus.CREATED;

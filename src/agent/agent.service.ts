@@ -91,7 +91,8 @@ export class AgentService {
       relations: ['agent', 'agent.organization'],
     });
 
-    const organizationId = referralDetails?.agent?.organization?.organizationId;
+    const organizationId =
+      referralDetails?.agent?.organization?.organizationId || null;
     let organizationSize =
       referralDetails?.agent?.organization?.organizationSize;
 
@@ -113,6 +114,7 @@ export class AgentService {
             payoutCommissionRate: referralDetails?.payoutCommission,
           }
         : null,
+      organizationId: organizationId || null,
     });
 
     const created = await this.agentRepository.save(agent);

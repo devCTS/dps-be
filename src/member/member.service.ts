@@ -120,6 +120,7 @@ export class MemberService {
             topupCommissionRate: referralDetails?.topupCommission,
           }
         : null,
+      teamId: teamId || null,
     });
 
     const createdMember = await this.memberRepository.save(member);
@@ -239,6 +240,7 @@ export class MemberService {
               topupCommissionRate: referralDetails?.topupCommission,
             }
           : null,
+        teamId: teamId || null,
       });
 
       const createdMember = await this.memberRepository.save(member);
