@@ -205,8 +205,8 @@ export class MemberService {
         relations: ['member', 'member.team'],
       });
 
-      const teamId = referralDetails.member?.team?.teamId;
-      let teamSize = referralDetails.member?.team?.teamSize;
+      const teamId = referralDetails?.member?.team?.teamId;
+      let teamSize = referralDetails?.member?.team?.teamSize;
 
       const member = this.memberRepository.create({
         identity,
