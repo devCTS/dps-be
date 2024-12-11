@@ -18,7 +18,6 @@ export class TeamController {
 
   @Get(':id')
   async getTeamTree(@Param('id') id: string) {
-    console.log(id);
     return this.teamService.getTeamTree(id);
   }
 }

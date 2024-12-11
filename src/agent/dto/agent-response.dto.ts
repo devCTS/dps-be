@@ -68,4 +68,7 @@ export class AgentResponseDto {
     toClassOnly: true,
   })
   balance: number;
+
+  @Expose()
+  organizationId: string;
 }
