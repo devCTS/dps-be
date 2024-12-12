@@ -52,7 +52,7 @@ export class OrganizationService {
       organizationId: createdOrganization.organizationId,
     });
 
-    return HttpStatus.CREATED;
+    return createdOrganization;
   }
 
   async paginate(paginateDto: PaginateRequestDto) {

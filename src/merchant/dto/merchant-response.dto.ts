@@ -9,6 +9,7 @@ import { roundOffAmount } from 'src/utils/utils';
 import { AmountRangePayinMode } from '../entities/amountRangePayinMode.entity';
 import { ProportionalPayinMode } from '../entities/proportionalPayinMode.entity';
 import { ServiceRateType } from 'src/utils/enum/enum';
+import { Agent } from 'src/agent/entities/agent.entity';
 
 @Exclude()
 export class MerchantResponseDto {
@@ -160,4 +161,24 @@ export class MerchantResponseDto {
     { toClassOnly: true },
   )
   propotionRatio: ProportionalPayinMode[];
+
+  @Expose()
+  @Transform(
+    ({ obj }) => {
+      return {
+        id: obj?.agent?.id || 0,
+        name: obj?.agent?.firstName
+          ? obj?.agent?.firstName + ' ' + obj?.agent?.lastName
+          : '',
+      };
+    },
+    { toClassOnly: true },
+  )
+  agent: Agent;
+
+  @Expose()
+  agentPayinCommissionRate: number;
+
+  @Expose()
+  agentPayoutCommissionRate: number;
 }

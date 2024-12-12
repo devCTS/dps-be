@@ -84,8 +84,8 @@ export class Agent {
   @Column({ type: 'json', nullable: true })
   agentCommissions: AgentCommissionsType;
 
-  @OneToOne(() => Merchant, (merchant) => merchant.agent, { nullable: true })
-  referredMerchant: Merchant;
+  @OneToMany(() => Merchant, (merchant) => merchant.agent, { nullable: true })
+  referredMerchant: Merchant[];
 }
 
 export interface AgentCommissionsType {

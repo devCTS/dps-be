@@ -45,6 +45,7 @@ import { SystemConfigService } from 'src/system-config/system-config.service';
 import { AgentReferral } from 'src/agent-referral/entities/agent-referral.entity';
 import { Organization } from 'src/organization/entities/organization';
 import { OrganizationService } from 'src/organization/organization.service';
+import { Agent } from 'src/agent/entities/agent.entity';
 
 @Injectable()
 export class MerchantService {
@@ -79,6 +80,8 @@ export class MerchantService {
     private readonly agentReferralRepository: Repository<AgentReferral>,
     @InjectRepository(Organization)
     private readonly organizationRepository: Repository<Organization>,
+    @InjectRepository(Agent)
+    private readonly agentRepository: Repository<Agent>,
 
     private readonly identityService: IdentityService,
     private readonly jwtService: JwtService,
@@ -118,15 +121,18 @@ export class MerchantService {
       numberOfRangesOrRatio,
       amountRanges,
       ratios,
+      agentId,
+      agentPayinCommissionRate,
+      agentPayoutCommissionRate,
     } = createMerchantDto;
 
-    if (referralCode) {
-      const isCodeValid = await this.agentReferralService.validateReferralCode(
-        referralCode,
-        'merchant',
-      );
-      if (!isCodeValid) return;
-    }
+    // if (referralCode) {
+    //   const isCodeValid = await this.agentReferralService.validateReferralCode(
+    //     referralCode,
+    //     'merchant',
+    //   );
+    //   if (!isCodeValid) return;
+    // }
 
     const identity = await this.identityService.create(
       email,
@@ -137,15 +143,32 @@ export class MerchantService {
     const hashedWithdrawalPassword =
       this.jwtService.getHashPassword(withdrawalPassword);
 
-    const referralDetails = await this.agentReferralRepository.findOne({
-      where: { referralCode },
-      relations: ['agent', 'agent.organization'],
-    });
+    // const referralDetails = await this.agentReferralRepository.findOne({
+    //   where: { referralCode },
+    //   relations: ['agent', 'agent.organization'],
+    // });
 
-    const organizationId =
-      referralDetails?.agent?.organization?.organizationId || null;
-    let organizationSize =
-      referralDetails?.agent?.organization?.organizationSize;
+    let agent = null;
+    if (agentId)
+      agent = await this.agentRepository.findOne({
+        where: {
+          id: agentId,
+        },
+        relations: ['organization'],
+      });
+
+    let organization = agent?.organization || null;
+
+    if (agentId)
+      organization
+        ? await this.organizationRepository.update(
+            organization.organizationId,
+            {
+              organizationSize: organization.organizationSize++,
+            },
+          )
+        : (organization =
+            await this.organizationService.createOrganization(agentId));
 
     // Create and save the Admin
     const merchant = this.merchantRepository.create({
@@ -173,28 +196,18 @@ export class MerchantService {
       withdrawalPassword: hashedWithdrawalPassword,
       payinChannels,
       payoutChannels,
-      organization: referralDetails?.agent?.organization || null,
-      agent: referralDetails?.agent || null,
-      agentCommissions: referralDetails?.agent?.id
+      organization: organization || null,
+      agent: agent,
+      agentCommissions: agentId
         ? {
-            payinCommissionRate: referralDetails?.payinCommission,
-            payoutCommissionRate: referralDetails?.payoutCommission,
+            payinCommissionRate: agentPayinCommissionRate,
+            payoutCommissionRate: agentPayoutCommissionRate,
           }
         : null,
-      organizationId: organizationId || null,
+      organizationId: organization.organizationId || null,
     });
 
     const createdMerchant = await this.merchantRepository.save(merchant);
-
-    if (referralCode) {
-      organizationId
-        ? await this.organizationRepository.update(organizationId, {
-            organizationSize: organizationSize++,
-          })
-        : await this.organizationService.createOrganization(
-            referralDetails?.agent?.id,
-          );
-    }
 
     if (channelProfile?.upi && channelProfile.upi.length > 0) {
       for (const element of channelProfile.upi) {
@@ -241,13 +254,13 @@ export class MerchantService {
     // Process the channels and their profile fields
 
     // Update Agent Referrals
-    if (referralCode)
-      await this.agentReferralService.updateFromReferralCode({
-        referralCode,
-        merchantPayinServiceRate: payinServiceRate,
-        merchantPayoutServiceRate: payoutServiceRate,
-        referredMerchant: createdMerchant,
-      });
+    // if (referralCode)
+    //   await this.agentReferralService.updateFromReferralCode({
+    //     referralCode,
+    //     merchantPayinServiceRate: payinServiceRate,
+    //     merchantPayoutServiceRate: payoutServiceRate,
+    //     referredMerchant: createdMerchant,
+    //   });
 
     return HttpStatus.OK;
   }
@@ -278,6 +291,7 @@ export class MerchantService {
         'payinModeDetails',
         'payinModeDetails.proportionalRange',
         'payinModeDetails.amountRangeRange',
+        'agent',
       ],
     });
 
@@ -291,6 +305,10 @@ export class MerchantService {
       ...results,
       payoutChannels: newPayoutChannels,
       payinChannels: newPayinChannels,
+      agentPayinCommissionRate:
+        results?.agentCommissions?.payinCommissionRate || 0,
+      agentPayoutCommissionRate:
+        results?.agentCommissions?.payoutCommissionRate || 0,
     });
   }
 
@@ -738,8 +756,6 @@ export class MerchantService {
   }
 
   async updateBalance(identityId, systemOrderId, amount, failed) {
-    console.log({ identityId });
-
     const merchant = await this.merchantRepository.findOne({
       where: {
         identity: { id: identityId },
@@ -748,8 +764,6 @@ export class MerchantService {
     });
 
     if (!merchant) throw new NotFoundException('Merchant not found!');
-
-    console.log('2');
 
     await this.merchantRepository.update(merchant.id, {
       balance: merchant.balance + amount,

@@ -181,17 +181,13 @@ export class AgentService {
   }
 
   // Find all agents
-  async findAll(): Promise<AgentResponseDto[]> {
-    const results = await this.agentRepository.find({
-      relations: [
-        'identity',
-        'identity.upi',
-        'identity.eWallet',
-        'identity.netBanking',
-      ],
-    });
+  async findAll() {
+    const agents = await this.agentRepository.find();
 
-    return plainToInstance(AgentResponseDto, results);
+    return agents.map((agent) => ({
+      id: agent.id,
+      name: agent.firstName + ' ' + agent.lastName,
+    }));
   }
 
   // Get profile by id

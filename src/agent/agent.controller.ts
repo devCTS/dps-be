@@ -39,11 +39,11 @@ export class AgentController {
     return this.agentService.create(createAgentDto);
   }
 
-  // @Get()
-  // @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
-  // findAll(): Promise<AgentResponseDto[]> {
-  //   return this.agentService.findAll();
-  // }
+  @Get('list')
+  @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
+  findAll() {
+    return this.agentService.findAll();
+  }
 
   @Get()
   @Roles(Role.AGENT)

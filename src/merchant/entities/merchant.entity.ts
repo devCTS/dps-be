@@ -7,6 +7,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToOne,
+  ManyToOne,
 } from 'typeorm';
 import { PayinMode } from './payinMode.entity';
 import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
@@ -130,7 +131,7 @@ export class Merchant {
   @Column({ default: false })
   isOnline: boolean;
 
-  @OneToOne(() => Organization, (organisation) => organisation.leader, {
+  @ManyToOne(() => Organization, (organisation) => organisation.leader, {
     nullable: true,
   })
   @JoinColumn()
@@ -139,7 +140,7 @@ export class Merchant {
   @Column({ nullable: true })
   organizationId: string;
 
-  @OneToOne(() => Agent, (agent) => agent.referredMerchant, { nullable: true })
+  @ManyToOne(() => Agent, (agent) => agent.referredMerchant, { nullable: true })
   @JoinColumn({ name: 'agent' })
   agent: Agent;
 

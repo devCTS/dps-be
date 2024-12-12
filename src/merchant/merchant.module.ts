@@ -20,6 +20,7 @@ import { SystemConfigModule } from 'src/system-config/system-config.module';
 import { AgentReferral } from 'src/agent-referral/entities/agent-referral.entity';
 import { Organization } from 'src/organization/entities/organization';
 import { OrganizationModule } from 'src/organization/organization.module';
+import { Agent } from 'src/agent/entities/agent.entity';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { OrganizationModule } from 'src/organization/organization.module';
       Withdrawal,
       AgentReferral,
       Organization,
+      Agent,
     ]),
     JwtModule,
     IdentityModule,

@@ -170,4 +170,16 @@ export class CreateMerchantDto {
   @ValidateNested({ each: true })
   @Type(() => RatioDto)
   ratios: RatioDto[];
+
+  @IsOptional()
+  @IsNumber()
+  agentId: number;
+
+  @IsOptional()
+  @IsNumber()
+  agentPayinCommissionRate: number;
+
+  @IsOptional()
+  @IsNumber()
+  agentPayoutCommissionRate: number;
 }

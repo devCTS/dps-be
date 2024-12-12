@@ -6,6 +6,7 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -26,8 +27,8 @@ export class Organization {
   @JoinColumn({ name: 'leader' })
   leader: Agent;
 
-  @OneToOne(() => Merchant, (merchant) => merchant.organization)
-  merchant: Merchant;
+  @OneToMany(() => Merchant, (merchant) => merchant.organization)
+  merchant: Merchant[];
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
