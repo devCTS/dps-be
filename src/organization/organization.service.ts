@@ -1,7 +1,5 @@
-import { identity } from 'rxjs';
 import {
   ConflictException,
-  HttpStatus,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -52,7 +50,7 @@ export class OrganizationService {
       organizationId: createdOrganization.organizationId,
     });
 
-    return createdOrganization;
+    return createdOrganization.organizationId;
   }
 
   async paginate(paginateDto: PaginateRequestDto) {
@@ -109,6 +107,29 @@ export class OrganizationService {
     };
   }
 
+  async updateOrganizationSize(organizationId) {
+    const organization = await this.organizationRepository.findOneBy({
+      organizationId,
+    });
+
+    if (organization)
+      await this.organizationRepository.update(organizationId, {
+        organizationSize: ++organization.organizationSize,
+      });
+  }
+
+  async updateOrganizationReferrals(organizationId, amount) {
+    const organization = await this.organizationRepository.findOneBy({
+      organizationId,
+    });
+
+    if (organization)
+      await this.organizationRepository.update(organization.organizationId, {
+        totalReferralCommission: (organization.totalReferralCommission +=
+          amount),
+      });
+  }
+
   async getOrganizationTree(organizationId: string) {
     const agentMembers = await this.agentRepository.find({
       where: {
@@ -126,7 +147,11 @@ export class OrganizationService {
 
     return this.buildTree([
       ...agentMembers,
-      ...merchants.map((mer) => ({ ...mer, isMerchant: true })),
+      ...merchants.map((mer) => ({
+        ...mer,
+        isMerchant: true,
+        id: 'merchant' + mer.id,
+      })),
     ]);
   }
 
@@ -173,7 +198,7 @@ export class OrganizationService {
 
     return {
       tree,
-      id: rootAgent.organizationId,
+      id: rootAgent?.organizationId,
       name: tree.name,
     };
   }

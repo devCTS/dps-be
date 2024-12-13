@@ -47,6 +47,23 @@ export class TeamService {
     return HttpStatus.CREATED;
   }
 
+  async incrementTeamSize(teamId) {
+    const team = await this.teamRepository.findOneBy({ teamId });
+    if (team)
+      await this.teamRepository.update(teamId, { teamSize: ++team.teamSize });
+  }
+
+  async updateTeamQuota(teamId, amount) {
+    const team = await this.teamRepository.findOneBy({
+      teamId,
+    });
+
+    if (team)
+      await this.teamRepository.update(team.teamId, {
+        totalQuota: (team.totalQuota += amount),
+      });
+  }
+
   async paginate(paginateDto: PaginateRequestDto) {
     const query = this.teamRepository.createQueryBuilder('team');
 
@@ -110,8 +127,6 @@ export class TeamService {
   buildTree(members: Member[]) {
     const rootMember = members.find((member) => !member.agent);
 
-    console.log({ rootMember, members });
-
     const getChildren = (parentId: number): TreeNode[] => {
       const children = members.filter(
         (member) => member.agent?.id === parentId,
@@ -146,10 +161,7 @@ export class TeamService {
       balance: null,
       quota: rootMember.quota,
       serviceRate: null,
-      ratesOfAgent: {
-        payin: rootMember.agentCommissions.payinCommissionRate,
-        payout: rootMember.agentCommissions.payoutCommissionRate,
-      },
+      ratesOfAgent: null,
       memberRates: {
         payin: rootMember.payinCommissionRate,
         payout: rootMember.payoutCommissionRate,

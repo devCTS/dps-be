@@ -3,6 +3,7 @@ import { Identity } from 'src/identity/entities/identity.entity';
 import { DateFormat } from 'src/utils/decorators/dateformat.decorator';
 import { ChannelProfileDto } from 'src/utils/dtos/channel-profile.dto';
 import { roundOffAmount } from 'src/utils/utils';
+import { Agent } from '../entities/agent.entity';
 
 @Exclude()
 export class AgentResponseDto {
@@ -71,4 +72,24 @@ export class AgentResponseDto {
 
   @Expose()
   organizationId: string;
+
+  @Expose()
+  @Transform(
+    ({ obj }) => {
+      return {
+        id: obj?.agent?.id || 0,
+        name: obj?.agent?.firstName
+          ? obj?.agent?.firstName + ' ' + obj?.agent?.lastName
+          : '',
+      };
+    },
+    { toClassOnly: true },
+  )
+  agent: Agent;
+
+  @Expose()
+  agentPayinCommissionRate: number;
+
+  @Expose()
+  agentPayoutCommissionRate: number;
 }

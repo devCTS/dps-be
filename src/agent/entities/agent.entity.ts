@@ -1,4 +1,3 @@
-import { IsNotEmpty, IsNumber } from 'class-validator';
 import { AgentReferral } from 'src/agent-referral/entities/agent-referral.entity';
 import { Identity } from 'src/identity/entities/identity.entity';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
@@ -7,14 +6,12 @@ import {
   Entity,
   Column,
   PrimaryGeneratedColumn,
-  ManyToOne,
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
   OneToOne,
   OneToMany,
-  BeforeInsert,
-  BeforeUpdate,
+  ManyToOne,
 } from 'typeorm';
 
 @Entity()
@@ -31,9 +28,6 @@ export class Agent {
 
   @Column()
   lastName: string;
-
-  // @Column({ nullable: true })
-  // referralCode: string;
 
   @Column({ default: true })
   enabled: boolean;
@@ -70,16 +64,18 @@ export class Agent {
   @Column({ type: 'float', default: 0 })
   balance: number;
 
-  // for organization
   @OneToOne(() => Organization, (organisation) => organisation.leader)
   organization: Organization;
 
   @Column({ nullable: true })
   organizationId: string;
 
-  @OneToOne(() => Agent, { nullable: true })
-  @JoinColumn({ name: 'agent' })
+  @ManyToOne(() => Agent, (agent) => agent.referrees, { nullable: true })
+  @JoinColumn({ name: 'agent_id' })
   agent: Agent;
+
+  @OneToMany(() => Agent, (agent) => agent.agent)
+  referrees: Agent[];
 
   @Column({ type: 'json', nullable: true })
   agentCommissions: AgentCommissionsType;

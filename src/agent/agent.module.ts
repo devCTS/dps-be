@@ -15,12 +15,7 @@ import { AgentReferral } from 'src/agent-referral/entities/agent-referral.entity
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      Agent,
-      TransactionUpdate,
-      Organization,
-      AgentReferral,
-    ]),
+    TypeOrmModule.forFeature([Agent, TransactionUpdate, AgentReferral]),
     IdentityModule,
     JwtModule,
     AgentReferralModule,

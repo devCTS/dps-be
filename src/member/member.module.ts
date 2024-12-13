@@ -22,7 +22,6 @@ import { SystemConfigModule } from 'src/system-config/system-config.module';
       Member,
       TransactionUpdate,
       Topup,
-      Team,
       MemberReferral,
     ]),
     IdentityModule,

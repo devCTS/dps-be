@@ -131,12 +131,6 @@ export class Merchant {
   @Column({ default: false })
   isOnline: boolean;
 
-  @ManyToOne(() => Organization, (organisation) => organisation.leader, {
-    nullable: true,
-  })
-  @JoinColumn()
-  organization: Organization;
-
   @Column({ nullable: true })
   organizationId: string;
 

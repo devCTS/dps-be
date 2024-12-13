@@ -97,18 +97,18 @@ export class Member {
   @Column({ nullable: true })
   selfRegistered: boolean;
 
-  @OneToOne(() => Team, (team) => team.teamLeader)
-  team: Team;
-
   @Column({ nullable: true })
   teamId: string;
 
-  @OneToOne(() => Member, { nullable: true })
+  @ManyToOne(() => Member, { nullable: true })
   @JoinColumn({ name: 'agent' })
   agent: Member;
 
   @Column({ type: 'json', nullable: true })
   agentCommissions: AgentCommissionsType | null;
+
+  @OneToOne(() => Team, (team) => team.teamLeader)
+  team: Team;
 }
 
 export interface AgentCommissionsType {

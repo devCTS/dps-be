@@ -1,5 +1,4 @@
 import { Agent } from 'src/agent/entities/agent.entity';
-import { Member } from 'src/member/entities/member.entity';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
 import {
   Column,
@@ -26,9 +25,6 @@ export class Organization {
   @OneToOne(() => Agent, (agent) => agent.organization)
   @JoinColumn({ name: 'leader' })
   leader: Agent;
-
-  @OneToMany(() => Merchant, (merchant) => merchant.organization)
-  merchant: Merchant[];
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;

@@ -34,7 +34,6 @@ import { Agent } from 'src/agent/entities/agent.entity';
       Payout,
       Withdrawal,
       AgentReferral,
-      Organization,
       Agent,
     ]),
     JwtModule,

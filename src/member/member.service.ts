@@ -46,8 +46,8 @@ export class MemberService {
     private readonly netBankingRepository: Repository<NetBanking>,
     @InjectRepository(EWallet)
     private readonly eWalletRepository: Repository<EWallet>,
-    @InjectRepository(Team)
-    private readonly teamRepository: Repository<Team>,
+    // @InjectRepository(Team)
+    // private readonly teamRepository: Repository<Team>,
     @InjectRepository(MemberReferral)
     private readonly memberReferralRepository: Repository<MemberReferral>,
 
@@ -92,11 +92,10 @@ export class MemberService {
 
     const referralDetails = await this.memberReferralRepository.findOne({
       where: { referralCode },
-      relations: ['member', 'member.team'],
+      relations: ['member'],
     });
 
-    const teamId = referralDetails?.member?.team?.teamId || null;
-    let teamSize = referralDetails?.member?.team?.teamSize || 0;
+    const teamId = referralDetails?.member?.teamId || null;
 
     // Create and save the Admin
     const member = this.memberRepository.create({
@@ -127,7 +126,7 @@ export class MemberService {
 
     if (referralCode) {
       teamId
-        ? await this.teamRepository.update(teamId, { teamSize: teamSize++ })
+        ? await this.teamService.incrementTeamSize(teamId)
         : await this.teamService.createTeam(createdMember.id);
     }
 
@@ -202,11 +201,10 @@ export class MemberService {
 
       const referralDetails = await this.memberReferralRepository.findOne({
         where: { referralCode },
-        relations: ['member', 'member.team'],
+        relations: ['member'],
       });
 
-      const teamId = referralDetails?.member?.team?.teamId;
-      let teamSize = referralDetails?.member?.team?.teamSize;
+      const teamId = referralDetails?.member?.teamId;
 
       const member = this.memberRepository.create({
         identity,
@@ -246,7 +244,7 @@ export class MemberService {
       const createdMember = await this.memberRepository.save(member);
 
       teamId
-        ? await this.teamRepository.update(teamId, { teamSize: teamSize++ })
+        ? await this.teamService.incrementTeamSize(teamId)
         : await this.teamService.createTeam(createdMember.id);
 
       // Update Member Referrals
@@ -518,16 +516,8 @@ export class MemberService {
       quota: member.quota + amount,
     });
 
-    if (member.team?.teamId) {
-      const team = await this.teamRepository.findOneBy({
-        teamId: member.team.teamId,
-      });
-
-      if (team)
-        await this.teamRepository.update(team.teamId, {
-          totalQuota: (team.totalQuota += amount),
-        });
-    }
+    if (member?.teamId)
+      await this.teamService.updateTeamQuota(member.teamId, amount);
 
     const updatedMember = await this.memberRepository.findOne({
       where: { identity: { id: identityId } },

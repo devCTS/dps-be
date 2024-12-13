@@ -45,14 +45,9 @@ export class AgentService {
     private readonly netBankingRepository: Repository<NetBanking>,
     @InjectRepository(EWallet)
     private readonly eWalletRepository: Repository<EWallet>,
-    @InjectRepository(Organization)
-    private readonly organizationRepository: Repository<Organization>,
-    @InjectRepository(AgentReferral)
-    private readonly agentReferralRepository: Repository<AgentReferral>,
 
     private identityService: IdentityService,
     private jwtService: JwtService,
-    private agentReferralService: AgentReferralService,
     private organizationService: OrganizationService,
   ) {}
 
@@ -65,20 +60,14 @@ export class AgentService {
       lastName,
       phone,
       withdrawalPassword,
-      referralCode,
       minWithdrawalAmount,
       maxWithdrawalAmount,
       withdrawalRate,
       channelProfile,
+      agentId,
+      agentPayinCommissionRate,
+      agentPayoutCommissionRate,
     } = createAgentDto;
-
-    if (referralCode) {
-      const isCodeValid = await this.agentReferralService.validateReferralCode(
-        referralCode,
-        'agent',
-      );
-      if (!isCodeValid) return;
-    }
 
     const identity = await this.identityService.create(
       email,
@@ -86,46 +75,43 @@ export class AgentService {
       'AGENT',
     );
 
-    const referralDetails = await this.agentReferralRepository.findOne({
-      where: { referralCode },
-      relations: ['agent', 'agent.organization'],
-    });
+    let agent = null;
+    if (agentId)
+      agent = await this.agentRepository.findOne({
+        where: {
+          id: agentId,
+        },
+      });
 
-    const organizationId =
-      referralDetails?.agent?.organization?.organizationId || null;
-    let organizationSize =
-      referralDetails?.agent?.organization?.organizationSize;
+    let organizationId = agent?.organizationId || null;
+
+    if (agentId)
+      organizationId
+        ? await this.organizationService.updateOrganizationSize(organizationId)
+        : (organizationId =
+            await this.organizationService.createOrganization(agentId));
 
     // Create and save the Agent
-    const agent = this.agentRepository.create({
+    const agentRow = this.agentRepository.create({
       identity,
       firstName,
       lastName,
       phone,
-      // referralCode: referralCode ? referralCode : null,
       withdrawalPassword: this.jwtService.getHashPassword(withdrawalPassword),
       minWithdrawalAmount,
       maxWithdrawalAmount,
       withdrawalRate,
-      agent: referralDetails?.agent || null,
-      agentCommissions: referralDetails?.agent?.id
+      agent: agent || null,
+      agentCommissions: agentId
         ? {
-            payinCommissionRate: referralDetails?.payinCommission,
-            payoutCommissionRate: referralDetails?.payoutCommission,
+            payinCommissionRate: agentPayinCommissionRate,
+            payoutCommissionRate: agentPayoutCommissionRate,
           }
         : null,
       organizationId: organizationId || null,
     });
 
-    const created = await this.agentRepository.save(agent);
-
-    if (referralCode) {
-      organizationId
-        ? await this.organizationRepository.update(organizationId, {
-            organizationSize: organizationSize++,
-          })
-        : await this.organizationService.createOrganization(created.id);
-    }
+    const created = await this.agentRepository.save(agentRow);
 
     if (channelProfile?.upi && channelProfile.upi.length > 0) {
       for (const element of channelProfile.upi) {
@@ -154,14 +140,6 @@ export class AgentService {
       }
     }
 
-    // Update Agent Referrals
-    if (referralCode) {
-      await this.agentReferralService.updateFromReferralCode({
-        referralCode,
-        referredAgent: created,
-      });
-    }
-
     return plainToInstance(AgentResponseDto, created);
   }
 
@@ -174,10 +152,17 @@ export class AgentService {
         'identity.upi',
         'identity.eWallet',
         'identity.netBanking',
+        'agent',
       ],
     });
 
-    return plainToInstance(AgentResponseDto, results);
+    return plainToInstance(AgentResponseDto, {
+      ...results,
+      agentPayinCommissionRate:
+        results?.agentCommissions?.payinCommissionRate || 0,
+      agentPayoutCommissionRate:
+        results?.agentCommissions?.payoutCommissionRate || 0,
+    });
   }
 
   // Find all agents
@@ -487,7 +472,7 @@ export class AgentService {
       where: {
         identity: { id: identityId },
       },
-      relations: ['identity', 'organization'],
+      relations: ['identity'],
     });
 
     if (!agent) throw new NotFoundException('Agent not found!');
@@ -496,16 +481,11 @@ export class AgentService {
       balance: agent.balance + amount,
     });
 
-    if (agent.organization?.organizationId) {
-      const organization = await this.organizationRepository.findOneBy({
-        organizationId: agent.organization.organizationId,
-      });
-
-      if (organization)
-        await this.organizationRepository.update(organization.organizationId, {
-          totalReferralCommission: (organization.totalReferralCommission +=
-            amount),
-        });
+    if (agent.organizationId) {
+      await this.organizationService.updateOrganizationReferrals(
+        agent?.organizationId,
+        amount,
+      );
     }
 
     const updatedAgent = await this.agentRepository.findOne({

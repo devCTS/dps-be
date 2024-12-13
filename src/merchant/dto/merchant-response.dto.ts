@@ -163,6 +163,9 @@ export class MerchantResponseDto {
   propotionRatio: ProportionalPayinMode[];
 
   @Expose()
+  organizationId: string;
+
+  @Expose()
   @Transform(
     ({ obj }) => {
       return {

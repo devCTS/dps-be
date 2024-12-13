@@ -76,16 +76,11 @@ export class MerchantService {
 
     @InjectRepository(EWallet)
     private readonly eWalletRepository: Repository<EWallet>,
-    @InjectRepository(AgentReferral)
-    private readonly agentReferralRepository: Repository<AgentReferral>,
-    @InjectRepository(Organization)
-    private readonly organizationRepository: Repository<Organization>,
     @InjectRepository(Agent)
     private readonly agentRepository: Repository<Agent>,
 
     private readonly identityService: IdentityService,
     private readonly jwtService: JwtService,
-    private readonly agentReferralService: AgentReferralService,
     private readonly systemConfigService: SystemConfigService,
     private readonly organizationService: OrganizationService,
   ) {}
@@ -115,7 +110,6 @@ export class MerchantService {
       withdrawalServiceRate,
       withdrawalPassword,
       phone,
-      referralCode,
       channelProfile,
       payinMode,
       numberOfRangesOrRatio,
@@ -126,14 +120,6 @@ export class MerchantService {
       agentPayoutCommissionRate,
     } = createMerchantDto;
 
-    // if (referralCode) {
-    //   const isCodeValid = await this.agentReferralService.validateReferralCode(
-    //     referralCode,
-    //     'merchant',
-    //   );
-    //   if (!isCodeValid) return;
-    // }
-
     const identity = await this.identityService.create(
       email,
       password,
@@ -143,31 +129,20 @@ export class MerchantService {
     const hashedWithdrawalPassword =
       this.jwtService.getHashPassword(withdrawalPassword);
 
-    // const referralDetails = await this.agentReferralRepository.findOne({
-    //   where: { referralCode },
-    //   relations: ['agent', 'agent.organization'],
-    // });
-
     let agent = null;
     if (agentId)
       agent = await this.agentRepository.findOne({
         where: {
           id: agentId,
         },
-        relations: ['organization'],
       });
 
-    let organization = agent?.organization || null;
+    let organizationId = agent?.organizationId || null;
 
     if (agentId)
-      organization
-        ? await this.organizationRepository.update(
-            organization.organizationId,
-            {
-              organizationSize: organization.organizationSize++,
-            },
-          )
-        : (organization =
+      organizationId
+        ? await this.organizationService.updateOrganizationSize(organizationId)
+        : (organizationId =
             await this.organizationService.createOrganization(agentId));
 
     // Create and save the Admin
@@ -190,13 +165,12 @@ export class MerchantService {
       payoutServiceRate,
       withdrawalServiceRate,
       phone,
-      // referralCode,
       payinMode,
       integrationId: uniqid(),
       withdrawalPassword: hashedWithdrawalPassword,
       payinChannels,
       payoutChannels,
-      organization: organization || null,
+      organizationId: organizationId || null,
       agent: agent,
       agentCommissions: agentId
         ? {
@@ -204,7 +178,6 @@ export class MerchantService {
             payoutCommissionRate: agentPayoutCommissionRate,
           }
         : null,
-      organizationId: organization.organizationId || null,
     });
 
     const createdMerchant = await this.merchantRepository.save(merchant);

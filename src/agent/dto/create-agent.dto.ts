@@ -57,12 +57,20 @@ export class CreateAgentDto {
   @IsNotEmpty()
   maxWithdrawalAmount: number;
 
-  @IsString()
-  @IsOptional()
-  referralCode: string;
-
   @IsOptional()
   @Type(() => ChannelProfileDto)
   @ValidateNested({ each: true })
   channelProfile: ChannelProfileDto;
+
+  @IsOptional()
+  @IsNumber()
+  agentId: number;
+
+  @IsOptional()
+  @IsNumber()
+  agentPayinCommissionRate: number;
+
+  @IsOptional()
+  @IsNumber()
+  agentPayoutCommissionRate: number;
 }
