@@ -318,7 +318,7 @@ export class IdentityService {
       where: { id: id },
     });
     if (!existingIdentity) {
-      throw new ConflictException('User with this email does not exist');
+      throw new NotFoundException('User with this email does not exist');
     }
     if (
       !this.jwtService.isHashedPasswordVerified(
@@ -326,7 +326,7 @@ export class IdentityService {
         existingIdentity.password,
       )
     ) {
-      throw new UnauthorizedException('User name or password is incorrect');
+      throw new UnauthorizedException('Current password is incorrect');
     }
     const hashedPassword = this.jwtService.getHashPassword(
       changePasswordDto.newPassword,

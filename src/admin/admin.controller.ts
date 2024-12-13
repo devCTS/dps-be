@@ -7,6 +7,7 @@ import {
   Patch,
   Param,
   UseGuards,
+  Delete,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { CreateAdminDto } from './dto/create-admin.dto';
@@ -63,10 +64,11 @@ export class AdminController {
     return this.adminService.update(+id, updateAdminDto);
   }
 
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.adminService.remove(+id);
-  // }
+  @Delete(':id')
+  @Roles(Role.SUPER_ADMIN)
+  remove(@Param('id') id: string) {
+    return this.adminService.remove(+id);
+  }
 
   @Post('paginate')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
