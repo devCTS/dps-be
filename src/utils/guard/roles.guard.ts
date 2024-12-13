@@ -15,6 +15,7 @@ import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { Member } from 'src/member/entities/member.entity';
 import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
 import { Agent } from 'src/agent/entities/agent.entity';
+import { Admin } from 'src/admin/entities/admin.entity';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -41,6 +42,63 @@ export class RolesGuard implements CanActivate {
     if (!token) throw new ForbiddenException('Auth token missing!');
 
     const verifiedToken: any = await verifyToken(extractToken(token));
+
+    if (verifiedToken) {
+      const userType = verifiedToken?.userType;
+      switch (userType) {
+        case Role.AGENT:
+          const agent = this.entityManager.findOne(Agent, {
+            where: {
+              id: verifiedToken.id,
+            },
+          });
+
+          if (!agent) throw new ForbiddenException('Agent not found.');
+          break;
+
+        case Role.MEMBER:
+          const member = this.entityManager.findOne(Member, {
+            where: {
+              id: verifiedToken.id,
+            },
+          });
+
+          if (!member) throw new ForbiddenException('Member not found.');
+          break;
+        case Role.MERCHANT:
+          const merchant = this.entityManager.findOne(Merchant, {
+            where: {
+              id: verifiedToken.id,
+            },
+          });
+
+          if (!merchant) throw new ForbiddenException('Merchant not found');
+          break;
+        case Role.SUB_ADMIN || Role.SUPER_ADMIN:
+          const admin = this.entityManager.findOne(Admin, {
+            where: {
+              id: verifiedToken.id,
+            },
+          });
+
+          if (!admin) throw new ForbiddenException('Admin not found');
+          break;
+
+        case Role.SUB_MERCHANT:
+          const subMerchant = this.entityManager.findOne(Submerchant, {
+            where: {
+              id: verifiedToken.id,
+            },
+          });
+
+          if (!subMerchant)
+            throw new ForbiddenException('Sub merchant not found');
+          break;
+
+        default:
+          break;
+      }
+    }
 
     if (
       verifiedToken?.type &&
