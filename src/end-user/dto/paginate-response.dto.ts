@@ -1,4 +1,4 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
 
 @Exclude()
@@ -18,10 +18,10 @@ export class EndUserPaginateResponseDto {
   @Expose()
   mobile: string;
 
-  @Exclude()
+  @Expose()
   channel: string;
 
-  @Exclude()
+  @Expose()
   channelDetails: string;
 
   @Expose()
