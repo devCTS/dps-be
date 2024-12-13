@@ -1,4 +1,5 @@
 import {
+  OrderStatus,
   UserTypeForTransactionUpdates,
   WithdrawalOrderStatus,
 } from './../utils/enum/enum';
@@ -42,10 +43,9 @@ import { EWallet } from 'src/channel/entity/e-wallet.entity';
 import * as uniqid from 'uniqid';
 import { VerifyWithdrawalPasswordDto } from './dto/verify-withdrawal-password.dto';
 import { SystemConfigService } from 'src/system-config/system-config.service';
-import { AgentReferral } from 'src/agent-referral/entities/agent-referral.entity';
-import { Organization } from 'src/organization/entities/organization';
 import { OrganizationService } from 'src/organization/organization.service';
 import { Agent } from 'src/agent/entities/agent.entity';
+import { roundOffAmount } from 'src/utils/utils';
 
 @Injectable()
 export class MerchantService {
@@ -308,6 +308,9 @@ export class MerchantService {
     delete updateDto.numberOfRangesOrRatio;
     delete updateDto.amountRanges;
     delete updateDto.ratios;
+    delete updateDto?.agentId;
+    delete updateDto?.agentPayinCommissionRate;
+    delete updateDto?.agentPayoutCommissionRate;
 
     let result = null;
 
@@ -639,14 +642,22 @@ export class MerchantService {
       await this.systemConfigService.findLatest();
 
     const payload = rows.map((row) => {
-      return {
-        ...row,
-        withdrawalsCompleted: row.identity.withdrawal.reduce((prev, curr) => {
+      const totalPayoutAmount = row.payout?.reduce((prev, curr) => {
+        if (curr.status === OrderStatus.COMPLETE) prev += curr.amount;
+        return prev;
+      }, 0);
+
+      const totalWithdrawalAmount = row.identity.withdrawal?.reduce(
+        (prev, curr) => {
           if (curr.status === WithdrawalOrderStatus.COMPLETE)
             prev += curr.amount;
           return prev;
-        }, 0),
-        frozenAmount: row.identity.withdrawal.reduce((prev, curr) => {
+        },
+        0,
+      );
+
+      const totalWithdrawalsFrozenAmount = row.identity.withdrawal?.reduce(
+        (prev, curr) => {
           if (curr.status === WithdrawalOrderStatus.PENDING) {
             const currentDate = new Date();
             const withdrawalDate = new Date(curr.createdAt);
@@ -656,7 +667,33 @@ export class MerchantService {
             if (diffInDays > frozenAmountThreshold) prev += curr.amount;
           }
           return prev;
-        }, 0),
+        },
+        0,
+      );
+
+      const totalPayoutsFrozenAmount = row.payout?.reduce((prev, curr) => {
+        if (
+          curr.status !== OrderStatus.COMPLETE &&
+          curr.status !== OrderStatus.FAILED
+        ) {
+          const currentDate = new Date();
+          const payoutDate = new Date(curr.createdAt);
+          const diffInTime = currentDate.getTime() - payoutDate.getTime();
+          const diffInDays = diffInTime / (1000 * 3600 * 24);
+
+          if (diffInDays > frozenAmountThreshold) prev += curr.amount;
+        }
+        return prev;
+      }, 0);
+
+      return {
+        ...row,
+        withdrawalsCompleted: roundOffAmount(
+          totalPayoutAmount + totalWithdrawalAmount,
+        ),
+        frozenAmount: roundOffAmount(
+          totalWithdrawalsFrozenAmount + totalPayoutsFrozenAmount,
+        ),
       };
     });
 

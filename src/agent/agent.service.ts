@@ -200,6 +200,10 @@ export class AgentService {
     delete updateAgentDto.updateLoginCredentials;
     delete updateAgentDto.channelProfile;
 
+    delete updateAgentDto?.agentId;
+    delete updateAgentDto?.agentPayinCommissionRate;
+    delete updateAgentDto?.agentPayoutCommissionRate;
+
     const result = await this.agentRepository.update(
       { id: id },
       updateAgentDto,
