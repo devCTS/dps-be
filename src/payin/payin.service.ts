@@ -135,9 +135,8 @@ export class PayinService {
       amount,
       merchantId,
       memberId,
+      channel,
     } = payinDetails;
-
-    let channel = ChannelName.UPI;
 
     if (!merchantId || !memberId)
       throw new NotFoundException('Merchant ID or Member ID missing!');

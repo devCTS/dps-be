@@ -49,8 +49,11 @@ export class TransactionUpdatesPayoutService {
         where: { email: element.identity.email },
       });
 
-      const userType = UserTypeForTransactionUpdates.MERCHANT_BALANCE;
       const isMerchant = element.isMerchant;
+
+      const userType = isMerchant
+        ? UserTypeForTransactionUpdates.MERCHANT_BALANCE
+        : UserTypeForTransactionUpdates.AGENT_BALANCE;
       const isAgentOf = prevElement
         ? prevElement?.firstName + ' ' + prevElement?.lastName
         : null;

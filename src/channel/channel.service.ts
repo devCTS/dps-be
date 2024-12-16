@@ -96,7 +96,7 @@ export class ChannelService {
     if (orderType === OrderType.PAYIN) {
       return channels.map((channel) => ({
         channel: channel.name,
-        disabled: merchantId
+        enabled: merchantId
           ? JSON.stringify(merchant?.payinChannels)?.includes(channel.name) &&
             channel.incoming
           : channel.incoming,
@@ -112,7 +112,7 @@ export class ChannelService {
     if (orderType === OrderType.WITHDRAWAL) {
       return channels.map((channel) => ({
         channel: channel.name,
-        disabled: merchantId
+        enabled: merchantId
           ? merchant.identity[mapChannel[channel.name]].length >= 1 &&
             channel.outgoing
           : channel.outgoing,
@@ -121,7 +121,7 @@ export class ChannelService {
 
     return channels.map((channel) => ({
       channel: channel.name,
-      disabled: merchantId
+      enabled: merchantId
         ? JSON.stringify(merchant?.payoutChannels)?.includes(channel.name) &&
           channel.outgoing
         : channel.outgoing,

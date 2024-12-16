@@ -21,6 +21,7 @@ import { FundRecordModule } from 'src/fund-record/fund-record.module';
 import { NotificationModule } from 'src/notification/notification.module';
 import { AlertModule } from 'src/alert/alert.module';
 import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
+import { IdentityModule } from 'src/identity/identity.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
     FundRecordModule,
     NotificationModule,
     forwardRef(() => AlertModule),
+    IdentityModule,
   ],
   controllers: [PayoutController],
   providers: [

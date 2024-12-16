@@ -12,6 +12,7 @@ import { UpdateChannelConfigDto } from './dto/update-channel-config.dto';
 import { ChannelName, Role } from 'src/utils/enum/enum';
 import { RolesGuard } from 'src/utils/guard/roles.guard';
 import { Roles } from 'src/utils/decorators/roles.decorator';
+import { ChannelListDto } from './dto/channel-list.dto';
 
 @Controller('channel')
 @UseGuards(RolesGuard)
@@ -44,9 +45,9 @@ export class ChannelController {
     return this.channelService.getConfig(name);
   }
 
-  @Get('channel-list')
+  @Post('channel-list')
   @Roles(Role.ALL)
-  getChannelList(@Param() body) {
+  getChannelList(@Body() body: ChannelListDto) {
     return this.channelService.getChannelList(body);
   }
 }

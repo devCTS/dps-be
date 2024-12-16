@@ -21,6 +21,7 @@ export class CreatePayoutDto {
 
   @IsNotEmpty()
   @IsNumber()
+  @IsPositive()
   amount: number;
 
   @IsNotEmpty()

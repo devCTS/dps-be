@@ -39,6 +39,7 @@ import { AssignPayoutOrderDto } from './dto/assign-payout-order.dto';
 import { FundRecordService } from 'src/fund-record/fund-record.service';
 import { NotificationService } from 'src/notification/notification.service';
 import { AlertService } from 'src/alert/alert.service';
+import { IdentityService } from 'src/identity/identity.service';
 
 @Injectable()
 export class PayoutService {
@@ -65,6 +66,7 @@ export class PayoutService {
     private readonly paymentSystemService: PaymentSystemService,
     private readonly fundRecordService: FundRecordService,
     private readonly notificationService: NotificationService,
+    private readonly identityService: IdentityService,
 
     @Inject(forwardRef(() => AlertService))
     private readonly alertService: AlertService,
@@ -82,6 +84,24 @@ export class PayoutService {
     });
     if (!merchant) throw new NotFoundException('Merchant not found!');
 
+    const currentAvailableBalance =
+      await this.identityService.getCurrentBalalnce(merchant.identity.email);
+
+    if (currentAvailableBalance < payoutDetails.amount)
+      return {
+        error: true,
+        message: 'Your current available balance is not sufficient!',
+      };
+
+    if (
+      payoutDetails.amount < currentAvailableBalance ||
+      payoutDetails.amount > currentAvailableBalance
+    )
+      return {
+        error: true,
+        message: `Min Payout Amount - ${merchant.minPayout} | Max payout Amount - ${merchant.maxPayout}`,
+      };
+
     let endUserData = await this.endUserRepository.findOne({
       where: { userId, merchant: { id: merchantId } },
     });
@@ -90,7 +110,7 @@ export class PayoutService {
       if (endUserData.isBlacklisted)
         throw new NotAcceptableException('This user is currently blacklisted!');
 
-      const parsedChannedDetails = JSON.parse(endUserData.channelDetails);
+      const parsedChannedDetails = JSON.parse(endUserData.channelDetails) || {};
 
       if (parsedChannedDetails[channel]) delete parsedChannedDetails[channel];
 
@@ -381,6 +401,8 @@ export class PayoutService {
     transactionUpdateEntries.forEach(async (entry) => {
       if (entry.userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE) {
         const afterBalance = -(entry.before - entry.after);
+
+        console.log(entry.user.id);
 
         await this.merchantService.updateBalance(
           entry.user.id,
