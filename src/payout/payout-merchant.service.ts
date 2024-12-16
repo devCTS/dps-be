@@ -187,6 +187,7 @@ export class PayoutMerchantService {
     const dtos = await Promise.all(
       rows.map(async (row) => {
         return {
+          userId: row.id,
           name: row.name,
           channel: row.channel,
           channelDetails: row.channelDetails,
