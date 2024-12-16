@@ -82,7 +82,7 @@ export class OrganizationService {
       );
     }
 
-    // query.andWhere('organization.organizationSize > 2');
+    query.andWhere('organization.organizationSize > 2');
 
     query
       .orderBy('organization.totalReferralCommission', 'ASC')

@@ -90,7 +90,7 @@ export class TeamService {
       });
     }
 
-    // query.andWhere('team.teamSize > 2');
+    query.andWhere('team.teamSize > 2');
 
     query.orderBy('team.totalQuota', 'ASC').addOrderBy('team.teamSize', 'ASC');
 

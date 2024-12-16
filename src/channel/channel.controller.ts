@@ -43,4 +43,10 @@ export class ChannelController {
   getConfig(@Param('name') name: ChannelName) {
     return this.channelService.getConfig(name);
   }
+
+  @Get('channel-list')
+  @Roles(Role.ALL)
+  getChannelList(@Param() body) {
+    return this.channelService.getChannelList(body);
+  }
 }

@@ -19,7 +19,7 @@ import {
   OrderStatus,
   UserTypeForTransactionUpdates,
 } from 'src/utils/enum/enum';
-import { roundOffAmount } from 'src/utils/utils';
+import { getServicerRateForMerchant, roundOffAmount } from 'src/utils/utils';
 import { EndUser } from 'src/end-user/entities/end-user.entity';
 
 @Injectable()
@@ -240,7 +240,10 @@ export class PayoutMerchantService {
             : null,
         },
         balanceDetails: {
-          serviceRate: transactionUpdateMerchant.rate,
+          serviceRate: getServicerRateForMerchant(
+            transactionUpdateMerchant?.absoluteAmount,
+            transactionUpdateMerchant?.rate,
+          ),
           serviceFee: roundOffAmount(transactionUpdateMerchant.amount),
           balanceDeducted:
             orderDetails.status === OrderStatus.FAILED

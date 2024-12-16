@@ -18,7 +18,7 @@ import {
 } from './dto/payin-merchant-response.dto';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
-import { roundOffAmount } from 'src/utils/utils';
+import { getServicerRateForMerchant, roundOffAmount } from 'src/utils/utils';
 
 @Injectable()
 export class PayinMerchantService {
@@ -140,7 +140,10 @@ export class PayinMerchantService {
             : null,
         },
         balanceDetails: {
-          serviceRate: transactionUpdateMerchant.rate,
+          serviceRate: getServicerRateForMerchant(
+            transactionUpdateMerchant?.absoluteAmount,
+            transactionUpdateMerchant?.rate,
+          ),
           serviceFee: roundOffAmount(transactionUpdateMerchant?.amount),
           balanceEarned: roundOffAmount(
             transactionUpdateMerchant.after - transactionUpdateMerchant.before,

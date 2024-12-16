@@ -13,6 +13,7 @@ import { In, MoreThan, Repository } from 'typeorm';
 
 import {
   AlertType,
+  ChannelName,
   NotificationStatus,
   NotificationType,
   OrderStatus,
@@ -257,6 +258,24 @@ export class PayoutService {
     ) {
       throw new NotFoundException('Channels not found');
     }
+
+    if (
+      payoutOrderData.channel === ChannelName.UPI &&
+      !memberData.identity.upi.length
+    )
+      throw new NotFoundException('UPI channel is not registered!');
+
+    if (
+      payoutOrderData.channel === ChannelName.E_WALLET &&
+      !memberData.identity?.eWallet?.length
+    )
+      throw new NotFoundException('E-Wallet channel is not registered!');
+
+    if (
+      payoutOrderData.channel === ChannelName.BANKING &&
+      !memberData.identity?.netBanking?.length
+    )
+      throw new NotFoundException('NetBanking channel is not registered!');
 
     if (
       paymentMode === PaymentMadeOn.GATEWAY &&

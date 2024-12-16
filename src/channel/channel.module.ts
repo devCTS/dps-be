@@ -7,10 +7,11 @@ import { NetBanking } from './entity/net-banking.entity';
 import { Config } from './entity/config.entity';
 import { EWallet } from './entity/e-wallet.entity';
 import { Upi } from './entity/upi.entity';
+import { Merchant } from 'src/merchant/entities/merchant.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([NetBanking, Config, EWallet, Upi]),
+    TypeOrmModule.forFeature([NetBanking, Config, EWallet, Upi, Merchant]),
     Identity,
   ],
   controllers: [ChannelController],

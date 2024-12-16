@@ -96,6 +96,36 @@ export class UserDetailsMerchantService {
       },
     );
 
+    const totalWithdrawalsFrozenAmount = merchant.identity.withdrawal.reduce(
+      (prev, curr) => {
+        if (curr.status === WithdrawalOrderStatus.PENDING) {
+          const currentDate = new Date();
+          const withdrawalDate = new Date(curr.createdAt);
+          const diffInTime = currentDate.getTime() - withdrawalDate.getTime();
+          const diffInDays = diffInTime / (1000 * 3600 * 24);
+
+          if (diffInDays > frozenAmountThreshold) prev += curr.amount;
+        }
+        return prev;
+      },
+      0,
+    );
+
+    const totalPayoutsFrozenAmount = merchant.payout?.reduce((prev, curr) => {
+      if (
+        curr.status !== OrderStatus.COMPLETE &&
+        curr.status !== OrderStatus.FAILED
+      ) {
+        const currentDate = new Date();
+        const payoutDate = new Date(curr.createdAt);
+        const diffInTime = currentDate.getTime() - payoutDate.getTime();
+        const diffInDays = diffInTime / (1000 * 3600 * 24);
+
+        if (diffInDays > frozenAmountThreshold) prev += curr.amount;
+      }
+      return prev;
+    }, 0);
+
     return {
       name: merchant.firstName + ' ' + merchant.lastName,
       role: 'MERCHANT',
@@ -114,17 +144,9 @@ export class UserDetailsMerchantService {
       payoutFee: roundOffAmount(transactionEntries.payoutFee),
       withdrawanAmount: roundOffAmount(transactionEntries.withdrawanAmount),
       withdrawalFee: roundOffAmount(transactionEntries.withdrawalFee),
-      frozenAmount: merchant.identity.withdrawal.reduce((prev, curr) => {
-        if (curr.status === WithdrawalOrderStatus.PENDING) {
-          const currentDate = new Date();
-          const withdrawalDate = new Date(curr.createdAt);
-          const diffInTime = currentDate.getTime() - withdrawalDate.getTime();
-          const diffInDays = diffInTime / (1000 * 3600 * 24);
-
-          if (diffInDays > frozenAmountThreshold) prev += curr.amount;
-        }
-        return prev;
-      }, 0),
+      frozenAmount: roundOffAmount(
+        totalPayoutsFrozenAmount + totalWithdrawalsFrozenAmount,
+      ),
     };
   }
 

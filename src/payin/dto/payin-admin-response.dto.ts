@@ -1,4 +1,7 @@
-import { roundOffAmount } from './../../utils/utils';
+import {
+  getServicerRateForMerchant,
+  roundOffAmount,
+} from './../../utils/utils';
 import { Exclude, Expose, Transform } from 'class-transformer';
 import {
   CallBackStatus,
@@ -8,7 +11,6 @@ import {
   PaymentMadeOn,
   UserTypeForTransactionUpdates,
 } from 'src/utils/enum/enum';
-import { CreateDateColumn } from 'typeorm';
 
 @Exclude()
 export class PayinAdminResponseDto {
@@ -163,7 +165,10 @@ function TransformBalancesAndProfit() {
             return {
               role: 'merchant',
               name: item.name,
-              serviceRate: item.rate,
+              serviceRate: getServicerRateForMerchant(
+                item?.absoluteAmount,
+                item?.rate,
+              ),
               serviceFee: roundOffAmount(item.amount),
               balanceEarned: roundOffAmount(item.after - item.before),
               balanceBefore: roundOffAmount(item.before),

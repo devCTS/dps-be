@@ -160,7 +160,7 @@ export class FundRecordService {
         where: {
           systemOrderId: systemOrderId,
           orderType: OrderType.PAYIN,
-          pending: false,
+          // pending: false,
         },
         relations: ['user'],
       });
@@ -202,7 +202,7 @@ export class FundRecordService {
         where: {
           systemOrderId: systemOrderId,
           orderType: OrderType.PAYOUT,
-          pending: false,
+          // pending: false,
         },
         relations: ['user'],
       });
@@ -237,7 +237,7 @@ export class FundRecordService {
         where: {
           systemOrderId: systemOrderId,
           orderType: OrderType.WITHDRAWAL,
-          pending: false,
+          // pending: false,
         },
         relations: ['user'],
       });
@@ -272,7 +272,7 @@ export class FundRecordService {
         where: {
           systemOrderId: systemOrderId,
           orderType: OrderType.TOPUP,
-          pending: false,
+          // pending: false,
         },
         relations: ['user'],
       });
@@ -319,8 +319,11 @@ export class FundRecordService {
         });
         if (!merchant) throw new NotFoundException('User not found!');
 
-        user = await this.merchantRepository.findOneBy({
-          id: merchant.id,
+        user = await this.merchantRepository.findOne({
+          where: {
+            id: merchant.id,
+          },
+          relations: ['identity'],
         });
 
         before = user.balance;
@@ -365,8 +368,11 @@ export class FundRecordService {
         });
         if (!memberQuota) throw new NotFoundException('User not found!');
 
-        user = await this.memberRepository.findOneBy({
-          id: memberQuota.id,
+        user = await this.memberRepository.findOne({
+          where: {
+            id: memberQuota.id,
+          },
+          relations: ['identity'],
         });
 
         before = user.quota;
@@ -388,8 +394,11 @@ export class FundRecordService {
         });
         if (!agent) throw new NotFoundException('User not found!');
 
-        user = await this.agentRepository.findOneBy({
-          id: agent.id,
+        user = await this.agentRepository.findOne({
+          where: {
+            id: agent.id,
+          },
+          relations: ['identity'],
         });
 
         before = user.balance;
@@ -418,7 +427,7 @@ export class FundRecordService {
       amount: 0,
       serviceFee: 0,
       orderAmount: amount,
-      user,
+      user: user?.identity,
       description: getDescription({
         type: OrderType.ADMIN_ADJUSTMENT,
         userType: balanceType,

@@ -45,7 +45,7 @@ export class FundRecord {
   @Column({ type: 'float', nullable: true })
   after: number;
 
-  @ManyToOne(() => Identity, (identity) => identity.transactionUpdate, {
+  @ManyToOne(() => Identity, (identity) => identity.fundRecord, {
     nullable: true,
   })
   @JoinColumn({ name: 'identity_id' })

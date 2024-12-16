@@ -73,4 +73,7 @@ export class CreatePaymentOrderDtoAdmin {
 
   @IsNotEmpty()
   userMobileNumber: string;
+
+  @IsEnum(ChannelName)
+  channel: ChannelName;
 }
