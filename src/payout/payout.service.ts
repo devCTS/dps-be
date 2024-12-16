@@ -94,8 +94,8 @@ export class PayoutService {
       };
 
     if (
-      payoutDetails.amount < currentAvailableBalance ||
-      payoutDetails.amount > currentAvailableBalance
+      payoutDetails.amount < merchant.minPayout ||
+      payoutDetails.amount > merchant.maxPayout
     )
       return {
         error: true,
