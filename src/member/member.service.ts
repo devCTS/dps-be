@@ -90,10 +90,12 @@ export class MemberService {
       'MEMBER',
     );
 
-    const referralDetails = await this.memberReferralRepository.findOne({
-      where: { referralCode },
-      relations: ['member'],
-    });
+    const referralDetails = referralCode
+      ? await this.memberReferralRepository.findOne({
+          where: { referralCode },
+          relations: ['member'],
+        })
+      : null;
 
     const teamId = referralDetails?.member?.teamId || null;
 

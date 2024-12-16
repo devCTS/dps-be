@@ -16,6 +16,8 @@ const getUserFromUserType = (userType: UserTypeForTransactionUpdates) => {
   if (userType === UserTypeForTransactionUpdates.MEMBER_QUOTA) return 'Member';
 
   if (userType === UserTypeForTransactionUpdates.AGENT_BALANCE) return 'Agent';
+
+  if (userType === UserTypeForTransactionUpdates.SYSTEM_PROFIT) return 'System';
 };
 
 export function getDescription({
@@ -41,6 +43,9 @@ export function getDescription({
 
       if (userType === UserTypeForTransactionUpdates.AGENT_BALANCE)
         text = `Payin order - ${orderAmount} | Agent commission - ${userAmount}`;
+
+      if (userType === UserTypeForTransactionUpdates.SYSTEM_PROFIT)
+        text = `Net Profit - ${userAmount}`;
       break;
 
     case OrderType.PAYOUT:
@@ -54,6 +59,9 @@ export function getDescription({
 
       if (userType === UserTypeForTransactionUpdates.AGENT_BALANCE)
         text = `Payout order - ${orderAmount} | Balance - ${userAmount}`;
+
+      if (userType === UserTypeForTransactionUpdates.SYSTEM_PROFIT)
+        text = `Net Profit - ${userAmount}`;
       break;
 
     case OrderType.WITHDRAWAL:
@@ -69,6 +77,9 @@ export function getDescription({
         text = isAgentMember
           ? `Topup order - ${orderAmount} | Quota increase - ${userAmount} | Agent commission`
           : `Topup order - ${orderAmount} | Quota increase - ${orderAmount + userAmount} | Member commission - ${userAmount}`;
+
+      if (userType === UserTypeForTransactionUpdates.SYSTEM_PROFIT)
+        text = `Net Profit - ${userAmount}`;
 
       break;
 

@@ -158,3 +158,11 @@ export const calculateServiceAmountForMerchant = (
     return percentageAmount + serviceRate.absoluteAmount;
   }
 };
+
+export const getServicerRateForMerchant = (absoluteAmount, rate) => {
+  if (!absoluteAmount && !rate) return 0;
+
+  if (absoluteAmount && rate) return `₹${absoluteAmount} + ${rate}%`;
+  if (absoluteAmount) return `₹${absoluteAmount}`;
+  if (rate) return `${rate}%`;
+};

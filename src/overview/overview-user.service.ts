@@ -56,6 +56,7 @@ export class OverviewUserService {
       },
       relations: ['user'],
     });
+
     const totalWithdrawalAmount = withdrawals.reduce((prev, curr) => {
       return prev + curr.amount;
     }, 0);
@@ -140,18 +141,18 @@ export class OverviewUserService {
 
     const [payinRows, payinsCount] = await this.payinRepository.findAndCount({
       where: {
-        user: { id: merchant.identity.id },
+        merchant: { id: merchant.id },
       },
-      relations: ['user'],
+      relations: ['merchant'],
     });
 
     const payins = payinRows.reduce(
       (prev, curr) => {
-        if (curr.status === OrderStatus.COMPLETE) prev.completed++;
-        else if (curr.status === OrderStatus.FAILED) prev.failed++;
+        if (curr.status === OrderStatus.COMPLETE) {
+          prev.completed++;
+          prev.income += curr.amount;
+        } else if (curr.status === OrderStatus.FAILED) prev.failed++;
         else prev.pending++;
-
-        prev.income += curr.amount;
 
         return prev;
       },
@@ -169,11 +170,11 @@ export class OverviewUserService {
 
     const payouts = payoutRows.reduce(
       (prev, curr) => {
-        if (curr.status === OrderStatus.COMPLETE) prev.completed++;
-        else if (curr.status === OrderStatus.FAILED) prev.failed++;
+        if (curr.status === OrderStatus.COMPLETE) {
+          prev.completed++;
+          prev.amount += curr.amount;
+        } else if (curr.status === OrderStatus.FAILED) prev.failed++;
         else prev.pending++;
-
-        prev.amount += curr.amount;
 
         return prev;
       },
@@ -285,9 +286,9 @@ export class OverviewUserService {
 
     const payinRows = await this.payinRepository.find({
       where: {
-        user: { id: member.identity.id },
+        member: { id: member.id },
       },
-      relations: ['user'],
+      relations: ['member'],
     });
 
     const payins = payinRows.reduce(

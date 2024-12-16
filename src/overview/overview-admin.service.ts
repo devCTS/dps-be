@@ -1151,6 +1151,8 @@ export class OverviewAdminService {
     const parsedStartDate = new Date(parseStartDate(startDate));
     const parsedEndDate = new Date(parseEndDate(endDate));
 
+    console.log(parsedStartDate, parsedEndDate);
+
     const [payinRows, payinsCount] = await this.payinRepository.findAndCount({
       where: {
         channel: ChannelName.UPI,

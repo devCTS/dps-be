@@ -1,6 +1,6 @@
 import { Exclude, Expose, Transform } from 'class-transformer';
 import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
-import { roundOffAmount } from 'src/utils/utils';
+import { getServicerRateForMerchant, roundOffAmount } from 'src/utils/utils';
 @Exclude()
 export class AdminPayoutDetailsResponseDto {
   @Expose()
@@ -98,7 +98,10 @@ function TransformBalancesAndProfit() {
             return {
               role: 'merchant',
               name: item.name,
-              serviceRate: item.rate,
+              serviceRate: getServicerRateForMerchant(
+                item?.absoluteAmount,
+                item?.rate,
+              ),
               serviceFee: roundOffAmount(item.amount),
               balanceDeducted: roundOffAmount(item.before - item.after, true),
               balanceBefore: roundOffAmount(item.before),
