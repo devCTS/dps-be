@@ -51,7 +51,13 @@ export class UserDetailsMerchantService {
   async getMerchantDetails(userId: number) {
     const merchant = await this.merchantRepository.findOne({
       where: { id: userId },
-      relations: ['identity', 'payin', 'identity.withdrawal', 'agent'],
+      relations: [
+        'identity',
+        'payin',
+        'identity.withdrawal',
+        'agent',
+        'payout',
+      ],
     });
     if (!merchant) throw new NotFoundException('Request merchant not found!');
 

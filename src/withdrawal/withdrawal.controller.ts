@@ -140,7 +140,7 @@ export class WithdrawalController {
     return this.withdrawalMerchantService.getChannelProfileDetails(+merchantId);
   }
 
-  @Get('agent-channel-details/:id')
+  @Get('agent-channel-details')
   @Roles(Role.AGENT)
   @UseGuards(RolesGuard)
   getChannelProfileDetailsForAgent(@UserInReq() user) {
