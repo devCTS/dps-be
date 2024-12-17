@@ -102,9 +102,8 @@ export class PaymentSystemController {
   @UseGuards(RolesGuard)
   async createPaymentOrder(
     @Body() createPaymentOrderDto: CreatePaymentOrderDto,
-    @Res() response: Response,
   ) {
-    return this.service.createPaymentOrder(createPaymentOrderDto, response);
+    return this.service.createPaymentOrder(createPaymentOrderDto);
   }
 
   @Get('member-channel/:payinOrderId')

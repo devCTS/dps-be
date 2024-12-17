@@ -9,8 +9,11 @@ import { AmountRangePayinMode } from 'src/merchant/entities/amountRangePayinMode
 import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { ProportionalPayinMode } from 'src/merchant/entities/proportionalPayinMode.entity';
 import { SystemConfigService } from 'src/system-config/system-config.service';
-import { ChannelName, GatewayName } from 'src/utils/enum/enum';
+import { ChannelName, GatewayName, PaymentMadeOn } from 'src/utils/enum/enum';
 import { Repository } from 'typeorm';
+import { PayinGateway } from 'src/socket/payin.gateway';
+import { PaymentSystemService } from './payment-system.service';
+import { PayinService } from 'src/payin/payin.service';
 
 @Injectable()
 export class PaymentSystemUtilService {
@@ -31,7 +34,44 @@ export class PaymentSystemUtilService {
     private readonly proportionalRepository: Repository<ProportionalPayinMode>,
 
     private readonly systemConfigService: SystemConfigService,
+
+    private readonly payinSocketGateway: PayinGateway,
+    private readonly payinService: PayinService,
   ) {}
+
+  async handleAssignMemberPage(
+    orderId,
+    channelName,
+    amount,
+    userId,
+  ): Promise<void> {
+    const checkInterval = setInterval(async () => {
+      const selectedMember = await this.getMemberForPayin(channelName, amount);
+      // console.log(orderId, 'iteration ' + i++, selectedMember?.id);
+      if (selectedMember) {
+        clearInterval(checkInterval); // Stop the interval
+        // console.log('Order assigned to:', selectedMember?.id);
+
+        let paymentDetails = selectedMember.identity[channelName];
+
+        const body = {
+          id: orderId,
+          paymentMode: PaymentMadeOn.MEMBER,
+          memberId: selectedMember?.id,
+          gatewayServiceRate: null,
+          memberPaymentDetails: paymentDetails[0],
+          gatewayName: null,
+          userId: userId,
+        };
+
+        await this.payinService.updatePayinStatusToAssigned(body);
+
+        setTimeout(() => {
+          this.payinSocketGateway.notifyOrderAssigned(orderId);
+        }, 2000);
+      }
+    }, 1000);
+  }
 
   async fetchForDefault(merchant, channelName, amount) {
     // Both member and gateway are enabled

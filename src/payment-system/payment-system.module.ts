@@ -21,6 +21,7 @@ import { RazorpayService } from './razorpay/razorpay.service';
 import { PhonepeService } from 'src/upstream-gateway/phonepe/phonepe.service';
 import { EndUser } from 'src/end-user/entities/end-user.entity';
 import { EndUserModule } from 'src/end-user/end-user.module';
+import { SocketModule } from 'src/socket/socket.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { EndUserModule } from 'src/end-user/end-user.module';
     PayinModule,
     SystemConfigModule,
     EndUserModule,
+    SocketModule,
   ],
   controllers: [PaymentSystemController],
   providers: [

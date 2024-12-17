@@ -54,10 +54,7 @@ export class PaymentSystemService {
     return await this.razorpayService.razorpayPaymentStatus(orderId);
   }
 
-  async createPaymentOrder(
-    createPaymentOrderDto: CreatePaymentOrderDto,
-    response: Response,
-  ) {
+  async createPaymentOrder(createPaymentOrderDto: CreatePaymentOrderDto) {
     const merchant = await this.merchantRepository.findOne({
       where: {
         integrationId: createPaymentOrderDto.integrationId,
@@ -72,7 +69,6 @@ export class PaymentSystemService {
 
     const createdPayin = await this.payinService.create(createPaymentOrderDto);
 
-    let selectedPaymentMode;
     let channelNameMap = {
       UPI: 'upi',
       NET_BANKING: 'netBanking',
@@ -80,89 +76,108 @@ export class PaymentSystemService {
     };
     let channelName = channelNameMap[createdPayin.channel];
 
-    switch (merchant.payinMode) {
-      case 'DEFAULT':
-        selectedPaymentMode = await this.utilService.fetchForDefault(
-          merchant,
-          channelName,
-          createdPayin.amount,
-        );
-        break;
+    this.utilService.handleAssignMemberPage(
+      createdPayin?.systemOrderId,
+      channelName,
+      createdPayin?.amount,
+      createPaymentOrderDto.userId,
+    );
+    return { orderId: createdPayin.systemOrderId };
 
-      case 'AMOUNT RANGE':
-        selectedPaymentMode = await this.utilService.fetchForAmountRange(
-          merchant,
-          channelName,
-          createdPayin.amount,
-        );
-        break;
+    // switch (merchant.payinMode) {
+    //   case 'DEFAULT':
+    //     selectedPaymentMode = await this.utilService.fetchForDefault(
+    //       merchant,
+    //       channelName,
+    //       createdPayin.amount,
+    //     );
+    //     break;
 
-      case 'PROPORTIONAL':
-        selectedPaymentMode = await this.utilService.fetchForProportional(
-          merchant,
-          channelName,
-          createdPayin.amount,
-        );
-        break;
+    //   case 'AMOUNT RANGE':
+    //     selectedPaymentMode = await this.utilService.fetchForAmountRange(
+    //       merchant,
+    //       channelName,
+    //       createdPayin.amount,
+    //     );
+    //     break;
 
-      default:
-        break;
-    }
+    //   case 'PROPORTIONAL':
+    //     selectedPaymentMode = await this.utilService.fetchForProportional(
+    //       merchant,
+    //       channelName,
+    //       createdPayin.amount,
+    //     );
+    //     break;
 
-    const isMember = selectedPaymentMode?.id ? true : false;
-    let paymentDetails;
+    //   default:
+    //     break;
+    // }
 
-    if (isMember) {
-      paymentDetails = selectedPaymentMode.identity[channelName];
-    } else {
-      paymentDetails = await this.channelSettingsRepository.findOne({
-        where: {
-          gatewayName: selectedPaymentMode,
-          type: PaymentType.INCOMING,
-          channelName: createdPayin.channel,
-        },
-      });
-    }
+    /////////////////previous logic///////////////////////
+    // let selectedPaymentMode;
+    // let  paymentDetails = selectedPaymentMode.identity[channelName];
 
-    const body = {
-      id: createdPayin.systemOrderId,
-      paymentMode: isMember ? PaymentMadeOn.MEMBER : PaymentMadeOn.GATEWAY,
-      memberId: isMember && selectedPaymentMode.id,
-      gatewayServiceRate: !isMember ? paymentDetails.upstreamFee : null,
-      memberPaymentDetails: isMember ? paymentDetails[0] : null,
-      gatewayName: !isMember ? selectedPaymentMode : null,
-      userId: createPaymentOrderDto.userId,
-    };
-    await this.payinService.updatePayinStatusToAssigned(body);
+    // selectedPaymentMode = await this.utilService.fetchForDefault(
+    //   merchant,
+    //   channelName,
+    //   createdPayin.amount,
+    // );
 
-    let url = '';
-    if (isMember)
-      url = `${process.env.PAYMENT_PAGE_BASE_URL}/payment/${createdPayin.systemOrderId}`;
+    // const isMember = !!selectedPaymentMode?.id;
+    // let paymentDetails;
 
-    if (selectedPaymentMode === GatewayName.PHONEPE) {
-      const res = await this.getPayPage({
-        userId: createdPayin.user?.userId,
-        amount: createdPayin.amount.toString(),
-        orderId: createdPayin.systemOrderId,
-        gateway: GatewayName.PHONEPE,
-      });
-      url = res.url;
-    }
+    // if (isMember) {
+    //   paymentDetails = selectedPaymentMode.identity[channelName];
+    // } else {
+    //   paymentDetails = await this.channelSettingsRepository.findOne({
+    //     where: {
+    //       gatewayName: selectedPaymentMode,
+    //       type: PaymentType.INCOMING,
+    //       channelName: createdPayin.channel,
+    //     },
+    //   });
+    // }
 
-    if (selectedPaymentMode === GatewayName.RAZORPAY) {
-      const res = await this.getPayPage({
-        userId: createdPayin.user?.userId,
-        amount: createdPayin.amount.toString(),
-        orderId: createdPayin.systemOrderId,
-        gateway: GatewayName.RAZORPAY,
-      });
-      url = res.url;
-    }
+    // const body = {
+    //   id: createdPayin.systemOrderId,
+    //   paymentMode: isMember ? PaymentMadeOn.MEMBER : PaymentMadeOn.GATEWAY,
+    //   memberId: isMember && selectedPaymentMode.id,
+    //   gatewayServiceRate: !isMember ? paymentDetails.upstreamFee : null,
+    //   memberPaymentDetails: isMember ? paymentDetails[0] : null,
+    //   gatewayName: !isMember ? selectedPaymentMode : null,
+    //   userId: createPaymentOrderDto.userId,
+    // };
 
-    response.send({
-      url,
-      orderId: createdPayin.systemOrderId,
-    });
+    // await this.payinService.updatePayinStatusToAssigned(body);
+
+    // let url = '';
+    // if (isMember)
+    //   url = `${process.env.PAYMENT_PAGE_BASE_URL}/payment/${createdPayin.systemOrderId}`;
+
+    // if (selectedPaymentMode === GatewayName.PHONEPE) {
+    //   const res = await this.getPayPage({
+    //     userId: createdPayin.user?.userId,
+    //     amount: createdPayin.amount.toString(),
+    //     orderId: createdPayin.systemOrderId,
+    //     gateway: GatewayName.PHONEPE,
+    //   });
+    //   url = res.url;
+    // }
+
+    // if (selectedPaymentMode === GatewayName.RAZORPAY) {
+    //   const res = await this.getPayPage({
+    //     userId: createdPayin.user?.userId,
+    //     amount: createdPayin.amount.toString(),
+    //     orderId: createdPayin.systemOrderId,
+    //     gateway: GatewayName.RAZORPAY,
+    //   });
+    //   url = res.url;
+    // }
+
+    // response.send({
+    //   url,
+    //   orderId: createdPayin.systemOrderId,
+    // });
   }
 
   async phonepeCheckStatus(
