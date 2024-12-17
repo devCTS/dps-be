@@ -140,7 +140,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const roomId = `Member_${notificationData.for}`;
       this.server
         .to(roomId)
-        .emit('newNotification', { data, type, text, date: new Date() });
+        .emit('newNotification', { data, type, text, date: new Date(), id });
     }
   }
 

@@ -402,8 +402,6 @@ export class PayoutService {
       if (entry.userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE) {
         const afterBalance = -(entry.before - entry.after);
 
-        console.log(entry.user.id);
-
         await this.merchantService.updateBalance(
           entry.user.id,
           entry.systemOrderId,
