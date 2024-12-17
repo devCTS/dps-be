@@ -22,6 +22,7 @@ import { ChannelSettings } from 'src/gateway/entities/channel-settings.entity';
 import { FundRecordModule } from 'src/fund-record/fund-record.module';
 import { AlertModule } from 'src/alert/alert.module';
 import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
+import { Config } from 'src/channel/entity/config.entity';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
       TransactionUpdate,
       ChannelSettings,
       Submerchant,
+      Config,
     ]),
     IdentityModule,
     TransactionUpdatesModule,

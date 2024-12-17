@@ -12,7 +12,7 @@ import {
 } from './dto/create-fund-record.dto';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, Repository } from 'typeorm';
+import { Between, In, Repository } from 'typeorm';
 import { Identity } from 'src/identity/entities/identity.entity';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { Member } from 'src/member/entities/member.entity';
@@ -237,12 +237,17 @@ export class FundRecordService {
         where: {
           systemOrderId: systemOrderId,
           orderType: OrderType.WITHDRAWAL,
-          // pending: false,
+          userType: In([
+            UserTypeForTransactionUpdates.MERCHANT_BALANCE,
+            UserTypeForTransactionUpdates.AGENT_BALANCE,
+          ]),
         },
         relations: ['user'],
       });
 
     for (const row of transactionUpdateEntries) {
+      if (row.userType === UserTypeForTransactionUpdates.SYSTEM_PROFIT) return;
+
       const fundRecordEntry = {
         orderType: OrderType.WITHDRAWAL,
         name: row.name,

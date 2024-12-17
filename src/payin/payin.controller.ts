@@ -148,11 +148,11 @@ export class PayinController {
     return this.payinAdminService.getMerchantList();
   }
 
-  @Get('member-list')
+  @Post('member-list')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   @UseGuards(RolesGuard)
-  getMemberList() {
-    return this.payinAdminService.getMemberList();
+  getMemberList(@Body() body) {
+    return this.payinAdminService.getMemberList(body);
   }
 
   @Get('enduser-suggestions/:id')

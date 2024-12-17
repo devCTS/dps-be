@@ -18,6 +18,7 @@ import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { Agent } from 'src/agent/entities/agent.entity';
 import { FundRecordModule } from 'src/fund-record/fund-record.module';
 import { NotificationModule } from 'src/notification/notification.module';
+import { Config } from 'src/channel/entity/config.entity';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { NotificationModule } from 'src/notification/notification.module';
       TransactionUpdate,
       Merchant,
       Agent,
+      Config,
     ]),
     TransactionUpdatesModule,
     EndUserModule,

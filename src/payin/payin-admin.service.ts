@@ -284,18 +284,38 @@ export class PayinAdminService {
     return data;
   }
 
-  async getMemberList() {
-    const members = await this.memberRepository.find();
+  async getMemberList(body) {
+    const { amount, channel } = body;
+
+    const members = await this.memberRepository.find({
+      relations: [
+        'identity',
+        'identity.upi',
+        'identity.eWallet',
+        'identity.netBanking',
+      ],
+    });
     if (!members) return [];
 
-    const data = members.map((member) => {
+    const mapChannel = {
+      UPI: 'upi',
+      NET_BANKING: 'netBanking',
+      E_WALLET: 'eWallet',
+    };
+
+    let filteredMembers = [];
+    if (amount && channel)
+      filteredMembers = members.filter(
+        (member) =>
+          member.quota >= amount && member.identity[mapChannel[channel]].length,
+      );
+
+    return filteredMembers.map((member) => {
       return {
         id: member.id,
         name: member.firstName + ' ' + member.lastName,
       };
     });
-
-    return data;
   }
 
   async getEndUserIdSuggestions(merchantId: number) {

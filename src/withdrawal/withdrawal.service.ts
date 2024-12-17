@@ -33,6 +33,7 @@ import { SystemConfigService } from 'src/system-config/system-config.service';
 import { PaymentSystemService } from 'src/payment-system/payment-system.service';
 import { AlertService } from 'src/alert/alert.service';
 import { roundOffAmount } from 'src/utils/utils';
+import { max } from 'class-validator';
 
 @Injectable()
 export class WithdrawalService {
@@ -65,10 +66,41 @@ export class WithdrawalService {
       // email
     } = createWithdrawalDto;
 
-    const user = await this.identityRepository.findOneBy({
-      email,
+    const user = await this.identityRepository.findOne({
+      where: {
+        email,
+      },
+      relations: ['merchant', 'agent'],
     });
     if (!user) throw new NotFoundException('User not found!');
+
+    const isMerchant = user?.merchant;
+
+    const minWithdrawalAmountOfUser = isMerchant
+      ? user.merchant?.minWithdrawal
+      : user.agent?.minWithdrawalAmount;
+
+    const maxWithdrawalAmountOfUser = isMerchant
+      ? user.merchant?.maxWithdrawal
+      : user.agent?.maxWithdrawalAmount;
+
+    const currentAvailableBalance =
+      await this.identityService.getCurrentBalalnce(user.email);
+
+    if (currentAvailableBalance < withdrawalAmount)
+      return {
+        error: true,
+        message: 'Your current available balance is not sufficient!',
+      };
+
+    if (
+      withdrawalAmount < minWithdrawalAmountOfUser ||
+      withdrawalAmount > maxWithdrawalAmountOfUser
+    )
+      return {
+        error: true,
+        message: `Min Payout Amount - ${minWithdrawalAmountOfUser} | Max payout Amount - ${maxWithdrawalAmountOfUser}`,
+      };
 
     const channelMap = {
       UPI: ChannelName.UPI,
@@ -260,12 +292,21 @@ export class WithdrawalService {
       orderDetails.user.userType,
     );
 
+    await this.transactionUpdatesWithdrawalService.create({
+      orderDetails,
+      orderType: OrderType.WITHDRAWAL,
+      systemOrderId: orderDetails.systemOrderId,
+      userRole: orderDetails.user.userType,
+      withdrawalMadeOn: WithdrawalMadeOn.ADMIN,
+      user,
+    });
+
     await this.withdrawalRepository.update(orderDetails.id, {
       status: WithdrawalOrderStatus.REJECTED,
     });
 
     const mapUserType = {
-      MeERCHANT: Users.MERCHANT,
+      MERCHANT: Users.MERCHANT,
       AGENT: Users.AGENT,
       MEMBER: Users.MEMBER,
     };
@@ -304,6 +345,25 @@ export class WithdrawalService {
       orderDetails.user.id,
       orderDetails.user.userType,
     );
+
+    await this.transactionUpdatesWithdrawalService.create({
+      orderDetails,
+      orderType: OrderType.WITHDRAWAL,
+      systemOrderId: orderDetails.systemOrderId,
+      userRole: orderDetails.user.userType,
+      withdrawalMadeOn: WithdrawalMadeOn.GATEWAY,
+      user,
+    });
+
+    await this.transactionUpdatesWithdrawalService.create({
+      orderDetails,
+      orderType: OrderType.WITHDRAWAL,
+      systemOrderId: orderDetails.systemOrderId,
+      userRole: UserTypeForTransactionUpdates.GATEWAY_FEE,
+      withdrawalMadeOn: WithdrawalMadeOn.GATEWAY,
+      user,
+      gatewayName: orderDetails?.gatewayName,
+    });
 
     await this.withdrawalRepository.update(orderDetails.id, {
       status: WithdrawalOrderStatus.FAILED,

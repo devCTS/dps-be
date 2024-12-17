@@ -11,6 +11,7 @@ import {
   parseStartDate,
 } from 'src/utils/dtos/paginate.dto';
 import {
+  ChannelName,
   UserTypeForTransactionUpdates,
   WithdrawalOrderStatus,
 } from 'src/utils/enum/enum';
@@ -19,6 +20,7 @@ import {
   WithdrawalUserResponseDto,
 } from './dto/withdrawal-user-response.dto';
 import { roundOffAmount } from 'src/utils/utils';
+import { Config } from 'src/channel/entity/config.entity';
 
 @Injectable()
 export class WithdrawalMerchantService {
@@ -29,6 +31,8 @@ export class WithdrawalMerchantService {
     private readonly merchantRepository: Repository<Merchant>,
     @InjectRepository(TransactionUpdate)
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
+    @InjectRepository(Config)
+    private readonly channelConfigRepository: Repository<Config>,
   ) {}
 
   async getChannelProfileDetails(id: number) {
@@ -51,12 +55,25 @@ export class WithdrawalMerchantService {
       availableChannels.push('netBanking');
     merchant.identity?.eWallet?.length && availableChannels.push('eWallet');
 
-    const channelProfiles = availableChannels.map((el) => {
-      return {
-        channelName: el,
-        channelDetails: merchant.identity[el],
-      };
-    });
+    const mapChannel = {
+      upi: ChannelName.UPI,
+      eWallet: ChannelName.E_WALLET,
+      netBanking: ChannelName.BANKING,
+    };
+
+    const channelProfiles = await Promise.all(
+      availableChannels.map(async (el) => {
+        const channelConfig = await this.channelConfigRepository.findOneBy({
+          name: mapChannel[el],
+        });
+
+        return {
+          channelName: el,
+          channelDetails: merchant.identity[el],
+          enabled: channelConfig.outgoing,
+        };
+      }),
+    );
 
     return {
       channelProfiles,

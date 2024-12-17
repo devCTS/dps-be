@@ -601,6 +601,7 @@ export class MerchantService {
 
     query.leftJoinAndSelect('merchant.identity', 'identity');
     query.leftJoinAndSelect('identity.withdrawal', 'withdrawal');
+    query.leftJoinAndSelect('merchant.payout', 'payout');
 
     const search = paginateDto.search;
     const pageSize = paginateDto.pageSize;

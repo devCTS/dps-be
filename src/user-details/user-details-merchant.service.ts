@@ -80,7 +80,7 @@ export class UserDetailsMerchantService {
             prev.payinIncome += curr.payinOrder?.amount;
           }
 
-          if (curr.orderType === OrderType.PAYIN) {
+          if (curr.orderType === OrderType.PAYOUT) {
             prev.payoutFee += curr?.amount;
             prev.payoutAmount += curr.payoutOrder?.amount;
           }
@@ -148,7 +148,9 @@ export class UserDetailsMerchantService {
       payinFee: roundOffAmount(transactionEntries.payinFee),
       payoutAmount: roundOffAmount(transactionEntries.payoutAmount),
       payoutFee: roundOffAmount(transactionEntries.payoutFee),
-      withdrawanAmount: roundOffAmount(transactionEntries.withdrawanAmount),
+      withdrawanAmount: roundOffAmount(
+        transactionEntries.withdrawanAmount + transactionEntries.payoutAmount,
+      ),
       withdrawalFee: roundOffAmount(transactionEntries.withdrawalFee),
       frozenAmount: roundOffAmount(
         totalPayoutsFrozenAmount + totalWithdrawalsFrozenAmount,

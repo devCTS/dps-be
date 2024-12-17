@@ -93,7 +93,7 @@ export class ChannelService {
         })
       : null;
 
-    if (orderType === OrderType.PAYIN) {
+    if (orderType === OrderType.PAYIN || orderType === OrderType.TOPUP)
       return channels.map((channel) => ({
         channel: channel.name,
         enabled: merchantId
@@ -101,7 +101,6 @@ export class ChannelService {
             channel.incoming
           : channel.incoming,
       }));
-    }
 
     const mapChannel = {
       UPI: 'upi',

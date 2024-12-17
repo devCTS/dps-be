@@ -33,6 +33,7 @@ import { AssignTopupOrderDto } from './dto/assign-topup-order.dto';
 import { roundOffAmount } from 'src/utils/utils';
 import { FundRecordService } from 'src/fund-record/fund-record.service';
 import { NotificationService } from 'src/notification/notification.service';
+import { Config } from 'src/channel/entity/config.entity';
 
 @Injectable()
 export class TopupService {
@@ -45,6 +46,9 @@ export class TopupService {
 
     @InjectRepository(Agent)
     private readonly agentRepository: Repository<Agent>,
+
+    @InjectRepository(Config)
+    private readonly configRepository: Repository<Config>,
 
     @InjectRepository(Merchant)
     private readonly merchantRepository: Repository<Merchant>,
@@ -101,6 +105,7 @@ export class TopupService {
     let upiChannels;
     let netBanking;
     let eWallet;
+
     if (channelProfiles?.upi) {
       upiChannels = [...channelProfiles.upi].map((item) => ({
         ...item,
@@ -134,7 +139,14 @@ export class TopupService {
 
     const channels = await this.systemConfigService.getTopupChannels();
 
-    const flattenedChannels = this.getOrderedChannels(channels);
+    const flattenedChannels = await Promise.all(
+      this.getOrderedChannels(channels).map(async (channel) => {
+        const channelConfig = await this.configRepository.findOneBy({
+          name: channel.type,
+        });
+        return channelConfig.incoming ? channel : null;
+      }),
+    ).then((filteredChannels) => filteredChannels.filter(Boolean));
 
     const nextTopupIndex = totalSetteledTopupOrders % flattenedChannels.length;
 
@@ -207,6 +219,9 @@ export class TopupService {
     const currentSystemHoldings = await this.getCurrentToupHoldings();
     const amountPending = topupThreshold - currentSystemHoldings;
     const nextTopupChannel = await this.getNextTopupChannel();
+
+    if (!nextTopupChannel.channel)
+      throw new NotFoundException('No top-up channel found!');
 
     const currentTopup = await this.topupRepository.findOne({
       where: {
