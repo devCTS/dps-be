@@ -19,6 +19,9 @@ export class FundRecordAdminResponseDto {
   amount: number;
 
   @Expose()
+  netAmount: number;
+
+  @Expose()
   orderAmount: number;
 
   @Expose()

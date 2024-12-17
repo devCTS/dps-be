@@ -77,6 +77,7 @@ export class TransactionUpdatesWithdrawalService {
     withdrawalMadeOn,
     user,
     gatewayName = GatewayName.PHONEPE,
+    failed = false,
   }) {
     const mapUserType = {
       MERCHANT: UserTypeForTransactionUpdates.MERCHANT_BALANCE,
@@ -104,7 +105,7 @@ export class TransactionUpdatesWithdrawalService {
       rate,
       amount: roundOffAmount(amount),
       before: roundOffAmount(before),
-      after: roundOffAmount(after),
+      after: failed ? roundOffAmount(before) : roundOffAmount(after),
       name:
         userRole === UserTypeForTransactionUpdates.GATEWAY_FEE
           ? gatewayName

@@ -180,6 +180,13 @@ export class FundRecordService {
         before: row.before,
         after: row.after,
         amount: row.amount || 0,
+        netAmount: this.getNetAmount({
+          orderAmount,
+          orderType: OrderType.PAYIN,
+          userType: row.userType,
+          amount: row.amount,
+          isAgent: row.isAgentOf || row.isAgentMember ? true : false,
+        }),
         serviceFee: row.amount || 0,
         orderAmount,
         user: row.user,
@@ -216,6 +223,13 @@ export class FundRecordService {
         before: row.before,
         after: row.after,
         amount: row.amount || 0,
+        netAmount: this.getNetAmount({
+          orderAmount,
+          orderType: OrderType.PAYOUT,
+          userType: row.userType,
+          amount: row.amount,
+          isAgent: row.isAgentOf || row.isAgentMember ? true : false,
+        }),
         serviceFee: row.amount || 0,
         orderAmount,
         user: row.user,
@@ -256,6 +270,13 @@ export class FundRecordService {
         before: row.before,
         after: row.after,
         amount: row.amount || 0,
+        netAmount: this.getNetAmount({
+          orderAmount,
+          orderType: OrderType.WITHDRAWAL,
+          userType: row.userType,
+          amount: row.amount,
+          isAgent: row.isAgentOf || row.isAgentMember ? true : false,
+        }),
         serviceFee: row.amount || 0,
         orderAmount,
         user: row.user,
@@ -291,6 +312,13 @@ export class FundRecordService {
         before: row.before,
         after: row.after,
         amount: row.amount || 0,
+        netAmount: this.getNetAmount({
+          orderAmount,
+          orderType: OrderType.TOPUP,
+          userType: row.userType,
+          amount: row.amount,
+          isAgent: row.isAgentOf || row.isAgentMember ? true : false,
+        }),
         serviceFee: row.amount || 0,
         orderAmount,
         user: row.user,
@@ -430,6 +458,7 @@ export class FundRecordService {
       before,
       after,
       amount: 0,
+      netAmount: amount,
       serviceFee: 0,
       orderAmount: amount,
       user: user?.identity,
@@ -475,13 +504,14 @@ export class FundRecordService {
     );
 
     await this.fundRecordRepository.save({
-      orderType: OrderType.ADMIN_ADJUSTMENT,
+      orderType: OrderType.MEMBER_adjustment,
       name: sendingMember?.firstName + ' ' + sendingMember?.lastName,
       balanceType: UserTypeForTransactionUpdates.MEMBER_QUOTA,
       systemOrderId: uniqid(),
       before: sendingMember.quota,
       after: sendingMember.quota - amount,
       amount: 0,
+      netAmount: amount,
       serviceFee: 0,
       orderAmount: amount,
       user: sendingMember.identity,
@@ -503,13 +533,14 @@ export class FundRecordService {
     );
 
     await this.fundRecordRepository.save({
-      orderType: OrderType.ADMIN_ADJUSTMENT,
+      orderType: OrderType.MEMBER_adjustment,
       name: receivingMember?.firstName + ' ' + receivingMember?.lastName,
       balanceType: UserTypeForTransactionUpdates.MEMBER_QUOTA,
       systemOrderId: uniqid(),
       before: receivingMember.quota,
       after: receivingMember.quota + amount,
       amount: 0,
+      netAmount: amount,
       serviceFee: 0,
       orderAmount: amount,
       user: receivingMember.identity,
@@ -542,5 +573,35 @@ export class FundRecordService {
       total,
       data: plainToInstance(FundRecordAdminResponseDto, rows),
     };
+  }
+
+  private getNetAmount({
+    orderType,
+    orderAmount,
+    amount,
+    userType,
+    isAgent,
+  }: {
+    orderType: OrderType;
+    orderAmount: number;
+    amount: number;
+    userType: UserTypeForTransactionUpdates;
+    isAgent?: boolean;
+  }) {
+    if (isAgent) return amount;
+
+    switch (userType) {
+      case UserTypeForTransactionUpdates.MERCHANT_BALANCE:
+        if (orderType === OrderType.PAYIN) return orderAmount - amount;
+        if (orderType === OrderType.PAYOUT) return orderAmount + amount;
+
+      case UserTypeForTransactionUpdates.MEMBER_QUOTA:
+        if (orderType === OrderType.PAYIN) return orderAmount - amount;
+        if (orderType === OrderType.PAYOUT) return orderAmount + amount;
+        if (orderType === OrderType.TOPUP) return orderAmount + amount;
+
+      default:
+        return orderAmount;
+    }
   }
 }

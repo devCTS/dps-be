@@ -20,6 +20,9 @@ export class WithdrawalUserResponseDto {
   amount: number;
 
   @Expose()
+  netAmount: number;
+
+  @Expose()
   createdAt: Date;
 
   @Expose()

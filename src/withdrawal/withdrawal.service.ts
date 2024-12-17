@@ -299,6 +299,7 @@ export class WithdrawalService {
       userRole: orderDetails.user.userType,
       withdrawalMadeOn: WithdrawalMadeOn.ADMIN,
       user,
+      failed: true,
     });
 
     await this.withdrawalRepository.update(orderDetails.id, {
@@ -353,6 +354,7 @@ export class WithdrawalService {
       userRole: orderDetails.user.userType,
       withdrawalMadeOn: WithdrawalMadeOn.GATEWAY,
       user,
+      failed: true,
     });
 
     await this.transactionUpdatesWithdrawalService.create({
@@ -363,6 +365,7 @@ export class WithdrawalService {
       withdrawalMadeOn: WithdrawalMadeOn.GATEWAY,
       user,
       gatewayName: orderDetails?.gatewayName,
+      failed: true,
     });
 
     await this.withdrawalRepository.update(orderDetails.id, {

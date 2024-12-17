@@ -26,6 +26,9 @@ export class WithdrawalAdminResponseDto {
   amount: number;
 
   @Expose()
+  netAmount: number;
+
+  @Expose()
   createdAt: Date;
 
   @Expose()

@@ -40,6 +40,9 @@ export class FundRecord {
   orderAmount: number;
 
   @Column({ type: 'float', nullable: true })
+  netAmount: number;
+
+  @Column({ type: 'float', nullable: true })
   before: number;
 
   @Column({ type: 'float', nullable: true })
