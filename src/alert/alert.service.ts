@@ -37,7 +37,7 @@ export class AlertService {
     private alertRepository: Repository<Alert>,
     @InjectRepository(Admin)
     private adminRepository: Repository<Admin>,
-    @InjectRepository(Admin)
+    @InjectRepository(Merchant)
     private merchantRepository: Repository<Merchant>,
     @InjectRepository(Agent)
     private agentRepository: Repository<Agent>,

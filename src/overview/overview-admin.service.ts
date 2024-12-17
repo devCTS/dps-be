@@ -1990,7 +1990,7 @@ export class OverviewAdminService {
 
     const [payinRows, payinsCount] = await this.payinRepository.findAndCount({
       where: whereConditions,
-      relations: ['merchant'],
+      relations: ['merchant', 'transactionUpdate'],
     });
 
     const payins = payinRows.reduce(
@@ -1998,6 +1998,15 @@ export class OverviewAdminService {
         if (curr.status === OrderStatus.COMPLETE) {
           prev.completed++;
           prev.totalCompleted += curr.amount;
+
+          curr.transactionUpdate
+            .filter(
+              (el) =>
+                el.userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE,
+            )
+            .forEach((row) => {
+              prev.serviceFee += row.amount;
+            });
         }
         if (curr.status === OrderStatus.FAILED) {
           prev.failed++;
@@ -2026,6 +2035,7 @@ export class OverviewAdminService {
         submitted: 0,
         completed: 0,
         failed: 0,
+        serviceFee: 0,
       },
     );
 
@@ -2066,6 +2076,8 @@ export class OverviewAdminService {
         totalFailed: payins.totalFailed,
         totalPending: payins.totalPending,
         totalCompleted: payins.totalCompleted,
+        totalServiceFee: roundOffAmount(payins.serviceFee),
+        successRate: roundOffAmount((payins.completed / payinsCount) * 100),
       },
       pieChartData: {
         initiated: payins.initiated,
@@ -2094,7 +2106,7 @@ export class OverviewAdminService {
     const [payoutRows, payoutsCount] = await this.payoutRepository.findAndCount(
       {
         where: whereConditions,
-        relations: ['merchant'],
+        relations: ['merchant', 'transactionUpdate'],
       },
     );
 
@@ -2103,6 +2115,15 @@ export class OverviewAdminService {
         if (curr.status === OrderStatus.COMPLETE) {
           prev.completed++;
           prev.totalCompleted += curr.amount;
+
+          curr.transactionUpdate
+            .filter(
+              (el) =>
+                el.userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE,
+            )
+            .forEach((row) => {
+              prev.serviceFee += row.amount;
+            });
         }
         if (curr.status === OrderStatus.FAILED) {
           prev.failed++;
@@ -2120,6 +2141,7 @@ export class OverviewAdminService {
           prev.initiated++;
           prev.totalPending += curr.amount;
         }
+
         return prev;
       },
       {
@@ -2131,6 +2153,7 @@ export class OverviewAdminService {
         submitted: 0,
         completed: 0,
         failed: 0,
+        serviceFee: 0,
       },
     );
 
@@ -2171,6 +2194,8 @@ export class OverviewAdminService {
         totalFailed: payouts.totalFailed,
         totalPending: payouts.totalPending,
         totalCompleted: payouts.totalCompleted,
+        totalServiceFee: roundOffAmount(payouts.serviceFee),
+        successRate: roundOffAmount((payouts.completed / payoutsCount) * 100),
       },
       pieChartData: {
         initiated: payouts.initiated,
