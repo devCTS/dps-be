@@ -211,58 +211,54 @@ export class PayoutMerchantService {
   }
 
   async getPayoutDetails(id: string) {
-    try {
-      const orderDetails = await this.payoutRepository.findOne({
-        where: { systemOrderId: id },
-        relations: ['user', 'merchant', 'member'],
+    const orderDetails = await this.payoutRepository.findOne({
+      where: { systemOrderId: id },
+      relations: ['user', 'merchant', 'member', 'merchant.identity'],
+    });
+    if (!orderDetails) throw new NotFoundException('Order not found.');
+
+    const transactionUpdateMerchant =
+      await this.transactionUpdateRepository.findOne({
+        where: {
+          systemOrderId: id,
+          userType: UserTypeForTransactionUpdates.MERCHANT_BALANCE,
+          user: { id: orderDetails.merchant?.identity?.id },
+        },
+        relations: ['payinOrder', 'user', 'user.merchant'],
       });
-      if (!orderDetails) throw new NotFoundException('Order not found.');
 
-      const transactionUpdateMerchant =
-        await this.transactionUpdateRepository.findOne({
-          where: {
-            systemOrderId: id,
-            userType: UserTypeForTransactionUpdates.MERCHANT_BALANCE,
-            user: { id: orderDetails.merchant?.identity?.id },
-          },
-          relations: ['payinOrder', 'user', 'user.merchant'],
-        });
+    const res = {
+      ...orderDetails,
+      transactionDetails: {
+        transactionId: orderDetails.transactionId,
+        receipt: orderDetails.transactionReceipt,
+        member: orderDetails.member
+          ? JSON.parse(orderDetails.transactionDetails)
+          : null,
+        gateway: orderDetails.gatewayName
+          ? JSON.parse(orderDetails.transactionDetails)
+          : null,
+      },
+      balanceDetails: {
+        serviceRate: getServicerRateForMerchant(
+          transactionUpdateMerchant?.absoluteAmount,
+          transactionUpdateMerchant?.rate,
+        ),
+        serviceFee: roundOffAmount(transactionUpdateMerchant?.amount),
+        balanceDeducted:
+          orderDetails.status === OrderStatus.FAILED
+            ? 0
+            : roundOffAmount(
+                orderDetails?.amount + transactionUpdateMerchant?.amount,
+                true,
+              ),
+      },
+      channelDetails: orderDetails.user.channelDetails,
+    };
 
-      const res = {
-        ...orderDetails,
-        transactionDetails: {
-          transactionId: orderDetails.transactionId,
-          receipt: orderDetails.transactionReceipt,
-          member: orderDetails.member
-            ? JSON.parse(orderDetails.transactionDetails)
-            : null,
-          gateway: orderDetails.gatewayName
-            ? JSON.parse(orderDetails.transactionDetails)
-            : null,
-        },
-        balanceDetails: {
-          serviceRate: getServicerRateForMerchant(
-            transactionUpdateMerchant?.absoluteAmount,
-            transactionUpdateMerchant?.rate,
-          ),
-          serviceFee: roundOffAmount(transactionUpdateMerchant.amount),
-          balanceDeducted:
-            orderDetails.status === OrderStatus.FAILED
-              ? 0
-              : roundOffAmount(
-                  orderDetails.amount + transactionUpdateMerchant.amount,
-                  true,
-                ),
-        },
-        channelDetails: orderDetails.user.channelDetails,
-      };
+    const details = plainToInstance(MerchantPayoutDetailsResponseDto, res);
 
-      const details = plainToInstance(MerchantPayoutDetailsResponseDto, res);
-
-      return details;
-    } catch (error) {
-      throw new InternalServerErrorException();
-    }
+    return details;
   }
 
   async confirmAndGetEndUserDetails(userId) {

@@ -402,8 +402,6 @@ export class PayoutService {
       if (entry.userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE) {
         const afterBalance = -(entry.before - entry.after);
 
-        console.log(entry.user.id);
-
         await this.merchantService.updateBalance(
           entry.user.id,
           entry.systemOrderId,
@@ -470,16 +468,15 @@ export class PayoutService {
       },
     );
 
-    if (payoutOrderDetails.payoutMadeVia === PaymentMadeOn.MEMBER)
-      await this.notificationService.create({
-        for: payoutOrderDetails.member.id,
-        type: NotificationType.PAYOUT_VERIFIED,
-        data: {
-          orderId: payoutOrderDetails.systemOrderId,
-          amount: payoutOrderDetails.amount,
-          channel: payoutOrderDetails.channel,
-        },
-      });
+    await this.notificationService.create({
+      for: payoutOrderDetails.member.id,
+      type: NotificationType.PAYOUT_VERIFIED,
+      data: {
+        orderId: payoutOrderDetails.systemOrderId,
+        amount: payoutOrderDetails.amount,
+        channel: payoutOrderDetails.channel,
+      },
+    });
 
     const mapUserType = {
       MeERCHANT: Users.MERCHANT,

@@ -195,15 +195,18 @@ export class PayinService {
       ],
     });
 
+    const mapChannel = {
+      E_WALLET: 'eWallet',
+      NET_BANKING: 'netBanking',
+      UPI: 'upi',
+    };
+
     await this.updatePayinStatusToAssigned({
       id: payin.systemOrderId,
       userId: endUser.id,
       paymentMode: PaymentMadeOn.MEMBER,
       memberId: memberId,
-      memberPaymentDetails:
-        member?.identity.upi[0] ||
-        member?.identity?.eWallet[0] ||
-        member?.identity?.netBanking[0],
+      memberPaymentDetails: member?.identity?.[mapChannel[channel]][0],
     });
 
     return payin;

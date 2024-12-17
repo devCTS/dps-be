@@ -45,7 +45,7 @@ export class TransactionUpdatesWithdrawalService {
 
     transactionUpdateEntries.forEach((row) => {
       if (
-        row.userType === UserTypeForTransactionUpdates.MEMBER_BALANCE ||
+        // row.userType === UserTypeForTransactionUpdates.MEMBER_BALANCE ||
         row.userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE ||
         row.userType === UserTypeForTransactionUpdates.AGENT_BALANCE
       )

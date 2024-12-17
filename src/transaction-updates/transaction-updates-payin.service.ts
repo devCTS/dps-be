@@ -201,9 +201,9 @@ export class TransactionUpdatesPayinService {
           case UserTypeForTransactionUpdates.MERCHANT_BALANCE:
             acc.merchantTotal += entry.amount;
             break;
-          case UserTypeForTransactionUpdates.MEMBER_BALANCE:
-            acc.memberTotal += entry.amount;
-            break;
+          // case UserTypeForTransactionUpdates.MEMBER_BALANCE:
+          //   acc.memberTotal += entry.amount;
+          //   break;
           case UserTypeForTransactionUpdates.MEMBER_QUOTA:
             acc.memberQuota += entry.amount;
             break;
