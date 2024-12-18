@@ -156,6 +156,13 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const roomId = `${userType}_${alertData.for}`;
     this.server
       .to(roomId)
-      .emit('newAlert', { data, type, text, date: new Date(), userType });
+      .emit('newAlert', {
+        data,
+        type,
+        text,
+        date: new Date(),
+        userType,
+        id: alertData.id,
+      });
   }
 }
