@@ -78,14 +78,15 @@ export class PaymentSystemController {
         'Authorization Error. Business Url validation failed.',
       );
 
+    let enabledChannels;
     if (merchant.payinChannels) {
       const channels = JSON.parse(merchant.payinChannels);
 
-      const enabledChannels = await Promise.all(
-        channels.map((channel) =>
-          this.configRepository.findBy({ incoming: true, name: channel }),
-        ),
-      );
+      enabledChannels = (
+        await this.configRepository.findBy({
+          incoming: true,
+        })
+      ).map((ch) => ch.name);
 
       if (enabledChannels.length <= 0)
         throw new BadRequestException('All channels are disabled!');
@@ -93,7 +94,9 @@ export class PaymentSystemController {
 
     return {
       businessName: merchant.businessName,
-      channels: JSON.parse(merchant.payinChannels),
+      channels: JSON.parse(merchant.payinChannels).filter((ch) =>
+        enabledChannels.includes(ch),
+      ),
     };
   }
 
