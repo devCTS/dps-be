@@ -32,6 +32,7 @@ import { Payout } from 'src/payout/entities/payout.entity';
 import { Withdrawal } from 'src/withdrawal/entities/withdrawal.entity';
 import { OrderStatus, Role, WithdrawalOrderStatus } from 'src/utils/enum/enum';
 import { send } from 'process';
+import { EmailService } from 'src/services/email/email.service';
 
 type MemberContext = {
   firstName: string;
@@ -80,13 +81,31 @@ export class IdentityService {
     private readonly payoutRepository: Repository<Payout>,
     @InjectRepository(Withdrawal)
     private readonly withdrawalRepository: Repository<Withdrawal>,
+    private readonly emailService: EmailService,
   ) {
     this.membersContexts = {};
     this.forgotPasswordContexts = {};
   }
 
+  generateRandomOTP() {
+    let sixDigitRandomNumber;
+
+    do {
+      const randomDecimal = Math.random();
+      sixDigitRandomNumber = Math.floor(randomDecimal * 900000) + 100000;
+    } while (String(sixDigitRandomNumber).startsWith('0'));
+
+    return sixDigitRandomNumber;
+  }
+
   makeAndSendOtp(email) {
-    return 282907;
+    const otp = this.generateRandomOTP();
+    this.emailService.send({
+      subject: 'Kingsgate - One Time Password',
+      text: `Your 6 digit One Time Password (OTP) for Kingsgate is ${otp}`,
+      receiver: email,
+    });
+    return otp;
   }
 
   async getUser(

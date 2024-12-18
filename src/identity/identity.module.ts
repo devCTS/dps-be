@@ -14,6 +14,7 @@ import { ChannelModule } from 'src/channel/channel.module';
 import { GatewayModule } from 'src/gateway/gateway.module';
 import { Withdrawal } from 'src/withdrawal/entities/withdrawal.entity';
 import { Payout } from 'src/payout/entities/payout.entity';
+import { EmailModule } from 'src/services/email/email.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { Payout } from 'src/payout/entities/payout.entity';
     JwtModule,
     ChannelModule,
     GatewayModule,
+    EmailModule,
   ],
   controllers: [IdentityController],
   providers: [IdentityService],
