@@ -6,11 +6,6 @@ import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
 export class TeamController {
   constructor(private teamService: TeamService) {}
 
-  @Post()
-  async createTeam(@Body() body: { memberId: number }) {
-    return this.teamService.createTeam(body.memberId);
-  }
-
   @Post('paginate')
   async paginate(@Body() paginateRequestDto: PaginateRequestDto) {
     return this.teamService.paginate(paginateRequestDto);

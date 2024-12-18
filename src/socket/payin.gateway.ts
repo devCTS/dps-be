@@ -25,7 +25,6 @@ export class PayinGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   handleDisconnect(client: Socket) {
-    console.log(`Client disconnected: ${client.id}`);
     // Cleanup orderSockets map
     for (const [orderId, socket] of this.orderSockets.entries()) {
       if (socket.id === client.id) {
@@ -42,13 +41,11 @@ export class PayinGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const { orderId } = data;
     client.join(orderId);
     client.emit('joinedOrder', { message: `Joined room for order ${orderId}` });
-    console.log(`Client ${client.id} joined room: ${orderId}`);
   }
 
   notifyOrderAssigned(orderId: string) {
     this.server.to(orderId).emit('orderAssigned', {
       orderId,
     });
-    console.log(orderId + ' notified');
   }
 }

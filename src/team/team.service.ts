@@ -15,7 +15,6 @@ import {
   parseEndDate,
   parseStartDate,
 } from 'src/utils/dtos/paginate.dto';
-import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class TeamService {
@@ -26,21 +25,30 @@ export class TeamService {
     private readonly memberRepository: Repository<Member>,
   ) {}
 
-  async createTeam(memberId: number) {
-    const member = await this.memberRepository.findOneBy({ id: memberId });
-    if (!member) throw new NotFoundException('Member not found.');
+  async createTeam(leadingMemberId: number, subMemberId: number) {
+    const leadingMember = await this.memberRepository.findOneBy({
+      id: leadingMemberId,
+    });
+    if (!leadingMember)
+      throw new NotFoundException('Leading member not found.');
 
     const team = await this.teamRepository.findOne({
       where: {
-        teamLeader: { id: member.id },
+        teamLeader: { id: leadingMember.id },
       },
       relations: ['teamLeader'],
     });
     if (team) throw new ConflictException('Team already exists.');
 
-    const createdTeam = await this.teamRepository.save({ teamLeader: member });
+    const createdTeam = await this.teamRepository.save({
+      teamLeader: leadingMember,
+    });
 
-    await this.memberRepository.update(member.id, {
+    await this.memberRepository.update(leadingMember.id, {
+      teamId: createdTeam.teamId,
+    });
+
+    await this.memberRepository.update(subMemberId, {
       teamId: createdTeam.teamId,
     });
 
