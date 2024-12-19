@@ -308,9 +308,7 @@ export class MerchantService {
     delete updateDto.numberOfRangesOrRatio;
     delete updateDto.amountRanges;
     delete updateDto.ratios;
-    delete updateDto?.agentId;
-    delete updateDto?.agentPayinCommissionRate;
-    delete updateDto?.agentPayoutCommissionRate;
+    delete updateDto.agentId;
 
     let result = null;
 

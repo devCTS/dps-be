@@ -126,11 +126,13 @@ export class MemberService {
 
     const createdMember = await this.memberRepository.save(member);
 
-    if (referralCode) {
+    if (referralCode)
       teamId
         ? await this.teamService.incrementTeamSize(teamId)
-        : await this.teamService.createTeam(createdMember.id);
-    }
+        : await this.teamService.createTeam(
+            referralDetails.member.id,
+            createdMember.id,
+          );
 
     if (channelProfile?.upi) {
       for (const element of channelProfile.upi) {
@@ -143,7 +145,7 @@ export class MemberService {
 
     if (channelProfile?.eWallet) {
       for (const element of channelProfile.eWallet) {
-        await this.upiRepository.save({
+        await this.eWalletRepository.save({
           ...element,
           identity,
         });
@@ -152,7 +154,7 @@ export class MemberService {
 
     if (channelProfile?.netBanking) {
       for (const element of channelProfile.netBanking) {
-        await this.upiRepository.save({
+        await this.netBankingRepository.save({
           ...element,
           identity,
         });
@@ -201,10 +203,12 @@ export class MemberService {
         minimumPayoutAmountForMember,
       } = await this.systemConfigService.findLatest();
 
-      const referralDetails = await this.memberReferralRepository.findOne({
-        where: { referralCode },
-        relations: ['member'],
-      });
+      const referralDetails = referralCode
+        ? await this.memberReferralRepository.findOne({
+            where: { referralCode },
+            relations: ['member'],
+          })
+        : null;
 
       const teamId = referralDetails?.member?.teamId;
 
@@ -245,9 +249,14 @@ export class MemberService {
 
       const createdMember = await this.memberRepository.save(member);
 
-      teamId
-        ? await this.teamService.incrementTeamSize(teamId)
-        : await this.teamService.createTeam(createdMember.id);
+      if (referralCode) {
+        teamId
+          ? await this.teamService.incrementTeamSize(teamId)
+          : await this.teamService.createTeam(
+              referralDetails?.member?.id,
+              createdMember.id,
+            );
+      }
 
       // Update Member Referrals
       if (referralCode)

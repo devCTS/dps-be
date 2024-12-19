@@ -30,19 +30,18 @@ export function getDescription({
 }: argType) {
   let text = '';
 
-  // TODO: Change texts, order amounts are fine
   switch (type) {
     case OrderType.PAYIN:
       if (userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE)
-        text = `Payin order - ${orderAmount} | Income - ${orderAmount - userAmount}`;
+        text = `Order Amount - ${orderAmount} | Income - ${orderAmount - userAmount}`;
 
       if (userType === UserTypeForTransactionUpdates.MEMBER_QUOTA)
         text = isAgentMember
-          ? `Payin order - ${orderAmount} | Quota increase - ${userAmount} | Agent commission`
-          : `Payin order - ${orderAmount} | Quota deduct - ${orderAmount - userAmount} | Member commission - ${userAmount}`;
+          ? `Order Amount - ${orderAmount} | Agent Commission - ${userAmount} | Quota Credit - ${userAmount} `
+          : `Order Amount - ${orderAmount} | Member Commission - ${userAmount} | Quota Debit - ${orderAmount - userAmount}`;
 
       if (userType === UserTypeForTransactionUpdates.AGENT_BALANCE)
-        text = `Payin order - ${orderAmount} | Agent commission - ${userAmount}`;
+        text = `Order Amount - ${orderAmount} | Agent Commission - ${userAmount}`;
 
       if (userType === UserTypeForTransactionUpdates.SYSTEM_PROFIT)
         text = `Net Profit - ${userAmount}`;
@@ -50,33 +49,29 @@ export function getDescription({
 
     case OrderType.PAYOUT:
       if (userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE)
-        text = `Payout order - ${orderAmount} | Balance deduct - ${orderAmount + userAmount}`;
+        text = `Order Amount - ${orderAmount} | Balance Debit - ${orderAmount + userAmount}`;
 
       if (userType === UserTypeForTransactionUpdates.MEMBER_QUOTA)
         text = isAgentMember
-          ? `Payout order - ${orderAmount} | Quota increase - ${userAmount} | Agent commission`
-          : `Payout order - ${orderAmount} | Quota increase - ${orderAmount + userAmount} | Member commission - ${userAmount}`;
+          ? `Order Amount - ${orderAmount} | Agent Commission - ${userAmount} | Quota Credit - ${userAmount}`
+          : `Order Amount - ${orderAmount} | Member Commission - ${userAmount} | Quota Credit - ${orderAmount + userAmount}`;
 
       if (userType === UserTypeForTransactionUpdates.AGENT_BALANCE)
-        text = `Payout order - ${orderAmount} | Balance - ${userAmount}`;
+        text = `Order Amount - ${orderAmount} | Agent Commission - ${userAmount}`;
 
       if (userType === UserTypeForTransactionUpdates.SYSTEM_PROFIT)
         text = `Net Profit - ${userAmount}`;
       break;
 
     case OrderType.WITHDRAWAL:
-      if (userType === UserTypeForTransactionUpdates.MERCHANT_BALANCE)
-        text = `Withdrawal order - ${orderAmount}`;
-
-      if (userType === UserTypeForTransactionUpdates.AGENT_BALANCE)
-        text = `Withdrawal order - ${orderAmount}`;
+      text = `Order Amount - ${orderAmount} | Service Charge - ${userAmount} | Balance Debit - ${orderAmount + userAmount}`;
       break;
 
     case OrderType.TOPUP:
       if (userType === UserTypeForTransactionUpdates.MEMBER_QUOTA)
         text = isAgentMember
-          ? `Topup order - ${orderAmount} | Quota increase - ${userAmount} | Agent commission`
-          : `Topup order - ${orderAmount} | Quota increase - ${orderAmount + userAmount} | Member commission - ${userAmount}`;
+          ? `Order Amount - ${orderAmount} | Agent Commission - ${userAmount} | Quota Credit - ${userAmount}`
+          : `Order Amount - ${orderAmount} | Member Commission - ${userAmount} | Quota Credit - ${orderAmount + userAmount}`;
 
       if (userType === UserTypeForTransactionUpdates.SYSTEM_PROFIT)
         text = `Net Profit - ${userAmount}`;
@@ -88,24 +83,21 @@ export function getDescription({
 
       const amount =
         userAmount > 0
-          ? `increase ${userAmount}`
-          : `decrease ${Math.abs(userAmount)}`;
+          ? `Credit - ${userAmount}`
+          : `Debit - ${Math.abs(userAmount)}`;
 
-      if (user === 'Merchant') text = `Merchant balance adjustment - ${amount}`;
+      if (user === 'Merchant') text = `Balance ${amount}`;
 
-      if (user === 'Agent') text = `Agent balance adjustment - ${amount}`;
+      if (user === 'Agent') text = `Balance ${amount}`;
 
-      if (user === 'Member') text = `Member quota adjustment - ${amount}`;
+      if (user === 'Member') text = `Quota ${amount}`;
 
       break;
 
     case OrderType.MEMBER_adjustment:
-      const quota = !isSendingMember
-        ? `increase ${userAmount}`
-        : `decrease ${userAmount}`;
-
-      if (isSendingMember) text = `Quota transfer - ${quota}`;
-      else text = `Quota transfer - ${quota}`;
+      text = !isSendingMember
+        ? `Quota Credit - ${userAmount}`
+        : `Quota Debit - ${userAmount}`;
 
       break;
 

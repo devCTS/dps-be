@@ -45,7 +45,6 @@ export class PaymentSystemController {
   @Roles(Role.ALL)
   @UseGuards(RolesGuard)
   checkStatus(
-    @Req() req: Request,
     @Res() res,
     @Param('transactionId') transactionId: string,
     @Param('userId') userId: string,
