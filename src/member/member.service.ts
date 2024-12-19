@@ -203,10 +203,12 @@ export class MemberService {
         minimumPayoutAmountForMember,
       } = await this.systemConfigService.findLatest();
 
-      const referralDetails = await this.memberReferralRepository.findOne({
-        where: { referralCode },
-        relations: ['member'],
-      });
+      const referralDetails = referralCode
+        ? await this.memberReferralRepository.findOne({
+            where: { referralCode },
+            relations: ['member'],
+          })
+        : null;
 
       const teamId = referralDetails?.member?.teamId;
 
@@ -247,12 +249,14 @@ export class MemberService {
 
       const createdMember = await this.memberRepository.save(member);
 
-      teamId
-        ? await this.teamService.incrementTeamSize(teamId)
-        : await this.teamService.createTeam(
-            referralDetails?.member?.id,
-            createdMember.id,
-          );
+      if (referralCode) {
+        teamId
+          ? await this.teamService.incrementTeamSize(teamId)
+          : await this.teamService.createTeam(
+              referralDetails?.member?.id,
+              createdMember.id,
+            );
+      }
 
       // Update Member Referrals
       if (referralCode)
