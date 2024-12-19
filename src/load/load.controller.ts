@@ -4,11 +4,14 @@ import {
   HttpStatus,
   Get,
   InternalServerErrorException,
+  Body,
+  BadRequestException,
 } from '@nestjs/common';
 import { AdminService } from 'src/admin/admin.service';
 import { ChannelService } from 'src/channel/channel.service';
 import { GatewayService } from 'src/gateway/gateway.service';
 import { SystemConfigService } from 'src/system-config/system-config.service';
+import * as nodemailer from 'nodemailer';
 
 @Controller('load')
 export class LoadController {
@@ -33,5 +36,35 @@ export class LoadController {
     } catch (error) {
       throw new InternalServerErrorException();
     }
+  }
+
+  @Get('mail')
+  sendMail() {
+    let transporter = nodemailer.createTransport({
+      host: 'gottabarter.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: `"Maddison Foo Koch 👻" <no-reply@gottabarter.com>`,
+        pass: 'G0ttaBarter',
+      },
+    });
+
+    let mailOptions = {
+      from: 'no-reply@gottabarter.com',
+      to: 'naheg46162@ronete.com',
+      subject: 'Something',
+      text: 'Something text',
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log(error);
+        // throw new BadRequestException('abc');
+      } else {
+        console.log(info);
+        return 'abc';
+      }
+    });
   }
 }
