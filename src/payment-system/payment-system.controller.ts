@@ -73,7 +73,7 @@ export class PaymentSystemController {
         'Integration Error. Merchant profile is disabled.',
       );
 
-    if (merchant.businessUrl && !requestOrigin.includes(merchant.businessUrl))
+    if (merchant.businessUrl && !requestOrigin?.includes(merchant.businessUrl))
       throw new UnauthorizedException(
         'Authorization Error. Business Url validation failed.',
       );
@@ -95,7 +95,7 @@ export class PaymentSystemController {
     return {
       businessName: merchant.businessName,
       channels: JSON.parse(merchant.payinChannels).filter((ch) =>
-        enabledChannels.includes(ch),
+        enabledChannels?.includes(ch),
       ),
     };
   }
