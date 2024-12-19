@@ -135,17 +135,21 @@ export class TeamService {
   buildTree(members: Member[]) {
     const rootMember = members.find((member) => !member.agent);
 
-    const getChildren = (parentId: number): TreeNode[] => {
+    const getChildren = (
+      parentId: number,
+      ancestorsOfParent: number[],
+    ): TreeNode[] => {
       const children = members.filter(
         (member) => member.agent?.id === parentId,
       );
 
       return children.map((obj) => ({
         id: obj.id,
-        children: getChildren(obj.id),
+        children: getChildren(obj.id, [...ancestorsOfParent, parentId]),
         name: obj.firstName + ' ' + obj.lastName,
         email: obj.identity?.email,
         isAgent: false,
+        ancestors: [...ancestorsOfParent, parentId],
         balance: null,
         quota: obj.quota,
         serviceRate: null,
@@ -162,10 +166,11 @@ export class TeamService {
 
     const tree: TreeNode = {
       id: rootMember.id,
-      children: getChildren(rootMember.id),
+      children: getChildren(rootMember.id, []),
       name: rootMember.firstName + ' ' + rootMember.lastName,
       email: rootMember.identity?.email,
       isAgent: false,
+      ancestors: [],
       balance: null,
       quota: rootMember.quota,
       serviceRate: null,

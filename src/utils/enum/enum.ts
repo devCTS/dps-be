@@ -131,6 +131,7 @@ export interface TreeNode {
   name: string;
   email: string;
   isAgent: boolean;
+  ancestors: number[];
   balance: number;
   quota: number;
   serviceRate: Rate;

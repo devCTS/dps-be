@@ -158,15 +158,19 @@ export class OrganizationService {
   buildTree(agents: any[]) {
     const rootAgent = agents.find((agent) => !agent.agent);
 
-    const getChildren = (parentId: number): TreeNode[] => {
+    const getChildren = (
+      parentId: number,
+      ancestorsOfParent: number[],
+    ): TreeNode[] => {
       const children = agents.filter((agent) => agent.agent?.id === parentId);
 
       return children.map((obj) => ({
         id: obj.id,
-        children: getChildren(obj.id),
+        children: getChildren(obj.id, [...ancestorsOfParent, parentId]),
         name: obj.firstName + ' ' + obj.lastName,
         email: obj.identity?.email,
         isAgent: !obj.isMerchant,
+        ancestors: [...ancestorsOfParent, parentId],
         balance: obj.balance,
         quota: null,
         serviceRate: obj.isMerchant
@@ -185,10 +189,11 @@ export class OrganizationService {
 
     const tree: TreeNode = {
       id: rootAgent.id,
-      children: getChildren(rootAgent.id),
+      children: getChildren(rootAgent.id, []),
       name: rootAgent.firstName + ' ' + rootAgent.lastName,
       email: rootAgent?.identity?.email,
       isAgent: true,
+      ancestors: [],
       balance: rootAgent.balance,
       quota: null,
       serviceRate: null,
