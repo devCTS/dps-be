@@ -26,6 +26,7 @@ import { systemConfigData } from './data/system-config.data';
 import { Upi } from 'src/channel/entity/upi.entity';
 import { NetBanking } from 'src/channel/entity/net-banking.entity';
 import { EWallet } from 'src/channel/entity/e-wallet.entity';
+import { UpdateSystemProfitDto } from './dto/update-system-profit.dto';
 
 @Injectable()
 export class SystemConfigService {
@@ -453,6 +454,34 @@ export class SystemConfigService {
       ...latestResult,
       ...updateWithdrawalDefaultsDto,
     });
+
+    return HttpStatus.OK;
+  }
+
+  async updateSystemProfitRates(systemProfitDto: UpdateSystemProfitDto) {
+    const { payinSystemProfitRate, payoutSystemProfitRate } = systemProfitDto;
+
+    const latestResult = await this.findLatest();
+
+    if (!latestResult) {
+      await this.systemConfigRepository.save({
+        payinSystemProfitRate,
+        payoutSystemProfitRate,
+      });
+
+      return HttpStatus.CREATED;
+    }
+
+    delete latestResult.payinSystemProfitRate;
+    delete latestResult.payoutSystemProfitRate;
+
+    const newSystemConfig = this.systemConfigRepository.save({
+      payinSystemProfitRate,
+      payoutSystemProfitRate,
+      ...latestResult,
+    });
+
+    if (!newSystemConfig) throw new InternalServerErrorException();
 
     return HttpStatus.OK;
   }

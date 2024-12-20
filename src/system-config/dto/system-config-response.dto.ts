@@ -82,6 +82,13 @@ export class SystemConfigResponseDto {
   @Expose()
   channelProfile: {};
 
+  // System Profit Rates
+  @Expose()
+  payinSystemProfitRate: number;
+
+  @Expose()
+  payoutSystemProfitRate: number;
+
   // Member Defaults
   @Expose()
   payinCommissionRateForMember: number;

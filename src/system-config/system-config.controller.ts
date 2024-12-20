@@ -1,14 +1,5 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Delete,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, UseGuards } from '@nestjs/common';
 import { SystemConfigService } from './system-config.service';
-import { CreateSystemConfigDto } from './dto/create-system-config.dto';
 import { UpdateGatewaysTimeoutsDto } from './dto/update-gateways-timeouts.dto';
 import { UpdateCurrencyDto } from './dto/update-currency.dto';
 import { UpdateTopupConfigDto } from './dto/update-topup-config.dto';
@@ -18,6 +9,7 @@ import { UpdateWithdrawalDefaultsDto } from './dto/update-withdrawal-default.dto
 import { Roles } from 'src/utils/decorators/roles.decorator';
 import { Role } from 'src/utils/enum/enum';
 import { RolesGuard } from 'src/utils/guard/roles.guard';
+import { UpdateSystemProfitDto } from './dto/update-system-profit.dto';
 
 @Controller('system-config')
 export class SystemConfigController {
@@ -68,6 +60,17 @@ export class SystemConfigController {
   ) {
     return this.systemConfigService.updateTopupConfigurations(
       updateTopupConfigDto,
+    );
+  }
+
+  @Patch('/system-profit-rates')
+  @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
+  @UseGuards(RolesGuard)
+  updateSystemProfitRates(
+    @Body() updateSystemProfitDto: UpdateSystemProfitDto,
+  ) {
+    return this.systemConfigService.updateSystemProfitRates(
+      updateSystemProfitDto,
     );
   }
 

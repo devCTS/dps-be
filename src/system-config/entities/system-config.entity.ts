@@ -30,6 +30,13 @@ export class SystemConfig {
   @Column({ nullable: true })
   defaultPayoutGateway: string;
 
+  // System Profit Defaults
+  @Column({ type: 'float', nullable: true })
+  payinSystemProfitRate: number;
+
+  @Column({ type: 'float', nullable: true })
+  payoutSystemProfitRate: number;
+
   // Topup Configurations
   @Column({ nullable: true })
   topupThreshold: number;
@@ -70,7 +77,6 @@ export class SystemConfig {
   maximumPayoutAmountForMerchant: number;
 
   // Withdrawal defaults
-
   @Column({ type: 'float', nullable: true })
   withdrawalRate: number;
 
