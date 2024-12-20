@@ -15,6 +15,7 @@ import {
   parseEndDate,
   parseStartDate,
 } from 'src/utils/dtos/paginate.dto';
+import { UpdateTeamCommissionsDto } from './dto/update-commissions.dto';
 
 @Injectable()
 export class TeamService {
@@ -70,6 +71,28 @@ export class TeamService {
       await this.teamRepository.update(team.teamId, {
         totalQuota: (team.totalQuota += amount),
       });
+  }
+
+  async updateTeamCommissionRates(
+    teamId: string,
+    updateDto: UpdateTeamCommissionsDto,
+  ) {
+    const {
+      teamPayinCommissionRate,
+      teamPayoutCommissionRate,
+      teamTopupCommissionRate,
+    } = updateDto;
+
+    const team = await this.teamRepository.findOneBy({ teamId });
+    if (!team) throw new NotFoundException('Team not found!');
+
+    await this.teamRepository.update(team.teamId, {
+      teamPayinCommissionRate,
+      teamPayoutCommissionRate,
+      teamTopupCommissionRate,
+    });
+
+    return HttpStatus.OK;
   }
 
   async paginate(paginateDto: PaginateRequestDto) {

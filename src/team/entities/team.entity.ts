@@ -29,6 +29,15 @@ export class Team {
   @Column({ type: 'float', default: 0 })
   totalQuota: number;
 
+  @Column({ type: 'float', default: 0 })
+  teamPayinCommissionRate: number;
+
+  @Column({ type: 'float', default: 0 })
+  teamPayoutCommissionRate: number;
+
+  @Column({ type: 'float', default: 0 })
+  teamTopupCommissionRate: number;
+
   @OneToOne(() => Member, (member) => member.team)
   @JoinColumn({ name: 'team_leader' })
   teamLeader: Member;
