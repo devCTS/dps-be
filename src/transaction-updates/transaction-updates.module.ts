@@ -18,6 +18,7 @@ import { Topup } from 'src/topup/entities/topup.entity';
 import { Agent } from 'src/agent/entities/agent.entity';
 import { Member } from 'src/member/entities/member.entity';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
+import { Team } from 'src/team/entities/team.entity';
 
 @Module({
   imports: [

@@ -1,4 +1,3 @@
-import { identity } from 'rxjs';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -38,6 +37,8 @@ export class TransactionUpdatesPayinService {
       };
     };
 
+    let currentOrderSystemProfit = 0;
+
     for (let i = 0; i < referralList.length; i++) {
       const element = referralList[i];
       const prevElement = i > 0 ? referralList[i - 1] : null;
@@ -68,7 +69,7 @@ export class TransactionUpdatesPayinService {
             orderAmount,
             element.payinServiceRate,
           )
-        : (orderAmount / 100) * rate;
+        : (currentOrderSystemProfit / 100) * rate;
 
       const before = element.balance;
 
@@ -92,7 +93,22 @@ export class TransactionUpdatesPayinService {
       };
 
       await this.transactionUpdateRepository.save(transactionUpdate);
+
+      if (isMerchant) {
+        const { payinSystemProfitRate } =
+          await this.systemConfigService.findLatest();
+        currentOrderSystemProfit = (amount / 100) * payinSystemProfitRate;
+      } else {
+        currentOrderSystemProfit -= amount;
+      }
     }
+
+    await this.addSystemProfit({
+      orderDetails,
+      orderType,
+      systemOrderId,
+      amount: currentOrderSystemProfit,
+    });
   }
 
   async processReferralMember(
@@ -110,6 +126,24 @@ export class TransactionUpdatesPayinService {
       };
     };
 
+    const { amount: merchantFee } =
+      await this.transactionUpdateRepository.findOne({
+        where: {
+          systemOrderId,
+          userType: UserTypeForTransactionUpdates.MERCHANT_BALANCE,
+        },
+      });
+
+    const { amount: systemProfitAmount } =
+      await this.transactionUpdateRepository.findOne({
+        where: {
+          systemOrderId,
+          userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
+        },
+      });
+
+    let remainingMerchantFee = merchantFee - systemProfitAmount;
+
     for (let i = 0; i < referralList.length; i++) {
       const element = referralList[i];
       const prevElement = i > 0 ? referralList[i - 1] : null;
@@ -125,9 +159,15 @@ export class TransactionUpdatesPayinService {
       const rate = !isAgent
         ? element.payinCommissionRate
         : getAgentRates(prevElement).payin;
-      const amount = (orderAmount / 100) * rate;
+
+      const amount = !isAgent
+        ? (merchantFee / 100) * rate
+        : (remainingMerchantFee / 100) * rate;
+
       const before = element.quota;
+
       const after = !isAgent ? before - orderAmount + amount : before + amount;
+
       const isAgentOf = prevElement
         ? prevElement?.firstName + ' ' + prevElement?.lastName
         : null;
@@ -149,9 +189,10 @@ export class TransactionUpdatesPayinService {
       };
 
       await this.transactionUpdateRepository.save(transactionUpdate);
+      remainingMerchantFee -= amount;
 
+      // insert row twice for agents - quota and balance
       if (isAgent) {
-        // insert row twice for agents - quota and balance
         const agentTransactionUpdate = {
           orderType,
           userType: UserTypeForTransactionUpdates.MEMBER_BALANCE,
@@ -170,9 +211,24 @@ export class TransactionUpdatesPayinService {
         await this.transactionUpdateRepository.save(agentTransactionUpdate);
       }
     }
+
+    if (remainingMerchantFee > 0)
+      await this.addSystemProfit({
+        orderDetails,
+        orderType,
+        systemOrderId,
+        amount: remainingMerchantFee,
+        forUpdate: true,
+      });
   }
 
-  async addSystemProfit(orderDetails, orderType, systemOrderId) {
+  async addSystemProfit({
+    orderDetails,
+    orderType,
+    systemOrderId,
+    amount,
+    forUpdate = false,
+  }) {
     const systemProfitExists = await this.transactionUpdateRepository.findOne({
       where: {
         userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
@@ -183,62 +239,20 @@ export class TransactionUpdatesPayinService {
     if (systemProfitExists)
       await this.transactionUpdateRepository.remove(systemProfitExists);
 
-    const transactionUpdateEntries =
-      await this.transactionUpdateRepository.find({
-        where: {
-          systemOrderId,
-          pending: true,
-        },
-        relations: ['payinOrder'],
-      });
+    const { systemProfit } = await this.systemConfigService.findLatest();
 
-    const systemConfig = await this.systemConfigService.findLatest();
+    let beforeProfit = systemProfit;
 
-    let beforeProfit = systemConfig.systemProfit;
-    let profitFromCurrentOrder = transactionUpdateEntries.reduce(
-      (acc, entry) => {
-        switch (entry.userType) {
-          case UserTypeForTransactionUpdates.MERCHANT_BALANCE:
-            acc.merchantTotal += entry.amount;
-            break;
-          // case UserTypeForTransactionUpdates.MEMBER_BALANCE:
-          //   acc.memberTotal += entry.amount;
-          //   break;
-          case UserTypeForTransactionUpdates.MEMBER_QUOTA:
-            acc.memberQuota += entry.amount;
-            break;
-          case UserTypeForTransactionUpdates.AGENT_BALANCE:
-            acc.agentTotal += entry.amount;
-            break;
-          case UserTypeForTransactionUpdates.GATEWAY_FEE:
-            acc.agentTotal += entry.amount;
-            break;
-          default:
-            break;
-        }
-        return acc;
-      },
-      {
-        merchantTotal: 0,
-        memberTotal: 0,
-        memberQuota: 0,
-        agentTotal: 0,
-        gatewayTotal: 0,
-      },
-    );
-    const currentProfit =
-      profitFromCurrentOrder.merchantTotal -
-      (profitFromCurrentOrder.memberTotal +
-        profitFromCurrentOrder.agentTotal +
-        profitFromCurrentOrder.gatewayTotal +
-        profitFromCurrentOrder.memberQuota);
+    const currentAmount = forUpdate
+      ? amount + systemProfitExists.amount
+      : amount;
 
     await this.transactionUpdateRepository.save({
       orderType,
       userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
       before: roundOffAmount(beforeProfit),
-      amount: roundOffAmount(currentProfit),
-      after: roundOffAmount(beforeProfit + currentProfit),
+      amount: roundOffAmount(currentAmount),
+      after: roundOffAmount(beforeProfit + currentAmount),
       payinOrder: orderDetails,
       systemOrderId,
     });
@@ -276,8 +290,6 @@ export class TransactionUpdatesPayinService {
         systemOrderId,
       );
     }
-
-    await this.addSystemProfit(orderDetails, orderType, systemOrderId);
 
     return HttpStatus.CREATED;
   }

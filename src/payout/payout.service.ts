@@ -343,11 +343,12 @@ export class PayoutService {
         payoutOrder: payoutOrderDetails,
       });
 
-      await this.transactionUpdatePayoutService.addSystemProfit(
-        payoutOrderDetails,
-        OrderType.PAYOUT,
-        payoutOrderDetails.systemOrderId,
-      );
+      await this.transactionUpdatePayoutService.addSystemProfit({
+        orderDetails: payoutOrderDetails,
+        orderType: OrderType.PAYOUT,
+        systemOrderId: payoutOrderDetails.systemOrderId,
+        amount: 0,
+      });
     }
 
     await this.payoutRepository.update(

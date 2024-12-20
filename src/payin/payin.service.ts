@@ -341,11 +341,12 @@ export class PayinService {
         payinOrder: payinOrderDetails,
       });
 
-      await this.transactionUpdateService.addSystemProfit(
-        payinOrderDetails,
-        OrderType.PAYIN,
-        payinOrderDetails.systemOrderId,
-      );
+      await this.transactionUpdateService.addSystemProfit({
+        orderDetails: payinOrderDetails,
+        orderType: OrderType.PAYIN,
+        systemOrderId: payinOrderDetails.systemOrderId,
+        amount: 0,
+      });
     }
 
     await this.payinRepository.update(
