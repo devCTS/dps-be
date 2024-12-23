@@ -149,7 +149,7 @@ export class PayinMemberService {
             : null,
         },
         quotaDetails: {
-          commissionRate: transactionUpdate?.rate,
+          commissionRate: transactionUpdate?.rateText,
           commissionAmount: roundOffAmount(transactionUpdate.amount),
           quotaDeducted: roundOffAmount(
             transactionUpdate.after - transactionUpdate.before,

@@ -63,6 +63,9 @@ export class TransactionUpdatesTopupService {
       const rate = !isAgent
         ? await getMemberRates(element?.teamId)
         : getAgentRates(prevElement).topup;
+
+      const rateText = `${rate}% of ₹${orderAmount}`;
+
       const amount = (orderAmount / 100) * rate;
       const before = element.quota;
       const after = !isAgent ? before + orderAmount + amount : before + amount;
@@ -75,6 +78,7 @@ export class TransactionUpdatesTopupService {
         orderType,
         userType,
         rate,
+        rateText,
         amount: roundOffAmount(amount),
         before: roundOffAmount(before),
         after: roundOffAmount(after),
@@ -93,6 +97,7 @@ export class TransactionUpdatesTopupService {
           orderType,
           userType: UserTypeForTransactionUpdates.MEMBER_BALANCE,
           rate,
+          rateText,
           amount: roundOffAmount(amount),
           before: element.balance,
           after: element.balance + amount,

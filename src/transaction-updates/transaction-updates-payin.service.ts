@@ -41,6 +41,7 @@ export class TransactionUpdatesPayinService {
     };
 
     let currentOrderSystemProfit = 0;
+    let merchantAgentsBaseAmount = 0;
 
     for (let i = 0; i < referralList.length; i++) {
       const element = referralList[i];
@@ -63,6 +64,10 @@ export class TransactionUpdatesPayinService {
         ? element.payinServiceRate?.percentageAmount
         : getAgentRates(prevElement).payout;
 
+      const rateText = isMerchant
+        ? `${rate}% of ₹${orderAmount}`
+        : `${rate}% of ₹${merchantAgentsBaseAmount}`;
+
       const absoluteAmount = isMerchant
         ? element.payinServiceRate?.absoluteAmount
         : 0;
@@ -72,7 +77,7 @@ export class TransactionUpdatesPayinService {
             orderAmount,
             element.payinServiceRate,
           )
-        : (currentOrderSystemProfit / 100) * rate;
+        : (merchantAgentsBaseAmount / 100) * rate;
 
       const before = element.balance;
 
@@ -84,6 +89,7 @@ export class TransactionUpdatesPayinService {
         orderType,
         userType,
         rate,
+        rateText,
         absoluteAmount,
         amount: roundOffAmount(amount),
         before: roundOffAmount(before),
@@ -101,6 +107,7 @@ export class TransactionUpdatesPayinService {
         const { payinSystemProfitRate } =
           await this.systemConfigService.findLatest();
         currentOrderSystemProfit = (amount / 100) * payinSystemProfitRate;
+        merchantAgentsBaseAmount = currentOrderSystemProfit;
       } else {
         currentOrderSystemProfit -= amount;
       }
@@ -156,6 +163,7 @@ export class TransactionUpdatesPayinService {
       });
 
     let remainingMerchantFee = merchantFee - systemProfitAmount;
+    let systemProfit = remainingMerchantFee;
 
     for (let i = 0; i < referralList.length; i++) {
       const element = referralList[i];
@@ -177,6 +185,10 @@ export class TransactionUpdatesPayinService {
         ? (merchantFee / 100) * rate
         : (remainingMerchantFee / 100) * rate;
 
+      const rateText = !isAgent
+        ? `${rate}% of ₹${merchantFee}`
+        : `${rate}% of ₹${remainingMerchantFee}`;
+
       const before = element.quota;
 
       const after = !isAgent ? before - orderAmount + amount : before + amount;
@@ -190,6 +202,7 @@ export class TransactionUpdatesPayinService {
         orderType,
         userType,
         rate,
+        rateText,
         amount: roundOffAmount(amount),
         before: roundOffAmount(before),
         after: roundOffAmount(after),
@@ -202,7 +215,7 @@ export class TransactionUpdatesPayinService {
       };
 
       await this.transactionUpdateRepository.save(transactionUpdate);
-      remainingMerchantFee -= amount;
+      systemProfit -= amount;
 
       // insert row twice for agents - quota and balance
       if (isAgent) {
@@ -210,6 +223,7 @@ export class TransactionUpdatesPayinService {
           orderType,
           userType: UserTypeForTransactionUpdates.MEMBER_BALANCE,
           rate,
+          rateText,
           amount: roundOffAmount(amount),
           before: element.balance,
           after: element.balance + amount,
@@ -225,12 +239,12 @@ export class TransactionUpdatesPayinService {
       }
     }
 
-    if (remainingMerchantFee > 0)
+    if (systemProfit > 0)
       await this.addSystemProfit({
         orderDetails,
         orderType,
         systemOrderId,
-        amount: remainingMerchantFee,
+        amount: systemProfit,
         forUpdate: true,
       });
   }

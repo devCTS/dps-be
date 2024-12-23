@@ -169,6 +169,7 @@ function TransformBalancesAndProfit() {
                 item?.absoluteAmount,
                 item?.rate,
               ),
+              rateText: item?.rateText,
               serviceFee: roundOffAmount(item.amount),
               balanceEarned: roundOffAmount(item.after - item.before),
               balanceBefore: roundOffAmount(item.before),
@@ -180,6 +181,7 @@ function TransformBalancesAndProfit() {
               role: 'agent',
               name: item.name,
               commissionRate: item.rate,
+              rateText: item?.rateText,
               commissionAmount: roundOffAmount(item.amount),
               balanceEarned: roundOffAmount(item.after - item.before),
               balanceBefore: roundOffAmount(item.before),
@@ -193,6 +195,7 @@ function TransformBalancesAndProfit() {
                   role: 'agent',
                   name: item.name,
                   commissionRate: item.rate,
+                  rateText: item?.rateText,
                   commissionAmount: roundOffAmount(item.amount),
                   balanceEarned: roundOffAmount(item.after - item.before, true),
                   balanceBefore: roundOffAmount(item.before),
@@ -204,6 +207,7 @@ function TransformBalancesAndProfit() {
                   role: 'member',
                   name: item.name,
                   commissionRate: item.rate,
+                  rateText: item?.rateText,
                   commissionAmount: roundOffAmount(item.amount),
                   quotaDeducted: roundOffAmount(item.after - item.before, true),
                   quotaBefore: roundOffAmount(item.before),
@@ -213,6 +217,7 @@ function TransformBalancesAndProfit() {
           case UserTypeForTransactionUpdates.SYSTEM_PROFIT:
             return {
               role: 'system',
+              rateText: item?.rateText,
               profit: roundOffAmount(item.after - item.before),
               balanceBefore: roundOffAmount(item.before),
               balanceAfter: roundOffAmount(item.after),
@@ -221,6 +226,7 @@ function TransformBalancesAndProfit() {
           case UserTypeForTransactionUpdates.GATEWAY_FEE:
             return {
               role: 'gateway',
+              rateText: item?.rateText,
               name: item.name,
               upstreamFee: roundOffAmount(item.amount),
               upstreamRate: item.rate,

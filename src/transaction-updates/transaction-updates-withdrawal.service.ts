@@ -88,6 +88,7 @@ export class TransactionUpdatesWithdrawalService {
       withdrawalMadeOn === WithdrawalMadeOn.ADMIN
         ? 0
         : user?.withdrawalServiceRate || user?.withdrawalRate;
+    const rateText = `${rate}% of ₹${orderDetails?.amount}`;
     const amount =
       withdrawalMadeOn === WithdrawalMadeOn.ADMIN
         ? 0
@@ -102,6 +103,7 @@ export class TransactionUpdatesWithdrawalService {
       orderType,
       userType: mapUserType[userRole],
       rate,
+      rateText,
       amount: roundOffAmount(amount),
       before: roundOffAmount(before),
       after: failed ? roundOffAmount(before) : roundOffAmount(after),
