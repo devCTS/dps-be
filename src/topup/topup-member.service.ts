@@ -170,7 +170,7 @@ export class TopupMemberService {
       const responseData = {
         ...orderDetails,
         quotaDetails: {
-          commissionRate: roundOffAmount(transactionUpdate.rate),
+          commissionRate: transactionUpdate.rateText,
           commissionAmount: roundOffAmount(transactionUpdate.amount),
           quotaEarned: roundOffAmount(
             orderDetails.amount + transactionUpdate.amount,

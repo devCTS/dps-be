@@ -194,7 +194,7 @@ export class PayoutMemberService {
       ...orderDetails,
       transactionDetails,
       quotaDetails: {
-        commissionRate: transactionUpdate.rate,
+        commissionRate: transactionUpdate.rateText,
         commissionAmount: transactionUpdate.amount,
         quotaEarned:
           orderDetails.status === OrderStatus.FAILED
