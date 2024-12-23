@@ -1,3 +1,4 @@
+import { systemConfigData } from './../system-config/data/system-config.data';
 import {
   HttpStatus,
   Injectable,
@@ -16,6 +17,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { MemberReferral } from './entities/member-referral.entity';
 import { Between, ILike, In, Not, Repository } from 'typeorm';
 import { Member } from 'src/member/entities/member.entity';
+import { SystemConfig } from 'src/system-config/entities/system-config.entity';
+import { SystemConfigService } from 'src/system-config/system-config.service';
+import { Team } from 'src/team/entities/team.entity';
+import { TeamService } from 'src/team/team.service';
 
 @Injectable()
 export class MemberReferralService {
@@ -26,6 +31,9 @@ export class MemberReferralService {
     private readonly memberReferralRepository: Repository<MemberReferral>,
     @InjectRepository(Member)
     private readonly memberRepository: Repository<Member>,
+
+    private readonly systemConfigService: SystemConfigService,
+    private readonly teamService: TeamService,
   ) {}
 
   async create(createMemberReferralDto: CreateMemberReferralDto) {
@@ -35,9 +43,6 @@ export class MemberReferralService {
       payinCommission,
       payoutCommission,
       topupCommission,
-      referredMemberPayinCommission,
-      referredMemberPayoutCommission,
-      referredMemberTopupCommission,
     } = createMemberReferralDto;
 
     const member = await this.memberRepository.findOne({
@@ -58,15 +63,62 @@ export class MemberReferralService {
         `You can only generate maxiumum ${this.referralLimit} referral codes.`,
       );
 
+    const { payinSystemProfitRate, payoutSystemProfitRate } =
+      await this.systemConfigService.findLatest();
+
+    const ancestors = await this.teamService.getAncestorsWithCommissionRates(
+      member?.teamId,
+      memberId,
+    );
+
+    const totalAncestorsPayinRate = ancestors.reduce(
+      (sum, ancestor) => sum + ancestor?.commissionRates?.payin,
+      0,
+    );
+
+    const totalAncestorsPayoutRate = ancestors.reduce(
+      (sum, ancestor) => sum + ancestor?.commissionRates?.payout,
+      0,
+    );
+
+    const totalAncestorsTopupRate = ancestors.reduce(
+      (sum, ancestor) => sum + ancestor?.commissionRates?.topup,
+      0,
+    );
+
+    const maxRateLeftForPayinCommission =
+      100 - payinSystemProfitRate - totalAncestorsPayinRate;
+    const maxRateLeftForPayoutCommission =
+      100 - payoutSystemProfitRate - totalAncestorsPayoutRate;
+    const maxRateLeftForTopupCommission = 100 - totalAncestorsTopupRate;
+
+    if (payinCommission >= maxRateLeftForPayinCommission)
+      return {
+        error: true,
+        forPayin: true,
+        messsage: `Maximum payin commission rate - ${maxRateLeftForPayinCommission}%`,
+      };
+
+    if (payoutCommission >= maxRateLeftForPayoutCommission)
+      return {
+        error: true,
+        forPayout: true,
+        messsage: `Maximum payout commission rate - ${maxRateLeftForPayoutCommission}%`,
+      };
+
+    if (topupCommission >= maxRateLeftForTopupCommission)
+      return {
+        error: true,
+        forTopup: true,
+        messsage: `Maximum topup commission rate - ${maxRateLeftForTopupCommission}%`,
+      };
+
     await this.memberReferralRepository.save({
       referralCode,
       member,
       payinCommission,
       payoutCommission,
       topupCommission,
-      referredMemberPayinCommission,
-      referredMemberPayoutCommission,
-      referredMemberTopupCommission,
     });
 
     return HttpStatus.OK;
@@ -133,13 +185,7 @@ export class MemberReferralService {
     return HttpStatus.OK;
   }
 
-  async updateFromReferralCode({
-    referralCode,
-    referredMemberPayinCommission = null,
-    referredMemberPayoutCommission = null,
-    referredMemberTopupCommission = null,
-    referredMember = null,
-  }) {
+  async updateFromReferralCode({ referralCode, referredMember = null }) {
     const memberReferral = await this.memberReferralRepository.findOne({
       where: { referralCode },
     });
@@ -149,15 +195,6 @@ export class MemberReferralService {
 
     const updateData = {
       status: 'utilized',
-      ...(referredMemberPayinCommission !== null && {
-        referredMemberPayinCommission,
-      }),
-      ...(referredMemberPayoutCommission !== null && {
-        referredMemberPayoutCommission,
-      }),
-      ...(referredMemberTopupCommission !== null && {
-        referredMemberTopupCommission,
-      }),
       ...(referredMember !== null && { referredMember }),
     };
 
@@ -251,151 +288,4 @@ export class MemberReferralService {
       endRecord,
     };
   }
-
-  // Method to fetch and build the referral tree starting from the root member
-  // async getReferralTree(): Promise<any> {
-  //   const rootReferral = await this.memberReferralRepository.findOne({
-  //     where: {
-  //       referralCode: null,
-  //       status: 'utilized',
-  //     },
-  //     relations: ['member', 'member.identity'],
-  //   });
-
-  //   if (!rootReferral) return null;
-
-  //   const rootMember = rootReferral.member;
-  //   return this.buildTree(rootMember);
-  // }
-
-  // Recursive method to build the tree structure
-  // private async buildTree(member: Member): Promise<any> {
-  //   const referrals = await this.memberReferralRepository.find({
-  //     where: {
-  //       member: { id: member.id },
-  //       status: 'utilized',
-  //     },
-  //     relations: ['referredMember', 'referredMember.identity'],
-  //   });
-
-  //   // Recursively build children tree for each referred member
-  //   const children = await Promise.all(
-  //     referrals.map(async (referral) => {
-  //       if (referral.referredMember) {
-  //         const childTree = await this.buildTree(referral.referredMember);
-
-  //         return {
-  //           id: referral.referredMember.id,
-  //           uniqueId: referral.referredMember.identity.id,
-  //           firstName: referral.referredMember.firstName,
-  //           lastName: referral.referredMember.lastName,
-  //           referralCode: referral.referredMember.referralCode,
-  //           email: referral.referredMember.identity.email,
-  //           payinCommission: referral.payinCommission,
-  //           payoutCommission: referral.payoutCommission,
-  //           topupCommission: referral.topupCommission,
-  //           referredMemberPayinCommission:
-  //             referral.referredMemberPayinCommission,
-  //           referredMemberPayoutCommission:
-  //             referral.referredMemberPayoutCommission,
-  //           referredMemberTopupCommission:
-  //             referral.referredMemberTopupCommission,
-  //           balance: referral.referredMember.balance,
-  //           quota: referral.referredMember.quota,
-
-  //           children: childTree.children,
-  //         };
-  //       }
-  //       return null;
-  //     }),
-  //   );
-
-  //   return {
-  //     id: member.id,
-  //     uniqueId: member.identity.id,
-  //     firstName: member.firstName,
-  //     lastName: member.lastName,
-  //     referralCode: member.referralCode,
-  //     email: member.identity.email,
-  //     payinCommission: member.payinCommissionRate,
-  //     payoutCommission: member.payoutCommissionRate,
-  //     topupCommission: member.topupCommissionRate,
-  //     balance: member.balance,
-  //     quota: member.quota,
-  //     children: children.filter((child) => child !== null),
-  //   };
-  // }
-
-  // async getReferralTreeOfUser(userId: number) {
-  //   const referralTree = await this.getReferralTree();
-  //   if (!referralTree) {
-  //     const member = await this.memberRepository.findOne({
-  //       where: { identity: { id: userId } },
-  //       relations: ['identity'],
-  //     });
-  //     if (!member) return null;
-
-  //     return {
-  //       id: member.id,
-  //       firstName: member.firstName,
-  //       lastName: member.lastName,
-  //       referralCode: member.referralCode,
-  //       email: member.identity.email,
-  //       balance: member.balance,
-  //       quota: member.quota,
-  //       payinCommission: member.payinCommissionRate,
-  //       payoutCommission: member.payoutCommissionRate,
-  //       topupCommission: member.topupCommissionRate,
-  //       children: [],
-  //     };
-  //   }
-  //   return await this.trimTreeToUser(referralTree, userId);
-  // }
-
-  // private async trimTreeToUser(tree: any, userId: number): Promise<any> {
-  //   if (tree.uniqueId === userId)
-  //     return {
-  //       id: tree.id,
-  //       firstName: tree.firstName,
-  //       lastName: tree.lastName,
-  //       referralCode: tree.referralCode,
-  //       email: tree.email,
-  //       balance: tree.balance,
-  //       quota: tree.quota,
-  //       payinCommission: tree.payinCommission,
-  //       payoutCommission: tree.payoutCommission,
-  //       topupCommission: tree.topupCommission,
-  //       children: [],
-  //     };
-
-  //   const trimmedChildren = await Promise.all(
-  //     tree.children.map((child: any) => this.trimTreeToUser(child, userId)),
-  //   );
-
-  //   if (trimmedChildren.length > 0)
-  //     return {
-  //       ...tree,
-  //       children: trimmedChildren,
-  //     };
-
-  //   const member = await this.memberRepository.findOne({
-  //     where: { identity: { id: userId } },
-  //     relations: ['identity'],
-  //   });
-  //   if (!member) return null;
-
-  //   return {
-  //     id: member.id,
-  //     firstName: member.firstName,
-  //     lastName: member.lastName,
-  //     referralCode: member.referralCode,
-  //     email: member.identity.email,
-  //     balance: member.balance,
-  //     quota: member.quota,
-  //     payinCommission: member.payinCommissionRate,
-  //     payoutCommission: member.payoutCommissionRate,
-  //     topupCommission: member.topupCommissionRate,
-  //     children: [],
-  //   };
-  // }
 }

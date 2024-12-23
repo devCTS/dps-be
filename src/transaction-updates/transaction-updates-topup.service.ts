@@ -7,6 +7,8 @@ import { Identity } from 'src/identity/entities/identity.entity';
 import { MemberReferralService } from 'src/member-referral/member-referral.service';
 import { roundOffAmount } from 'src/utils/utils';
 import { TransactionUpdatesService } from './transaction-updates.service';
+import { Team } from 'src/team/entities/team.entity';
+import { SystemConfigService } from 'src/system-config/system-config.service';
 
 @Injectable()
 export class TransactionUpdatesTopupService {
@@ -15,8 +17,11 @@ export class TransactionUpdatesTopupService {
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
     @InjectRepository(Identity)
     private readonly identityRepository: Repository<Identity>,
-    private readonly memberReferralService: MemberReferralService,
+    @InjectRepository(Team)
+    private readonly teamRepository: Repository<Team>,
+
     private readonly transactionUpdatesService: TransactionUpdatesService,
+    private readonly systemConfigService: SystemConfigService,
   ) {}
 
   async processReferralMember(
@@ -34,6 +39,15 @@ export class TransactionUpdatesTopupService {
       };
     };
 
+    const getMemberRates = async (teamId) => {
+      let team;
+      if (teamId) team = await this.teamRepository.findOneBy({ teamId });
+      if (team?.teamTopupCommissionRate) return team?.teamTopupCommissionRate;
+
+      return (await this.systemConfigService.findLatest())
+        ?.topupCommissionRateForMember;
+    };
+
     for (let i = 0; i < referralList.length; i++) {
       const element = referralList[i];
       const prevElement = i > 0 ? referralList[i - 1] : null;
@@ -47,7 +61,7 @@ export class TransactionUpdatesTopupService {
       const userType = UserTypeForTransactionUpdates.MEMBER_QUOTA;
 
       const rate = !isAgent
-        ? element.topupCommissionRate
+        ? getMemberRates(element?.teamId)
         : getAgentRates(prevElement).topup;
       const amount = (orderAmount / 100) * rate;
       const before = element.quota;

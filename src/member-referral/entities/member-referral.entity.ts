@@ -35,15 +35,6 @@ export class MemberReferral {
   @Column('float')
   topupCommission: number;
 
-  @Column('float')
-  referredMemberPayinCommission: number;
-
-  @Column('float')
-  referredMemberPayoutCommission: number;
-
-  @Column('float')
-  referredMemberTopupCommission: number;
-
   @Column({
     enum: ['pending', 'utilized'],
     default: 'pending',

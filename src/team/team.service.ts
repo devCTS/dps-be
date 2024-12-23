@@ -16,6 +16,7 @@ import {
   parseStartDate,
 } from 'src/utils/dtos/paginate.dto';
 import { UpdateTeamCommissionsDto } from './dto/update-commissions.dto';
+import { SystemConfigService } from 'src/system-config/system-config.service';
 
 @Injectable()
 export class TeamService {
@@ -24,6 +25,8 @@ export class TeamService {
     private readonly teamRepository: Repository<Team>,
     @InjectRepository(Member)
     private readonly memberRepository: Repository<Member>,
+
+    private readonly systemConfigService: SystemConfigService,
   ) {}
 
   async createTeam(leadingMemberId: number, subMemberId: number) {
@@ -155,36 +158,35 @@ export class TeamService {
     return this.buildTree(teamMembers);
   }
 
-  buildTree(members: Member[]) {
+  async buildTree(members: Member[]) {
     const rootMember = members.find((member) => !member.agent);
 
-    const getChildren = (
-      parentId: number,
-      ancestorsOfParent: number[],
-    ): TreeNode[] => {
+    const getChildren = (parentId: number, ancestorsOfParent: number[]) => {
       const children = members.filter(
         (member) => member.agent?.id === parentId,
       );
 
-      return children.map((obj) => ({
-        id: obj.id,
-        children: getChildren(obj.id, [...ancestorsOfParent, parentId]),
-        name: obj.firstName + ' ' + obj.lastName,
-        email: obj.identity?.email,
-        isAgent: false,
-        ancestors: [...ancestorsOfParent, parentId],
-        balance: null,
-        quota: obj.quota,
-        serviceRate: null,
-        ratesOfAgent: {
-          payin: obj.agentCommissions.payinCommissionRate,
-          payout: obj.agentCommissions.payoutCommissionRate,
-        },
-        memberRates: {
-          payin: obj.payinCommissionRate,
-          payout: obj.payoutCommissionRate,
-        },
-      }));
+      return Promise.all(
+        children.map(async (obj) => ({
+          id: obj.id,
+          children: getChildren(obj.id, [...ancestorsOfParent, parentId]),
+          name: obj.firstName + ' ' + obj.lastName,
+          email: obj.identity?.email,
+          isAgent: false,
+          ancestors: [...ancestorsOfParent, parentId],
+          balance: null,
+          quota: obj.quota,
+          serviceRate: null,
+          ratesOfAgent: {
+            payin: obj.agentCommissions.payinCommissionRate,
+            payout: obj.agentCommissions.payoutCommissionRate,
+          },
+          memberRates: {
+            payin: (await this.getMemberRates(obj?.teamId)).payin,
+            payout: (await this.getMemberRates(obj?.teamId)).payout,
+          },
+        })),
+      );
     };
 
     const tree: TreeNode = {
@@ -199,8 +201,8 @@ export class TeamService {
       serviceRate: null,
       ratesOfAgent: null,
       memberRates: {
-        payin: rootMember.payinCommissionRate,
-        payout: rootMember.payoutCommissionRate,
+        payin: (await this.getMemberRates(rootMember?.teamId)).payin,
+        payout: (await this.getMemberRates(rootMember?.teamId)).payout,
       },
     };
 
@@ -209,5 +211,68 @@ export class TeamService {
       id: rootMember.teamId,
       name: tree.name,
     };
+  }
+
+  private getMemberRates = async (teamId) => {
+    let team;
+    if (teamId) team = await this.teamRepository.findOneBy({ teamId });
+    if (team)
+      return {
+        payin: team?.teamPayinCommissionRate,
+        payout: team?.teamPayoutCommissionRate,
+      };
+
+    const systemConfig = await this.systemConfigService.findLatest();
+
+    return {
+      payin: systemConfig?.payinCommissionRateForMember,
+      payout: systemConfig?.payoutCommissionRateForMember,
+    };
+  };
+
+  async getAncestorsWithCommissionRates(teamId: string, memberId: number) {
+    if (!teamId) return [];
+
+    const teamMembers = await this.memberRepository.find({
+      where: {
+        teamId,
+      },
+      relations: ['agent', 'identity'],
+    });
+
+    const member = teamMembers.find((member) => member.id === memberId);
+    if (!member) throw new Error('Member not found');
+
+    const ancestors: {
+      id: number;
+      name: string;
+      commissionRates: { payin: number; payout: number; topup: number };
+    }[] = [];
+
+    const findParent = (agentId: number) =>
+      teamMembers.find((m) => m.id === agentId);
+
+    let currentMember = member;
+
+    while (currentMember?.agent?.id) {
+      const parent = findParent(currentMember.agent.id);
+
+      if (parent) {
+        ancestors.push({
+          id: parent.id,
+          name: `${parent.firstName} ${parent.lastName}`,
+          commissionRates: {
+            payin: parent.agentCommissions.payinCommissionRate,
+            payout: parent.agentCommissions.payoutCommissionRate,
+            topup: parent.agentCommissions.topupCommissionRate,
+          },
+        });
+        currentMember = parent;
+      } else {
+        break;
+      }
+    }
+
+    return ancestors;
   }
 }

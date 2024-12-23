@@ -34,20 +34,8 @@ export class Member {
   @Column({ nullable: true })
   phone: string;
 
-  // @Column({ nullable: true })
-  // referralCode: string; // remove
-
   @Column({ default: true })
   enabled: boolean;
-
-  @Column({ type: 'float' })
-  payinCommissionRate: number;
-
-  @Column({ type: 'float' })
-  payoutCommissionRate: number;
-
-  @Column({ type: 'float' })
-  topupCommissionRate: number;
 
   @Column({ type: 'integer' })
   singlePayoutUpperLimit: number;

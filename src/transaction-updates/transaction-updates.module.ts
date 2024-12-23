@@ -31,6 +31,7 @@ import { Team } from 'src/team/entities/team.entity';
       Agent,
       Member,
       Merchant,
+      Team,
     ]),
     AgentReferralModule,
     MemberReferralModule,

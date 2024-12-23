@@ -19,7 +19,6 @@ import {
   parseEndDate,
   parseStartDate,
 } from 'src/utils/dtos/paginate.dto';
-import { JwtService } from 'src/services/jwt/jwt.service';
 import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 import { MemberReferralService } from 'src/member-referral/member-referral.service';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
@@ -52,7 +51,6 @@ export class MemberService {
     private readonly memberReferralRepository: Repository<MemberReferral>,
 
     private readonly identityService: IdentityService,
-    private readonly jwtService: JwtService,
     private readonly memberReferralService: MemberReferralService,
     private readonly teamService: TeamService,
     private readonly systemConfigService: SystemConfigService,
@@ -66,11 +64,8 @@ export class MemberService {
       enabled,
       firstName,
       lastName,
-      payinCommissionRate,
-      payoutCommissionRate,
       singlePayoutLowerLimit,
       singlePayoutUpperLimit,
-      topupCommissionRate,
       phone,
       referralCode,
       channelProfile,
@@ -107,11 +102,8 @@ export class MemberService {
       phone,
       enabled,
       dailyTotalPayoutLimit,
-      payinCommissionRate,
-      payoutCommissionRate,
       singlePayoutLowerLimit,
       singlePayoutUpperLimit,
-      topupCommissionRate,
       telegramId,
       agent: referralDetails?.member || null,
       agentCommissions: referralDetails?.member?.id
@@ -165,9 +157,6 @@ export class MemberService {
     if (referralCode)
       await this.memberReferralService.updateFromReferralCode({
         referralCode,
-        referredMemberPayinCommission: payinCommissionRate,
-        referredMemberPayoutCommission: payoutCommissionRate,
-        referredMemberTopupCommission: topupCommissionRate,
         referredMember: createdMember,
       });
 
@@ -195,9 +184,6 @@ export class MemberService {
       );
 
       const {
-        payinCommissionRateForMember,
-        payoutCommissionRateForMember,
-        topupCommissionRateForMember,
         maximumDailyPayoutAmountForMember,
         maximumPayoutAmountForMember,
         minimumPayoutAmountForMember,
@@ -218,18 +204,6 @@ export class MemberService {
         lastName: verifiedContext.lastName,
         phone: '',
         enabled: true,
-
-        payinCommissionRate: referralCode
-          ? referralDetails?.referredMemberPayinCommission
-          : payinCommissionRateForMember,
-
-        payoutCommissionRate: referralCode
-          ? referralDetails?.referredMemberPayoutCommission
-          : payoutCommissionRateForMember,
-
-        topupCommissionRate: referralCode
-          ? referralDetails?.referredMemberTopupCommission
-          : topupCommissionRateForMember,
 
         singlePayoutLowerLimit: minimumPayoutAmountForMember || 100,
         singlePayoutUpperLimit: maximumPayoutAmountForMember || 10000,
@@ -639,17 +613,10 @@ export class MemberService {
   }
 
   async updateComissionRates(requestDto: UpdateCommissionRatesDto) {
-    const {
-      payinCommissionRate,
-      payoutCommissionRate,
-      agentPayinCommissionRate,
-      agentPayoutCommissionRate,
-      memberId,
-    } = requestDto;
+    const { agentPayinCommissionRate, agentPayoutCommissionRate, memberId } =
+      requestDto;
 
     await this.memberRepository.update(memberId, {
-      payinCommissionRate,
-      payoutCommissionRate,
       agentCommissions: {
         payinCommissionRate: agentPayinCommissionRate,
         payoutCommissionRate: agentPayoutCommissionRate,

@@ -10,6 +10,7 @@ import {
   roundOffAmount,
 } from 'src/utils/utils';
 import { TransactionUpdatesService } from './transaction-updates.service';
+import { Team } from 'src/team/entities/team.entity';
 
 @Injectable()
 export class TransactionUpdatesPayinService {
@@ -18,6 +19,8 @@ export class TransactionUpdatesPayinService {
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
     @InjectRepository(Identity)
     private readonly identityRepository: Repository<Identity>,
+    @InjectRepository(Team)
+    private readonly teamRepository: Repository<Team>,
 
     private readonly systemConfigService: SystemConfigService,
     private readonly transactionUpdatesService: TransactionUpdatesService,
@@ -126,6 +129,15 @@ export class TransactionUpdatesPayinService {
       };
     };
 
+    const getMemberRates = async (teamId) => {
+      let team;
+      if (teamId) team = await this.teamRepository.findOneBy({ teamId });
+      if (team?.teamPayinCommissionRate) return team?.teamPayinCommissionRate;
+
+      return (await this.systemConfigService.findLatest())
+        ?.payinCommissionRateForMember;
+    };
+
     const { amount: merchantFee } =
       await this.transactionUpdateRepository.findOne({
         where: {
@@ -157,7 +169,7 @@ export class TransactionUpdatesPayinService {
       const userType = UserTypeForTransactionUpdates.MEMBER_QUOTA;
 
       const rate = !isAgent
-        ? element.payinCommissionRate
+        ? getMemberRates(element?.teamId)
         : getAgentRates(prevElement).payin;
 
       const amount = !isAgent

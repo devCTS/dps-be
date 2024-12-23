@@ -1,14 +1,6 @@
-import { IsNotEmpty, isNotEmpty, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsNumber } from 'class-validator';
 
 export class UpdateCommissionRatesDto {
-  @IsNumber()
-  @IsNotEmpty()
-  payinCommissionRate: number;
-
-  @IsNumber()
-  @IsNotEmpty()
-  payoutCommissionRate: number;
-
   @IsNumber()
   @IsNotEmpty()
   agentPayinCommissionRate: number;

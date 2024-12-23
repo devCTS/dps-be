@@ -15,13 +15,4 @@ export class CreateMemberReferralDto {
 
   @IsNumber()
   topupCommission: number;
-
-  @IsNumber()
-  referredMemberPayinCommission: number;
-
-  @IsNumber()
-  referredMemberPayoutCommission: number;
-
-  @IsNumber()
-  referredMemberTopupCommission: number;
 }

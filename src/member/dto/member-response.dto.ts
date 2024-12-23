@@ -34,15 +34,6 @@ export class MemberResponseDto {
   enabled: boolean;
 
   @Expose()
-  payinCommissionRate: number;
-
-  @Expose()
-  payoutCommissionRate: number;
-
-  @Expose()
-  topupCommissionRate: number;
-
-  @Expose()
   singlePayoutUpperLimit: number;
 
   @Expose()

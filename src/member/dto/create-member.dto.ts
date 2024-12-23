@@ -50,18 +50,6 @@ export class CreateMemberDto {
 
   @IsNumber()
   @Min(0)
-  payinCommissionRate: number;
-
-  @IsNumber()
-  @Min(0)
-  payoutCommissionRate: number;
-
-  @IsNumber()
-  @Min(0)
-  topupCommissionRate: number;
-
-  @IsNumber()
-  @Min(0)
   singlePayoutUpperLimit: number;
 
   @IsNumber()
