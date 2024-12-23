@@ -133,7 +133,8 @@ export class TransactionUpdatesPayoutService {
     const getMemberRates = async (teamId) => {
       let team;
       if (teamId) team = await this.teamRepository.findOneBy({ teamId });
-      if (team?.teamPayoutCommissionRate) return team?.teamPayoutCommissionRate;
+      if (team?.teamPayoutCommissionRate > 0)
+        return team?.teamPayoutCommissionRate;
 
       return (await this.systemConfigService.findLatest())
         ?.payoutCommissionRateForMember;
@@ -170,7 +171,7 @@ export class TransactionUpdatesPayoutService {
       const userType = UserTypeForTransactionUpdates.MEMBER_QUOTA;
 
       const rate = !isAgent
-        ? getMemberRates(element?.teamId)
+        ? await getMemberRates(element?.teamId)
         : getAgentRates(prevElement).payout;
 
       const amount = !isAgent

@@ -92,26 +92,35 @@ export class MemberReferralService {
       100 - payoutSystemProfitRate - totalAncestorsPayoutRate;
     const maxRateLeftForTopupCommission = 100 - totalAncestorsTopupRate;
 
-    if (payinCommission >= maxRateLeftForPayinCommission)
+    if (payinCommission > maxRateLeftForPayinCommission)
       return {
         error: true,
         forPayin: true,
         messsage: `Maximum payin commission rate - ${maxRateLeftForPayinCommission}%`,
       };
 
-    if (payoutCommission >= maxRateLeftForPayoutCommission)
+    if (payoutCommission > maxRateLeftForPayoutCommission)
       return {
         error: true,
         forPayout: true,
         messsage: `Maximum payout commission rate - ${maxRateLeftForPayoutCommission}%`,
       };
 
-    if (topupCommission >= maxRateLeftForTopupCommission)
+    if (topupCommission > maxRateLeftForTopupCommission)
       return {
         error: true,
         forTopup: true,
         messsage: `Maximum topup commission rate - ${maxRateLeftForTopupCommission}%`,
       };
+
+    if (
+      maxRateLeftForPayinCommission <= 0 &&
+      maxRateLeftForPayoutCommission <= 0 &&
+      maxRateLeftForTopupCommission <= 0
+    )
+      throw new NotAcceptableException(
+        'Referral commissions are fully utilized!',
+      );
 
     await this.memberReferralRepository.save({
       referralCode,

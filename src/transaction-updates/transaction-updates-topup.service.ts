@@ -4,7 +4,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
 import { Identity } from 'src/identity/entities/identity.entity';
-import { MemberReferralService } from 'src/member-referral/member-referral.service';
 import { roundOffAmount } from 'src/utils/utils';
 import { TransactionUpdatesService } from './transaction-updates.service';
 import { Team } from 'src/team/entities/team.entity';
@@ -42,7 +41,8 @@ export class TransactionUpdatesTopupService {
     const getMemberRates = async (teamId) => {
       let team;
       if (teamId) team = await this.teamRepository.findOneBy({ teamId });
-      if (team?.teamTopupCommissionRate) return team?.teamTopupCommissionRate;
+      if (team?.teamTopupCommissionRate > 0)
+        return team?.teamTopupCommissionRate;
 
       return (await this.systemConfigService.findLatest())
         ?.topupCommissionRateForMember;
@@ -61,7 +61,7 @@ export class TransactionUpdatesTopupService {
       const userType = UserTypeForTransactionUpdates.MEMBER_QUOTA;
 
       const rate = !isAgent
-        ? getMemberRates(element?.teamId)
+        ? await getMemberRates(element?.teamId)
         : getAgentRates(prevElement).topup;
       const amount = (orderAmount / 100) * rate;
       const before = element.quota;

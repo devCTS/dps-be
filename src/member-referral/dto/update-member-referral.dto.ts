@@ -13,18 +13,6 @@ export class UpdateMemberReferralDto {
   @IsNumber()
   topupCommission?: number;
 
-  @IsOptional()
-  @IsNumber()
-  referredMemberPayinCommission?: number;
-
-  @IsOptional()
-  @IsNumber()
-  referredMemberPayoutCommission?: number;
-
-  @IsOptional()
-  @IsNumber()
-  referredMemberTopupCommission?: number;
-
   @IsString()
   status: string;
 }
