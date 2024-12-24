@@ -2312,8 +2312,10 @@ export class OverviewAdminService {
 
     const topups = topupRows.reduce(
       (prev, curr) => {
-        if (curr.status === OrderStatus.COMPLETE)
+        if (curr.status === OrderStatus.COMPLETE) {
           prev.totalCompleted += curr.amount;
+          ++prev.total;
+        }
 
         if (curr.status === OrderStatus.FAILED) prev.totalFailed += curr.amount;
 
@@ -2326,6 +2328,7 @@ export class OverviewAdminService {
         return prev;
       },
       {
+        total: 0,
         totalCompleted: 0,
         totalFailed: 0,
         totalPending: 0,
@@ -2365,7 +2368,7 @@ export class OverviewAdminService {
 
     return {
       orders: {
-        total: topupsCount,
+        total: topups.total,
         totalFailed: topups.totalFailed,
         totalPending: topups.totalPending,
         totalCompleted: topups.totalCompleted,
