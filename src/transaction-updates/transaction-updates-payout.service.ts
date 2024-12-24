@@ -90,6 +90,7 @@ export class TransactionUpdatesPayoutService {
         orderType,
         userType,
         rate,
+        rateText,
         absoluteAmount,
         amount: roundOffAmount(amount),
         before: roundOffAmount(before),
