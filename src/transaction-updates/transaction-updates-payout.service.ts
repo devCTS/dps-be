@@ -155,16 +155,12 @@ export class TransactionUpdatesPayoutService {
         },
       });
 
-    const { amount: systemProfitAmount } =
-      await this.transactionUpdateRepository.findOne({
-        where: {
-          systemOrderId,
-          userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
-        },
-      });
+    const { payoutSystemProfitRate } =
+      await this.systemConfigService.findLatest();
 
-    let remainingMerchantFee = merchantFee - systemProfitAmount;
-    let systemProfit = merchantFee - systemProfitAmount;
+    let remainingMerchantFee =
+      merchantFee - (merchantFee / 100) * payoutSystemProfitRate;
+    let systemProfit = remainingMerchantFee;
 
     for (let i = 0; i < referralList.length; i++) {
       const element = referralList[i];
@@ -216,6 +212,7 @@ export class TransactionUpdatesPayoutService {
       };
 
       await this.transactionUpdateRepository.save(transactionUpdate);
+      if (!isAgent) remainingMerchantFee -= amount;
       systemProfit -= amount;
 
       if (isAgent) {
@@ -244,7 +241,7 @@ export class TransactionUpdatesPayoutService {
         orderDetails,
         orderType,
         systemOrderId,
-        amount: remainingMerchantFee,
+        amount: systemProfit,
         forUpdate: true,
       });
   }

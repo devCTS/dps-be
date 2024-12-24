@@ -154,15 +154,11 @@ export class TransactionUpdatesPayinService {
         },
       });
 
-    const { amount: systemProfitAmount } =
-      await this.transactionUpdateRepository.findOne({
-        where: {
-          systemOrderId,
-          userType: UserTypeForTransactionUpdates.SYSTEM_PROFIT,
-        },
-      });
+    const { payinSystemProfitRate } =
+      await this.systemConfigService.findLatest();
 
-    let remainingMerchantFee = merchantFee - systemProfitAmount;
+    let remainingMerchantFee =
+      merchantFee - (merchantFee / 100) * payinSystemProfitRate;
     let systemProfit = remainingMerchantFee;
 
     for (let i = 0; i < referralList.length; i++) {
@@ -216,6 +212,7 @@ export class TransactionUpdatesPayinService {
 
       await this.transactionUpdateRepository.save(transactionUpdate);
       systemProfit -= amount;
+      if (!isAgent) remainingMerchantFee -= amount;
 
       // insert row twice for agents - quota and balance
       if (isAgent) {
