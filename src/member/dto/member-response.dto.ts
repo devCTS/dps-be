@@ -15,9 +15,6 @@ export class MemberResponseDto {
   firstName: string;
 
   @Expose()
-  referralCode: string;
-
-  @Expose()
   lastName: string;
 
   @Expose()
@@ -41,6 +38,15 @@ export class MemberResponseDto {
 
   @Expose()
   dailyTotalPayoutLimit: number;
+
+  @Expose()
+  payinCommissionRate: number;
+
+  @Expose()
+  payoutCommissionRate: number;
+
+  @Expose()
+  topupCommissionRate: number;
 
   @Expose()
   @DateFormat()

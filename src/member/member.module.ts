@@ -23,6 +23,7 @@ import { SystemConfigModule } from 'src/system-config/system-config.module';
       TransactionUpdate,
       Topup,
       MemberReferral,
+      Team,
     ]),
     IdentityModule,
     JwtModule,

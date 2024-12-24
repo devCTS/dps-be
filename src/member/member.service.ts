@@ -45,8 +45,8 @@ export class MemberService {
     private readonly netBankingRepository: Repository<NetBanking>,
     @InjectRepository(EWallet)
     private readonly eWalletRepository: Repository<EWallet>,
-    // @InjectRepository(Team)
-    // private readonly teamRepository: Repository<Team>,
+    @InjectRepository(Team)
+    private readonly teamRepository: Repository<Team>,
     @InjectRepository(MemberReferral)
     private readonly memberReferralRepository: Repository<MemberReferral>,
 
@@ -262,6 +262,28 @@ export class MemberService {
     return plainToInstance(MemberResponseDto, results);
   }
 
+  private getMemberRates = async (teamId) => {
+    let team;
+    if (teamId) team = await this.teamRepository.findOneBy({ teamId });
+    if (
+      team?.teamPayinCommissionRate > 0 ||
+      team?.teamPayoutCommissionRate > 0
+    ) {
+      return {
+        payin: team?.teamPayinCommissionRate,
+        payout: team?.teamPayoutCommissionRate,
+        topup: team?.teamTopupCommissionRate,
+      };
+    }
+
+    const systemConfig = await this.systemConfigService.findLatest();
+    return {
+      payin: systemConfig?.payinCommissionRateForMember,
+      payout: systemConfig?.payoutCommissionRateForMember,
+      topup: systemConfig?.topupCommissionRateForMember,
+    };
+  };
+
   async findOne(id: number): Promise<any> {
     const results = await this.memberRepository.findOne({
       where: { id },
@@ -273,7 +295,14 @@ export class MemberService {
       ],
     });
 
-    return plainToInstance(MemberResponseDto, results);
+    const modifiedResults = {
+      ...results,
+      payinCommissionRate: (await this.getMemberRates(results.teamId)).payin,
+      payoutCommissionRate: (await this.getMemberRates(results.teamId)).payout,
+      topupCommissionRate: (await this.getMemberRates(results.teamId)).topup,
+    };
+
+    return plainToInstance(MemberResponseDto, modifiedResults);
   }
 
   async update(id: number, updateDto: UpdateMemberDto): Promise<HttpStatus> {

@@ -215,6 +215,12 @@ export class FundRecordService {
       });
 
     for (const row of transactionUpdateEntries) {
+      const memberAgentBalance =
+        row.isAgentMember &&
+        row.userType === UserTypeForTransactionUpdates.MEMBER_BALANCE;
+
+      if (memberAgentBalance) return;
+
       const fundRecordEntry = {
         orderType: OrderType.PAYOUT,
         name: row.name,
@@ -304,6 +310,12 @@ export class FundRecordService {
       });
 
     for (const row of transactionUpdateEntries) {
+      const memberAgentBalance =
+        row.isAgentMember &&
+        row.userType === UserTypeForTransactionUpdates.MEMBER_BALANCE;
+
+      if (memberAgentBalance) return;
+
       const fundRecordEntry = {
         orderType: OrderType.TOPUP,
         name: row.name,
