@@ -215,7 +215,7 @@ export class SystemConfigService {
   }
 
   async updateTopupConfigurations(updateTopupConfigDto: UpdateTopupConfigDto) {
-    const { topupAmount, topupThreshold, channelProfile } =
+    const { topupAmount, topupThreshold, topupServiceRate, channelProfile } =
       updateTopupConfigDto;
 
     const identity = await this.identityRepository.findOne({
@@ -236,9 +236,10 @@ export class SystemConfigService {
     const latestResult = await this.findLatest();
 
     if (!latestResult) {
-      const systemConfig = await this.systemConfigRepository.save({
+      await this.systemConfigRepository.save({
         topupAmount,
         topupThreshold,
+        topupServiceRate,
       });
 
       return HttpStatus.CREATED;
@@ -246,6 +247,7 @@ export class SystemConfigService {
 
     delete latestResult.topupAmount;
     delete latestResult.topupThreshold;
+    delete latestResult.topupServiceRate;
     delete latestResult.id;
     delete latestResult.createdAt;
     delete latestResult.updatedAt;
@@ -253,6 +255,7 @@ export class SystemConfigService {
     const newSystemConfig = await this.systemConfigRepository.save({
       topupAmount,
       topupThreshold,
+      topupServiceRate,
       ...latestResult,
     });
 

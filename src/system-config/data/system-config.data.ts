@@ -20,6 +20,7 @@ export const systemConfigData = () => {
     currency: 'USD',
     topupThreshold: 1000,
     topupAmount: 5000,
+    topupServiceRate: 10,
     payinSystemProfitRate: 5,
     payoutSystemProfitRate: 5,
     payinCommissionRateForMember: 2.5,

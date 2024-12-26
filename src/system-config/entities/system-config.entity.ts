@@ -44,6 +44,9 @@ export class SystemConfig {
   @Column({ type: 'float', nullable: true })
   topupAmount: number;
 
+  @Column({ type: 'float', nullable: true })
+  topupServiceRate: number;
+
   // Member Defaults
   @Column({ type: 'float', nullable: true })
   payinCommissionRateForMember: number;

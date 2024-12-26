@@ -80,6 +80,9 @@ export class SystemConfigResponseDto {
   topupAmount: number;
 
   @Expose()
+  topupServiceRate: number;
+
+  @Expose()
   channelProfile: {};
 
   // System Profit Rates

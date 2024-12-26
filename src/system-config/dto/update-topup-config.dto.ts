@@ -9,6 +9,9 @@ export class UpdateTopupConfigDto {
   @IsNumber()
   topupAmount: number;
 
+  @IsNumber()
+  topupServiceRate: number;
+
   @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => ChannelProfileDto)

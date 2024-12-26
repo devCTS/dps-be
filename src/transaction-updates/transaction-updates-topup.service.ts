@@ -48,6 +48,10 @@ export class TransactionUpdatesTopupService {
         ?.topupCommissionRateForMember;
     };
 
+    const { topupServiceRate } = await this.systemConfigService.findLatest();
+
+    const baseAmountForCommissions = (orderAmount / 100) * topupServiceRate;
+
     for (let i = 0; i < referralList.length; i++) {
       const element = referralList[i];
       const prevElement = i > 0 ? referralList[i - 1] : null;
@@ -64,9 +68,9 @@ export class TransactionUpdatesTopupService {
         ? await getMemberRates(element?.teamId)
         : getAgentRates(prevElement).topup;
 
-      const rateText = `${rate}% of ₹${orderAmount}`;
+      const rateText = `${rate}% of ₹${baseAmountForCommissions}`;
 
-      const amount = (orderAmount / 100) * rate;
+      const amount = (baseAmountForCommissions / 100) * rate;
       const before = element.quota;
       const after = !isAgent ? before + orderAmount + amount : before + amount;
       const isAgentOf = prevElement

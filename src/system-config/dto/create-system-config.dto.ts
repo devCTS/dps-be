@@ -38,6 +38,9 @@ export class CreateSystemConfigDto {
   @IsNumber()
   topupAmount: number;
 
+  @IsNumber()
+  topupServiceRate: number;
+
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
