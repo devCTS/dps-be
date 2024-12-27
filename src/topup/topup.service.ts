@@ -43,17 +43,15 @@ export class TopupService {
     private readonly topupRepository: Repository<Topup>,
     @InjectRepository(Member)
     private readonly memberRepository: Repository<Member>,
-
     @InjectRepository(Agent)
     private readonly agentRepository: Repository<Agent>,
-
     @InjectRepository(Config)
     private readonly configRepository: Repository<Config>,
-
     @InjectRepository(Merchant)
     private readonly merchantRepository: Repository<Merchant>,
     @InjectRepository(TransactionUpdate)
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
+
     private readonly transactionUpdateTopupService: TransactionUpdatesTopupService,
     private readonly memberService: MemberService,
     private readonly systemConfigService: SystemConfigService,

@@ -310,6 +310,14 @@ export class MerchantService {
     delete updateDto.ratios;
     delete updateDto.agentId;
 
+    const agentCommissions = {
+      payinCommissionRate: updateDto?.agentPayinCommissionRate,
+      payoutCommissionRate: updateDto?.agentPayoutCommissionRate,
+    };
+
+    delete updateDto.agentPayinCommissionRate;
+    delete updateDto.agentPayoutCommissionRate;
+
     let result = null;
 
     if (updateWithdrawalCredentials) {
@@ -317,6 +325,7 @@ export class MerchantService {
         { id: id },
         {
           ...updateDto,
+          agentCommissions,
           withdrawalPassword: this.jwtService.getHashPassword(
             updateDto.withdrawalPassword,
           ),
@@ -324,7 +333,13 @@ export class MerchantService {
       );
     } else {
       delete updateDto.withdrawalPassword;
-      result = await this.merchantRepository.update({ id: id }, updateDto);
+      result = await this.merchantRepository.update(
+        { id: id },
+        {
+          ...updateDto,
+          agentCommissions,
+        },
+      );
     }
 
     const merchant = await this.merchantRepository.findOne({

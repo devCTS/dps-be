@@ -41,9 +41,6 @@ export class Merchant {
   @Column({ nullable: true })
   businessName: string;
 
-  // @Column({ nullable: true })
-  // referralCode: string;
-
   @Column({ default: true })
   enabled: boolean;
 
