@@ -126,8 +126,7 @@ export class MemberReferralService {
 
     if (
       maxRateLeftForPayinCommission <= 0 &&
-      maxRateLeftForPayoutCommission <= 0 &&
-      maxRateLeftForTopupCommission <= 0
+      maxRateLeftForPayoutCommission <= 0
     )
       throw new NotAcceptableException(
         'Referral commissions are fully utilized!',
@@ -310,7 +309,19 @@ export class MemberReferralService {
   }
 
   private async getDirectMemberRates(teamId = null) {
-    if (teamId) return await this.teamService.getTeamCommissionRate(teamId);
+    if (teamId) {
+      const teamRates = await this.teamService.getTeamCommissionRate(teamId);
+      if (
+        teamRates.payinRate > 0 &&
+        teamRates.payoutRate > 0 &&
+        teamRates.topupRate > 0
+      )
+        return {
+          payinRate: teamRates.payinRate,
+          payoutRate: teamRates.payoutRate,
+          topupRate: teamRates.topupRate,
+        };
+    }
 
     const {
       payinCommissionRateForMember,
