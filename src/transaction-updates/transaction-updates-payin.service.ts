@@ -177,13 +177,9 @@ export class TransactionUpdatesPayinService {
         ? await getMemberRates(element?.teamId)
         : getAgentRates(prevElement).payin;
 
-      const amount = !isAgent
-        ? (merchantFee / 100) * rate
-        : (remainingMerchantFee / 100) * rate;
+      const amount = (merchantFee / 100) * rate;
 
-      const rateText = !isAgent
-        ? `${rate}% of ₹${merchantFee}`
-        : `${rate}% of ₹${remainingMerchantFee}`;
+      const rateText = `${rate}% of ₹${roundOffAmount(merchantFee)}`;
 
       const before = element.quota;
 
@@ -212,7 +208,6 @@ export class TransactionUpdatesPayinService {
 
       await this.transactionUpdateRepository.save(transactionUpdate);
       systemProfit -= amount;
-      if (!isAgent) remainingMerchantFee -= amount;
 
       // insert row twice for agents - quota and balance
       if (isAgent) {

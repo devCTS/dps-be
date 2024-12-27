@@ -87,10 +87,21 @@ export class MemberReferralService {
     );
 
     const maxRateLeftForPayinCommission =
-      100 - payinSystemProfitRate - totalAncestorsPayinRate;
+      100 -
+      payinSystemProfitRate -
+      totalAncestorsPayinRate -
+      (await this.getDirectMemberRates(member?.teamId)).payinRate;
+
     const maxRateLeftForPayoutCommission =
-      100 - payoutSystemProfitRate - totalAncestorsPayoutRate;
-    const maxRateLeftForTopupCommission = 100 - totalAncestorsTopupRate;
+      100 -
+      payoutSystemProfitRate -
+      totalAncestorsPayoutRate -
+      (await this.getDirectMemberRates(member?.teamId)).payoutRate;
+
+    const maxRateLeftForTopupCommission =
+      100 -
+      totalAncestorsTopupRate -
+      (await this.getDirectMemberRates(member?.teamId)).topupRate;
 
     if (payinCommission > maxRateLeftForPayinCommission)
       return {
@@ -295,6 +306,22 @@ export class MemberReferralService {
       totalPages: Math.ceil(total / pageSize),
       startRecord,
       endRecord,
+    };
+  }
+
+  private async getDirectMemberRates(teamId = null) {
+    if (teamId) return await this.teamService.getTeamCommissionRate(teamId);
+
+    const {
+      payinCommissionRateForMember,
+      payoutCommissionRateForMember,
+      topupCommissionRateForMember,
+    } = await this.systemConfigService.findLatest();
+
+    return {
+      payinRate: payinCommissionRateForMember,
+      payoutRate: payoutCommissionRateForMember,
+      topupRate: topupCommissionRateForMember,
     };
   }
 }

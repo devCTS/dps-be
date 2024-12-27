@@ -178,13 +178,9 @@ export class TransactionUpdatesPayoutService {
         ? await getMemberRates(element?.teamId)
         : getAgentRates(prevElement).payout;
 
-      const rateText = !isAgent
-        ? `${rate}% of ₹${merchantFee}`
-        : `${rate}% of ₹${remainingMerchantFee}`;
+      const rateText = `${rate}% of ₹${roundOffAmount(merchantFee)}`;
 
-      const amount = !isAgent
-        ? (merchantFee / 100) * rate
-        : (remainingMerchantFee / 100) * rate;
+      const amount = (merchantFee / 100) * rate;
 
       const before = element.quota;
 
@@ -212,7 +208,6 @@ export class TransactionUpdatesPayoutService {
       };
 
       await this.transactionUpdateRepository.save(transactionUpdate);
-      if (!isAgent) remainingMerchantFee -= amount;
       systemProfit -= amount;
 
       if (isAgent) {

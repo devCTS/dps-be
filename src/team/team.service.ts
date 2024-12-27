@@ -304,4 +304,13 @@ export class TeamService {
 
     return ancestors.reverse();
   }
+
+  async getTeamCommissionRate(teamId) {
+    const team = await this.teamRepository.findOneBy({ teamId });
+    return {
+      payinRate: team.teamPayinCommissionRate,
+      payoutRate: team.teamPayoutCommissionRate,
+      topupRate: team.teamTopupCommissionRate,
+    };
+  }
 }
