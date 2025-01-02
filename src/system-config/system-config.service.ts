@@ -92,9 +92,9 @@ export class SystemConfigService {
     return plainToInstance(SystemConfigResponseDto, {
       ...latestResult[0],
       channelProfile: channels,
-      defaultPayinGateway: JSON.parse(defaultPayinGateway),
-      defaultPayoutGateway: JSON.parse(defaultPayoutGateway),
-      defaultWithdrawalGateway: JSON.parse(defaultWithdrawalGateway),
+      defaultPayinGateway: defaultPayinGateway,
+      defaultPayoutGateway: defaultPayoutGateway,
+      defaultWithdrawalGateway: defaultWithdrawalGateway,
     });
   }
 
@@ -116,9 +116,9 @@ export class SystemConfigService {
 
     return {
       ...latestResult[0],
-      defaultPayinGateway: JSON.parse(defaultPayinGateway),
-      defaultPayoutGateway: JSON.parse(defaultPayoutGateway),
-      defaultWithdrawalGateway: JSON.parse(defaultWithdrawalGateway),
+      defaultPayinGateway: defaultPayinGateway,
+      defaultPayoutGateway: defaultPayoutGateway,
+      defaultWithdrawalGateway: defaultWithdrawalGateway,
     };
   }
 
@@ -137,9 +137,9 @@ export class SystemConfigService {
 
     if (!latestResult) {
       await this.systemConfigRepository.save({
-        defaultPayinGateway: JSON.stringify(defaultPayinGateway),
-        defaultPayoutGateway: JSON.stringify(defaultPayoutGateway),
-        defaultWithdrawalGateway: JSON.stringify(defaultWithdrawalGateway),
+        defaultPayinGateway: defaultPayinGateway,
+        defaultPayoutGateway: defaultPayoutGateway,
+        defaultWithdrawalGateway: defaultWithdrawalGateway,
         payinTimeout,
         payoutTimeout,
       });
@@ -157,9 +157,9 @@ export class SystemConfigService {
     delete latestResult.updatedAt;
 
     const newSystemConfig = this.systemConfigRepository.save({
-      defaultPayinGateway: JSON.stringify(defaultPayinGateway),
-      defaultPayoutGateway: JSON.stringify(defaultPayoutGateway),
-      defaultWithdrawalGateway: JSON.stringify(defaultWithdrawalGateway),
+      defaultPayinGateway: defaultPayinGateway,
+      defaultPayoutGateway: defaultPayoutGateway,
+      defaultWithdrawalGateway: defaultWithdrawalGateway,
       payinTimeout,
       payoutTimeout,
       ...latestResult,

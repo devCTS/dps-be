@@ -43,7 +43,7 @@ import { IdentityService } from 'src/identity/identity.service';
 
 @Injectable()
 export class PayoutService {
-  private selectGateway = false;
+  private enableGateway = false;
 
   constructor(
     @InjectRepository(Payout)
@@ -165,7 +165,9 @@ export class PayoutService {
       },
     });
 
-    if (this.selectGateway) {
+    if (this.enableGateway) {
+      const { payoutTimeout } = await this.systemConfigService.findLatest();
+
       let intervalId = setInterval(async () => {
         try {
           const response = await this.findOne(payout.systemOrderId);
@@ -182,6 +184,7 @@ export class PayoutService {
 
       const timeoutId = setTimeout(async () => {
         clearInterval(intervalId);
+
         const result = await this.paymentSystemService.makeGatewayPayout({
           userId: merchant.id,
           orderId: payout.systemOrderId,
@@ -199,7 +202,7 @@ export class PayoutService {
         }
 
         return HttpStatus.CREATED;
-      }, 6000);
+      }, payoutTimeout * 1000);
     }
     return HttpStatus.CREATED;
   }

@@ -316,17 +316,6 @@ export class PayinService {
         orderType: OrderType.PAYIN,
         systemOrderId: payinOrderDetails.systemOrderId,
       });
-
-      // Withheld
-      const deductedQuota = -((payinOrderDetails.amount * 50) / 100);
-
-      await this.memberService.updateQuota(
-        member.identity.id,
-        payinOrderDetails.systemOrderId,
-        deductedQuota,
-        false,
-        false,
-      );
     }
 
     if (paymentMode === PaymentMadeOn.GATEWAY) {
@@ -378,7 +367,7 @@ export class PayinService {
       where: {
         systemOrderId: id,
       },
-      relations: ['member'],
+      relations: ['member', 'member.identity'],
     });
     if (!payinOrderDetails) throw new NotFoundException('Order not found');
 
@@ -394,7 +383,7 @@ export class PayinService {
       },
     );
 
-    if (payinOrderDetails.payinMadeOn === PaymentMadeOn.MEMBER)
+    if (payinOrderDetails.payinMadeOn === PaymentMadeOn.MEMBER) {
       await this.notificationService.create({
         for: payinOrderDetails.member?.id,
         type: NotificationType.PAYIN_FOR_VERIFY,
@@ -404,6 +393,18 @@ export class PayinService {
           channel: payinOrderDetails.channel,
         },
       });
+
+      // Withheld
+      const deductedQuota = -((payinOrderDetails.amount * 50) / 100);
+
+      await this.memberService.updateQuota(
+        payinOrderDetails.member.identity.id,
+        payinOrderDetails.systemOrderId,
+        deductedQuota,
+        false,
+        false,
+      );
+    }
 
     return HttpStatus.OK;
   }

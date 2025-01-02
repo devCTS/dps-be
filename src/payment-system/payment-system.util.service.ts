@@ -313,4 +313,42 @@ export class PaymentSystemUtilService {
 
     return gateway && channelEnabled;
   };
+
+  async getFirstEnabledGateway(
+    gatewayObject: Record<string, GatewayName>,
+  ): Promise<GatewayName | null> {
+    for (const key in gatewayObject) {
+      const gateway = gatewayObject[key];
+      let isGatewayEnabled;
+
+      switch (gateway) {
+        case GatewayName.PHONEPE:
+          isGatewayEnabled = await this.phonePeRepository.findOne({
+            where: {
+              outgoing: true,
+            },
+          });
+          break;
+
+        case GatewayName.RAZORPAY:
+          isGatewayEnabled = await this.razorpayRepository.findOne({
+            where: {
+              outgoing: true,
+            },
+          });
+          break;
+
+        case GatewayName.UNIQPAY:
+          isGatewayEnabled = true;
+          break;
+
+        default:
+          break;
+      }
+
+      if (isGatewayEnabled) return gateway;
+    }
+
+    return null;
+  }
 }

@@ -1,4 +1,3 @@
-import { Withdrawal } from './../../withdrawal/entities/withdrawal.entity';
 export enum ChannelName {
   UPI = 'UPI',
   BANKING = 'NET_BANKING',
@@ -8,6 +7,7 @@ export enum ChannelName {
 export enum GatewayName {
   RAZORPAY = 'RAZORPAY',
   PHONEPE = 'PHONEPE',
+  UNIQPAY = 'UNIQPAY',
 }
 
 export enum PaymentType {

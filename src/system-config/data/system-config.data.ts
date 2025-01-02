@@ -3,18 +3,18 @@ import { GatewayName } from 'src/utils/enum/enum';
 
 export const systemConfigData = () => {
   return {
-    defaultPayinGateway: JSON.stringify({
+    defaultPayinGateway: {
       0: GatewayName.RAZORPAY,
       1: GatewayName.PHONEPE,
-    }),
-    defaultWithdrawalGateway: JSON.stringify({
+    },
+    defaultWithdrawalGateway: {
       0: GatewayName.RAZORPAY,
       1: GatewayName.PHONEPE,
-    }),
-    defaultPayoutGateway: JSON.stringify({
+    },
+    defaultPayoutGateway: {
       0: GatewayName.RAZORPAY,
       1: GatewayName.PHONEPE,
-    }),
+    },
     payinTimeout: 300,
     payoutTimeout: 600,
     currency: 'USD',

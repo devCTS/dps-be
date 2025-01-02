@@ -1,4 +1,4 @@
-import { ServiceRateType } from 'src/utils/enum/enum';
+import { GatewayName, ServiceRateType } from 'src/utils/enum/enum';
 import {
   Column,
   CreateDateColumn,
@@ -21,14 +21,14 @@ export class SystemConfig {
   @Column({ nullable: true })
   currency: string;
 
-  @Column({ nullable: true })
-  defaultPayinGateway: string;
+  @Column({ nullable: true, type: 'json' })
+  defaultPayinGateway: PaymentGatewayType;
 
-  @Column({ nullable: true })
-  defaultWithdrawalGateway: string;
+  @Column({ nullable: true, type: 'json' })
+  defaultWithdrawalGateway: PaymentGatewayType;
 
-  @Column({ nullable: true })
-  defaultPayoutGateway: string;
+  @Column({ nullable: true, type: 'json' })
+  defaultPayoutGateway: PaymentGatewayType;
 
   // System Profit Defaults
   @Column({ type: 'float', nullable: true })
@@ -104,3 +104,7 @@ export class SystemConfig {
   @Column({ default: 2 })
   frozenAmountThreshold: number;
 }
+
+export type PaymentGatewayType = {
+  [key: number]: GatewayName;
+};

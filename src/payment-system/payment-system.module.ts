@@ -22,6 +22,8 @@ import { PhonepeService } from 'src/upstream-gateway/phonepe/phonepe.service';
 import { EndUser } from 'src/end-user/entities/end-user.entity';
 import { EndUserModule } from 'src/end-user/end-user.module';
 import { SocketModule } from 'src/socket/socket.module';
+import { UniqpayModule } from './uniqpay/uniqpay.module';
+import { UniqpayService } from './uniqpay/uniqpay.service';
 
 @Module({
   imports: [
@@ -39,6 +41,7 @@ import { SocketModule } from 'src/socket/socket.module';
     ]),
     PhonePeModule,
     RazorpayModule,
+    UniqpayModule,
     HttpModule,
     PayinModule,
     SystemConfigModule,
@@ -51,6 +54,7 @@ import { SocketModule } from 'src/socket/socket.module';
     PaymentSystemUtilService,
     RazorpayService,
     PhonepeService,
+    UniqpayService,
   ],
   exports: [PaymentSystemService],
 })

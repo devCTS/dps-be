@@ -23,6 +23,7 @@ import { ChannelSettings } from 'src/gateway/entities/channel-settings.entity';
 import { GetPayPageDto } from './dto/getPayPage.dto';
 import { SystemConfig } from 'src/system-config/entities/system-config.entity';
 import { SystemConfigService } from 'src/system-config/system-config.service';
+import { UniqpayService } from './uniqpay/uniqpay.service';
 
 // const paymentPageBaseUrl = 'http://localhost:5174';
 @Injectable()
@@ -34,6 +35,7 @@ export class PaymentSystemService {
     private readonly channelSettingsRepository: Repository<ChannelSettings>,
     private readonly phonepeService: PhonepeService,
     private readonly razorpayService: RazorpayService,
+    private readonly uniqpayService: UniqpayService,
     private readonly payinService: PayinService,
     private readonly utilService: PaymentSystemUtilService,
     private readonly systemConfigService: SystemConfigService,
@@ -196,50 +198,30 @@ export class PaymentSystemService {
 
     if (!orderType) throw new BadRequestException('Order Type Required!');
 
-    const systemConfig = await this.systemConfigService.findLatest();
+    const { defaultPayoutGateway, defaultWithdrawalGateway } =
+      await this.systemConfigService.findLatest();
 
-    let defaultGateway;
+    let defaultEnabledGateway;
     if (orderType === OrderType.WITHDRAWAL)
-      defaultGateway = systemConfig.defaultWithdrawalGateway;
+      defaultEnabledGateway = await this.utilService.getFirstEnabledGateway(
+        defaultWithdrawalGateway,
+      );
 
     if (orderType === OrderType.PAYOUT)
-      defaultGateway = systemConfig.defaultPayoutGateway;
+      defaultEnabledGateway =
+        await this.utilService.getFirstEnabledGateway(defaultPayoutGateway);
 
-    const isDefaultGatewayEnabled =
-      await this.channelSettingsRepository.findOne({
-        where: {
-          gatewayName: defaultGateway,
-          enabled: true,
-        },
-      });
-
-    if (!isDefaultGatewayEnabled) {
-      defaultGateway =
-        defaultGateway === GatewayName.PHONEPE
-          ? GatewayName.RAZORPAY
-          : GatewayName.PHONEPE;
-
-      const isFallbackGatewayEnabled =
-        await this.channelSettingsRepository.findOne({
-          where: {
-            gatewayName: defaultGateway,
-            enabled: true,
-          },
-        });
-
-      if (!isFallbackGatewayEnabled)
-        throw new BadRequestException('No enabled gateways available!');
-    }
-
-    return await this.processPaymentWithGateway(defaultGateway, body);
+    return await this.processPaymentWithGateway(defaultEnabledGateway, body);
   }
 
-  private async processPaymentWithGateway(gatewayName: string, body: any) {
+  private async processPaymentWithGateway(gatewayName: GatewayName, body: any) {
     switch (gatewayName) {
       case GatewayName.PHONEPE:
         return await this.phonepeService.makePayoutPayment(body);
       case GatewayName.RAZORPAY:
         return await this.razorpayService.makePayoutPayment(body);
+      case GatewayName.UNIQPAY:
+        return await this.uniqpayService.makePayoutPayment(body);
       default:
         throw new BadRequestException('Unsupported gateway!');
     }
