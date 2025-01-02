@@ -5,6 +5,7 @@ import {
   Get,
   InternalServerErrorException,
 } from '@nestjs/common';
+import axios from 'axios';
 import { AdminService } from 'src/admin/admin.service';
 import { ChannelService } from 'src/channel/channel.service';
 import { GatewayService } from 'src/gateway/gateway.service';
@@ -33,5 +34,32 @@ export class LoadController {
     } catch (error) {
       throw new InternalServerErrorException();
     }
+  }
+
+  @Get('uniq')
+  async uniqPayment() {
+    const data = axios.post(
+      process.env.UNIQ_PAY_API,
+      {
+        name: 'Abc',
+        email: 'abc@abc.com ',
+        phone: '1234567890',
+        bankAccount: '123421232432278',
+        ifsc: 'PUNB001001',
+        address: '',
+        amount: '200',
+        custUniqRef: 'qwert',
+        uniqpayId: 'qwert',
+        txnPaymode: 'bank',
+      },
+      {
+        headers: {
+          'X-Upay-Client-Secret': process.env.UNIQ_PAY_SECRET,
+          'X-Upay-Client-Id': process.env.UNIQ_PAY_CLIENT_ID,
+        },
+      },
+    );
+
+    console.log(data);
   }
 }
