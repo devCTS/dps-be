@@ -20,3 +20,13 @@ export const loadRazorpayData = () => {
     sandbox_key_secret: 'dummy_secret_key',
   };
 };
+export const loadUniqpayData = () => {
+  return {
+    incoming: false,
+    outgoing: true,
+    key_secret: 'dummy_secret_key',
+    key_id: 'dummy_secret_key',
+    sandbox_key_id: 'dummy_secret_key',
+    sandbox_key_secret: 'dummy_secret_key',
+  };
+};

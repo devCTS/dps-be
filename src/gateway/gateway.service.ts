@@ -19,21 +19,37 @@ import { RazorpayResponseDto } from './dto/razorpay-response.dto';
 import { PhonepeResponseDto } from './dto/phonepe-response.dto';
 import { loadChannelData } from './data/channel.data';
 import { GetChannelSettingsDto } from './dto/get-channel-settings.dto';
-import { loadPhonepeData, loadRazorpayData } from './data/gateway.data';
+import {
+  loadPhonepeData,
+  loadRazorpayData,
+  loadUniqpayData,
+} from './data/gateway.data';
+import { Uniqpay } from './entities/uniqpay.entity';
+import { UniqpayResponseDto } from './dto/uniqpay-response.dto';
+import { UpdateUniqpayDto } from './dto/create-uniqpay.dto';
 
 @Injectable()
 export class GatewayService {
   constructor(
-    @InjectRepository(Razorpay)
-    private readonly razorpayRepository: Repository<Razorpay>,
     @InjectRepository(ChannelSettings)
     private readonly channelSettingsRepository: Repository<ChannelSettings>,
+    @InjectRepository(Razorpay)
+    private readonly razorpayRepository: Repository<Razorpay>,
     @InjectRepository(Phonepe)
     private readonly phonepeRepository: Repository<Phonepe>,
+    @InjectRepository(Uniqpay)
+    private readonly uniqpayRepository: Repository<Uniqpay>,
     private jwtService: JwtService,
   ) {}
 
   secretTextKeysRazorpay = [
+    'key_secret',
+    'key_id',
+    'sandbox_key_id',
+    'sandbox_key_secret',
+  ];
+
+  secretTextKeysUniqpay = [
     'key_secret',
     'key_id',
     'sandbox_key_id',
@@ -135,6 +151,50 @@ export class GatewayService {
     });
 
     await this.phonepeRepository.update(existingData[0].id, updatedData);
+    return HttpStatus.OK;
+  }
+
+  async createUniqpay() {
+    const isGatewayExists = await this.uniqpayRepository.find();
+
+    const createUniqpayDto = loadUniqpayData();
+
+    if (isGatewayExists?.length > 0) throw new ConflictException();
+
+    const secretTextKeys = this.secretTextKeysUniqpay;
+
+    secretTextKeys.forEach((key) => {
+      secretTextKeys.forEach((key) => {
+        createUniqpayDto[key] = this.jwtService.getHashPassword(
+          createUniqpayDto[key],
+        );
+      });
+    });
+
+    await this.uniqpayRepository.save(createUniqpayDto);
+  }
+
+  async getUniqpay() {
+    const uniqpayData = await this.uniqpayRepository.find();
+    if (!uniqpayData) throw new NotFoundException();
+    const result = plainToInstance(UniqpayResponseDto, uniqpayData[0]);
+    return result;
+  }
+
+  async updateUniqpay(updateUniqpayDto: UpdateUniqpayDto) {
+    const secretTextKeys = this.secretTextKeysUniqpay;
+
+    const existingData = await this.uniqpayRepository.find();
+    if (!existingData) throw new NotFoundException();
+
+    const updatedData = Object.assign({}, existingData[0], updateUniqpayDto);
+
+    secretTextKeys.forEach((key) => {
+      if (updateUniqpayDto[key])
+        updatedData[key] = this.jwtService.getHashPassword(updatedData[key]);
+    });
+
+    await this.uniqpayRepository.update(existingData[0].id, updatedData);
     return HttpStatus.OK;
   }
 

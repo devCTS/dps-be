@@ -7,6 +7,7 @@ import { GetChannelSettingsDto } from './dto/get-channel-settings.dto';
 import { RolesGuard } from 'src/utils/guard/roles.guard';
 import { Roles } from 'src/utils/decorators/roles.decorator';
 import { Role } from 'src/utils/enum/enum';
+import { UpdateUniqpayDto } from './dto/create-uniqpay.dto';
 
 @Controller('gateway')
 @UseGuards(RolesGuard)
@@ -47,6 +48,24 @@ export class GatewayController {
   @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
   updatePhonepe(@Body() updatePhonepeDto: UpdatePhonepDto) {
     return this.gatewayService.updatePhonepe(updatePhonepeDto);
+  }
+
+  @Post('uniqpay/create')
+  @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
+  CreateUniqpay() {
+    return this.gatewayService.createUniqpay();
+  }
+
+  @Get('uniqpay')
+  @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
+  getUniqpayConfig() {
+    return this.gatewayService.getUniqpay();
+  }
+
+  @Post('uniqppay/update')
+  @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
+  UpdateUniqpay(@Body() updateUniqpayDto: UpdateUniqpayDto) {
+    return this.gatewayService.updateUniqpay(updateUniqpayDto);
   }
 
   @Get('channel-settings/all')
