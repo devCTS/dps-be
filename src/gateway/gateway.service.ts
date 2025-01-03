@@ -194,7 +194,7 @@ export class GatewayService {
         updatedData[key] = this.jwtService.getHashPassword(updatedData[key]);
     });
 
-    await this.uniqpayRepository.update(existingData[0].id, updatedData);
+    await this.uniqpayRepository.update(existingData[0]?.id, updatedData);
     return HttpStatus.OK;
   }
 
