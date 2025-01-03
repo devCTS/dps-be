@@ -62,7 +62,7 @@ export class GatewayController {
     return this.gatewayService.getUniqpay();
   }
 
-  @Post('uniqppay/update')
+  @Post('uniqpay/update')
   @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
   UpdateUniqpay(@Body() updateUniqpayDto: UpdateUniqpayDto) {
     return this.gatewayService.updateUniqpay(updateUniqpayDto);
