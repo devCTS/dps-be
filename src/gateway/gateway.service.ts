@@ -9,7 +9,7 @@ import { UpdateRazorpayDto } from './dto/create-razorpay.dto';
 import { JwtService } from 'src/services/jwt/jwt.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Razorpay } from './entities/razorpay.entity';
-import { Not, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { UpdatePhonepDto } from './dto/create-phonepe.dto';
 import { Phonepe } from './entities/phonepe.entity';
 import { UpdateChannelSettingsDto } from './dto/create-channel-settings.dto';

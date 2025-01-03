@@ -22,7 +22,7 @@ import {
 import { ChangePasswordDto } from 'src/identity/dto/changePassword.dto';
 import { MemberReferralService } from 'src/member-referral/member-referral.service';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
-import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
+import { OrderType, UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
 import { Upi } from 'src/channel/entity/upi.entity';
 import { NetBanking } from 'src/channel/entity/net-banking.entity';
 import { EWallet } from 'src/channel/entity/e-wallet.entity';
@@ -642,8 +642,37 @@ export class MemberService {
   }
 
   async updateComissionRates(requestDto: UpdateCommissionRatesDto) {
-    const { agentPayinCommissionRate, agentPayoutCommissionRate, memberId } =
-      requestDto;
+    const {
+      agentPayinCommissionRate,
+      agentPayoutCommissionRate,
+      memberId,
+      teamId,
+    } = requestDto;
+
+    const upperLimitForPayin = await this.teamService.getUpperLimitForAdminEdit(
+      memberId,
+      teamId,
+      OrderType.PAYIN,
+    );
+    if (agentPayinCommissionRate > upperLimitForPayin)
+      return {
+        error: true,
+        for: 'payin',
+        message: `Max limit - ${upperLimitForPayin}%`,
+      };
+
+    const upperLimitForPayout =
+      await this.teamService.getUpperLimitForAdminEdit(
+        memberId,
+        teamId,
+        OrderType.PAYOUT,
+      );
+    if (agentPayoutCommissionRate > upperLimitForPayout)
+      return {
+        error: true,
+        for: 'payout',
+        message: `Max limit - ${upperLimitForPayout}%`,
+      };
 
     await this.memberRepository.update(memberId, {
       agentCommissions: {
@@ -651,5 +680,7 @@ export class MemberService {
         payoutCommissionRate: agentPayoutCommissionRate,
       },
     });
+
+    return HttpStatus.OK;
   }
 }

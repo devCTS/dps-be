@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class UpdateCommissionRatesDto {
   @IsNumber()
@@ -12,4 +12,8 @@ export class UpdateCommissionRatesDto {
   @IsNumber()
   @IsNotEmpty()
   memberId: number;
+
+  @IsString()
+  @IsNotEmpty()
+  teamId: string;
 }

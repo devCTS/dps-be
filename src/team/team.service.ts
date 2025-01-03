@@ -1,4 +1,5 @@
-import { TreeNode } from './../utils/enum/enum';
+import { SystemConfig } from './../system-config/entities/system-config.entity';
+import { OrderType, TreeNode } from './../utils/enum/enum';
 import {
   ConflictException,
   HttpCode,
@@ -312,5 +313,66 @@ export class TeamService {
       payoutRate: team.teamPayoutCommissionRate,
       topupRate: team.teamTopupCommissionRate,
     };
+  }
+
+  async getUpperLimitForAdminEdit(
+    memberId: number,
+    teamId: string,
+    orderType: OrderType,
+  ) {
+    // X = sum of all agent commission rates of payin/payout of all members in the tree
+    // Y = agent commission rate of payin of member whose rate is being edited
+    // P = (X - Y) + system profit rate + direct member commission rate (system default / team default)
+    // Allowed max range for editing = 100 - P
+
+    const systemConfig = await this.systemConfigService.findLatest();
+
+    const systemProfitRate =
+      orderType === OrderType.PAYIN
+        ? systemConfig?.payinSystemProfitRate
+        : systemConfig?.payoutSystemProfitRate;
+
+    const team = await this.teamRepository.findOneBy({ teamId });
+
+    const teamMembers = await this.memberRepository.find({
+      where: { teamId },
+      relations: ['agent'],
+    });
+
+    // Step 1: Calculate X - sum of all agent commission rates
+    const X = teamMembers.reduce((acc, member) => {
+      if (orderType === OrderType.PAYIN) {
+        return acc + (member.agentCommissions?.payinCommissionRate || 0);
+      }
+      if (orderType === OrderType.PAYOUT)
+        return acc + (member.agentCommissions?.payoutCommissionRate || 0);
+      return acc;
+    }, 0);
+
+    const currentMember = teamMembers.find((member) => member.id === memberId);
+    if (!currentMember) throw new NotFoundException('Member not found.');
+
+    // Step 2: Calculate Y - agent commission rate of current member being edited
+    const Y =
+      orderType === OrderType.PAYIN
+        ? currentMember.agentCommissions?.payinCommissionRate
+        : currentMember.agentCommissions?.payoutCommissionRate;
+
+    // Step 3: Calculate P = (X - Y) + system profit rate + direct member commission rate
+    let directMemberCommissionRate = 0;
+    if (orderType === OrderType.PAYIN) {
+      directMemberCommissionRate =
+        team?.teamPayinCommissionRate ||
+        systemConfig?.payinCommissionRateForMember;
+    } else {
+      directMemberCommissionRate =
+        team?.teamPayoutCommissionRate ||
+        systemConfig?.payoutCommissionRateForMember;
+    }
+
+    const P = X - Y + systemProfitRate + directMemberCommissionRate;
+
+    // Step 4: Upper limit = 100 - P
+    return 100 - P;
   }
 }
