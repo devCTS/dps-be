@@ -6,14 +6,17 @@ export const systemConfigData = () => {
     defaultPayinGateway: JSON.stringify({
       0: GatewayName.RAZORPAY,
       1: GatewayName.PHONEPE,
+      2: GatewayName.UNIQPAY,
     }),
     defaultWithdrawalGateway: JSON.stringify({
       0: GatewayName.RAZORPAY,
       1: GatewayName.PHONEPE,
+      2: GatewayName.UNIQPAY,
     }),
     defaultPayoutGateway: JSON.stringify({
       0: GatewayName.RAZORPAY,
       1: GatewayName.PHONEPE,
+      2: GatewayName.UNIQPAY,
     }),
     payinTimeout: 300,
     payoutTimeout: 600,

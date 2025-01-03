@@ -8,6 +8,7 @@ export enum ChannelName {
 export enum GatewayName {
   RAZORPAY = 'RAZORPAY',
   PHONEPE = 'PHONEPE',
+  UNIQPAY = 'UNIQPAY',
 }
 
 export enum PaymentType {
