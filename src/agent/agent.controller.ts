@@ -119,7 +119,7 @@ export class AgentController {
   }
 
   @Put('update-commission-rates')
-  @Roles(Role.AGENT)
+  @Roles(Role.AGENT, Role.SUB_ADMIN, Role.SUPER_ADMIN)
   updateCommissionRates(@Body() requestDto: UpdateCommissionRatesDto) {
     return this.agentService.updateComissionRates(requestDto);
   }
