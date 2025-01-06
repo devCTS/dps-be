@@ -72,7 +72,11 @@ export class EndUserService {
 
     if (search) {
       query.andWhere(
-        `CONCAT(merchant.first_name, ' ', merchant.last_name, ' ', endUser.name, ' ', endUser.mobile, ' ', endUser.channelDetails) ILIKE :search`,
+        `(
+        CONCAT("merchant"."first_name", ' ', "merchant"."last_name", ' ', "endUser"."name", ' ', "endUser"."mobile") ILIKE :search
+        OR
+        "endUser"."channel_details"::jsonb -> 'UPI' ->> 'Upi Id' ILIKE :search
+      )`,
         { search: `%${search}%` },
       );
     }
