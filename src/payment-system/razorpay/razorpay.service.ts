@@ -33,9 +33,9 @@ export class RazorpayService {
     const options = {
       amount: amountInPaise,
       customer: {
-        name: endUser.name,
-        email: endUser.email,
-        contact: endUser.mobile,
+        name: endUser?.name || '',
+        email: endUser?.email || '',
+        contact: endUser?.mobile || '',
       },
       currency: 'INR',
       options: {
