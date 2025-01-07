@@ -335,7 +335,7 @@ export class MemberReferralService {
       where: {
         member: { teamId },
       },
-      relations: ['member'],
+      relations: ['member', 'referredMember'],
     });
 
     return {
