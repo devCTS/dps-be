@@ -18,6 +18,7 @@ import {
 } from 'src/utils/dtos/paginate.dto';
 import { UpdateTeamCommissionsDto } from './dto/update-commissions.dto';
 import { SystemConfigService } from 'src/system-config/system-config.service';
+import { roundOffAmount } from 'src/utils/utils';
 
 @Injectable()
 export class TeamService {
@@ -190,6 +191,7 @@ export class TeamService {
             ratesOfAgent: {
               payin: obj.agentCommissions?.payinCommissionRate ?? null,
               payout: obj.agentCommissions?.payoutCommissionRate ?? null,
+              topup: obj.agentCommissions?.topupCommissionRate ?? null,
             },
             memberRates: {
               payin: memberRates.payin,
@@ -374,5 +376,9 @@ export class TeamService {
 
     // Step 4: Upper limit = 100 - P
     return 100 - P;
+  }
+
+  async getTeamDetailsForEditMode() {
+    const { systemProfit } = await this.systemConfigService.findLatest();
   }
 }

@@ -11,6 +11,10 @@ export class UpdateCommissionRatesDto {
 
   @IsNumber()
   @IsNotEmpty()
+  agentTopupCommissionRate: number;
+
+  @IsNumber()
+  @IsNotEmpty()
   memberId: number;
 
   @IsString()

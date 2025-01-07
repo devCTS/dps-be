@@ -645,6 +645,7 @@ export class MemberService {
     const {
       agentPayinCommissionRate,
       agentPayoutCommissionRate,
+      agentTopupCommissionRate,
       memberId,
       teamId,
     } = requestDto;
@@ -658,7 +659,7 @@ export class MemberService {
       return {
         error: true,
         for: 'payin',
-        message: `Max limit - ${upperLimitForPayin}%`,
+        message: `Max limit - ${upperLimitForPayin.toString().substring(0, 5)}%`,
       };
 
     const upperLimitForPayout =
@@ -671,13 +672,14 @@ export class MemberService {
       return {
         error: true,
         for: 'payout',
-        message: `Max limit - ${upperLimitForPayout}%`,
+        message: `Max limit - ${upperLimitForPayin.toString().substring(0, 5)}%`,
       };
 
     await this.memberRepository.update(memberId, {
       agentCommissions: {
         payinCommissionRate: agentPayinCommissionRate,
         payoutCommissionRate: agentPayoutCommissionRate,
+        topupCommissionRate: agentTopupCommissionRate,
       },
     });
 
