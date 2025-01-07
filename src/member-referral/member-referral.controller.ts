@@ -86,16 +86,10 @@ export class MemberReferralController {
     return this.memberReferralService.paginate(paginateRequestDto, true);
   }
 
-  @Post('paginate/team-referral-codes/:teamId')
+  @Get('team-referral-codes/:teamId')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
   @UseGuards(RolesGuard)
-  paginateTeamReferralCodes(
-    @Param('teamId') teamId: string,
-    @Body() paginateBody: PaginateRequestDto,
-  ) {
-    return this.memberReferralService.paginateTeamReferralCodes(
-      teamId,
-      paginateBody,
-    );
+  getTeamReferralCodes(@Param('teamId') teamId: string) {
+    return this.memberReferralService.getTeamReferralCodes(teamId);
   }
 }

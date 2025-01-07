@@ -330,34 +330,9 @@ export class MemberReferralService {
     };
   }
 
-  async paginateTeamReferralCodes(
-    teamId: string,
-    paginateDto: PaginateRequestDto,
-  ) {
-    const { search, pageSize, pageNumber, startDate, endDate, sortBy } =
-      paginateDto;
-
+  async getTeamReferralCodes(teamId: string) {
     const whereConditions: any = {};
     whereConditions['member.teamId'] = teamId;
-
-    if (search) whereConditions.referralCode = ILike(`%${search}%`);
-
-    if (startDate && endDate) {
-      const parsedStartDate = parseStartDate(startDate);
-      const parsedEndDate = parseEndDate(endDate);
-      whereConditions.createdAt = Between(parsedStartDate, parsedEndDate);
-    }
-
-    let orderConditions: any = {};
-    if (sortBy)
-      if (sortBy === 'latest') {
-        orderConditions['createdAt'] = 'DESC';
-      } else {
-        orderConditions['createdAt'] = 'ASC';
-      }
-
-    const skip = (pageNumber - 1) * pageSize;
-    const take = pageSize;
 
     const [rows, total] = await this.memberReferralRepository.findAndCount({
       where: whereConditions,
@@ -367,21 +342,10 @@ export class MemberReferralService {
         'member.identity',
         'referredMember.identity',
       ],
-      skip,
-      take,
-      order: orderConditions,
     });
-
-    const startRecord = skip + 1;
-    const endRecord = Math.min(skip + pageSize, total);
 
     return {
       total,
-      page: pageNumber,
-      pageSize,
-      totalPages: Math.ceil(total / pageSize),
-      startRecord,
-      endRecord,
       data: rows,
     };
   }
