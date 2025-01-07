@@ -331,17 +331,11 @@ export class MemberReferralService {
   }
 
   async getTeamReferralCodes(teamId: string) {
-    const whereConditions: any = {};
-    whereConditions['member.teamId'] = teamId;
-
     const [rows, total] = await this.memberReferralRepository.findAndCount({
-      where: whereConditions,
-      relations: [
-        'member',
-        'referredMember',
-        'member.identity',
-        'referredMember.identity',
-      ],
+      where: {
+        member: { teamId },
+      },
+      relations: ['member'],
     });
 
     return {
