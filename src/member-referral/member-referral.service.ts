@@ -1,4 +1,4 @@
-import { systemConfigData } from './../system-config/data/system-config.data';
+import { PaginateRequestDto } from './../utils/dtos/paginate.dto';
 import {
   HttpStatus,
   Injectable,
@@ -8,18 +8,12 @@ import {
 } from '@nestjs/common';
 import { CreateMemberReferralDto } from './dto/create-member-referral.dto';
 import { UpdateMemberReferralDto } from './dto/update-member-referral.dto';
-import {
-  PaginateRequestDto,
-  parseEndDate,
-  parseStartDate,
-} from 'src/utils/dtos/paginate.dto';
+import { parseEndDate, parseStartDate } from 'src/utils/dtos/paginate.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MemberReferral } from './entities/member-referral.entity';
-import { Between, ILike, In, Not, Repository } from 'typeorm';
+import { Between, ILike, In, Repository } from 'typeorm';
 import { Member } from 'src/member/entities/member.entity';
-import { SystemConfig } from 'src/system-config/entities/system-config.entity';
 import { SystemConfigService } from 'src/system-config/system-config.service';
-import { Team } from 'src/team/entities/team.entity';
 import { TeamService } from 'src/team/team.service';
 
 @Injectable()
@@ -333,6 +327,62 @@ export class MemberReferralService {
       payinRate: payinCommissionRateForMember,
       payoutRate: payoutCommissionRateForMember,
       topupRate: topupCommissionRateForMember,
+    };
+  }
+
+  async paginateTeamReferralCodes(
+    teamId: string,
+    paginateDto: PaginateRequestDto,
+  ) {
+    const { search, pageSize, pageNumber, startDate, endDate, sortBy } =
+      paginateDto;
+
+    const whereConditions: any = {};
+    whereConditions['member.teamId'] = teamId;
+
+    if (search) whereConditions.referralCode = ILike(`%${search}%`);
+
+    if (startDate && endDate) {
+      const parsedStartDate = parseStartDate(startDate);
+      const parsedEndDate = parseEndDate(endDate);
+      whereConditions.createdAt = Between(parsedStartDate, parsedEndDate);
+    }
+
+    let orderConditions: any = {};
+    if (sortBy)
+      if (sortBy === 'latest') {
+        orderConditions['createdAt'] = 'DESC';
+      } else {
+        orderConditions['createdAt'] = 'ASC';
+      }
+
+    const skip = (pageNumber - 1) * pageSize;
+    const take = pageSize;
+
+    const [rows, total] = await this.memberReferralRepository.findAndCount({
+      where: whereConditions,
+      relations: [
+        'member',
+        'referredMember',
+        'member.identity',
+        'referredMember.identity',
+      ],
+      skip,
+      take,
+      order: orderConditions,
+    });
+
+    const startRecord = skip + 1;
+    const endRecord = Math.min(skip + pageSize, total);
+
+    return {
+      total,
+      page: pageNumber,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+      startRecord,
+      endRecord,
+      data: rows,
     };
   }
 }

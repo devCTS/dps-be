@@ -34,20 +34,6 @@ export class MemberReferralController {
     return this.memberReferralService.findAll();
   }
 
-  // @Get('/tree')
-  // @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MEMBER)
-  // @UseGuards(RolesGuard)
-  // getReferralTree() {
-  //   return this.memberReferralService.getReferralTree();
-  // }
-
-  // @Get('/tree/:userId')
-  // @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MEMBER)
-  // @UseGuards(RolesGuard)
-  // getReferralTreeOfUser(@Param('userId') userId: string) {
-  //   return this.memberReferralService.getReferralTreeOfUser(+userId);
-  // }
-
   @Get('/referral/:code')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MEMBER)
   @UseGuards(RolesGuard)
@@ -98,5 +84,18 @@ export class MemberReferralController {
   @UseGuards(RolesGuard)
   paginateUsedCodes(@Body() paginateRequestDto: PaginateRequestDto) {
     return this.memberReferralService.paginate(paginateRequestDto, true);
+  }
+
+  @Post('paginate/team-referral-codes/:teamId')
+  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
+  @UseGuards(RolesGuard)
+  paginateTeamReferralCodes(
+    @Param('teamId') teamId: string,
+    @Body() paginateBody: PaginateRequestDto,
+  ) {
+    return this.memberReferralService.paginateTeamReferralCodes(
+      teamId,
+      paginateBody,
+    );
   }
 }
