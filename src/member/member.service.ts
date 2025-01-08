@@ -650,30 +650,30 @@ export class MemberService {
       teamId,
     } = requestDto;
 
-    const upperLimitForPayin = await this.teamService.getUpperLimitForAdminEdit(
-      memberId,
-      teamId,
-      OrderType.PAYIN,
-    );
-    if (agentPayinCommissionRate > upperLimitForPayin)
-      return {
-        error: true,
-        for: 'payin',
-        message: `Max limit - ${upperLimitForPayin.toString().substring(0, 5)}%`,
-      };
+    // const upperLimitForPayin = await this.teamService.getUpperLimitForAdminEdit(
+    //   memberId,
+    //   teamId,
+    //   OrderType.PAYIN,
+    // );
+    // if (agentPayinCommissionRate > upperLimitForPayin)
+    //   return {
+    //     error: true,
+    //     for: 'payin',
+    //     message: `Max limit - ${upperLimitForPayin.toString().substring(0, 5)}%`,
+    //   };
 
-    const upperLimitForPayout =
-      await this.teamService.getUpperLimitForAdminEdit(
-        memberId,
-        teamId,
-        OrderType.PAYOUT,
-      );
-    if (agentPayoutCommissionRate > upperLimitForPayout)
-      return {
-        error: true,
-        for: 'payout',
-        message: `Max limit - ${upperLimitForPayin.toString().substring(0, 5)}%`,
-      };
+    // const upperLimitForPayout =
+    //   await this.teamService.getUpperLimitForAdminEdit(
+    //     memberId,
+    //     teamId,
+    //     OrderType.PAYOUT,
+    //   );
+    // if (agentPayoutCommissionRate > upperLimitForPayout)
+    //   return {
+    //     error: true,
+    //     for: 'payout',
+    //     message: `Max limit - ${upperLimitForPayin.toString().substring(0, 5)}%`,
+    //   };
 
     await this.memberRepository.update(memberId, {
       agentCommissions: {

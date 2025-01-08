@@ -196,6 +196,7 @@ export class TeamService {
             memberRates: {
               payin: memberRates.payin,
               payout: memberRates.payout,
+              topup: memberRates.topup,
             },
           };
         }),
@@ -218,6 +219,7 @@ export class TeamService {
       memberRates: {
         payin: rootMemberRates.payin,
         payout: rootMemberRates.payout,
+        topup: rootMemberRates.topup,
       },
     };
 
@@ -238,6 +240,7 @@ export class TeamService {
       return {
         payin: team?.teamPayinCommissionRate,
         payout: team?.teamPayoutCommissionRate,
+        topup: team?.teamTopupCommissionRate,
       };
     }
 
@@ -245,6 +248,7 @@ export class TeamService {
     return {
       payin: systemConfig?.payinCommissionRateForMember,
       payout: systemConfig?.payoutCommissionRateForMember,
+      topup: systemConfig?.topupCommissionRateForMember,
     };
   };
 
@@ -376,9 +380,5 @@ export class TeamService {
 
     // Step 4: Upper limit = 100 - P
     return 100 - P;
-  }
-
-  async getTeamDetailsForEditMode() {
-    const { systemProfit } = await this.systemConfigService.findLatest();
   }
 }

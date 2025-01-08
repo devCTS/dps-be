@@ -142,4 +142,5 @@ export interface TreeNode {
 interface Rate {
   payin: number;
   payout: number;
+  topup: number;
 }

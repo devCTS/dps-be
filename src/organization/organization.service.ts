@@ -177,11 +177,13 @@ export class OrganizationService {
           ? {
               payin: obj.payinServiceRate,
               payout: obj.payoutServiceRate,
+              topup: 0,
             }
           : null,
         ratesOfAgent: {
           payin: obj.agentCommissions.payinCommissionRate,
           payout: obj.agentCommissions.payoutCommissionRate,
+          topup: 0,
         },
         memberRates: null,
       }));
