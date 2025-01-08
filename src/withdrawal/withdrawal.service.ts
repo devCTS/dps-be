@@ -112,7 +112,7 @@ export class WithdrawalService {
       channel: channelMap[channel],
       channelDetails,
       amount: withdrawalAmount,
-      systemOrderId: uniqid(),
+      systemOrderId: `WITHDRAWAL-${uniqid()}`.toUpperCase(),
       user,
     });
     if (!createWithdrawalOrder)

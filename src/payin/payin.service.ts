@@ -108,7 +108,7 @@ export class PayinService {
     const payin = await this.payinRepository.save({
       merchantOrderId: orderId,
       user: endUser,
-      systemOrderId: uniqid(),
+      systemOrderId: `PAYIN-${uniqid()}`.toUpperCase(),
       merchant,
       amount,
       channel,

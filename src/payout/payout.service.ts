@@ -142,7 +142,7 @@ export class PayoutService {
       ...payoutDetails,
       user: endUserData,
       merchant,
-      systemOrderId: uniqid(),
+      systemOrderId: `PAYOUT-${uniqid()}`.toUpperCase(),
     });
 
     if (!payout) throw new InternalServerErrorException('Payout error');

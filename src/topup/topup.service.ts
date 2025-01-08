@@ -275,7 +275,7 @@ export class TopupService {
     const topup = await this.topupRepository.save({
       ...topupDetails,
       transactionDetails: JSON.stringify({ channelDetails }),
-      systemOrderId: uniqid(),
+      systemOrderId: `TOPUP-${uniqid()}`.toUpperCase(),
     });
 
     await this.notificationService.create({
