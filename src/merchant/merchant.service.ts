@@ -289,7 +289,7 @@ export class MerchantService {
     const channelProfile = updateDto.channelProfile;
     const payinChannels = updateDto.payinChannels;
     const payoutChannels = updateDto.payoutChannels;
-    const ipAddresses = updateDto.ipAddresses;
+    const ipAddresses = updateDto.ipAddresses || [];
     const numberOfRangesOrRatio = updateDto.numberOfRangesOrRatio;
     const amountRanges = updateDto.amountRanges;
     const ratios = updateDto.ratios;

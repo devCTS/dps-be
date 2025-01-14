@@ -144,7 +144,7 @@ export class CreateMerchantDto {
 
   @IsOptional()
   @IsArray()
-  @ArrayNotEmpty()
+  // @ArrayNotEmpty()
   @IsIP(undefined, { each: true })
   ipAddresses: string[];
 
