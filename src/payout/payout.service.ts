@@ -1,4 +1,5 @@
 import {
+  ForbiddenException,
   forwardRef,
   HttpStatus,
   Inject,
@@ -72,7 +73,11 @@ export class PayoutService {
     private readonly alertService: AlertService,
   ) {}
 
-  async create(payoutDetails: CreatePayoutDto, merchantId: number) {
+  async create(
+    payoutDetails: CreatePayoutDto,
+    merchantId: number,
+    clientIp: string,
+  ) {
     const { name, email, channelDetails, channel, mobile, userId } =
       payoutDetails;
 
@@ -80,9 +85,18 @@ export class PayoutService {
       where: {
         id: merchantId,
       },
-      relations: ['identity'],
+      relations: ['identity', 'identity.ips'],
     });
     if (!merchant) throw new NotFoundException('Merchant not found!');
+
+    if (merchant.identity?.ips?.length) {
+      const whiteListedIps = merchant.identity.ips.map((item) => item.value);
+
+      if (!whiteListedIps.includes(clientIp))
+        throw new ForbiddenException(
+          'Your IP address is not allowed to generate a payout request!',
+        );
+    }
 
     const currentAvailableBalance =
       await this.identityService.getCurrentBalalnce(merchant.identity.email);

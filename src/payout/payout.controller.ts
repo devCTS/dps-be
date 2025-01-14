@@ -7,6 +7,7 @@ import {
   Query,
   Put,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { PayoutService } from './payout.service';
 import { CreatePayoutDto } from './dto/create-payout.dto';
@@ -37,7 +38,13 @@ export class PayoutController {
   @Post()
   @Roles(Role.MERCHANT, Role.SUB_MERCHANT)
   @UseGuards(RolesGuard)
-  async create(@Body() createPayoutDto: CreatePayoutDto, @UserInReq() user) {
+  async create(
+    @Req() request,
+    @Body() createPayoutDto: CreatePayoutDto,
+    @UserInReq() user,
+  ) {
+    let clientIp = request.headers['x-forwarded-for'] as string;
+
     const isSubMerchant = user?.type?.includes('SUB');
 
     let subMerchant = null;
@@ -50,7 +57,7 @@ export class PayoutController {
 
     const merchantId = subMerchant ? subMerchant.merchant.id : user.id;
 
-    return this.payoutService.create(createPayoutDto, merchantId);
+    return this.payoutService.create(createPayoutDto, merchantId, clientIp);
   }
 
   @Get(':id')
