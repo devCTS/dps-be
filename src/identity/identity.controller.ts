@@ -10,7 +10,6 @@ import {
   UseGuards,
   Req,
   Put,
-  Request,
 } from '@nestjs/common';
 import { IdentityService } from './identity.service';
 import { SignInDto } from './dto/signin.dto';
@@ -24,6 +23,7 @@ import { UserInReq } from 'src/utils/decorators/user-in-req.decorator';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
 import { Repository } from 'typeorm';
+import { Request } from 'express';
 
 @Controller('identity')
 export class IdentityController {
@@ -34,9 +34,20 @@ export class IdentityController {
   ) {}
 
   @Post('sign-in')
-  async signIn(@Request() request, @Body() signinDto: SignInDto) {
-    const clientIp = request.connection.remoteAddress.substring(7);
-    return await this.identityService.signin(signinDto, clientIp);
+  async signIn(@Req() request: Request, @Body() signinDto: SignInDto) {
+    let ipv4 = request.ip;
+    let clientIp = request.headers['x-forwarded-for'] as string;
+
+    console.log({ remoteAddress: request.connection.remoteAddress, clientIp });
+    // Extract IPv4 address from x-forwarded-for header if it's an IPv4-mapped IPv6 address
+    if (ipv4 && ipv4.startsWith('::ffff:')) {
+      ipv4 = ipv4.substring(7);
+    } else {
+      ipv4 = null;
+    }
+
+    console.log(clientIp ?? ipv4);
+    return await this.identityService.signin(signinDto, ipv4 ?? clientIp);
   }
 
   @Post('sign-up')
