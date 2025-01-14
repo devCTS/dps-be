@@ -99,15 +99,13 @@ export class IdentityService {
   }
 
   makeAndSendOtp(email) {
-    // const otp = this.generateRandomOTP();
-    // this.emailService.send({
-    //   subject: 'Kingsgate - One Time Password',
-    //   text: `Your 6 digit One Time Password (OTP) for Kingsgate is ${otp}`,
-    //   receiver: email,
-    // });
-    // return otp;
-
-    return 282907;
+    const otp = this.generateRandomOTP();
+    this.emailService.send({
+      subject: 'Kingsgate - One Time Password',
+      text: `Your 6 digit One Time Password (OTP) for Kingsgate is ${otp}`,
+      receiver: email,
+    });
+    return otp;
   }
 
   async getUser(
