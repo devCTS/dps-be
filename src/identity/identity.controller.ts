@@ -35,19 +35,8 @@ export class IdentityController {
 
   @Post('sign-in')
   async signIn(@Req() request: Request, @Body() signinDto: SignInDto) {
-    let ipv4 = request.ip;
     let clientIp = request.headers['x-forwarded-for'] as string;
-
-    console.log({ remoteAddress: request.connection.remoteAddress, clientIp });
-    // Extract IPv4 address from x-forwarded-for header if it's an IPv4-mapped IPv6 address
-    if (ipv4 && ipv4.startsWith('::ffff:')) {
-      ipv4 = ipv4.substring(7);
-    } else {
-      ipv4 = null;
-    }
-
-    console.log(clientIp ?? ipv4);
-    return await this.identityService.signin(signinDto, ipv4 ?? clientIp);
+    return await this.identityService.signin(signinDto, clientIp);
   }
 
   @Post('sign-up')
