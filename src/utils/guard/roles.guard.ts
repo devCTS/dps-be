@@ -114,13 +114,9 @@ export class RolesGuard implements CanActivate {
 
       if (merchant.identity.ips.length === 0) return true;
 
-      let whiteListedIps: any = [...merchant.identity?.ips];
+      let whiteListedIps = [];
 
-      console.log({
-        ip,
-        whiteListedIps,
-        condition: whiteListedIps.includes(ip),
-      });
+      merchant.identity.ips.forEach((item) => whiteListedIps.push(item.value));
 
       if (!whiteListedIps.includes(ip)) {
         throw new ForbiddenException('Ip restricted');
