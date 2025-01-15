@@ -37,7 +37,7 @@ export class RolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const token = request.headers.authorization;
 
-    let ip = request.connection.remoteAddress.substring(7);
+    let ip = request.headers['x-forwarded-for'] as string;
 
     if (!token) throw new ForbiddenException('Auth token missing!');
 
@@ -114,9 +114,7 @@ export class RolesGuard implements CanActivate {
 
       if (merchant.identity.ips.length === 0) return true;
 
-      let whiteListedIps = [];
-
-      merchant.identity.ips.forEach((item) => whiteListedIps.push(item.value));
+      let whiteListedIps: any = [...merchant.identity?.ips];
 
       if (!whiteListedIps.includes(ip)) {
         throw new ForbiddenException('Ip restricted');
