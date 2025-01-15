@@ -156,7 +156,7 @@ export class PayinController {
   }
 
   @Get('enduser-suggestions/:id')
-  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
+  @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MERCHANT, Role.SUB_MERCHANT)
   @UseGuards(RolesGuard)
   getEnduserIdSuggestions(@Param('id') id: number) {
     return this.payinAdminService.getEndUserIdSuggestions(id);
