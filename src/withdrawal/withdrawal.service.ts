@@ -127,17 +127,17 @@ export class WithdrawalService {
       orderType: OrderType.WITHDRAWAL,
     });
 
-    // if (res.paymentStatus === 'success')
-    //   await this.updateStatusToComplete({
-    //     id: body.orderId,
-    //     transactionDetails: {
-    //       transactionId: res.transactionId,
-    //       transactionReceipt: res.transactionReceipt,
-    //       gatewayDetails: res.transactionDetails,
-    //     },
-    //     withdrawalMadeOn: WithdrawalMadeOn.GATEWAY,
-    //     gatewayName: res.gatewayName,
-    //   });
+    if (res.paymentStatus === 'success')
+      await this.updateStatusToComplete({
+        id: body.orderId,
+        transactionDetails: {
+          transactionId: res.transactionId,
+          transactionReceipt: res.transactionReceipt,
+          gatewayDetails: res.transactionDetails,
+        },
+        withdrawalMadeOn: WithdrawalMadeOn.GATEWAY,
+        gatewayName: res.gatewayName,
+      });
 
     return HttpStatus.OK;
   }

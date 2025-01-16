@@ -48,7 +48,7 @@ export class RazorpayService {
           },
         },
       },
-      // upi_link: true, // Prod only
+      upi_link: true, // Prod only
     };
 
     const payment = await this.razorpayClient.paymentLink.create(options);
