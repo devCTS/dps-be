@@ -25,6 +25,7 @@ import { SocketModule } from 'src/socket/socket.module';
 import { UniqpayModule } from './uniqpay/uniqpay.module';
 import { UniqpayService } from './uniqpay/uniqpay.service';
 import { MemberChannelModule } from './member/member-channel.module';
+import { MemberChannelService } from './member/member-channel.service';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { MemberChannelModule } from './member/member-channel.module';
     RazorpayService,
     PhonepeService,
     UniqpayService,
+    MemberChannelService,
   ],
   exports: [PaymentSystemService],
 })
