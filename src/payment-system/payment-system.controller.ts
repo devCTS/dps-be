@@ -178,18 +178,7 @@ export class PaymentSystemController {
   @Roles(Role.ALL)
   @UseGuards(RolesGuard)
   async getPaymentStatus(@Param('payinOrderId') payinOrderId: string) {
-    const payinOrder = await this.payinRepository.findOneBy({
-      systemOrderId: payinOrderId,
-    });
-    if (!payinOrder) throw new NotFoundException('payin system ID invalid!');
-
-    let status = 'PENDING';
-
-    if (payinOrder.status === OrderStatus.COMPLETE) status = 'SUCCESS';
-
-    if (payinOrder.status === OrderStatus.FAILED) status = 'FAILED';
-
-    return { status };
+    return this.service.getPaymentStatus(payinOrderId);
   }
 
   @Post('submit-payment/:payinOrderId')
@@ -214,19 +203,19 @@ export class PaymentSystemController {
     return this.service.getPayPage(getPayPageDto);
   }
 
-  @Post('razorpay/:orderId')
-  @Roles(Role.ALL)
-  @UseGuards(RolesGuard)
-  getRazorPayOrderDetails(@Param('orderId') orderId: string) {
-    return this.service.getOrderDetails(orderId);
-  }
+  // @Post('razorpay/:orderId')
+  // @Roles(Role.ALL)
+  // @UseGuards(RolesGuard)
+  // getRazorPayOrderDetails(@Param('orderId') orderId: string) {
+  //   return this.service.getOrderDetails(orderId);
+  // }
 
-  @Post('razorpay-payment/verification')
-  @Roles(Role.ALL)
-  @UseGuards(RolesGuard)
-  razorpayPaymentVerification(@Body() paymentData: any) {
-    return this.service.paymentVerification(paymentData);
-  }
+  // @Post('razorpay-payment/verification')
+  // @Roles(Role.ALL)
+  // @UseGuards(RolesGuard)
+  // razorpayPaymentVerification(@Body() paymentData: any) {
+  //   return this.service.paymentVerification(paymentData);
+  // }
 
   @Post('make-gateway-payout')
   @Roles(Role.ALL)

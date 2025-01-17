@@ -24,6 +24,7 @@ import { EndUserModule } from 'src/end-user/end-user.module';
 import { SocketModule } from 'src/socket/socket.module';
 import { UniqpayModule } from './uniqpay/uniqpay.module';
 import { UniqpayService } from './uniqpay/uniqpay.service';
+import { MemberChannelModule } from './member/member-channel.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { UniqpayService } from './uniqpay/uniqpay.service';
     SystemConfigModule,
     EndUserModule,
     SocketModule,
+    MemberChannelModule,
   ],
   controllers: [PaymentSystemController],
   providers: [

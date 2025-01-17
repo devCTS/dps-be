@@ -14,6 +14,7 @@ export class RazorpayService {
   public constructor(
     @InjectRepository(EndUser)
     private readonly endUserRepository: Repository<EndUser>,
+
     private readonly httpService: HttpService,
   ) {
     this.razorpayClient = new Razorpay({
@@ -31,6 +32,7 @@ export class RazorpayService {
     // transaction amount
     const amountInPaise = parseFloat(amount) * 100;
     const options = {
+      acceptPartial: false,
       amount: amountInPaise,
       customer: {
         name: endUser?.name || '',
@@ -41,6 +43,7 @@ export class RazorpayService {
       options: {
         checkout: {
           method: {
+            // TODO configure acc. to channel configs
             netbanking: true,
             upi: true,
             card: true,
@@ -48,14 +51,14 @@ export class RazorpayService {
           },
         },
       },
-      upi_link: true, // Prod only
     };
 
-    const payment = await this.razorpayClient.paymentLink.create(options);
+    const paymentLink = await this.razorpayClient.paymentLink.create(options);
 
     return {
-      url: payment.short_url,
-      details: payment,
+      url: paymentLink.short_url,
+      details: paymentLink,
+      trackingId: paymentLink.id,
     };
   }
 
@@ -76,30 +79,44 @@ export class RazorpayService {
     });
   }
 
-  async razorpayPaymentStatus(paymentLinkId: string) {
+  async getPaymentStatus(paymentLinkId: string) {
     const paymentLinkDetails =
       await this.razorpayClient.paymentLink.fetch(paymentLinkId);
 
-    return await this.razorpayClient.orders.fetchPayments(
+    const orderResponse = await this.razorpayClient.orders.fetchPayments(
       paymentLinkDetails?.order_id,
     );
+
+    const orderDetails = orderResponse.items[0];
+
+    let status = '';
+    if (orderDetails.status === 'captured') status = 'SUCCESS';
+    if (orderDetails.status === 'failed') status = 'FAILED';
+
+    return {
+      status,
+      details: {
+        transactionId: paymentLinkDetails?.payments[0]?.payment_id,
+        transactionReceipt: orderDetails?.receipt,
+      },
+    };
   }
 
-  getRazorpayPayementStatus(paymentData) {
-    let paymentStatus = 'pending';
+  // getRazorpayPayementStatus(paymentData) {
+  //   let paymentStatus = 'pending';
 
-    const failed = 'payment.failed';
-    const paid = 'payment_link.paid';
-    const expired = 'payment_link.expired';
+  //   const failed = 'payment.failed';
+  //   const paid = 'payment_link.paid';
+  //   const expired = 'payment_link.expired';
 
-    if (paymentData.event === failed || paymentData.event === expired) {
-      paymentStatus = 'failed';
-    }
+  //   if (paymentData.event === failed || paymentData.event === expired) {
+  //     paymentStatus = 'failed';
+  //   }
 
-    if (paymentData.event === paid) {
-      paymentStatus = 'success';
-    }
+  //   if (paymentData.event === paid) {
+  //     paymentStatus = 'success';
+  //   }
 
-    return paymentStatus;
-  }
+  //   return paymentStatus;
+  // }
 }

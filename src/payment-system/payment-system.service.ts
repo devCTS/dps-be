@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
   Res,
@@ -16,6 +17,7 @@ import { Response } from 'express';
 import { PaymentSystemUtilService } from './payment-system.util.service';
 import {
   GatewayName,
+  OrderStatus,
   OrderType,
   PaymentMadeOn,
   PaymentType,
@@ -25,6 +27,8 @@ import { GetPayPageDto } from './dto/getPayPage.dto';
 import { SystemConfig } from 'src/system-config/entities/system-config.entity';
 import { SystemConfigService } from 'src/system-config/system-config.service';
 import { UniqpayService } from './uniqpay/uniqpay.service';
+import { Payin } from 'src/payin/entities/payin.entity';
+import { MemberChannelService } from './member/member-channel.service';
 
 // const paymentPageBaseUrl = 'http://localhost:5174';
 @Injectable()
@@ -34,16 +38,25 @@ export class PaymentSystemService {
     private readonly merchantRepository: Repository<Merchant>,
     @InjectRepository(ChannelSettings)
     private readonly channelSettingsRepository: Repository<ChannelSettings>,
+    @InjectRepository(Payin)
+    private readonly payinRepository: Repository<Payin>,
+
     private readonly phonepeService: PhonepeService,
     private readonly razorpayService: RazorpayService,
     private readonly uniqpayService: UniqpayService,
     private readonly payinService: PayinService,
     private readonly utilService: PaymentSystemUtilService,
     private readonly systemConfigService: SystemConfigService,
+    private readonly memberChannelService: MemberChannelService,
   ) {}
 
   async getPayPage(getPayPageDto: GetPayPageDto) {
-    const { gateway } = getPayPageDto;
+    const { gateway, orderId } = getPayPageDto;
+
+    let res;
+
+    if (gateway === GatewayName.MEMBER)
+      return await this.memberChannelService.getPayPage(orderId);
 
     if (gateway === GatewayName.PHONEPE)
       return await this.phonepeService.getPayPage(getPayPageDto);
@@ -53,7 +66,7 @@ export class PaymentSystemService {
   }
 
   async getOrderDetails(orderId: string) {
-    return await this.razorpayService.razorpayPaymentStatus(orderId);
+    return await this.razorpayService.getPaymentStatus(orderId);
   }
 
   async createPaymentOrder(
@@ -138,32 +151,35 @@ export class PaymentSystemService {
 
     await this.payinService.updatePayinStatusToAssigned(body);
 
-    let url = '';
+    let res = null;
     if (isMember)
-      url = `${process.env.PAYMENT_PAGE_BASE_URL}/payment/${createdPayin.systemOrderId}`;
+      res = await this.getPayPage({
+        orderId: createdPayin.systemOrderId,
+        gateway: GatewayName.MEMBER,
+      });
 
-    if (selectedPaymentMode === GatewayName.PHONEPE) {
-      const res = await this.getPayPage({
+    if (selectedPaymentMode === GatewayName.PHONEPE)
+      res = await this.getPayPage({
         userId: createdPayin.user?.userId,
         amount: createdPayin.amount.toString(),
         orderId: createdPayin.systemOrderId,
         gateway: GatewayName.PHONEPE,
       });
-      url = res.url;
-    }
 
-    if (selectedPaymentMode === GatewayName.RAZORPAY) {
-      const res = await this.getPayPage({
+    if (selectedPaymentMode === GatewayName.RAZORPAY)
+      res = await this.getPayPage({
         userId: createdPayin.user?.userId,
         amount: createdPayin.amount.toString(),
         orderId: createdPayin.systemOrderId,
         gateway: GatewayName.RAZORPAY,
       });
-      url = res.url;
-    }
+
+    await this.payinRepository.update(createdPayin.id, {
+      trackingId: res.trackingId,
+    });
 
     response.send({
-      url,
+      url: res.url,
       orderId: createdPayin.systemOrderId,
     });
   }
@@ -173,12 +189,16 @@ export class PaymentSystemService {
     transactionId: string,
     userId: string,
   ) {
-    return await this.phonepeService.checkStatus(res, transactionId, userId);
+    return await this.phonepeService.getPaymentStatus(
+      res,
+      transactionId,
+      userId,
+    );
   }
 
-  async paymentVerification(paymentData: any) {
-    return await this.razorpayService.getRazorpayPayementStatus(paymentData);
-  }
+  // async paymentVerification(paymentData: any) {
+  //   return await this.razorpayService.getRazorpayPayementStatus(paymentData);
+  // }
 
   async makeGatewayPayout(body): Promise<any> {
     const { userId, orderId, amount, orderType } = body;
@@ -212,5 +232,52 @@ export class PaymentSystemService {
       default:
         throw new BadRequestException('Unsupported gateway!');
     }
+  }
+
+  async getPaymentStatus(payinOrderId: string) {
+    const payinOrder = await this.payinRepository.findOneBy({
+      systemOrderId: payinOrderId,
+    });
+    if (!payinOrder) throw new NotFoundException('payin system ID invalid!');
+
+    if (payinOrder.status !== OrderStatus.ASSIGNED)
+      throw new ConflictException('Not Applivable for other statuses!');
+
+    const paymentMethod = payinOrder.payinMadeOn;
+
+    let res = null;
+    if (paymentMethod === PaymentMadeOn.MEMBER) {
+      res = await this.memberChannelService.getPaymentStatus(payinOrder);
+    }
+
+    if (payinOrder.gatewayName === GatewayName.RAZORPAY) {
+      // set gateway response details in entity
+      res = await this.razorpayService.getPaymentStatus(payinOrder.trackingId);
+
+      // TODO
+
+      await this.payinService.updatePayinStatusToSubmitted({
+        id: payinOrderId,
+        transactionReceipt: res.details?.transactionReceipt,
+        transactionId: res.details?.transactionId,
+      });
+
+      if (res.status === 'SUCCESS') {
+        await this.payinService.updatePayinStatusToComplete({
+          id: payinOrderId,
+        });
+      } else if (res.status === 'FAILED') {
+        await this.payinService.updatePayinStatusToFailed({ id: payinOrder });
+      }
+    }
+
+    if (payinOrder.gatewayName === GatewayName.PHONEPE) {
+      // set gateway response details in entity
+      res = await this.phonepeService.getPaymentStatus(null, '', '');
+    }
+
+    if (res) return { status: res.status };
+
+    throw new NotFoundException('Unable to find status!');
   }
 }

@@ -99,50 +99,55 @@ export class PhonepeService {
     });
   }
 
-  async checkStatus(
+  async getPaymentStatus(
     responseObj: Response,
     transactionId: string,
     userId: string,
   ) {
-    if (transactionId) {
-      // generate checksum
-      const string =
-        `/pg/v1/status/${this.merchant_id}/` + transactionId + this.salt_key;
-      const sha256_val = sha256(string);
-      const xVerifyCheckSum = sha256_val + '###' + this.salt_index;
+    // if (transactionId) {
+    //   // generate checksum
+    //   const string =
+    //     `/pg/v1/status/${this.merchant_id}/` + transactionId + this.salt_key;
+    //   const sha256_val = sha256(string);
+    //   const xVerifyCheckSum = sha256_val + '###' + this.salt_index;
 
-      const options = {
-        headers: {
-          'Content-Typpe': 'application/json',
-          'X-VERIFY': xVerifyCheckSum,
-          'X-MERCHANT-ID': this.merchant_id,
-          accept: 'application/json',
-        },
-      };
+    //   const options = {
+    //     headers: {
+    //       'Content-Typpe': 'application/json',
+    //       'X-VERIFY': xVerifyCheckSum,
+    //       'X-MERCHANT-ID': this.merchant_id,
+    //       accept: 'application/json',
+    //     },
+    //   };
 
-      try {
-        const request_url =
-          this.api_url +
-          '/pg/v1/status/' +
-          this.merchant_id +
-          '/' +
-          transactionId;
+    //   try {
+    //     const request_url =
+    //       this.api_url +
+    //       '/pg/v1/status/' +
+    //       this.merchant_id +
+    //       '/' +
+    //       transactionId;
 
-        const observable = this.httpService.get(
-          request_url,
+    //     const observable = this.httpService.get(
+    //       request_url,
 
-          options,
-        );
+    //       options,
+    //     );
 
-        const response = await firstValueFrom<any>(observable);
-        //send data to merchant
+    //     const response = await firstValueFrom<any>(observable);
+    //     //send data to merchant
 
-        responseObj.send(response.data);
+    //     responseObj.send(response.data);
 
-        // responseObj.redirect('https://ginrummy.asia/redirect.html');
-      } catch (error) {
-        throw new ConflictException(error.response?.data || error.toString());
-      }
-    }
+    //     // responseObj.redirect('https://ginrummy.asia/redirect.html');
+    //   } catch (error) {
+    //     throw new ConflictException(error.response?.data || error.toString());
+    //   }
+    // }
+
+    return {
+      status: 'COMPLETE',
+      details: null,
+    };
   }
 }

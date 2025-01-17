@@ -65,6 +65,9 @@ export class Payin {
   @Column({ nullable: true })
   transactionDetails: string;
 
+  @Column({ nullable: true })
+  trackingId: string;
+
   @ManyToOne(() => EndUser, (endUser) => endUser.payin)
   @JoinColumn({ name: 'enduser_id' })
   user: EndUser;
