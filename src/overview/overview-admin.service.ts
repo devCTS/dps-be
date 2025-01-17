@@ -26,7 +26,7 @@ import { FiltersDto } from './dtos/filters-dto';
 import { SystemConfigService } from 'src/system-config/system-config.service';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { monthNames, roundOffAmount } from 'src/utils/utils';
-import * as moment from 'moment';
+import moment from 'moment';
 
 @Injectable()
 export class OverviewAdminService {

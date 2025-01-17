@@ -30,7 +30,7 @@ import {
 } from 'src/utils/dtos/paginate.dto';
 import { plainToInstance } from 'class-transformer';
 import { FundRecordAdminResponseDto } from './dto/paginate-response.dto';
-import * as uniqid from 'uniqid';
+import uniqid from 'uniqid';
 import { roundOffAmount } from 'src/utils/utils';
 
 @Injectable()

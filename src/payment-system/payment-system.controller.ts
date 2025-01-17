@@ -14,7 +14,7 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { PaymentSystemService } from './payment-system.service';
-import * as QRCode from 'qrcode';
+import QRCode from 'qrcode';
 import { CreatePaymentOrderDto } from './dto/createPaymentOrder.dto';
 import { SubmitPaymentOrderDto } from './dto/submitPayment.dto';
 import { InjectRepository } from '@nestjs/typeorm';

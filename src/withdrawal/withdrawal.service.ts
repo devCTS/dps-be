@@ -12,7 +12,7 @@ import { CreateWithdrawalDto } from './dto/create-withdrawal.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Withdrawal } from './entities/withdrawal.entity';
 import { Repository } from 'typeorm';
-import * as uniqid from 'uniqid';
+import uniqid from 'uniqid';
 import {
   AlertType,
   ChannelName,

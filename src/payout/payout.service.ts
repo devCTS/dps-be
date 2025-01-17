@@ -26,7 +26,7 @@ import {
 import { EndUserService } from 'src/end-user/end-user.service';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { EndUser } from 'src/end-user/entities/end-user.entity';
-import * as uniqid from 'uniqid';
+import uniqid from 'uniqid';
 import { CreatePayoutDto } from './dto/create-payout.dto';
 import { TransactionUpdatesPayoutService } from 'src/transaction-updates/transaction-updates-payout.service';
 import { Member } from 'src/member/entities/member.entity';

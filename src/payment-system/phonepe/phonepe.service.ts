@@ -1,7 +1,7 @@
 import { HttpService } from '@nestjs/axios';
 import { ConflictException, Injectable } from '@nestjs/common';
-import * as uniqid from 'uniqid';
-import * as sha256 from 'sha256';
+import uniqid from 'uniqid';
+import sha256 from 'sha256';
 import { firstValueFrom } from 'rxjs';
 import { Response } from 'express';
 import { GetPayPageDto } from '../dto/getPayPage.dto';
