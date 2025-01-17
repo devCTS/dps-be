@@ -17,7 +17,7 @@ import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-
 import { ChannelName, OrderStatus } from 'src/utils/enum/enum';
 import { MemberTopupDetailsResponseDto } from './dto/topup-details-response/member-topup-details-response.dto';
 import { roundOffAmount } from 'src/utils/utils';
-import * as QRCode from 'qrcode';
+import QRCode from 'qrcode';
 
 @Injectable()
 export class TopupMemberService {

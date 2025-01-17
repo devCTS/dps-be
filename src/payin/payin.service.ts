@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as uniqid from 'uniqid';
+import uniqid from 'uniqid';
 import { Payin } from './entities/payin.entity';
 import {
   AlertType,

@@ -1,7 +1,7 @@
 import { HttpService } from '@nestjs/axios';
 import { ConflictException, Injectable } from '@nestjs/common';
 //@ts-ignore
-import * as Razorpay from 'razorpay';
+import Razorpay from 'razorpay';
 import { GetPayPageDto } from '../dto/getPayPage.dto';
 import { get } from 'http';
 import { InjectRepository } from '@nestjs/typeorm';

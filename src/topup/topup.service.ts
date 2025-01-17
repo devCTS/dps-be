@@ -18,7 +18,7 @@ import {
   UserTypeForTransactionUpdates,
 } from 'src/utils/enum/enum';
 
-import * as uniqid from 'uniqid';
+import uniqid from 'uniqid';
 import { Member } from 'src/member/entities/member.entity';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { MemberService } from 'src/member/member.service';

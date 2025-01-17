@@ -1,6 +1,6 @@
 import { HttpStatus } from '@nestjs/common';
-import * as bycrypt from 'bcrypt';
-import * as jwt from 'jsonwebtoken';
+import bycrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import { AlertType, NotificationType, ServiceRateType } from './enum/enum';
 
 // Encrypt password or match password

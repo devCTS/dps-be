@@ -40,7 +40,7 @@ import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-
 import { Upi } from 'src/channel/entity/upi.entity';
 import { NetBanking } from 'src/channel/entity/net-banking.entity';
 import { EWallet } from 'src/channel/entity/e-wallet.entity';
-import * as uniqid from 'uniqid';
+import uniqid from 'uniqid';
 import { VerifyWithdrawalPasswordDto } from './dto/verify-withdrawal-password.dto';
 import { SystemConfigService } from 'src/system-config/system-config.service';
 import { OrganizationService } from 'src/organization/organization.service';
