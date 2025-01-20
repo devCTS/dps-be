@@ -36,8 +36,7 @@ export class PaymentSystemService {
   constructor(
     @InjectRepository(Merchant)
     private readonly merchantRepository: Repository<Merchant>,
-    @InjectRepository(ChannelSettings)
-    private readonly channelSettingsRepository: Repository<ChannelSettings>,
+
     @InjectRepository(Payin)
     private readonly payinRepository: Repository<Payin>,
 
@@ -51,28 +50,14 @@ export class PaymentSystemService {
   ) {}
 
   async getPayPage(getPayPageDto: GetPayPageDto) {
-    const { gateway, orderId } = getPayPageDto;
-
-    let res;
-
-    if (gateway === GatewayName.MEMBER)
-      return await this.memberChannelService.getPayPage(orderId);
-
-    if (gateway === GatewayName.PHONEPE)
-      return await this.phonepeService.getPayPage(getPayPageDto);
-
-    if (gateway === GatewayName.RAZORPAY)
-      return await this.razorpayService.getPayPage(getPayPageDto);
+    await this.utilService.getPayPage(getPayPageDto);
   }
 
   async getOrderDetails(orderId: string) {
     return await this.razorpayService.getPaymentStatus(orderId);
   }
 
-  async createPaymentOrder(
-    createPaymentOrderDto: CreatePaymentOrderDto,
-    response: Response,
-  ) {
+  async createPaymentOrder(createPaymentOrderDto: CreatePaymentOrderDto) {
     const merchant = await this.merchantRepository.findOne({
       where: {
         integrationId: createPaymentOrderDto.integrationId,
@@ -87,101 +72,15 @@ export class PaymentSystemService {
 
     const createdPayin = await this.payinService.create(createPaymentOrderDto);
 
-    let channelNameMap = {
-      UPI: 'upi',
-      NET_BANKING: 'netBanking',
-      E_WALLET: 'eWallet',
-    };
-    let channelName = channelNameMap[createdPayin.channel];
+    this.utilService.assignPaymentMethodForPayinOrder(
+      merchant,
+      createdPayin,
+      createPaymentOrderDto.userId,
+    );
 
-    let selectedPaymentMode;
-    switch (merchant.payinMode) {
-      case 'DEFAULT':
-        selectedPaymentMode = await this.utilService.fetchForDefault(
-          merchant,
-          channelName,
-          createdPayin.amount,
-        );
-        break;
-
-      case 'AMOUNT RANGE':
-        selectedPaymentMode = await this.utilService.fetchForAmountRange(
-          merchant,
-          channelName,
-          createdPayin.amount,
-        );
-        break;
-
-      case 'PROPORTIONAL':
-        selectedPaymentMode = await this.utilService.fetchForProportional(
-          merchant,
-          channelName,
-          createdPayin.amount,
-        );
-        break;
-
-      default:
-        break;
-    }
-
-    const isMember = !!selectedPaymentMode?.id;
-    let paymentDetails;
-
-    if (isMember) {
-      paymentDetails = selectedPaymentMode.identity[channelName];
-    } else {
-      paymentDetails = await this.channelSettingsRepository.findOne({
-        where: {
-          gatewayName: selectedPaymentMode,
-          type: PaymentType.INCOMING,
-          channelName: createdPayin.channel,
-        },
-      });
-    }
-
-    const body = {
-      id: createdPayin.systemOrderId,
-      paymentMode: isMember ? PaymentMadeOn.MEMBER : PaymentMadeOn.GATEWAY,
-      memberId: isMember && selectedPaymentMode.id,
-      gatewayServiceRate: !isMember ? paymentDetails.upstreamFee : null,
-      memberPaymentDetails: isMember ? paymentDetails[0] : null,
-      gatewayName: !isMember ? selectedPaymentMode : null,
-      userId: createPaymentOrderDto.userId,
-    };
-
-    await this.payinService.updatePayinStatusToAssigned(body);
-
-    let res = null;
-    if (isMember)
-      res = await this.getPayPage({
-        orderId: createdPayin.systemOrderId,
-        gateway: GatewayName.MEMBER,
-      });
-
-    if (selectedPaymentMode === GatewayName.PHONEPE)
-      res = await this.getPayPage({
-        userId: createdPayin.user?.userId,
-        amount: createdPayin.amount.toString(),
-        orderId: createdPayin.systemOrderId,
-        gateway: GatewayName.PHONEPE,
-      });
-
-    if (selectedPaymentMode === GatewayName.RAZORPAY)
-      res = await this.getPayPage({
-        userId: createdPayin.user?.userId,
-        amount: createdPayin.amount.toString(),
-        orderId: createdPayin.systemOrderId,
-        gateway: GatewayName.RAZORPAY,
-      });
-
-    await this.payinRepository.update(createdPayin.id, {
-      trackingId: res.trackingId,
-    });
-
-    response.send({
-      url: res.url,
+    return {
       orderId: createdPayin.systemOrderId,
-    });
+    };
   }
 
   async phonepeCheckStatus(
@@ -241,7 +140,7 @@ export class PaymentSystemService {
     if (!payinOrder) throw new NotFoundException('payin system ID invalid!');
 
     if (payinOrder.status !== OrderStatus.ASSIGNED)
-      throw new ConflictException('Not Applivable for other statuses!');
+      throw new ConflictException('Not Applicable for other statuses!');
 
     const paymentMethod = payinOrder.payinMadeOn;
 
@@ -254,20 +153,20 @@ export class PaymentSystemService {
       // set gateway response details in entity
       res = await this.razorpayService.getPaymentStatus(payinOrder.trackingId);
 
-      // TODO
-
-      await this.payinService.updatePayinStatusToSubmitted({
-        id: payinOrderId,
-        transactionReceipt: res.details?.transactionReceipt,
-        transactionId: res.details?.transactionId,
-      });
-
-      if (res.status === 'SUCCESS') {
-        await this.payinService.updatePayinStatusToComplete({
+      if (res && res.status) {
+        await this.payinService.updatePayinStatusToSubmitted({
           id: payinOrderId,
+          transactionReceipt: res.details?.transactionReceipt || 'receipt', // TODO
+          transactionId: res.details?.transactionId || 'trnx001',
         });
-      } else if (res.status === 'FAILED') {
-        await this.payinService.updatePayinStatusToFailed({ id: payinOrder });
+
+        if (res.status === 'SUCCESS')
+          await this.payinService.updatePayinStatusToComplete({
+            id: payinOrderId,
+          });
+
+        if (res.status === 'FAILED')
+          await this.payinService.updatePayinStatusToFailed({ id: payinOrder });
       }
     }
 

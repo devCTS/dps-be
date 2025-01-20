@@ -20,4 +20,8 @@ export class GetPayPageDto {
   @IsNotEmpty()
   @IsString()
   orderId: string;
+
+  @IsOptional()
+  @IsString()
+  integrationId?: string;
 }

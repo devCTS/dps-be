@@ -43,9 +43,15 @@ export class PayinGateway implements OnGatewayConnection, OnGatewayDisconnect {
     client.emit('joinedOrder', { message: `Joined room for order ${orderId}` });
   }
 
-  notifyOrderAssigned(orderId: string) {
+  notifyOrderAssigned(
+    orderId: string,
+    url: string,
+    type: 'MEMBER' | 'GATEWAY',
+  ) {
     this.server.to(orderId).emit('orderAssigned', {
       orderId,
+      url,
+      type,
     });
   }
 }

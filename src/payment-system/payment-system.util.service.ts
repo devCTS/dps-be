@@ -11,7 +11,20 @@ import { AmountRangePayinMode } from 'src/merchant/entities/amountRangePayinMode
 import { ProportionalPayinMode } from 'src/merchant/entities/proportionalPayinMode.entity';
 
 import { SystemConfigService } from 'src/system-config/system-config.service';
-import { ChannelName, GatewayName, PaymentType } from 'src/utils/enum/enum';
+import {
+  ChannelName,
+  GatewayName,
+  PaymentMadeOn,
+  PaymentType,
+} from 'src/utils/enum/enum';
+import { Payin } from 'src/payin/entities/payin.entity';
+import { PayinService } from 'src/payin/payin.service';
+import { PaymentSystemService } from './payment-system.service';
+import { GetPayPageDto } from './dto/getPayPage.dto';
+import { MemberChannelService } from './member/member-channel.service';
+import { PhonepeService } from './phonepe/phonepe.service';
+import { RazorpayService } from './razorpay/razorpay.service';
+import { PayinGateway } from 'src/socket/payin.gateway';
 
 @Injectable()
 export class PaymentSystemUtilService {
@@ -22,6 +35,8 @@ export class PaymentSystemUtilService {
     private readonly phonePeRepository: Repository<Phonepe>,
     @InjectRepository(Razorpay)
     private readonly razorpayRepository: Repository<Razorpay>,
+    @InjectRepository(Payin)
+    private readonly payinRepository: Repository<Payin>,
     @InjectRepository(ChannelSettings)
     private readonly channelSettingsRepository: Repository<ChannelSettings>,
     @InjectRepository(AmountRangePayinMode)
@@ -30,6 +45,11 @@ export class PaymentSystemUtilService {
     private readonly proportionalRepository: Repository<ProportionalPayinMode>,
 
     private readonly systemConfigService: SystemConfigService,
+    private readonly payinService: PayinService,
+    private readonly memberChannelService: MemberChannelService,
+    private readonly phonepeService: PhonepeService,
+    private readonly razorpayService: RazorpayService,
+    private readonly payinGateway: PayinGateway,
   ) {}
 
   async fetchForDefault(merchant, channelName, amount) {
@@ -41,19 +61,24 @@ export class PaymentSystemUtilService {
         (await this.systemConfigService.findLatest()).payinTimeout * 1000;
 
       // Find an eligible online member with the interval of 0.5 sec until payin timeout
-      const intervalId = setInterval(async () => {
-        if (Date.now() - startTime >= payinTimeout) {
-          clearInterval(intervalId);
-          return;
-        }
+      const findMemberPromise = new Promise((resolve, reject) => {
+        const intervalId = setInterval(async () => {
+          if (Date.now() - startTime >= payinTimeout) {
+            clearInterval(intervalId);
+            resolve(null); // No member found within the timeout
+          }
 
-        selectedMember = await this.getMemberForPayin(channelName, amount);
-        // If an eligible online member is found clear interval and return the selected member
-        if (selectedMember) {
-          clearInterval(intervalId);
-          return selectedMember;
-        }
-      }, 500);
+          selectedMember = await this.getMemberForPayin(channelName, amount);
+          // If an eligible online member is found, clear interval and resolve the promise
+          if (selectedMember) {
+            clearInterval(intervalId);
+            resolve(selectedMember);
+          }
+        }, 500);
+      });
+
+      // Await the result of finding a member
+      selectedMember = await findMemberPromise;
 
       // If no eligible member is found, fetch the gateway
       if (!selectedMember)
@@ -63,7 +88,7 @@ export class PaymentSystemUtilService {
     }
 
     // If gateway/3rd party payment is disabled by the merchant
-    if (!merchant.allowPgBackupForPayin) {
+    else if (!merchant.allowPgBackupForPayin) {
       // Keep finding eligible member with an interval of 0.5 sec indefinitely until found.
       return new Promise((resolve, reject) => {
         const intervalId = setInterval(async () => {
@@ -81,8 +106,9 @@ export class PaymentSystemUtilService {
     }
 
     // If member channels are disabled by the merchant
-    if (!merchant.allowMemberChannelsPayin)
+    else if (!merchant.allowMemberChannelsPayin) {
       return await this.getGatewayForPayin(channelName, amount);
+    }
   }
 
   async fetchForAmountRange(merchant: Merchant, channelName, payinAmount) {
@@ -233,6 +259,7 @@ export class PaymentSystemUtilService {
       .andWhere('member.quota >= :amount', { amount })
       .andWhere(`${channelName}.id IS NOT NULL`)
       .getMany();
+
     if (!eligibleMembers || !eligibleMembers.length) return null;
 
     // If more than one members are eligible then find the member with least payin orders.
@@ -350,5 +377,127 @@ export class PaymentSystemUtilService {
     }
 
     return null;
+  }
+
+  async assignPaymentMethodForPayinOrder(
+    merchant: Merchant,
+    createdPayin: Payin,
+    userId,
+  ) {
+    let channelNameMap = {
+      UPI: 'upi',
+      NET_BANKING: 'netBanking',
+      E_WALLET: 'eWallet',
+    };
+    let channelName = channelNameMap[createdPayin.channel];
+
+    let selectedPaymentMode;
+    switch (merchant.payinMode) {
+      case 'DEFAULT':
+        selectedPaymentMode = await this.fetchForDefault(
+          merchant,
+          channelName,
+          createdPayin.amount,
+        );
+        break;
+
+      case 'AMOUNT RANGE':
+        selectedPaymentMode = await this.fetchForAmountRange(
+          merchant,
+          channelName,
+          createdPayin.amount,
+        );
+        break;
+
+      case 'PROPORTIONAL':
+        selectedPaymentMode = await this.fetchForProportional(
+          merchant,
+          channelName,
+          createdPayin.amount,
+        );
+        break;
+
+      default:
+        break;
+    }
+
+    const isMember = !!selectedPaymentMode?.id;
+    let paymentDetails;
+
+    if (isMember) {
+      paymentDetails = selectedPaymentMode.identity[channelName];
+    } else {
+      paymentDetails = await this.channelSettingsRepository.findOne({
+        where: {
+          gatewayName: selectedPaymentMode,
+          type: PaymentType.INCOMING,
+          channelName: createdPayin.channel,
+        },
+      });
+    }
+
+    const body = {
+      id: createdPayin.systemOrderId,
+      paymentMode: isMember ? PaymentMadeOn.MEMBER : PaymentMadeOn.GATEWAY,
+      memberId: isMember && selectedPaymentMode.id,
+      gatewayServiceRate: !isMember ? paymentDetails.upstreamFee : null,
+      memberPaymentDetails: isMember ? paymentDetails[0] : null,
+      gatewayName: !isMember ? selectedPaymentMode : null,
+      userId: userId,
+    };
+
+    await this.payinService.updatePayinStatusToAssigned(body);
+
+    let res = null;
+    if (isMember)
+      res = await this.getPayPage({
+        orderId: createdPayin.systemOrderId,
+        gateway: GatewayName.MEMBER,
+      });
+
+    if (selectedPaymentMode === GatewayName.PHONEPE)
+      res = await this.getPayPage({
+        userId: createdPayin.user?.userId,
+        amount: createdPayin.amount.toString(),
+        orderId: createdPayin.systemOrderId,
+        gateway: GatewayName.PHONEPE,
+        integrationId: merchant.integrationId,
+      });
+
+    if (selectedPaymentMode === GatewayName.RAZORPAY)
+      res = await this.getPayPage({
+        userId: createdPayin.user?.userId,
+        amount: createdPayin.amount.toString(),
+        orderId: createdPayin.systemOrderId,
+        gateway: GatewayName.RAZORPAY,
+        integrationId: merchant.integrationId,
+      });
+
+    await this.payinRepository.update(createdPayin.id, {
+      trackingId: res.trackingId,
+    });
+
+    const paymentMethodType = isMember ? 'MEMBER' : 'GATEWAY';
+
+    setTimeout(() => {
+      this.payinGateway.notifyOrderAssigned(
+        createdPayin.systemOrderId,
+        res.url,
+        paymentMethodType,
+      );
+    }, 1000);
+  }
+
+  async getPayPage(getPayPageDto: GetPayPageDto) {
+    const { gateway, orderId } = getPayPageDto;
+
+    if (gateway === GatewayName.MEMBER)
+      return await this.memberChannelService.getPayPage(orderId);
+
+    if (gateway === GatewayName.PHONEPE)
+      return await this.phonepeService.getPayPage(getPayPageDto);
+
+    if (gateway === GatewayName.RAZORPAY)
+      return await this.razorpayService.getPayPage(getPayPageDto);
   }
 }

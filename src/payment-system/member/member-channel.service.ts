@@ -5,7 +5,9 @@ import { OrderStatus } from 'src/utils/enum/enum';
 @Injectable()
 export class MemberChannelService {
   async getPayPage(systemOrderId) {
-    return `${process.env.PAYMENT_PAGE_BASE_URL}/payment/${systemOrderId}`;
+    return {
+      url: `${process.env.PAYMENT_PAGE_BASE_URL}/payment/${systemOrderId}`,
+    };
   }
 
   async getPaymentStatus(payinOrder: Payin) {

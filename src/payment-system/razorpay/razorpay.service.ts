@@ -3,7 +3,6 @@ import { ConflictException, Injectable } from '@nestjs/common';
 //@ts-ignore
 import Razorpay from 'razorpay';
 import { GetPayPageDto } from '../dto/getPayPage.dto';
-import { get } from 'http';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EndUser } from 'src/end-user/entities/end-user.entity';
 import { Repository } from 'typeorm';
@@ -25,14 +24,13 @@ export class RazorpayService {
 
   //   razorpay payment
   async getPayPage(getPayPageDto: GetPayPageDto) {
-    const { userId, amount } = getPayPageDto;
+    const { userId, amount, orderId, integrationId } = getPayPageDto;
 
     const endUser = await this.endUserRepository.findOneBy({ userId });
 
     // transaction amount
     const amountInPaise = parseFloat(amount) * 100;
     const options = {
-      acceptPartial: false,
       amount: amountInPaise,
       customer: {
         name: endUser?.name || '',
@@ -51,6 +49,8 @@ export class RazorpayService {
           },
         },
       },
+      callback_url: `${process.env.PAYMENT_PAGE_BASE_URL}/checkout/${integrationId}?callback=true&orderId=${orderId}`,
+      callback_method: 'get',
     };
 
     const paymentLink = await this.razorpayClient.paymentLink.create(options);
@@ -89,7 +89,7 @@ export class RazorpayService {
 
     const orderDetails = orderResponse.items[0];
 
-    let status = '';
+    let status;
     if (orderDetails.status === 'captured') status = 'SUCCESS';
     if (orderDetails.status === 'failed') status = 'FAILED';
 
