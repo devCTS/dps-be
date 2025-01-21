@@ -720,15 +720,15 @@ export class PayoutService {
           payout.transactionId,
         );
 
-      if (response.status === 'processed')
+      if (response?.status === 'processed')
         await this.updatePayoutStatusToComplete({
           id: payout.systemOrderId,
         });
 
       if (
-        response.status === 'failed' ||
-        response.status === 'rejected' ||
-        response.status === 'cancelled'
+        response?.status === 'failed' ||
+        response?.status === 'rejected' ||
+        response?.status === 'cancelled'
       )
         await this.updatePayoutStatusToFailed({
           id: payout.systemOrderId,
