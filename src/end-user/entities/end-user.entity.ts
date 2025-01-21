@@ -54,6 +54,15 @@ export class EndUser {
   @JoinColumn()
   merchant: Merchant;
 
+  @Column({ nullable: true })
+  contactId: string;
+
+  @Column({ nullable: true })
+  fundAccountId: string;
+
+  @Column({ nullable: true, enum: ['vpa', 'bank_account'] })
+  fundAccountType: 'vpa' | 'bank_account';
+
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 

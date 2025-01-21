@@ -1,12 +1,18 @@
 import { HttpService } from '@nestjs/axios';
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 //@ts-ignore
 import Razorpay from 'razorpay';
 import { GetPayPageDto } from '../dto/getPayPage.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EndUser } from 'src/end-user/entities/end-user.entity';
 import { Repository } from 'typeorm';
-import { ChannelName } from 'src/utils/enum/enum';
+import { ChannelName, GatewayName } from 'src/utils/enum/enum';
+import { firstValueFrom } from 'rxjs';
+import uuid from 'uuid';
 
 @Injectable()
 export class RazorpayService {
@@ -22,6 +28,8 @@ export class RazorpayService {
       key_secret: process.env.RAZORPAY_KEY_SECRET,
     });
   }
+
+  generateUniqueKey = () => uuid();
 
   //   razorpay payment
   async getPayPage(getPayPageDto: GetPayPageDto) {
@@ -63,21 +71,235 @@ export class RazorpayService {
     };
   }
 
-  async makePayoutPayment({ userId, amount = 1000, orderId }) {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          gatewayName: 'RAZORPAY',
-          transactionId: 'TRXN123-ABC-156',
-          transactionReceipt: 'https://www.google.com',
-          paymentStatus: 'success',
-          transactionDetails: {
-            date: new Date(),
-            amount: amount,
+  async createContact(contactDetails) {
+    const { name, email, contact, type, reference_id, notes } = contactDetails;
+
+    const contactRequest = {
+      name,
+      email,
+      contact,
+      type,
+      reference_id,
+      notes: {
+        notes_key_1: '',
+        notes_key_2: '',
+      },
+    };
+
+    const authHeader = `Basic ${Buffer.from(`${process.env.RAZORPAY_KEY_ID}:${process.env.RAZORPAY_TEST_KEY_SECRET}`).toString('base64')}`;
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(
+          'https://api.razorpay.com/v1/contacts',
+          contactRequest,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: authHeader,
+            },
           },
-        });
-      }, 3000);
+        ),
+      );
+
+      return response.data;
+    } catch (error) {
+      console.log(error.response);
+    }
+  }
+
+  async createFundAccount(fundAccountDetails) {
+    const {
+      contact_id,
+      account_type, // bank_account || vpa
+      bank_account, // format bank_account: {name: "", ifsc: "", account_number: ""}
+      vpa, // format - vpa: { address: "" }
+    } = fundAccountDetails;
+
+    const fundAccountRequest = {
+      contact_id,
+      account_type,
+      bank_account,
+      vpa,
+    };
+
+    // Include bank account details if the account type is 'bank_account'
+    if (account_type === 'bank_account') {
+      fundAccountRequest.bank_account = fundAccountDetails.bank_account;
+      delete fundAccountRequest.vpa;
+    }
+
+    // Include VPA details if the account type is 'vpa'
+    if (account_type === 'vpa') {
+      fundAccountRequest.vpa = fundAccountDetails.vpa;
+      delete fundAccountRequest.bank_account;
+    }
+
+    const authHeader = `Basic ${Buffer.from(`${process.env.RAZORPAY_KEY_ID}:${process.env.RAZORPAY_TEST_KEY_SECRET}`).toString('base64')}`;
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(
+          'https://api.razorpay.com/v1/fund_accounts',
+          fundAccountRequest,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: authHeader,
+            },
+          },
+        ),
+      );
+
+      return response.data;
+    } catch (error) {
+      console.log(error.response);
+    }
+  }
+
+  async createPayout(payoutDetails) {
+    const {
+      userId,
+      account_number, // The account from which you want to make the payout.
+      amount,
+      customer_bank_details,
+      customer_vpa,
+      customer_details,
+      currency, // INR
+      mode, // Netbanking - (NEFT, RTGS, IMPS, card) or VPA - (UPI)
+      purpose, // refund, cashback, salary, payout, utility bill, vendor bill
+      reference_id, // A user-generated reference given to the payout.
+      narration, //  This is a custom note that also appears on the bank statement. If no value is passed for this parameter, it defaults to the Merchant Billing Label.
+      notes, // Multiple key-value pairs that can be used to store additional information about the entity. Maximum 15 key-value pairs, 256 characters (maximum) each. For example, "note_key": "Beam me up Scotty”.
+      queue_if_low_balance, // payout will be rejected if insufficient balance in acc else will be queued
+    } = payoutDetails;
+
+    const endUser = await this.endUserRepository.findOneBy({ userId });
+
+    let contactId = endUser?.contactId;
+    if (!endUser.contactId) {
+      const contact = await this.createContact({
+        name: customer_details.name,
+        type: 'customer',
+        email: customer_details.email,
+        contact: customer_details.contact,
+        reference_id: 'abc',
+        notes: '',
+      });
+
+      contactId = contact?.id;
+
+      await this.endUserRepository.update(endUser.id, {
+        contactId,
+      });
+    }
+
+    let fundAccountId = endUser?.fundAccountId;
+    if (
+      (mode === 'UPI' && endUser.fundAccountType !== 'vpa') ||
+      (mode !== 'UPI' && endUser.fundAccountType === 'vpa')
+    ) {
+      const fundAccount = await this.createFundAccount({
+        contact_id: contactId,
+        account_type: mode === 'UPI' ? 'vpa' : 'bank_account',
+        bank_account:
+          mode !== 'UPI'
+            ? {
+                name: customer_bank_details.name,
+                account_number: customer_bank_details.account_number,
+                ifsc: customer_bank_details.ifsc,
+              }
+            : undefined,
+        vpa: mode == 'UPI' ? { address: customer_vpa } : undefined,
+      });
+
+      const fundAccountType = mode === 'UPI' ? 'vpa' : 'bank_account';
+      fundAccountId = fundAccount?.id;
+
+      await this.endUserRepository.update(endUser.id, {
+        fundAccountId,
+        fundAccountType,
+      });
+    }
+
+    const payoutRequest = {
+      ...payoutDetails,
+      fund_account_id: fundAccountId,
+    };
+
+    const authHeader = `Basic ${Buffer.from(`${process.env.RAZORPAY_KEY_ID}:${process.env.RAZORPAY_TEST_KEY_SECRET}`).toString('base64')}`;
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(
+          'https://api.razorpay.com/v1/payouts',
+          payoutRequest,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Payout-Idempotency': this.generateUniqueKey(),
+              Authorization: authHeader,
+            },
+          },
+        ),
+      );
+      return response.data;
+    } catch (error) {
+      console.log(error.response);
+    }
+  }
+
+  async makePayoutPayment({
+    userId,
+    amount = 1000,
+    mode,
+  }: {
+    userId: string;
+    amount: number;
+    mode: 'VPA' | 'IMPS' | 'RTGS' | 'NEFT';
+  }) {
+    const endUser = await this.endUserRepository.findOneBy({ userId });
+    if (!endUser) throw new NotFoundException('End user not found!');
+
+    const userChannelDetails = JSON.parse(endUser.channelDetails);
+    const amountInPaise = amount * 100;
+
+    // {"UPI":{"Upi Id":"kartik@upi","Mobile Number":"9876543210"},"NET_BANKING":{"Account Number":"123412341241234","Bank Name":"HDFC","IFSC Code":"HDFC0002900","Beneficiary Name":"KARTIK"},"E_WALLET":{"App Name":"GOOGLE PAY","Mobile Number":"9876543210"}}
+
+    const res = await this.createPayout({
+      account_number: '', //TODO
+      amount: amountInPaise,
+      customer_details: {
+        name: endUser.name,
+        email: endUser.email,
+        contact: endUser.mobile,
+        type: 'customer',
+      },
+      customer_bank_details:
+        mode !== 'VPA'
+          ? {
+              name: userChannelDetails['NET_BANKING']['Bank Name'],
+              account_number:
+                userChannelDetails['NET_BANKING']['Account Number'],
+              ifcs: userChannelDetails['NET_BANKING']['IFSC Code'],
+            }
+          : null,
+      customer_vpa: mode === 'VPA' ? userChannelDetails['UPI']['Upi Id'] : null,
+      currency: 'INR',
+      mode: mode,
+      purpose: 'payout',
+      reference_id: `REF-PAYOUT-${userId}`,
+      queue_if_low_balance: false,
+      userId,
     });
+
+    return {
+      gatewayName: GatewayName.RAZORPAY,
+      transactionId: res?.id || 'DUMMY_TRXN',
+      transactionReceipt: 'DUMMY_RECEIPT',
+      paymentStatus: res?.status,
+      transactionDetails: res,
+    };
   }
 
   async getPaymentStatus(paymentLinkId: string) {
@@ -104,21 +326,30 @@ export class RazorpayService {
     };
   }
 
-  // getRazorpayPayementStatus(paymentData) {
-  //   let paymentStatus = 'pending';
+  async getPayoutDetails(payoutId: string) {
+    const authHeader = `Basic ${Buffer.from(
+      `${process.env.RAZORPAY_KEY_ID}:${process.env.RAZORPAY_TEST_KEY_SECRET}`,
+    ).toString('base64')}`;
 
-  //   const failed = 'payment.failed';
-  //   const paid = 'payment_link.paid';
-  //   const expired = 'payment_link.expired';
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(
+          `https://api.razorpay.com/v1/payouts/${payoutId}`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: authHeader,
+            },
+          },
+        ),
+      );
 
-  //   if (paymentData.event === failed || paymentData.event === expired) {
-  //     paymentStatus = 'failed';
-  //   }
-
-  //   if (paymentData.event === paid) {
-  //     paymentStatus = 'success';
-  //   }
-
-  //   return paymentStatus;
-  // }
+      return {
+        status: response.data.status,
+        details: response.data,
+      };
+    } catch (error) {
+      throw new Error('Failed to fetch payout details');
+    }
+  }
 }

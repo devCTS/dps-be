@@ -15,6 +15,7 @@ import { In, MoreThan, Repository } from 'typeorm';
 import {
   AlertType,
   ChannelName,
+  GatewayName,
   NotificationStatus,
   NotificationType,
   OrderStatus,
@@ -41,6 +42,7 @@ import { FundRecordService } from 'src/fund-record/fund-record.service';
 import { NotificationService } from 'src/notification/notification.service';
 import { AlertService } from 'src/alert/alert.service';
 import { IdentityService } from 'src/identity/identity.service';
+import { RazorpayService } from 'src/payment-system/razorpay/razorpay.service';
 
 @Injectable()
 export class PayoutService {
@@ -68,6 +70,7 @@ export class PayoutService {
     private readonly fundRecordService: FundRecordService,
     private readonly notificationService: NotificationService,
     private readonly identityService: IdentityService,
+    private readonly razorpayService: RazorpayService,
 
     @Inject(forwardRef(() => AlertService))
     private readonly alertService: AlertService,
@@ -206,15 +209,35 @@ export class PayoutService {
           orderType: OrderType.PAYOUT,
         });
 
-        if (result.paymentStatus === 'success') {
+        if (result.paymentStatus) {
           await this.updatePayoutStatusToAssigned({
             id: payout.systemOrderId,
             paymentMode: PaymentMadeOn.GATEWAY,
-            gatewayServiceRate: payout.gatewayServiceRate || 0.3,
+            gatewayServiceRate: payout.gatewayServiceRate || 0.1,
             gatewayName: result.gatewayName,
           });
-        }
 
+          await this.updatePayoutStatusToSubmitted({
+            id: payout.systemOrderId,
+            transactionId: result.transactionId,
+            transactionReceipt: result.transactionReceipt,
+            transactionDetails: result.transactionDetails,
+          });
+
+          if (result.paymentStatus === 'processed')
+            await this.updatePayoutStatusToComplete({
+              id: payout.systemOrderId,
+            });
+
+          if (
+            result.paymentStatus === 'failed' ||
+            result.status === 'rejected' ||
+            result.status === 'cancelled'
+          )
+            await this.updatePayoutStatusToFailed({
+              id: payout.systemOrderId,
+            });
+        }
         return HttpStatus.CREATED;
       }, payoutTimeout * 1000);
     }
@@ -627,7 +650,7 @@ export class PayoutService {
   }
 
   async updatePayoutStatusToSubmitted(body) {
-    const { id, transactionId, transactionReceipt } = body;
+    const { id, transactionId, transactionReceipt, transactionDetails } = body;
 
     if (!transactionId && !transactionReceipt)
       throw new NotAcceptableException('Transaction ID or receipt missing!');
@@ -641,12 +664,21 @@ export class PayoutService {
     if (payoutOrderDetails.status !== OrderStatus.ASSIGNED)
       throw new NotAcceptableException('order status is not assigned!');
 
+    let updatedTransactionDetails = payoutOrderDetails.transactionDetails;
+    if (
+      payoutOrderDetails.payoutMadeVia === PaymentMadeOn.GATEWAY &&
+      transactionDetails
+    ) {
+      updatedTransactionDetails = transactionDetails;
+    }
+
     await this.payoutRepository.update(
       { systemOrderId: id },
       {
         status: OrderStatus.SUBMITTED,
         transactionId,
         transactionReceipt,
+        transactionDetails: updatedTransactionDetails,
       },
     );
 
@@ -672,5 +704,35 @@ export class PayoutService {
 
   async findOne(id: string) {
     return await this.payoutRepository.findOneBy({ systemOrderId: id });
+  }
+
+  async fetchPendingPayoutsAndUpdateStatus() {
+    const pendingPayouts = await this.payoutRepository.findBy({
+      status: OrderStatus.ASSIGNED,
+      payoutMadeVia: PaymentMadeOn.GATEWAY,
+    });
+    if (!pendingPayouts.length) return;
+
+    pendingPayouts.forEach(async (payout) => {
+      let response;
+      if (payout.gatewayName === GatewayName.RAZORPAY)
+        response = await this.razorpayService.getPayoutDetails(
+          payout.transactionId,
+        );
+
+      if (response.status === 'processed')
+        await this.updatePayoutStatusToComplete({
+          id: payout.systemOrderId,
+        });
+
+      if (
+        response.status === 'failed' ||
+        response.status === 'rejected' ||
+        response.status === 'cancelled'
+      )
+        await this.updatePayoutStatusToFailed({
+          id: payout.systemOrderId,
+        });
+    });
   }
 }
