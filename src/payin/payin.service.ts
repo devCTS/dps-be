@@ -357,7 +357,7 @@ export class PayinService {
   }
 
   async updatePayinStatusToSubmitted(body) {
-    const { id, transactionId, transactionReceipt } = body;
+    const { id, transactionId, transactionReceipt, transactionDetails } = body;
 
     if (!id) throw new NotAcceptableException('System order ID missing!');
     if (!transactionId || !transactionReceipt)
@@ -374,12 +374,21 @@ export class PayinService {
     if (payinOrderDetails.status !== OrderStatus.ASSIGNED)
       throw new NotAcceptableException('order status is not assigned!');
 
+    let updatedTransactionDetails = payinOrderDetails.transactionDetails;
+    if (
+      payinOrderDetails.payinMadeOn === PaymentMadeOn.GATEWAY &&
+      transactionDetails
+    ) {
+      updatedTransactionDetails = JSON.stringify(transactionDetails); // Update only if payment is via gateway
+    }
+
     await this.payinRepository.update(
       { systemOrderId: id },
       {
         status: OrderStatus.SUBMITTED,
         transactionId,
         transactionReceipt,
+        transactionDetails: updatedTransactionDetails,
       },
     );
 

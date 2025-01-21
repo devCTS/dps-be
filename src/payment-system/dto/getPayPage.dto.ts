@@ -1,5 +1,5 @@
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { GatewayName } from 'src/utils/enum/enum';
+import { ChannelName, GatewayName } from 'src/utils/enum/enum';
 
 export class GetPayPageDto {
   @IsOptional()
@@ -24,4 +24,8 @@ export class GetPayPageDto {
   @IsOptional()
   @IsString()
   integrationId?: string;
+
+  @IsOptional()
+  @IsEnum(ChannelName)
+  channelName?: ChannelName;
 }

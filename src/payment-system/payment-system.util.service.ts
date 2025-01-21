@@ -462,6 +462,7 @@ export class PaymentSystemUtilService {
         orderId: createdPayin.systemOrderId,
         gateway: GatewayName.PHONEPE,
         integrationId: merchant.integrationId,
+        channelName: createdPayin.channel,
       });
 
     if (selectedPaymentMode === GatewayName.RAZORPAY)
@@ -471,6 +472,7 @@ export class PaymentSystemUtilService {
         orderId: createdPayin.systemOrderId,
         gateway: GatewayName.RAZORPAY,
         integrationId: merchant.integrationId,
+        channelName: createdPayin.channel,
       });
 
     await this.payinRepository.update(createdPayin.id, {

@@ -6,6 +6,7 @@ import { GetPayPageDto } from '../dto/getPayPage.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EndUser } from 'src/end-user/entities/end-user.entity';
 import { Repository } from 'typeorm';
+import { ChannelName } from 'src/utils/enum/enum';
 
 @Injectable()
 export class RazorpayService {
@@ -24,7 +25,8 @@ export class RazorpayService {
 
   //   razorpay payment
   async getPayPage(getPayPageDto: GetPayPageDto) {
-    const { userId, amount, orderId, integrationId } = getPayPageDto;
+    const { userId, amount, orderId, integrationId, channelName } =
+      getPayPageDto;
 
     const endUser = await this.endUserRepository.findOneBy({ userId });
 
@@ -41,11 +43,10 @@ export class RazorpayService {
       options: {
         checkout: {
           method: {
-            // TODO configure acc. to channel configs
-            netbanking: true,
-            upi: true,
-            card: true,
-            wallet: true,
+            netbanking: channelName === ChannelName.BANKING ? true : false,
+            upi: channelName === ChannelName.UPI ? true : false,
+            wallet: channelName === ChannelName.E_WALLET ? true : false,
+            card: false,
           },
         },
       },
@@ -87,7 +88,7 @@ export class RazorpayService {
       paymentLinkDetails?.order_id,
     );
 
-    const orderDetails = orderResponse.items[0];
+    const orderDetails = orderResponse?.items[0];
 
     let status;
     if (orderDetails.status === 'captured') status = 'SUCCESS';
@@ -98,6 +99,7 @@ export class RazorpayService {
       details: {
         transactionId: paymentLinkDetails?.payments[0]?.payment_id,
         transactionReceipt: orderDetails?.receipt,
+        otherPaymentDetails: orderDetails,
       },
     };
   }

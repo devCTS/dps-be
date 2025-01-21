@@ -145,19 +145,18 @@ export class PaymentSystemService {
     const paymentMethod = payinOrder.payinMadeOn;
 
     let res = null;
-    if (paymentMethod === PaymentMadeOn.MEMBER) {
+    if (paymentMethod === PaymentMadeOn.MEMBER)
       res = await this.memberChannelService.getPaymentStatus(payinOrder);
-    }
 
     if (payinOrder.gatewayName === GatewayName.RAZORPAY) {
-      // set gateway response details in entity
       res = await this.razorpayService.getPaymentStatus(payinOrder.trackingId);
 
-      if (res && res.status) {
+      if (res && (res.status === 'SUCCESS' || res.status === 'FAILED')) {
         await this.payinService.updatePayinStatusToSubmitted({
           id: payinOrderId,
-          transactionReceipt: res.details?.transactionReceipt || 'receipt', // TODO
+          transactionReceipt: res.details?.transactionReceipt || 'receipt',
           transactionId: res.details?.transactionId || 'trnx001',
+          transactionDetails: res.details?.otherPaymentDetails,
         });
 
         if (res.status === 'SUCCESS')
@@ -171,7 +170,6 @@ export class PaymentSystemService {
     }
 
     if (payinOrder.gatewayName === GatewayName.PHONEPE) {
-      // set gateway response details in entity
       res = await this.phonepeService.getPaymentStatus(null, '', '');
     }
 
