@@ -6,9 +6,15 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { EndUser } from 'src/end-user/entities/end-user.entity';
 import { PayinMode } from 'src/merchant/entities/payinMode.entity';
 import { PayinModule } from 'src/payin/payin.module';
+import { Razorpay } from 'src/gateway/entities/razorpay.entity';
+import { JwtModule } from 'src/services/jwt/jwt.module';
 
 @Module({
-  imports: [HttpModule, TypeOrmModule.forFeature([EndUser])],
+  imports: [
+    TypeOrmModule.forFeature([EndUser, Razorpay]),
+    HttpModule,
+    JwtModule,
+  ],
   providers: [RazorpayService],
   exports: [RazorpayService],
 })

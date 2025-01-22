@@ -18,8 +18,14 @@ export class Razorpay {
   key_id: string;
 
   @Column()
+  account_number: string;
+
+  @Column()
   sandbox_key_id: string;
 
   @Column()
   sandbox_key_secret: string;
+
+  @Column()
+  sandbox_account_number: string;
 }

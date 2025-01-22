@@ -46,7 +46,7 @@ import { RazorpayService } from 'src/payment-system/razorpay/razorpay.service';
 
 @Injectable()
 export class PayoutService {
-  private enableGateway = false;
+  private enableGateway = true;
 
   constructor(
     @InjectRepository(Payout)
@@ -203,20 +203,21 @@ export class PayoutService {
         clearInterval(intervalId);
 
         const result = await this.paymentSystemService.makeGatewayPayout({
-          userId: merchant.id,
+          userId: endUserData.userId,
           orderId: payout.systemOrderId,
           amount: payout.amount,
           orderType: OrderType.PAYOUT,
+          mode: payout.channel === ChannelName.UPI ? 'UPI' : 'IMPS',
+        });
+
+        await this.updatePayoutStatusToAssigned({
+          id: payout.systemOrderId,
+          paymentMode: PaymentMadeOn.GATEWAY,
+          gatewayServiceRate: payout.gatewayServiceRate || 0.1,
+          gatewayName: result.gatewayName,
         });
 
         if (result.paymentStatus) {
-          await this.updatePayoutStatusToAssigned({
-            id: payout.systemOrderId,
-            paymentMode: PaymentMadeOn.GATEWAY,
-            gatewayServiceRate: payout.gatewayServiceRate || 0.1,
-            gatewayName: result.gatewayName,
-          });
-
           await this.updatePayoutStatusToSubmitted({
             id: payout.systemOrderId,
             transactionId: result.transactionId,
@@ -509,21 +510,16 @@ export class PayoutService {
       },
     );
 
-    await this.notificationService.create({
-      for: payoutOrderDetails.member.id,
-      type: NotificationType.PAYOUT_VERIFIED,
-      data: {
-        orderId: payoutOrderDetails.systemOrderId,
-        amount: payoutOrderDetails.amount,
-        channel: payoutOrderDetails.channel,
-      },
-    });
-
-    const mapUserType = {
-      MeERCHANT: Users.MERCHANT,
-      AGENT: Users.AGENT,
-      MEMBER: Users.MEMBER,
-    };
+    if (payoutOrderDetails.payoutMadeVia === PaymentMadeOn.MEMBER)
+      await this.notificationService.create({
+        for: payoutOrderDetails.member.id,
+        type: NotificationType.PAYOUT_VERIFIED,
+        data: {
+          orderId: payoutOrderDetails.systemOrderId,
+          amount: payoutOrderDetails.amount,
+          channel: payoutOrderDetails.channel,
+        },
+      });
 
     await this.alertService.create({
       for: payoutOrderDetails.merchant.id,
@@ -708,31 +704,34 @@ export class PayoutService {
 
   async fetchPendingPayoutsAndUpdateStatus() {
     const pendingPayouts = await this.payoutRepository.findBy({
-      status: OrderStatus.ASSIGNED,
+      status: In([OrderStatus.ASSIGNED, OrderStatus.SUBMITTED]),
       payoutMadeVia: PaymentMadeOn.GATEWAY,
     });
     if (!pendingPayouts.length) return;
 
     pendingPayouts.forEach(async (payout) => {
-      let response;
-      if (payout.gatewayName === GatewayName.RAZORPAY)
-        response = await this.razorpayService.getPayoutDetails(
-          payout.transactionId,
-        );
+      if (payout.transactionId) {
+        let response;
 
-      if (response?.status === 'processed')
-        await this.updatePayoutStatusToComplete({
-          id: payout.systemOrderId,
-        });
+        if (payout.gatewayName === GatewayName.RAZORPAY)
+          response = await this.razorpayService.getPayoutDetails(
+            payout.transactionId,
+          );
 
-      if (
-        response?.status === 'failed' ||
-        response?.status === 'rejected' ||
-        response?.status === 'cancelled'
-      )
-        await this.updatePayoutStatusToFailed({
-          id: payout.systemOrderId,
-        });
+        if (response?.status === 'processed')
+          await this.updatePayoutStatusToComplete({
+            id: payout.systemOrderId,
+          });
+
+        if (
+          response?.status === 'failed' ||
+          response?.status === 'rejected' ||
+          response?.status === 'cancelled'
+        )
+          await this.updatePayoutStatusToFailed({
+            id: payout.systemOrderId,
+          });
+      }
     });
   }
 }

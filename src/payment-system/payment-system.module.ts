@@ -26,6 +26,7 @@ import { UniqpayModule } from './uniqpay/uniqpay.module';
 import { UniqpayService } from './uniqpay/uniqpay.service';
 import { MemberChannelModule } from './member/member-channel.module';
 import { MemberChannelService } from './member/member-channel.service';
+import { JwtModule } from 'src/services/jwt/jwt.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { MemberChannelService } from './member/member-channel.service';
     EndUserModule,
     SocketModule,
     MemberChannelModule,
+    JwtModule,
   ],
   controllers: [PaymentSystemController],
   providers: [

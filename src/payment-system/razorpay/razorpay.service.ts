@@ -1,37 +1,66 @@
 import { HttpService } from '@nestjs/axios';
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 //@ts-ignore
-import Razorpay from 'razorpay';
+
 import { GetPayPageDto } from '../dto/getPayPage.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EndUser } from 'src/end-user/entities/end-user.entity';
 import { Repository } from 'typeorm';
 import { ChannelName, GatewayName } from 'src/utils/enum/enum';
 import { firstValueFrom } from 'rxjs';
-import uuid from 'uuid';
+import { Razorpay as RazorpayEntity } from 'src/gateway/entities/razorpay.entity';
+import Razorpay from 'razorpay';
+import { v4 as uuid } from 'uuid';
+import { JwtService } from 'src/services/jwt/jwt.service';
 
 @Injectable()
 export class RazorpayService {
   razorpayClient: any = null;
+  isLiveMode = process.env.GATEWAY_MODE === 'live';
+
   public constructor(
     @InjectRepository(EndUser)
     private readonly endUserRepository: Repository<EndUser>,
+    @InjectRepository(RazorpayEntity)
+    private readonly razorpayRepository: Repository<RazorpayEntity>,
 
     private readonly httpService: HttpService,
+    private readonly jwtService: JwtService,
   ) {
-    this.razorpayClient = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID,
-      key_secret: process.env.RAZORPAY_KEY_SECRET,
-    });
+    this.isLiveMode = process.env.GATEWAY_MODE === 'live';
+    this.initializeKeys();
   }
 
   generateUniqueKey = () => uuid();
 
-  //   razorpay payment
+  async initializeKeys() {
+    const razorpay = (await this.razorpayRepository.find())[0];
+    if (!razorpay) throw new NotFoundException('Razorpay record not found!');
+
+    const keys = this.isLiveMode
+      ? { keyId: razorpay.key_id, keySecret: razorpay.key_secret }
+      : {
+          keyId: razorpay.sandbox_key_id,
+          keySecret: razorpay.sandbox_key_secret,
+        };
+
+    const decryptedKeyId = this.jwtService.decryptValue(keys.keyId);
+    const decryptedKeySecret = this.jwtService.decryptValue(keys.keySecret);
+
+    if (!decryptedKeyId || !decryptedKeySecret)
+      throw new Error('Failed to decrypt Razorpay keys');
+
+    this.razorpayClient = new Razorpay({
+      key_id: decryptedKeyId,
+      key_secret: decryptedKeySecret,
+    });
+
+    return {
+      key_id: decryptedKeyId,
+      key_secret: decryptedKeySecret,
+    };
+  }
+
   async getPayPage(getPayPageDto: GetPayPageDto) {
     const { userId, amount, orderId, integrationId, channelName } =
       getPayPageDto;
@@ -86,7 +115,12 @@ export class RazorpayService {
       },
     };
 
-    const authHeader = `Basic ${Buffer.from(`${process.env.RAZORPAY_KEY_ID}:${process.env.RAZORPAY_TEST_KEY_SECRET}`).toString('base64')}`;
+    const key_id = (await this.initializeKeys()).key_id;
+    const key_secret = (await this.initializeKeys()).key_secret;
+
+    const authHeader = `Basic ${Buffer.from(`${key_id}:${key_secret}`).toString('base64')}`;
+
+    console.log({ key_id, key_secret });
 
     try {
       const response = await firstValueFrom(
@@ -135,7 +169,10 @@ export class RazorpayService {
       delete fundAccountRequest.bank_account;
     }
 
-    const authHeader = `Basic ${Buffer.from(`${process.env.RAZORPAY_KEY_ID}:${process.env.RAZORPAY_TEST_KEY_SECRET}`).toString('base64')}`;
+    const key_id = (await this.initializeKeys()).key_id;
+    const key_secret = (await this.initializeKeys()).key_secret;
+
+    const authHeader = `Basic ${Buffer.from(`${key_id}:${key_secret}`).toString('base64')}`;
 
     try {
       const response = await firstValueFrom(
@@ -223,11 +260,22 @@ export class RazorpayService {
     }
 
     const payoutRequest = {
-      ...payoutDetails,
+      account_number,
+      amount,
+      currency,
+      mode,
+      purpose,
+      queue_if_low_balance,
+      reference_id,
+      narration,
+      notes,
       fund_account_id: fundAccountId,
     };
 
-    const authHeader = `Basic ${Buffer.from(`${process.env.RAZORPAY_KEY_ID}:${process.env.RAZORPAY_TEST_KEY_SECRET}`).toString('base64')}`;
+    const key_id = (await this.initializeKeys()).key_id;
+    const key_secret = (await this.initializeKeys()).key_secret;
+
+    const authHeader = `Basic ${Buffer.from(`${key_id}:${key_secret}`).toString('base64')}`;
 
     try {
       const response = await firstValueFrom(
@@ -245,19 +293,22 @@ export class RazorpayService {
       );
       return response.data;
     } catch (error) {
-      console.log(error.response);
+      console.log({ error: error.response.data });
     }
   }
 
   async makePayoutPayment({
     userId,
-    amount = 1000,
+    amount,
     mode,
   }: {
     userId: string;
     amount: number;
-    mode: 'VPA' | 'IMPS' | 'RTGS' | 'NEFT';
+    mode: 'UPI' | 'IMPS' | 'RTGS' | 'NEFT';
   }) {
+    const razorpay = (await this.razorpayRepository.find())[0];
+    if (!razorpay) throw new NotFoundException('Razorpay record not found!');
+
     const endUser = await this.endUserRepository.findOneBy({ userId });
     if (!endUser) throw new NotFoundException('End user not found!');
 
@@ -266,8 +317,14 @@ export class RazorpayService {
 
     // {"UPI":{"Upi Id":"kartik@upi","Mobile Number":"9876543210"},"NET_BANKING":{"Account Number":"123412341241234","Bank Name":"HDFC","IFSC Code":"HDFC0002900","Beneficiary Name":"KARTIK"},"E_WALLET":{"App Name":"GOOGLE PAY","Mobile Number":"9876543210"}}
 
+    const accountNumber = this.isLiveMode
+      ? razorpay?.account_number
+      : razorpay?.sandbox_account_number;
+
+    const decryptedAccountNumber = this.jwtService.decryptValue(accountNumber);
+
     const res = await this.createPayout({
-      account_number: '', //TODO
+      account_number: '924020068715927',
       amount: amountInPaise,
       customer_details: {
         name: endUser.name,
@@ -276,7 +333,7 @@ export class RazorpayService {
         type: 'customer',
       },
       customer_bank_details:
-        mode !== 'VPA'
+        mode !== 'UPI'
           ? {
               name: userChannelDetails['NET_BANKING']['Bank Name'],
               account_number:
@@ -284,7 +341,7 @@ export class RazorpayService {
               ifcs: userChannelDetails['NET_BANKING']['IFSC Code'],
             }
           : null,
-      customer_vpa: mode === 'VPA' ? userChannelDetails['UPI']['Upi Id'] : null,
+      customer_vpa: mode === 'UPI' ? userChannelDetails['UPI']['Upi Id'] : null,
       currency: 'INR',
       mode: mode,
       purpose: 'payout',
@@ -327,9 +384,12 @@ export class RazorpayService {
   }
 
   async getPayoutDetails(payoutId: string) {
-    const authHeader = `Basic ${Buffer.from(
-      `${process.env.RAZORPAY_KEY_ID}:${process.env.RAZORPAY_TEST_KEY_SECRET}`,
-    ).toString('base64')}`;
+    const key_id = (await this.initializeKeys()).key_id;
+    const key_secret = (await this.initializeKeys()).key_secret;
+
+    const authHeader = `Basic ${Buffer.from(`${key_id}:${key_secret}`).toString(
+      'base64',
+    )}`;
 
     try {
       const response = await firstValueFrom(

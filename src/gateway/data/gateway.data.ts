@@ -18,6 +18,8 @@ export const loadRazorpayData = () => {
     key_id: 'dummy_secret_key',
     sandbox_key_id: 'dummy_secret_key',
     sandbox_key_secret: 'dummy_secret_key',
+    account_number: '1234 1234 1234 1234',
+    sandbox_account_number: '1234 1234 1234',
   };
 };
 export const loadUniqpayData = () => {

@@ -47,6 +47,8 @@ export class GatewayService {
     'key_id',
     'sandbox_key_id',
     'sandbox_key_secret',
+    'account_number',
+    'sandbox_account_number',
   ];
 
   secretTextKeysUniqpay = [
@@ -102,7 +104,7 @@ export class GatewayService {
 
     secretTextKeys.forEach((key) => {
       if (updateRazorpayDto[key]) {
-        updatedData[key] = this.jwtService.getHashPassword(updatedData[key]);
+        updatedData[key] = this.jwtService.encryptValue(updatedData[key]);
       }
     });
 
