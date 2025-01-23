@@ -139,8 +139,8 @@ export class PaymentSystemService {
     });
     if (!payinOrder) throw new NotFoundException('payin system ID invalid!');
 
-    if (payinOrder.status !== OrderStatus.ASSIGNED)
-      throw new ConflictException('Not Applicable for other statuses!');
+    // if (payinOrder.status !== OrderStatus.ASSIGNED)
+    //   throw new ConflictException('Not Applicable for other statuses!');
 
     const paymentMethod = payinOrder.payinMadeOn;
 

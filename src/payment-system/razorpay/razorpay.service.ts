@@ -87,7 +87,7 @@ export class RazorpayService {
           },
         },
       },
-      callback_url: `${process.env.PAYMENT_PAGE_BASE_URL}/checkout/${integrationId}?callback=true&orderId=${orderId}`,
+      callback_url: `${process.env.PAYMENT_PAGE_BASE_URL}/close?orderId=${orderId}`,
       callback_method: 'get',
     };
 
