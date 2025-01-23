@@ -12,7 +12,7 @@ export class ProportionalPayinMode {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'integer' })
+  @Column({ type: 'float' })
   ratio: number;
 
   @Column({ type: 'enum', enum: ['member', 'phonepe', 'razorpay'] })

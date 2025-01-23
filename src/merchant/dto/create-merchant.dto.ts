@@ -35,7 +35,7 @@ export class RangeDto {
 }
 
 export class RatioDto {
-  @IsInt()
+  @IsNumber()
   @IsNotEmpty()
   ratio: number;
 
