@@ -3,7 +3,7 @@ import { ConflictException, Injectable } from '@nestjs/common';
 import uniqid from 'uniqid';
 import sha256 from 'sha256';
 import { firstValueFrom } from 'rxjs';
-import { Response } from 'express';
+import { response, Response } from 'express';
 import { GetPayPageDto } from '../dto/getPayPage.dto';
 
 @Injectable()
@@ -24,20 +24,18 @@ export class PhonepeService {
   }
 
   async getPayPage(getPayPageDto: GetPayPageDto) {
-    const { userId, amount, orderId } = getPayPageDto;
+    const { userId, amount, orderId, integrationId } = getPayPageDto;
     // transaction amount
     const amountInPaise = parseFloat(amount) * 100;
 
-    // Generate a unique merchant transaction ID for each transaction
-    const merchantTransactionId = orderId;
-
     const payload = {
       merchantId: this.merchant_id,
-      merchantTransactionId: merchantTransactionId,
+      merchantTransactionId: orderId,
       merchantUserId: userId,
       amount: amountInPaise,
-      redirectUrl: this.redirect_url + `/${merchantTransactionId}/${userId}`,
+      redirectUrl: `${process.env.PAYMENT_PAGE_BASE_URL}/close-razorpay?orderId=${orderId}`,
       redirectMode: 'REDIRECT',
+      callbackUrl: '',
       paymentInstrument: {
         type: 'PAY_PAGE',
       },
@@ -75,7 +73,7 @@ export class PhonepeService {
 
       return {
         url: response.data.data.instrumentResponse.redirectInfo.url,
-        transactionId: merchantTransactionId,
+        transactionId: orderId,
       };
     } catch (error) {
       throw new ConflictException(error.response?.data || error.toString());
@@ -99,55 +97,48 @@ export class PhonepeService {
     });
   }
 
-  async getPaymentStatus(
-    responseObj: Response,
-    transactionId: string,
-    userId: string,
-  ) {
-    // if (transactionId) {
-    //   // generate checksum
-    //   const string =
-    //     `/pg/v1/status/${this.merchant_id}/` + transactionId + this.salt_key;
-    //   const sha256_val = sha256(string);
-    //   const xVerifyCheckSum = sha256_val + '###' + this.salt_index;
+  async getPaymentStatus(transactionId: string, userId: string) {
+    if (transactionId) {
+      // generate checksum
+      const string =
+        `/pg/v1/status/${this.merchant_id}/` + transactionId + this.salt_key;
+      const sha256_val = sha256(string);
+      const xVerifyCheckSum = sha256_val + '###' + this.salt_index;
 
-    //   const options = {
-    //     headers: {
-    //       'Content-Typpe': 'application/json',
-    //       'X-VERIFY': xVerifyCheckSum,
-    //       'X-MERCHANT-ID': this.merchant_id,
-    //       accept: 'application/json',
-    //     },
-    //   };
+      const options = {
+        headers: {
+          'Content-Typpe': 'application/json',
+          'X-VERIFY': xVerifyCheckSum,
+          'X-MERCHANT-ID': this.merchant_id,
+          accept: 'application/json',
+        },
+      };
 
-    //   try {
-    //     const request_url =
-    //       this.api_url +
-    //       '/pg/v1/status/' +
-    //       this.merchant_id +
-    //       '/' +
-    //       transactionId;
+      try {
+        const request_url =
+          this.api_url +
+          '/pg/v1/status/' +
+          this.merchant_id +
+          '/' +
+          transactionId;
 
-    //     const observable = this.httpService.get(
-    //       request_url,
+        const observable = this.httpService.get(request_url, options);
 
-    //       options,
-    //     );
+        const response = await firstValueFrom<any>(observable);
 
-    //     const response = await firstValueFrom<any>(observable);
-    //     //send data to merchant
+        console.log({ response });
 
-    //     responseObj.send(response.data);
-
-    //     // responseObj.redirect('https://ginrummy.asia/redirect.html');
-    //   } catch (error) {
-    //     throw new ConflictException(error.response?.data || error.toString());
-    //   }
-    // }
-
-    return {
-      status: 'COMPLETE',
-      details: null,
-    };
+        return {
+          status: response,
+          details: {
+            transactionId: response,
+            transactionReceipt: response,
+            otherPaymentDetails: response,
+          },
+        };
+      } catch (error) {
+        throw new ConflictException(error.response?.data || error.toString());
+      }
+    }
   }
 }

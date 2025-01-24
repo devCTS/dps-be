@@ -83,17 +83,9 @@ export class PaymentSystemService {
     };
   }
 
-  async phonepeCheckStatus(
-    res: Response,
-    transactionId: string,
-    userId: string,
-  ) {
-    return await this.phonepeService.getPaymentStatus(
-      res,
-      transactionId,
-      userId,
-    );
-  }
+  // async phonepeCheckStatus(transactionId: string, userId: string) {
+  //   return await this.phonepeService.getPaymentStatus(transactionId, userId);
+  // }
 
   async makeGatewayPayout(body): Promise<any> {
     const { userId, orderId, amount, orderType } = body;
@@ -141,29 +133,32 @@ export class PaymentSystemService {
     if (paymentMethod === PaymentMadeOn.MEMBER)
       res = await this.memberChannelService.getPaymentStatus(payinOrder);
 
-    if (payinOrder.gatewayName === GatewayName.RAZORPAY) {
+    if (payinOrder.gatewayName === GatewayName.RAZORPAY)
       res = await this.razorpayService.getPaymentStatus(payinOrder.trackingId);
 
-      if (res && (res.status === 'SUCCESS' || res.status === 'FAILED')) {
-        await this.payinService.updatePayinStatusToSubmitted({
+    if (payinOrder.gatewayName === GatewayName.PHONEPE)
+      res = await this.phonepeService.getPaymentStatus(
+        payinOrder.trackingId,
+        '',
+      );
+
+    if (res && (res.status === 'SUCCESS' || res.status === 'FAILED')) {
+      await this.payinService.updatePayinStatusToSubmitted({
+        id: payinOrderId,
+        transactionReceipt: res.details?.transactionReceipt || 'receipt',
+        transactionId: res.details?.transactionId || 'trnx001',
+        transactionDetails: res.details?.otherPaymentDetails,
+      });
+
+      if (res.status === 'SUCCESS')
+        await this.payinService.updatePayinStatusToComplete({
           id: payinOrderId,
-          transactionReceipt: res.details?.transactionReceipt || 'receipt',
-          transactionId: res.details?.transactionId || 'trnx001',
-          transactionDetails: res.details?.otherPaymentDetails,
         });
 
-        if (res.status === 'SUCCESS')
-          await this.payinService.updatePayinStatusToComplete({
-            id: payinOrderId,
-          });
-
-        if (res.status === 'FAILED')
-          await this.payinService.updatePayinStatusToFailed({ id: payinOrder });
-      }
-    }
-
-    if (payinOrder.gatewayName === GatewayName.PHONEPE) {
-      res = await this.phonepeService.getPaymentStatus(null, '', '');
+      if (res.status === 'FAILED')
+        await this.payinService.updatePayinStatusToFailed({
+          id: payinOrder,
+        });
     }
 
     if (res) return { status: res.status };

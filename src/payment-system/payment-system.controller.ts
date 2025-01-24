@@ -41,16 +41,15 @@ export class PaymentSystemController {
     private readonly payinService: PayinService,
   ) {}
 
-  @Get('check-status/:transactionId/:userId')
-  @Roles(Role.ALL)
-  @UseGuards(RolesGuard)
-  checkStatus(
-    @Res() res,
-    @Param('transactionId') transactionId: string,
-    @Param('userId') userId: string,
-  ) {
-    return this.service.phonepeCheckStatus(res, transactionId, userId);
-  }
+  // @Get('check-status/:transactionId/:userId')
+  // @Roles(Role.ALL)
+  // @UseGuards(RolesGuard)
+  // checkStatus(
+  //   @Param('transactionId') transactionId: string,
+  //   @Param('userId') userId: string,
+  // ) {
+  //   return this.service.phonepeCheckStatus(transactionId, userId);
+  // }
 
   @Post('checkout/:integrationId')
   @Roles(Role.ALL)
