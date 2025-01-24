@@ -198,28 +198,21 @@ export class PaymentSystemController {
   @Post()
   @Roles(Role.ALL)
   @UseGuards(RolesGuard)
-  getPayPage(@Body() getPayPageDto: GetPayPageDto) {
+  async getPayPage(@Body() getPayPageDto: GetPayPageDto) {
     return this.service.getPayPage(getPayPageDto);
   }
-
-  // @Post('razorpay/:orderId')
-  // @Roles(Role.ALL)
-  // @UseGuards(RolesGuard)
-  // getRazorPayOrderDetails(@Param('orderId') orderId: string) {
-  //   return this.service.getOrderDetails(orderId);
-  // }
-
-  // @Post('razorpay-payment/verification')
-  // @Roles(Role.ALL)
-  // @UseGuards(RolesGuard)
-  // razorpayPaymentVerification(@Body() paymentData: any) {
-  //   return this.service.paymentVerification(paymentData);
-  // }
 
   @Post('make-gateway-payout')
   @Roles(Role.ALL)
   @UseGuards(RolesGuard)
-  makeGatewayPayout(@Body() body) {
+  async makeGatewayPayout(@Body() body) {
     return this.service.makeGatewayPayout(body);
+  }
+
+  @Get('order-details/:orderId')
+  @Roles(Role.ALL)
+  @UseGuards(RolesGuard)
+  async getOrderDetailsForIntegrationKit(@Param('orderId') id: string) {
+    return this.service.getOrderDetailsForIntegrationKit(id);
   }
 }

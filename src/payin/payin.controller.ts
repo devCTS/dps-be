@@ -120,8 +120,6 @@ export class PayinController {
   }
 
   @Post('update-status-complete')
-  // @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
-  // @UseGuards(RolesGuard)
   updatePayinStatusToCompleted(@Body() body) {
     return this.payinService.updatePayinStatusToComplete(body);
   }
@@ -158,7 +156,7 @@ export class PayinController {
   @Get('enduser-suggestions/:id')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MERCHANT, Role.SUB_MERCHANT)
   @UseGuards(RolesGuard)
-  getEnduserIdSuggestions(@Param('id') id: number) {
+  getEndUserIdSuggestions(@Param('id') id: number) {
     return this.payinAdminService.getEndUserIdSuggestions(id);
   }
 }

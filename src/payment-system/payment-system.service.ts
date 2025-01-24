@@ -95,10 +95,6 @@ export class PaymentSystemService {
     );
   }
 
-  // async paymentVerification(paymentData: any) {
-  //   return await this.razorpayService.getRazorpayPayementStatus(paymentData);
-  // }
-
   async makeGatewayPayout(body): Promise<any> {
     const { userId, orderId, amount, orderType } = body;
 
@@ -139,9 +135,6 @@ export class PaymentSystemService {
     });
     if (!payinOrder) throw new NotFoundException('payin system ID invalid!');
 
-    // if (payinOrder.status !== OrderStatus.ASSIGNED)
-    //   throw new ConflictException('Not Applicable for other statuses!');
-
     const paymentMethod = payinOrder.payinMadeOn;
 
     let res = null;
@@ -176,5 +169,33 @@ export class PaymentSystemService {
     if (res) return { status: res.status };
 
     throw new NotFoundException('Unable to find status!');
+  }
+
+  async getOrderDetailsForIntegrationKit(id: string) {
+    if (!id) return;
+
+    const payin = await this.payinRepository.findOne({
+      where: { systemOrderId: id },
+      relations: ['user'],
+    });
+    if (!payin) throw new NotFoundException('Payin order not found!');
+
+    return {
+      kingsgateOrderId: payin.systemOrderId,
+      orderId: payin.merchantOrderId,
+      status: payin.status === OrderStatus.COMPLETE ? 'SUCCESS' : 'FAILED',
+      user: {
+        id: payin.user?.userId,
+        name: payin.user?.name,
+        mobile: payin.user?.mobile,
+        email: payin.user?.email,
+      },
+      transactionDetails: {
+        id: payin.transactionId,
+        amount: payin.amount,
+        paymentMethod: payin.channel,
+        time: payin.updatedAt,
+      },
+    };
   }
 }
