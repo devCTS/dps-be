@@ -11,6 +11,7 @@ import {
   Req,
   Res,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { PaymentSystemService } from './payment-system.service';
@@ -40,16 +41,6 @@ export class PaymentSystemController {
     private readonly service: PaymentSystemService,
     private readonly payinService: PayinService,
   ) {}
-
-  // @Get('check-status/:transactionId/:userId')
-  // @Roles(Role.ALL)
-  // @UseGuards(RolesGuard)
-  // checkStatus(
-  //   @Param('transactionId') transactionId: string,
-  //   @Param('userId') userId: string,
-  // ) {
-  //   return this.service.phonepeCheckStatus(transactionId, userId);
-  // }
 
   @Post('checkout/:integrationId')
   @Roles(Role.ALL)
@@ -213,5 +204,11 @@ export class PaymentSystemController {
   @UseGuards(RolesGuard)
   async getOrderDetailsForIntegrationKit(@Param('orderId') id: string) {
     return this.service.getOrderDetailsForIntegrationKit(id);
+  }
+
+  @Post('receive-phonepe-request')
+  @Roles(Role.ALL)
+  async receivePhonepeRequest(@Request() request, @Body() body) {
+    return this.service.receivePhonepeRequest(request, body);
   }
 }

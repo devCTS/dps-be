@@ -1,5 +1,5 @@
 import { HttpService } from '@nestjs/axios';
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, HttpStatus, Injectable } from '@nestjs/common';
 import uniqid from 'uniqid';
 import sha256 from 'sha256';
 import { firstValueFrom } from 'rxjs';
@@ -35,7 +35,7 @@ export class PhonepeService {
       amount: amountInPaise,
       redirectUrl: `${process.env.PAYMENT_PAGE_BASE_URL}/close-razorpay?orderId=${orderId}`,
       redirectMode: 'REDIRECT',
-      callbackUrl: '',
+      callbackUrl: `${process.env.BASE_URL}/payment-system/receive-phonepe-request`,
       paymentInstrument: {
         type: 'PAY_PAGE',
       },
@@ -126,8 +126,6 @@ export class PhonepeService {
 
         const response = await firstValueFrom<any>(observable);
 
-        console.log({ response });
-
         return {
           status: response,
           details: {
@@ -139,6 +137,71 @@ export class PhonepeService {
       } catch (error) {
         throw new ConflictException(error.response?.data || error.toString());
       }
+    }
+  }
+
+  async receivePhonepeRequest(req, body) {
+    try {
+      const receivedXVerify = req.headers['x-verify'];
+      if (!receivedXVerify) throw new Error('Missing X-VERIFY header');
+
+      const parsedBody = JSON.parse(body);
+      const base64Response = parsedBody.response;
+
+      if (!base64Response)
+        throw new Error('Missing response field in request body');
+
+      const stringToHash = base64Response + this.salt_key;
+      const sha256_val = sha256(stringToHash);
+      const xVerifyCheckSum = sha256_val + '###' + this.salt_index;
+
+      if (receivedXVerify !== xVerifyCheckSum)
+        throw new Error('Invalid X-VERIFY header');
+
+      console.log('X-VERIFY validation successful');
+
+      const decodedResponse = Buffer.from(base64Response, 'base64').toString(
+        'utf-8',
+      );
+
+      const jsonResponse = JSON.parse(decodedResponse);
+
+      console.log('Decoded Response:', jsonResponse);
+
+      const {
+        success,
+        code,
+        message,
+        data: {
+          merchantId,
+          merchantTransactionId,
+          transactionId,
+          amount,
+          state,
+        },
+      } = jsonResponse;
+
+      // Return the decoded response or any custom response
+      return {
+        status: HttpStatus.OK,
+        success,
+        code,
+        message,
+        data: {
+          merchantId,
+          merchantTransactionId,
+          transactionId,
+          amount,
+          state,
+        },
+      };
+    } catch (error) {
+      console.error('Error in receivePhonepeRequest:', error.message);
+
+      return {
+        status: HttpStatus.BAD_REQUEST,
+        message: error.message,
+      };
     }
   }
 }

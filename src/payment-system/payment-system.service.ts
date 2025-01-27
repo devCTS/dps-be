@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  HttpStatus,
   Injectable,
   NotFoundException,
   Res,
@@ -82,10 +83,6 @@ export class PaymentSystemService {
       orderId: createdPayin.systemOrderId,
     };
   }
-
-  // async phonepeCheckStatus(transactionId: string, userId: string) {
-  //   return await this.phonepeService.getPaymentStatus(transactionId, userId);
-  // }
 
   async makeGatewayPayout(body): Promise<any> {
     const { userId, orderId, amount, orderType } = body;
@@ -192,5 +189,36 @@ export class PaymentSystemService {
         time: payin.updatedAt,
       },
     };
+  }
+
+  async receivePhonepeRequest(request, body) {
+    const res = await this.phonepeService.receivePhonepeRequest(request, body);
+
+    if (
+      res &&
+      (res?.code === 'PAYMENT_SUCCESS' || res?.code === 'PAYMENT_FAILED')
+    ) {
+      const payinOrder = await this.payinRepository.findOneBy({
+        systemOrderId: res?.data?.merchantTransactionId,
+      });
+      if (!payinOrder) throw new NotFoundException('Payin order not found!');
+
+      await this.payinService.updatePayinStatusToSubmitted({
+        id: payinOrder.id,
+        transactionReceipt: 'receipt',
+        transactionId: res?.data?.transactionId || 'trnx001',
+        transactionDetails: res?.data,
+      });
+
+      if (res.code === 'PAYMENT_SUCCESS')
+        await this.payinService.updatePayinStatusToComplete({
+          id: payinOrder.id,
+        });
+
+      if (res.code === 'PAYMENT_FAILED')
+        await this.payinService.updatePayinStatusToFailed({
+          id: payinOrder.id,
+        });
+    }
   }
 }
