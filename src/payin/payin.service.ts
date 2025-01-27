@@ -357,11 +357,11 @@ export class PayinService {
   }
 
   async updatePayinStatusToSubmitted(body) {
-    const { id, transactionId, transactionReceipt, transactionDetails } = body;
+    const { id, transactionId, transactionDetails } = body;
 
     if (!id) throw new NotAcceptableException('System order ID missing!');
-    if (!transactionId || !transactionReceipt)
-      throw new NotAcceptableException('Transaction ID or receipt missing!');
+    if (!transactionId)
+      throw new NotAcceptableException('Transaction ID missing!');
 
     const payinOrderDetails = await this.payinRepository.findOne({
       where: {
@@ -387,7 +387,6 @@ export class PayinService {
       {
         status: OrderStatus.SUBMITTED,
         transactionId,
-        transactionReceipt,
         transactionDetails: updatedTransactionDetails,
       },
     );
@@ -626,14 +625,6 @@ export class PayinService {
     const payins = await this.payinRepository.find();
 
     return payins;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} payout`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} payout`;
   }
 
   async handleCallbackStatusSuccess(systemOrderId) {

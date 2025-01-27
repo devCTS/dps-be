@@ -130,33 +130,33 @@ export class PaymentSystemService {
     if (paymentMethod === PaymentMadeOn.MEMBER)
       res = await this.memberChannelService.getPaymentStatus(payinOrder);
 
-    if (payinOrder.gatewayName === GatewayName.RAZORPAY)
+    if (payinOrder.gatewayName === GatewayName.RAZORPAY) {
       res = await this.razorpayService.getPaymentStatus(payinOrder.trackingId);
+
+      if (res && (res.status === 'SUCCESS' || res.status === 'FAILED')) {
+        await this.payinService.updatePayinStatusToSubmitted({
+          id: payinOrderId,
+          transactionId: res.details?.transactionId || 'trnx001',
+          transactionDetails: res.details?.otherPaymentDetails,
+        });
+
+        if (res.status === 'SUCCESS')
+          await this.payinService.updatePayinStatusToComplete({
+            id: payinOrderId,
+          });
+
+        if (res.status === 'FAILED')
+          await this.payinService.updatePayinStatusToFailed({
+            id: payinOrder,
+          });
+      }
+    }
 
     if (payinOrder.gatewayName === GatewayName.PHONEPE)
       res = await this.phonepeService.getPaymentStatus(
         payinOrder.trackingId,
         '',
       );
-
-    if (res && (res.status === 'SUCCESS' || res.status === 'FAILED')) {
-      await this.payinService.updatePayinStatusToSubmitted({
-        id: payinOrderId,
-        transactionReceipt: res.details?.transactionReceipt || 'receipt',
-        transactionId: res.details?.transactionId || 'trnx001',
-        transactionDetails: res.details?.otherPaymentDetails,
-      });
-
-      if (res.status === 'SUCCESS')
-        await this.payinService.updatePayinStatusToComplete({
-          id: payinOrderId,
-        });
-
-      if (res.status === 'FAILED')
-        await this.payinService.updatePayinStatusToFailed({
-          id: payinOrder,
-        });
-    }
 
     if (res) return { status: res.status };
 
@@ -175,7 +175,7 @@ export class PaymentSystemService {
     return {
       kingsgateOrderId: payin.systemOrderId,
       orderId: payin.merchantOrderId,
-      status: payin.status === OrderStatus.COMPLETE ? 'SUCCESS' : 'FAILED',
+      status: payin.status === OrderStatus.FAILED ? 'FAILED' : 'SUCCESS',
       user: {
         id: payin.user?.userId,
         name: payin.user?.name,

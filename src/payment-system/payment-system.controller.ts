@@ -179,7 +179,6 @@ export class PaymentSystemController {
   ) {
     await this.payinService.updatePayinStatusToSubmitted({
       transactionId: submitPaymentOrderDto.txnId,
-      transactionReceipt: submitPaymentOrderDto.receipt,
       id: payinOrderId,
     });
     return HttpStatus.OK;

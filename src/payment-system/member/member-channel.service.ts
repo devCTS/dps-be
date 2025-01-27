@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Payin } from 'src/payin/entities/payin.entity';
 import { OrderStatus } from 'src/utils/enum/enum';
 
