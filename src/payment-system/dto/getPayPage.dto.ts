@@ -28,4 +28,8 @@ export class GetPayPageDto {
   @IsOptional()
   @IsEnum(ChannelName)
   channelName?: ChannelName;
+
+  @IsOptional()
+  @IsEnum(['live', 'sandbox'])
+  environment?: 'live' | 'sandbox';
 }

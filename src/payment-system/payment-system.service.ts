@@ -3,6 +3,7 @@ import {
   ConflictException,
   HttpStatus,
   Injectable,
+  NotAcceptableException,
   NotFoundException,
   Res,
 } from '@nestjs/common';
@@ -17,6 +18,7 @@ import { PayinService } from 'src/payin/payin.service';
 import { Response } from 'express';
 import { PaymentSystemUtilService } from './payment-system.util.service';
 import {
+  ChannelName,
   GatewayName,
   OrderStatus,
   OrderType,
@@ -30,6 +32,8 @@ import { SystemConfigService } from 'src/system-config/system-config.service';
 import { UniqpayService } from './uniqpay/uniqpay.service';
 import { Payin } from 'src/payin/entities/payin.entity';
 import { MemberChannelService } from './member/member-channel.service';
+import { PayinSandbox } from 'src/payin/entities/payin-sandbox.entity';
+import QRCode from 'qrcode';
 
 // const paymentPageBaseUrl = 'http://localhost:5174';
 @Injectable()
@@ -37,9 +41,10 @@ export class PaymentSystemService {
   constructor(
     @InjectRepository(Merchant)
     private readonly merchantRepository: Repository<Merchant>,
-
     @InjectRepository(Payin)
     private readonly payinRepository: Repository<Payin>,
+    @InjectRepository(PayinSandbox)
+    private readonly payinSandboxRepository: Repository<PayinSandbox>,
 
     private readonly phonepeService: PhonepeService,
     private readonly razorpayService: RazorpayService,
@@ -54,11 +59,13 @@ export class PaymentSystemService {
     await this.utilService.getPayPage(getPayPageDto);
   }
 
-  async getOrderDetails(orderId: string) {
-    return await this.razorpayService.getPaymentStatus(orderId);
-  }
+  // async getOrderDetails(orderId: string) {
+  //   return await this.razorpayService.getPaymentStatus(orderId);
+  // }
 
   async createPaymentOrder(createPaymentOrderDto: CreatePaymentOrderDto) {
+    const { environment } = createPaymentOrderDto;
+
     const merchant = await this.merchantRepository.findOne({
       where: {
         integrationId: createPaymentOrderDto.integrationId,
@@ -71,13 +78,36 @@ export class PaymentSystemService {
     });
     if (!merchant) throw new NotFoundException('Merchant not found!');
 
-    const createdPayin = await this.payinService.create(createPaymentOrderDto);
+    let createdPayin;
 
-    this.utilService.assignPaymentMethodForPayinOrder(
-      merchant,
-      createdPayin,
-      createPaymentOrderDto.userId,
-    );
+    if (environment === 'live') {
+      createdPayin = await this.payinService.create(createPaymentOrderDto);
+
+      this.utilService.assignPaymentMethodForPayinOrder(
+        merchant,
+        createdPayin,
+        createPaymentOrderDto.userId,
+      );
+    }
+
+    if (environment === 'sandbox') {
+      if (!createPaymentOrderDto.paymentMethod)
+        throw new NotAcceptableException('Payment method missing!');
+
+      createdPayin = await this.payinService.createAndAssignSandbox({
+        ...createPaymentOrderDto,
+        paymentMethod: createPaymentOrderDto.paymentMethod,
+        merchantId: merchant.id,
+      });
+
+      this.utilService.processPaymentMethodSandbox(
+        merchant,
+        createdPayin,
+        createPaymentOrderDto.paymentMethod,
+        createPaymentOrderDto.userId,
+        environment,
+      );
+    }
 
     return {
       orderId: createdPayin.systemOrderId,
@@ -118,37 +148,88 @@ export class PaymentSystemService {
     }
   }
 
-  async getPaymentStatus(payinOrderId: string) {
-    const payinOrder = await this.payinRepository.findOneBy({
-      systemOrderId: payinOrderId,
-    });
-    if (!payinOrder) throw new NotFoundException('payin system ID invalid!');
+  async getPaymentStatus(
+    payinOrderId: string,
+    environment: 'live' | 'sandbox',
+  ) {
+    let payinOrder;
+
+    if (environment === 'live')
+      payinOrder = await this.payinRepository.findOneBy({
+        systemOrderId: payinOrderId,
+      });
+
+    if (environment === 'sandbox')
+      payinOrder = await this.payinSandboxRepository.findOneBy({
+        systemOrderId: payinOrderId,
+      });
+
+    if (!payinOrder) return;
 
     const paymentMethod = payinOrder.payinMadeOn;
 
     let res = null;
-    if (paymentMethod === PaymentMadeOn.MEMBER)
+
+    if (paymentMethod === PaymentMadeOn.MEMBER) {
       res = await this.memberChannelService.getPaymentStatus(payinOrder);
+    }
+
+    if (!payinOrder || !payinOrder.trackingId) return;
 
     if (payinOrder.gatewayName === GatewayName.RAZORPAY) {
-      res = await this.razorpayService.getPaymentStatus(payinOrder.trackingId);
+      res = await this.razorpayService.getPaymentStatus(
+        payinOrder.trackingId,
+        environment,
+      );
+
+      if (!res?.status) return;
 
       if (res && (res.status === 'SUCCESS' || res.status === 'FAILED')) {
-        await this.payinService.updatePayinStatusToSubmitted({
-          id: payinOrderId,
-          transactionId: res.details?.transactionId || 'trnx001',
-          transactionDetails: res.details?.otherPaymentDetails,
-        });
+        if (environment === 'sandbox') {
+          await this.payinSandboxRepository.update(
+            { systemOrderId: payinOrderId },
+            {
+              transactionId: res.details?.transactionId || 'trnx001',
+              transactionDetails: res.details?.otherPaymentDetails,
+            },
+          );
 
-        if (res.status === 'SUCCESS')
-          await this.payinService.updatePayinStatusToComplete({
+          if (res.status === 'SUCCESS')
+            await this.payinSandboxRepository.update(
+              { systemOrderId: payinOrderId },
+              {
+                status: OrderStatus.COMPLETE,
+              },
+            );
+
+          if (res.status === 'FAILED')
+            await this.payinSandboxRepository.update(
+              { systemOrderId: payinOrderId },
+              {
+                status: OrderStatus.FAILED,
+              },
+            );
+        }
+
+        if (environment === 'live') {
+          await this.payinService.updatePayinStatusToSubmitted({
             id: payinOrderId,
+            transactionId: res.details?.transactionId || 'trnx001',
+            transactionDetails: res.details?.otherPaymentDetails,
           });
 
-        if (res.status === 'FAILED')
-          await this.payinService.updatePayinStatusToFailed({
-            id: payinOrder,
-          });
+          if (res.status === 'SUCCESS') {
+            await this.payinService.updatePayinStatusToComplete({
+              id: payinOrderId,
+            });
+          }
+
+          if (res.status === 'FAILED') {
+            await this.payinService.updatePayinStatusToFailed({
+              id: payinOrderId,
+            });
+          }
+        }
       }
     }
 
@@ -163,13 +244,29 @@ export class PaymentSystemService {
     throw new NotFoundException('Unable to find status!');
   }
 
-  async getOrderDetailsForIntegrationKit(id: string) {
-    if (!id) return;
+  async getOrderDetailsForIntegrationKit(
+    id: string,
+    environment: 'sandbox' | 'live',
+  ) {
+    if (!id || !environment) return;
 
-    const payin = await this.payinRepository.findOne({
-      where: { systemOrderId: id },
-      relations: ['user'],
-    });
+    let payin;
+
+    if (environment === 'live')
+      payin = await this.payinRepository.findOne({
+        where: { systemOrderId: id },
+        relations: ['user'],
+      });
+
+    if (environment === 'sandbox') {
+      console.log('sandbox');
+      payin = await this.payinSandboxRepository.findOne({
+        where: { systemOrderId: id },
+      });
+    }
+
+    console.log({ payin });
+
     if (!payin) throw new NotFoundException('Payin order not found!');
 
     return {
@@ -219,6 +316,75 @@ export class PaymentSystemService {
         await this.payinService.updatePayinStatusToFailed({
           id: payinOrder.id,
         });
+    }
+  }
+
+  async getMemberChannelPageForSandbox(payinOrderId) {
+    const payin = await this.payinSandboxRepository.findOne({
+      where: { systemOrderId: payinOrderId },
+    });
+    if (!payin) throw new NotFoundException('Payin order not found!');
+
+    const name = payin.member.name;
+    const amount = payin.amount;
+
+    switch (payin.channel) {
+      case ChannelName.UPI:
+        const upiDetails = {
+          upiId: 'karlpearson@upi',
+          mobile: '9876543210',
+          isBusinessUpi: true,
+        };
+        const upiIntentURI = `upi://pay?pa=${upiDetails.upiId}&pn=${name}&am=${amount}&cu=INR`;
+
+        return {
+          channel: 'upi',
+          amount: amount,
+          memberDetails: {
+            upiId: upiDetails.upiId,
+            isBusiness: upiDetails.isBusinessUpi,
+            name: name,
+            qrCode: await QRCode.toDataURL(upiIntentURI),
+          },
+        };
+
+      case ChannelName.BANKING:
+        const netBankingDetails = {
+          beneficiaryName: 'Karl Pearson',
+          name: name,
+          accountNumber: '1234 1234 1234 1234',
+          ifsc: 'SBI002900',
+          bankName: 'SBI',
+        };
+
+        return {
+          channel: 'netbanking',
+          amount: amount,
+          memberDetails: {
+            beneficiaryName: netBankingDetails.beneficiaryName,
+            name: name,
+            accountNumber: netBankingDetails.accountNumber,
+            ifsc: netBankingDetails.ifsc,
+            bank: netBankingDetails.bankName,
+          },
+        };
+
+      case ChannelName.E_WALLET:
+        const eWalletDetails = {
+          app: 'Dummy App',
+          name: name,
+          mobile: '9876543210',
+        };
+
+        return {
+          channel: 'e-wallet',
+          amount: amount,
+          memberDetails: {
+            appName: eWalletDetails.app,
+            name: name,
+            mobile: eWalletDetails.mobile,
+          },
+        };
     }
   }
 }

@@ -27,12 +27,14 @@ import { UniqpayService } from './uniqpay/uniqpay.service';
 import { MemberChannelModule } from './member/member-channel.module';
 import { MemberChannelService } from './member/member-channel.service';
 import { JwtModule } from 'src/services/jwt/jwt.module';
+import { PayinSandbox } from 'src/payin/entities/payin-sandbox.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       Merchant,
       Payin,
+      PayinSandbox,
       Config,
       Member,
       Razorpay,

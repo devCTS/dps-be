@@ -15,9 +15,6 @@ import { JwtService } from 'src/services/jwt/jwt.service';
 
 @Injectable()
 export class RazorpayService {
-  razorpayClient: any = null;
-  isLiveMode = process.env.GATEWAY_MODE === 'live';
-
   public constructor(
     @InjectRepository(EndUser)
     private readonly endUserRepository: Repository<EndUser>,
@@ -26,23 +23,21 @@ export class RazorpayService {
 
     private readonly httpService: HttpService,
     private readonly jwtService: JwtService,
-  ) {
-    this.isLiveMode = process.env.GATEWAY_MODE === 'live';
-    this.initializeKeys();
-  }
+  ) {}
 
   generateUniqueKey = () => uuid();
 
-  async initializeKeys() {
+  async getCredentials(environment) {
     const razorpay = (await this.razorpayRepository.find())[0];
     if (!razorpay) throw new NotFoundException('Razorpay record not found!');
 
-    const keys = this.isLiveMode
-      ? { keyId: razorpay.key_id, keySecret: razorpay.key_secret }
-      : {
-          keyId: razorpay.sandbox_key_id,
-          keySecret: razorpay.sandbox_key_secret,
-        };
+    const keys =
+      environment === 'live'
+        ? { keyId: razorpay.key_id, keySecret: razorpay.key_secret }
+        : {
+            keyId: razorpay.sandbox_key_id,
+            keySecret: razorpay.sandbox_key_secret,
+          };
 
     const decryptedKeyId = this.jwtService.decryptValue(keys.keyId);
     const decryptedKeySecret = this.jwtService.decryptValue(keys.keySecret);
@@ -50,20 +45,25 @@ export class RazorpayService {
     if (!decryptedKeyId || !decryptedKeySecret)
       throw new Error('Failed to decrypt Razorpay keys');
 
-    this.razorpayClient = new Razorpay({
-      key_id: decryptedKeyId,
-      key_secret: decryptedKeySecret,
-    });
+    const accountNumber =
+      environment === 'live'
+        ? razorpay?.account_number
+        : razorpay?.sandbox_account_number;
+
+    const decryptedAccountNumber = this.jwtService.decryptValue(accountNumber);
 
     return {
       key_id: decryptedKeyId,
       key_secret: decryptedKeySecret,
+      account_number: decryptedAccountNumber,
     };
   }
 
   async getPayPage(getPayPageDto: GetPayPageDto) {
-    const { userId, amount, orderId, integrationId, channelName } =
+    const { userId, amount, orderId, integrationId, channelName, environment } =
       getPayPageDto;
+
+    this.getCredentials(environment);
 
     const endUser = await this.endUserRepository.findOneBy({ userId });
 
@@ -91,7 +91,12 @@ export class RazorpayService {
       callback_method: 'get',
     };
 
-    const paymentLink = await this.razorpayClient.paymentLink.create(options);
+    const razorpayClient = new Razorpay({
+      key_id: (await this.getCredentials(environment)).key_id,
+      key_secret: (await this.getCredentials(environment)).key_secret,
+    });
+
+    const paymentLink = await razorpayClient.paymentLink.create(options);
 
     return {
       url: paymentLink.short_url,
@@ -115,12 +120,10 @@ export class RazorpayService {
       },
     };
 
-    const key_id = (await this.initializeKeys()).key_id;
-    const key_secret = (await this.initializeKeys()).key_secret;
+    const key_id = (await this.getCredentials('live')).key_id;
+    const key_secret = (await this.getCredentials('live')).key_secret;
 
     const authHeader = `Basic ${Buffer.from(`${key_id}:${key_secret}`).toString('base64')}`;
-
-    console.log({ key_id, key_secret });
 
     try {
       const response = await firstValueFrom(
@@ -169,8 +172,8 @@ export class RazorpayService {
       delete fundAccountRequest.bank_account;
     }
 
-    const key_id = (await this.initializeKeys()).key_id;
-    const key_secret = (await this.initializeKeys()).key_secret;
+    const key_id = (await this.getCredentials('live')).key_id;
+    const key_secret = (await this.getCredentials('live')).key_secret;
 
     const authHeader = `Basic ${Buffer.from(`${key_id}:${key_secret}`).toString('base64')}`;
 
@@ -272,8 +275,8 @@ export class RazorpayService {
       fund_account_id: fundAccountId,
     };
 
-    const key_id = (await this.initializeKeys()).key_id;
-    const key_secret = (await this.initializeKeys()).key_secret;
+    const key_id = (await this.getCredentials('live')).key_id;
+    const key_secret = (await this.getCredentials('live')).key_secret;
 
     const authHeader = `Basic ${Buffer.from(`${key_id}:${key_secret}`).toString('base64')}`;
 
@@ -317,14 +320,8 @@ export class RazorpayService {
 
     // {"UPI":{"Upi Id":"kartik@upi","Mobile Number":"9876543210"},"NET_BANKING":{"Account Number":"123412341241234","Bank Name":"HDFC","IFSC Code":"HDFC0002900","Beneficiary Name":"KARTIK"},"E_WALLET":{"App Name":"GOOGLE PAY","Mobile Number":"9876543210"}}
 
-    const accountNumber = this.isLiveMode
-      ? razorpay?.account_number
-      : razorpay?.sandbox_account_number;
-
-    const decryptedAccountNumber = this.jwtService.decryptValue(accountNumber);
-
     const res = await this.createPayout({
-      account_number: '924020068715927',
+      account_number: (await this.getCredentials('live')).account_number,
       amount: amountInPaise,
       customer_details: {
         name: endUser.name,
@@ -359,19 +356,26 @@ export class RazorpayService {
     };
   }
 
-  async getPaymentStatus(paymentLinkId: string) {
-    const paymentLinkDetails =
-      await this.razorpayClient.paymentLink.fetch(paymentLinkId);
+  async getPaymentStatus(paymentLinkId: string, environment = 'live') {
+    const razorpayClient = new Razorpay({
+      key_id: (await this.getCredentials(environment)).key_id,
+      key_secret: (await this.getCredentials(environment)).key_secret,
+    });
 
-    const orderResponse = await this.razorpayClient.orders.fetchPayments(
+    const paymentLinkDetails: any =
+      await razorpayClient.paymentLink.fetch(paymentLinkId);
+
+    if (!paymentLinkDetails?.order_id) return;
+
+    const orderResponse = await razorpayClient.orders.fetchPayments(
       paymentLinkDetails?.order_id,
     );
 
-    const orderDetails = orderResponse?.items[0];
+    const orderDetails: any = orderResponse?.items[0];
 
     let status;
-    if (orderDetails.status === 'captured') status = 'SUCCESS';
-    if (orderDetails.status === 'failed') status = 'FAILED';
+    if (orderDetails?.status === 'captured') status = 'SUCCESS';
+    if (orderDetails?.status === 'failed') status = 'FAILED';
 
     return {
       status,
@@ -384,8 +388,8 @@ export class RazorpayService {
   }
 
   async getPayoutDetails(payoutId: string) {
-    const key_id = (await this.initializeKeys()).key_id;
-    const key_secret = (await this.initializeKeys()).key_secret;
+    const key_id = (await this.getCredentials('live')).key_id;
+    const key_secret = (await this.getCredentials('live')).key_secret;
 
     const authHeader = `Basic ${Buffer.from(`${key_id}:${key_secret}`).toString(
       'base64',

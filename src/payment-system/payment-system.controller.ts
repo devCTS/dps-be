@@ -12,6 +12,7 @@ import {
   Res,
   UseGuards,
   Request,
+  Query,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { PaymentSystemService } from './payment-system.service';
@@ -28,6 +29,8 @@ import { Config } from 'src/channel/entity/config.entity';
 import { GetPayPageDto } from './dto/getPayPage.dto';
 import { Roles } from 'src/utils/decorators/roles.decorator';
 import { RolesGuard } from 'src/utils/guard/roles.guard';
+import { env } from 'process';
+import { PayinSandbox } from 'src/payin/entities/payin-sandbox.entity';
 
 @Controller('payment-system')
 export class PaymentSystemController {
@@ -36,6 +39,8 @@ export class PaymentSystemController {
     private readonly merchantRepository: Repository<Merchant>,
     @InjectRepository(Payin)
     private readonly payinRepository: Repository<Payin>,
+    @InjectRepository(PayinSandbox)
+    private readonly payinSandboxRepository: Repository<PayinSandbox>,
     @InjectRepository(Config)
     private readonly configRepository: Repository<Config>,
     private readonly service: PaymentSystemService,
@@ -101,7 +106,13 @@ export class PaymentSystemController {
   @Get('member-channel/:payinOrderId')
   @Roles(Role.ALL)
   @UseGuards(RolesGuard)
-  async getMemberChannelPage(@Param('payinOrderId') payinOrderId: string) {
+  async getMemberChannelPage(
+    @Param('payinOrderId') payinOrderId: string,
+    @Query('environment') environment: 'live' | 'sandbox',
+  ) {
+    if (environment === 'sandbox')
+      return await this.service.getMemberChannelPageForSandbox(payinOrderId);
+
     const payin = await this.payinRepository.findOne({
       where: { systemOrderId: payinOrderId },
       relations: [
@@ -166,8 +177,11 @@ export class PaymentSystemController {
   @Get('status/:payinOrderId')
   @Roles(Role.ALL)
   @UseGuards(RolesGuard)
-  async getPaymentStatus(@Param('payinOrderId') payinOrderId: string) {
-    return this.service.getPaymentStatus(payinOrderId);
+  async getPaymentStatus(
+    @Param('payinOrderId') payinOrderId: string,
+    @Query('environment') environment: 'live' | 'sandbox',
+  ) {
+    return this.service.getPaymentStatus(payinOrderId, environment);
   }
 
   @Post('submit-payment/:payinOrderId')
@@ -175,8 +189,23 @@ export class PaymentSystemController {
   @UseGuards(RolesGuard)
   async submitPayment(
     @Param('payinOrderId') payinOrderId: string,
+    @Query('environment') environment: string,
     @Body() submitPaymentOrderDto: SubmitPaymentOrderDto,
   ) {
+    if (environment === 'sandbox') {
+      await this.payinSandboxRepository.update(
+        {
+          systemOrderId: payinOrderId,
+        },
+        {
+          transactionId: submitPaymentOrderDto.txnId,
+          status: OrderStatus.COMPLETE,
+        },
+      );
+
+      return HttpStatus.OK;
+    }
+
     await this.payinService.updatePayinStatusToSubmitted({
       transactionId: submitPaymentOrderDto.txnId,
       id: payinOrderId,
@@ -201,8 +230,11 @@ export class PaymentSystemController {
   @Get('order-details/:orderId')
   @Roles(Role.ALL)
   @UseGuards(RolesGuard)
-  async getOrderDetailsForIntegrationKit(@Param('orderId') id: string) {
-    return this.service.getOrderDetailsForIntegrationKit(id);
+  async getOrderDetailsForIntegrationKit(
+    @Param('orderId') id: string,
+    @Query('environment') environment: 'sandbox' | 'live',
+  ) {
+    return this.service.getOrderDetailsForIntegrationKit(id, environment);
   }
 
   @Post('receive-phonepe-request')

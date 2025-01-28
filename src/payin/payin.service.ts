@@ -13,6 +13,7 @@ import {
   AlertType,
   CallBackStatus,
   ChannelName,
+  GatewayName,
   NotificationType,
   OrderStatus,
   OrderType,
@@ -32,18 +33,22 @@ import { AgentService } from 'src/agent/agent.service';
 import {
   CreatePaymentOrderDto,
   CreatePaymentOrderDtoAdmin,
+  CreatePaymentOrderSandboxDto,
 } from 'src/payment-system/dto/createPaymentOrder.dto';
 import { EndUser } from 'src/end-user/entities/end-user.entity';
 import { FundRecordService } from 'src/fund-record/fund-record.service';
 import { NotificationService } from 'src/notification/notification.service';
 import { AlertService } from 'src/alert/alert.service';
 import { Team } from 'src/team/entities/team.entity';
+import { PayinSandbox } from './entities/payin-sandbox.entity';
 
 @Injectable()
 export class PayinService {
   constructor(
     @InjectRepository(Payin)
     private readonly payinRepository: Repository<Payin>,
+    @InjectRepository(PayinSandbox)
+    private readonly payinSandboxRepository: Repository<PayinSandbox>,
     @InjectRepository(Merchant)
     private readonly merchantRepository: Repository<Merchant>,
     @InjectRepository(Member)
@@ -147,8 +152,7 @@ export class PayinService {
       },
       relations: ['identity'],
     });
-    if (!merchant)
-      throw new InternalServerErrorException('Merchant not found!');
+    if (!merchant) throw new NotFoundException('Merchant not found!');
 
     let endUser = await this.endUserRepository.findOne({
       where: { userId, merchant: { id: merchant.id } },
@@ -208,6 +212,85 @@ export class PayinService {
       memberId: memberId,
       memberPaymentDetails: member?.identity?.[mapChannel[channel]][0],
     });
+
+    return payin;
+  }
+
+  async createAndAssignSandbox(payinDetails: CreatePaymentOrderSandboxDto) {
+    const {
+      userId,
+      userEmail,
+      userName,
+      userMobileNumber,
+      orderId,
+      amount,
+      channel,
+      paymentMethod,
+      merchantId,
+    } = payinDetails;
+
+    if (!merchantId) throw new NotFoundException('Merchant ID missing!');
+
+    const merchant = await this.merchantRepository.findOne({
+      where: {
+        id: merchantId,
+      },
+      relations: ['identity'],
+    });
+    if (!merchant) throw new NotFoundException('Merchant not found!');
+
+    const payin = await this.payinSandboxRepository.save({
+      merchantOrderId: orderId,
+      user: {
+        name: userName,
+        email: userEmail,
+        mobile: userMobileNumber,
+        userId,
+      },
+      systemOrderId: `PAYIN-SANDBOX-${uniqid()}`.toUpperCase(),
+      merchant: {
+        id: merchant.id,
+        name: merchant.firstName + ' ' + merchant.lastName,
+      },
+      amount,
+      channel,
+    });
+
+    switch (paymentMethod) {
+      case 'member':
+        const memberPaymentDetails = {
+          'Upi Id': 'karlpearson@upi',
+          mobile: '9876543210',
+        };
+
+        await this.payinSandboxRepository.update(payin.id, {
+          status: OrderStatus.ASSIGNED,
+          member: {
+            name: 'Karl Pearson',
+          },
+          payinMadeOn: PaymentMadeOn.MEMBER,
+          transactionId: 'SANDBOX-TRNX-001ABC',
+          transactionDetails: JSON.stringify(memberPaymentDetails),
+        });
+        break;
+
+      case 'phonepe':
+        await this.payinSandboxRepository.update(payin.id, {
+          status: OrderStatus.ASSIGNED,
+          gatewayName: GatewayName.PHONEPE,
+        });
+        break;
+
+      case 'razorpay':
+        await this.payinSandboxRepository.update(payin.id, {
+          status: OrderStatus.ASSIGNED,
+          gatewayName: GatewayName.RAZORPAY,
+        });
+        break;
+
+      default:
+        break;
+    }
 
     return payin;
   }

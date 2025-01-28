@@ -14,6 +14,7 @@ import { SystemConfigService } from 'src/system-config/system-config.service';
 import {
   ChannelName,
   GatewayName,
+  OrderStatus,
   PaymentMadeOn,
   PaymentType,
 } from 'src/utils/enum/enum';
@@ -25,6 +26,7 @@ import { MemberChannelService } from './member/member-channel.service';
 import { PhonepeService } from './phonepe/phonepe.service';
 import { RazorpayService } from './razorpay/razorpay.service';
 import { PayinGateway } from 'src/socket/payin.gateway';
+import { PayinSandbox } from 'src/payin/entities/payin-sandbox.entity';
 
 @Injectable()
 export class PaymentSystemUtilService {
@@ -37,6 +39,8 @@ export class PaymentSystemUtilService {
     private readonly razorpayRepository: Repository<Razorpay>,
     @InjectRepository(Payin)
     private readonly payinRepository: Repository<Payin>,
+    @InjectRepository(PayinSandbox)
+    private readonly payinSandboxRepository: Repository<PayinSandbox>,
     @InjectRepository(ChannelSettings)
     private readonly channelSettingsRepository: Repository<ChannelSettings>,
     @InjectRepository(AmountRangePayinMode)
@@ -501,5 +505,44 @@ export class PaymentSystemUtilService {
 
     if (gateway === GatewayName.RAZORPAY)
       return await this.razorpayService.getPayPage(getPayPageDto);
+  }
+
+  async processPaymentMethodSandbox(
+    merchant: Merchant,
+    createdPayin: PayinSandbox,
+    paymentMethod: 'member' | 'phonepe' | 'razorpay',
+    userId: string,
+    environment: 'live' | 'sandbox',
+  ) {
+    let gatewayName;
+    if (paymentMethod === 'member') gatewayName = GatewayName.MEMBER;
+    if (paymentMethod === 'phonepe') gatewayName = GatewayName.PHONEPE;
+    if (paymentMethod === 'razorpay') gatewayName = GatewayName.RAZORPAY;
+
+    const res: any = await this.getPayPage({
+      orderId: createdPayin.systemOrderId,
+      userId: userId,
+      amount: createdPayin.amount.toString(),
+      gateway: gatewayName,
+      channelName: createdPayin.channel,
+      integrationId: merchant.integrationId,
+      environment,
+    });
+
+    if (gatewayName !== GatewayName.MEMBER)
+      await this.payinSandboxRepository.update(createdPayin.id, {
+        trackingId: res?.trackingId,
+      });
+
+    const paymentMethodType =
+      gatewayName === GatewayName.MEMBER ? 'MEMBER' : 'GATEWAY';
+
+    setTimeout(() => {
+      this.payinGateway.notifyOrderAssigned(
+        createdPayin.systemOrderId,
+        res.url,
+        paymentMethodType,
+      );
+    }, 1000);
   }
 }

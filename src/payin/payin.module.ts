@@ -23,11 +23,13 @@ import { NotificationModule } from 'src/notification/notification.module';
 import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
 import { AlertModule } from 'src/alert/alert.module';
 import { Team } from 'src/team/entities/team.entity';
+import { PayinSandbox } from './entities/payin-sandbox.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       Payin,
+      PayinSandbox,
       EndUser,
       Identity,
       Merchant,
