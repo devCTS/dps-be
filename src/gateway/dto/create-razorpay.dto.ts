@@ -20,11 +20,19 @@ export class CreateRazorpayDto {
 
   @IsNotEmpty()
   @IsString()
+  account_number: string;
+
+  @IsNotEmpty()
+  @IsString()
   sandbox_key_id: string;
 
   @IsNotEmpty()
   @IsString()
   sandbox_key_secret: string;
+
+  @IsNotEmpty()
+  @IsString()
+  sandbox_account_number: string;
 }
 
 export class UpdateRazorpayDto extends PartialType(CreateRazorpayDto) {}

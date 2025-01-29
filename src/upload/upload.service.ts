@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Express } from 'express';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import * as uniqid from 'uniqid';
+import uniqid from 'uniqid';
 
 @Injectable()
 export class UploadService {

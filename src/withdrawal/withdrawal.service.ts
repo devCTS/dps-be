@@ -12,7 +12,7 @@ import { CreateWithdrawalDto } from './dto/create-withdrawal.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Withdrawal } from './entities/withdrawal.entity';
 import { Repository } from 'typeorm';
-import * as uniqid from 'uniqid';
+import uniqid from 'uniqid';
 import {
   AlertType,
   ChannelName,
@@ -127,17 +127,17 @@ export class WithdrawalService {
       orderType: OrderType.WITHDRAWAL,
     });
 
-    // if (res.paymentStatus === 'success')
-    //   await this.updateStatusToComplete({
-    //     id: body.orderId,
-    //     transactionDetails: {
-    //       transactionId: res.transactionId,
-    //       transactionReceipt: res.transactionReceipt,
-    //       gatewayDetails: res.transactionDetails,
-    //     },
-    //     withdrawalMadeOn: WithdrawalMadeOn.GATEWAY,
-    //     gatewayName: res.gatewayName,
-    //   });
+    if (res.paymentStatus === 'success')
+      await this.updateStatusToComplete({
+        id: body.orderId,
+        transactionDetails: {
+          transactionId: res.transactionId,
+          transactionReceipt: res.transactionReceipt,
+          gatewayDetails: res.transactionDetails,
+        },
+        withdrawalMadeOn: WithdrawalMadeOn.GATEWAY,
+        gatewayName: res.gatewayName,
+      });
 
     return HttpStatus.OK;
   }

@@ -24,12 +24,17 @@ import { EndUserModule } from 'src/end-user/end-user.module';
 import { SocketModule } from 'src/socket/socket.module';
 import { UniqpayModule } from './uniqpay/uniqpay.module';
 import { UniqpayService } from './uniqpay/uniqpay.service';
+import { MemberChannelModule } from './member/member-channel.module';
+import { MemberChannelService } from './member/member-channel.service';
+import { JwtModule } from 'src/services/jwt/jwt.module';
+import { PayinSandbox } from 'src/payin/entities/payin-sandbox.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       Merchant,
       Payin,
+      PayinSandbox,
       Config,
       Member,
       Razorpay,
@@ -47,6 +52,8 @@ import { UniqpayService } from './uniqpay/uniqpay.service';
     SystemConfigModule,
     EndUserModule,
     SocketModule,
+    MemberChannelModule,
+    JwtModule,
   ],
   controllers: [PaymentSystemController],
   providers: [
@@ -55,6 +62,7 @@ import { UniqpayService } from './uniqpay/uniqpay.service';
     RazorpayService,
     PhonepeService,
     UniqpayService,
+    MemberChannelService,
   ],
   exports: [PaymentSystemService],
 })

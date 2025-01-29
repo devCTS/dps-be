@@ -15,6 +15,7 @@ import { In, MoreThan, Repository } from 'typeorm';
 import {
   AlertType,
   ChannelName,
+  GatewayName,
   NotificationStatus,
   NotificationType,
   OrderStatus,
@@ -26,7 +27,7 @@ import {
 import { EndUserService } from 'src/end-user/end-user.service';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { EndUser } from 'src/end-user/entities/end-user.entity';
-import * as uniqid from 'uniqid';
+import uniqid from 'uniqid';
 import { CreatePayoutDto } from './dto/create-payout.dto';
 import { TransactionUpdatesPayoutService } from 'src/transaction-updates/transaction-updates-payout.service';
 import { Member } from 'src/member/entities/member.entity';
@@ -41,10 +42,11 @@ import { FundRecordService } from 'src/fund-record/fund-record.service';
 import { NotificationService } from 'src/notification/notification.service';
 import { AlertService } from 'src/alert/alert.service';
 import { IdentityService } from 'src/identity/identity.service';
+import { RazorpayService } from 'src/payment-system/razorpay/razorpay.service';
 
 @Injectable()
 export class PayoutService {
-  private enableGateway = false;
+  private enableGateway = true;
 
   constructor(
     @InjectRepository(Payout)
@@ -68,6 +70,7 @@ export class PayoutService {
     private readonly fundRecordService: FundRecordService,
     private readonly notificationService: NotificationService,
     private readonly identityService: IdentityService,
+    private readonly razorpayService: RazorpayService,
 
     @Inject(forwardRef(() => AlertService))
     private readonly alertService: AlertService,
@@ -200,21 +203,42 @@ export class PayoutService {
         clearInterval(intervalId);
 
         const result = await this.paymentSystemService.makeGatewayPayout({
-          userId: merchant.id,
+          userId: endUserData.userId,
           orderId: payout.systemOrderId,
           amount: payout.amount,
           orderType: OrderType.PAYOUT,
+          mode: payout.channel === ChannelName.UPI ? 'UPI' : 'IMPS',
         });
 
-        if (result.paymentStatus === 'success') {
-          await this.updatePayoutStatusToAssigned({
-            id: payout.systemOrderId,
-            paymentMode: PaymentMadeOn.GATEWAY,
-            gatewayServiceRate: payout.gatewayServiceRate || 0.3,
-            gatewayName: result.gatewayName,
-          });
-        }
+        await this.updatePayoutStatusToAssigned({
+          id: payout.systemOrderId,
+          paymentMode: PaymentMadeOn.GATEWAY,
+          gatewayServiceRate: payout.gatewayServiceRate || 0.1,
+          gatewayName: result.gatewayName,
+        });
 
+        if (result.paymentStatus) {
+          await this.updatePayoutStatusToSubmitted({
+            id: payout.systemOrderId,
+            transactionId: result.transactionId,
+            transactionReceipt: result.transactionReceipt,
+            transactionDetails: result.transactionDetails,
+          });
+
+          if (result.paymentStatus === 'processed')
+            await this.updatePayoutStatusToComplete({
+              id: payout.systemOrderId,
+            });
+
+          if (
+            result.paymentStatus === 'failed' ||
+            result.status === 'rejected' ||
+            result.status === 'cancelled'
+          )
+            await this.updatePayoutStatusToFailed({
+              id: payout.systemOrderId,
+            });
+        }
         return HttpStatus.CREATED;
       }, payoutTimeout * 1000);
     }
@@ -486,21 +510,16 @@ export class PayoutService {
       },
     );
 
-    await this.notificationService.create({
-      for: payoutOrderDetails.member.id,
-      type: NotificationType.PAYOUT_VERIFIED,
-      data: {
-        orderId: payoutOrderDetails.systemOrderId,
-        amount: payoutOrderDetails.amount,
-        channel: payoutOrderDetails.channel,
-      },
-    });
-
-    const mapUserType = {
-      MeERCHANT: Users.MERCHANT,
-      AGENT: Users.AGENT,
-      MEMBER: Users.MEMBER,
-    };
+    if (payoutOrderDetails.payoutMadeVia === PaymentMadeOn.MEMBER)
+      await this.notificationService.create({
+        for: payoutOrderDetails.member.id,
+        type: NotificationType.PAYOUT_VERIFIED,
+        data: {
+          orderId: payoutOrderDetails.systemOrderId,
+          amount: payoutOrderDetails.amount,
+          channel: payoutOrderDetails.channel,
+        },
+      });
 
     await this.alertService.create({
       for: payoutOrderDetails.merchant.id,
@@ -627,7 +646,7 @@ export class PayoutService {
   }
 
   async updatePayoutStatusToSubmitted(body) {
-    const { id, transactionId, transactionReceipt } = body;
+    const { id, transactionId, transactionReceipt, transactionDetails } = body;
 
     if (!transactionId && !transactionReceipt)
       throw new NotAcceptableException('Transaction ID or receipt missing!');
@@ -641,12 +660,21 @@ export class PayoutService {
     if (payoutOrderDetails.status !== OrderStatus.ASSIGNED)
       throw new NotAcceptableException('order status is not assigned!');
 
+    let updatedTransactionDetails = payoutOrderDetails.transactionDetails;
+    if (
+      payoutOrderDetails.payoutMadeVia === PaymentMadeOn.GATEWAY &&
+      transactionDetails
+    ) {
+      updatedTransactionDetails = transactionDetails;
+    }
+
     await this.payoutRepository.update(
       { systemOrderId: id },
       {
         status: OrderStatus.SUBMITTED,
         transactionId,
         transactionReceipt,
+        transactionDetails: updatedTransactionDetails,
       },
     );
 
@@ -672,5 +700,38 @@ export class PayoutService {
 
   async findOne(id: string) {
     return await this.payoutRepository.findOneBy({ systemOrderId: id });
+  }
+
+  async fetchPendingPayoutsAndUpdateStatus() {
+    const pendingPayouts = await this.payoutRepository.findBy({
+      status: In([OrderStatus.ASSIGNED, OrderStatus.SUBMITTED]),
+      payoutMadeVia: PaymentMadeOn.GATEWAY,
+    });
+    if (!pendingPayouts.length) return;
+
+    pendingPayouts.forEach(async (payout) => {
+      if (payout.transactionId) {
+        let response;
+
+        if (payout.gatewayName === GatewayName.RAZORPAY)
+          response = await this.razorpayService.getPayoutDetails(
+            payout.transactionId,
+          );
+
+        if (response?.status === 'processed')
+          await this.updatePayoutStatusToComplete({
+            id: payout.systemOrderId,
+          });
+
+        if (
+          response?.status === 'failed' ||
+          response?.status === 'rejected' ||
+          response?.status === 'cancelled'
+        )
+          await this.updatePayoutStatusToFailed({
+            id: payout.systemOrderId,
+          });
+      }
+    });
   }
 }

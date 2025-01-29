@@ -14,7 +14,7 @@ import {
 } from './dto/withdrawal-admin-response.dto';
 import { ChannelName, WithdrawalOrderStatus } from 'src/utils/enum/enum';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
-import * as QRCode from 'qrcode';
+import QRCode from 'qrcode';
 
 @Injectable()
 export class WithdrawalAdminService {

@@ -47,6 +47,8 @@ export class GatewayService {
     'key_id',
     'sandbox_key_id',
     'sandbox_key_secret',
+    'account_number',
+    'sandbox_account_number',
   ];
 
   secretTextKeysUniqpay = [
@@ -76,7 +78,7 @@ export class GatewayService {
 
     secretTextKeys.forEach((key) => {
       secretTextKeys.forEach((key) => {
-        createRazorPayDto[key] = this.jwtService.getHashPassword(
+        createRazorPayDto[key] = this.jwtService.encryptValue(
           createRazorPayDto[key],
         );
       });
@@ -102,7 +104,7 @@ export class GatewayService {
 
     secretTextKeys.forEach((key) => {
       if (updateRazorpayDto[key]) {
-        updatedData[key] = this.jwtService.getHashPassword(updatedData[key]);
+        updatedData[key] = this.jwtService.encryptValue(updatedData[key]);
       }
     });
 
@@ -119,7 +121,7 @@ export class GatewayService {
     const phonepeSecretKeys = this.secretTextKeysPhonepe;
 
     phonepeSecretKeys.forEach((key) => {
-      createPhonepeDto[key] = this.jwtService.getHashPassword(
+      createPhonepeDto[key] = this.jwtService.encryptValue(
         createPhonepeDto[key],
       );
     });
@@ -144,9 +146,7 @@ export class GatewayService {
 
     secretKeysPhonepe.forEach((key) => {
       if (updatePhonepeDto[key]) {
-        updatedData[key] = this.jwtService.getHashPassword(
-          updatePhonepeDto[key],
-        );
+        updatedData[key] = this.jwtService.encryptValue(updatePhonepeDto[key]);
       }
     });
 

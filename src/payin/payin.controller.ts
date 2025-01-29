@@ -5,6 +5,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
@@ -120,8 +121,6 @@ export class PayinController {
   }
 
   @Post('update-status-complete')
-  // @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN)
-  // @UseGuards(RolesGuard)
   updatePayinStatusToCompleted(@Body() body) {
     return this.payinService.updatePayinStatusToComplete(body);
   }
@@ -137,8 +136,11 @@ export class PayinController {
   }
 
   @Put('success-callback/:id')
-  handleCallbackStatusSuccess(@Param('id') id: string) {
-    return this.payinService.handleCallbackStatusSuccess(id);
+  handleCallbackStatusSuccess(
+    @Param('id') id: string,
+    @Query('environment') environment,
+  ) {
+    return this.payinService.handleCallbackStatusSuccess(id, environment);
   }
 
   @Get('merchant-list')
@@ -158,7 +160,7 @@ export class PayinController {
   @Get('enduser-suggestions/:id')
   @Roles(Role.SUPER_ADMIN, Role.SUB_ADMIN, Role.MERCHANT, Role.SUB_MERCHANT)
   @UseGuards(RolesGuard)
-  getEnduserIdSuggestions(@Param('id') id: number) {
+  getEndUserIdSuggestions(@Param('id') id: number) {
     return this.payinAdminService.getEndUserIdSuggestions(id);
   }
 }

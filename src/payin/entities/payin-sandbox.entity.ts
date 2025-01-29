@@ -1,9 +1,7 @@
 import { EndUser } from 'src/end-user/entities/end-user.entity';
 import { Member } from 'src/member/entities/member.entity';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
-import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import {
-  CallBackStatus,
   ChannelName,
   GatewayName,
   OrderStatus,
@@ -13,15 +11,12 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
-export class Payin {
+export class PayinSandbox {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -39,13 +34,6 @@ export class Payin {
 
   @Column({ type: 'enum', enum: ChannelName })
   channel: ChannelName;
-
-  @Column({
-    type: 'enum',
-    enum: CallBackStatus,
-    default: CallBackStatus.PENDING,
-  })
-  callbackStatus: CallBackStatus;
 
   @Column({ type: 'enum', enum: PaymentMadeOn, nullable: true })
   payinMadeOn: PaymentMadeOn;
@@ -65,27 +53,27 @@ export class Payin {
   @Column({ nullable: true })
   transactionDetails: string;
 
+  @Column({ type: 'json' })
+  user: {
+    name: string;
+    mobile: string;
+    email: string;
+    userId: string;
+  };
+
+  @Column({ type: 'json' })
+  merchant: {
+    id: number;
+    name: string;
+  };
+
+  @Column({ type: 'json', nullable: true })
+  member: {
+    name: string;
+  };
+
   @Column({ nullable: true })
   trackingId: string;
-
-  @ManyToOne(() => EndUser, (endUser) => endUser.payin)
-  @JoinColumn({ name: 'enduser_id' })
-  user: EndUser;
-
-  @ManyToOne(() => Merchant, (merchant) => merchant.payin)
-  @JoinColumn()
-  merchant: Merchant;
-
-  @ManyToOne(() => Member, (member) => member.payin, { nullable: true })
-  @JoinColumn()
-  member: Member;
-
-  @OneToMany(
-    () => TransactionUpdate,
-    (transactionUpdate) => transactionUpdate.payinOrder,
-    { nullable: true },
-  )
-  transactionUpdate: TransactionUpdate[];
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;

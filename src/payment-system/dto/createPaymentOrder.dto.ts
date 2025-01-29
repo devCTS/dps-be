@@ -41,6 +41,10 @@ export class CreatePaymentOrderDto {
 
   @IsEnum(['sandbox', 'live'])
   environment: 'sandbox' | 'live';
+
+  @IsOptional()
+  @IsEnum(['member', 'razorpay', 'phonepe'])
+  paymentMethod?: 'member' | 'razorpay' | 'phonepe';
 }
 
 export class CreatePaymentOrderDtoAdmin {
@@ -76,4 +80,37 @@ export class CreatePaymentOrderDtoAdmin {
 
   @IsEnum(ChannelName)
   channel: ChannelName;
+}
+
+export class CreatePaymentOrderSandboxDto {
+  @IsNumber()
+  @IsNotEmpty()
+  amount: number;
+
+  @IsString()
+  @IsNotEmpty()
+  orderId: string;
+
+  @IsNotEmpty()
+  userId: string;
+
+  @IsEmail()
+  @IsNotEmpty()
+  userEmail: string;
+
+  @IsString()
+  @IsNotEmpty()
+  userName: string;
+
+  @IsNotEmpty()
+  userMobileNumber: string;
+
+  @IsEnum(ChannelName)
+  channel: ChannelName;
+
+  @IsNumber()
+  merchantId: number;
+
+  @IsEnum(['member', 'razorpay', 'phonepe'])
+  paymentMethod: 'member' | 'razorpay' | 'phonepe';
 }

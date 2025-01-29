@@ -26,7 +26,7 @@ import { FiltersDto } from './dtos/filters-dto';
 import { SystemConfigService } from 'src/system-config/system-config.service';
 import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-update.entity';
 import { monthNames, roundOffAmount } from 'src/utils/utils';
-import * as moment from 'moment';
+import moment from 'moment';
 
 @Injectable()
 export class OverviewAdminService {
@@ -1150,8 +1150,6 @@ export class OverviewAdminService {
 
     const parsedStartDate = new Date(parseStartDate(startDate));
     const parsedEndDate = new Date(parseEndDate(endDate));
-
-    console.log(parsedStartDate, parsedEndDate);
 
     const [payinRows, payinsCount] = await this.payinRepository.findAndCount({
       where: {
