@@ -168,74 +168,28 @@ export class PaymentSystemService {
 
     if (paymentMethod === PaymentMadeOn.MEMBER) {
       res = await this.memberChannelService.getPaymentStatus(payinOrder);
-    }
+    } else {
+      if (payinOrder.gatewayName === GatewayName.RAZORPAY) {
+        if (!payinOrder || !payinOrder.trackingId) return;
 
-    if (payinOrder.gatewayName === GatewayName.RAZORPAY) {
-      if (!payinOrder || !payinOrder.trackingId) return;
+        res = await this.razorpayService.getPaymentStatus(
+          payinOrder.trackingId,
+          environment,
+        );
 
-      res = await this.razorpayService.getPaymentStatus(
-        payinOrder.trackingId,
-        environment,
-      );
-
-      if (!res?.status) return;
-
-      if (res && (res.status === 'SUCCESS' || res.status === 'FAILED')) {
-        if (environment === 'sandbox') {
-          await this.payinSandboxRepository.update(
-            { systemOrderId: payinOrderId },
-            {
-              transactionId: res.details?.transactionId || 'trnx001',
-              transactionDetails: res.details?.otherPaymentDetails,
-            },
-          );
-
-          if (res.status === 'SUCCESS')
-            await this.payinSandboxRepository.update(
-              { systemOrderId: payinOrderId },
-              {
-                status: OrderStatus.COMPLETE,
-              },
-            );
-
-          if (res.status === 'FAILED')
-            await this.payinSandboxRepository.update(
-              { systemOrderId: payinOrderId },
-              {
-                status: OrderStatus.FAILED,
-              },
-            );
-        }
-
-        if (environment === 'live') {
-          await this.payinService.updatePayinStatusToSubmitted({
-            id: payinOrderId,
-            transactionId: res.details?.transactionId || 'trnx001',
-            transactionDetails: res.details?.otherPaymentDetails,
-          });
-
-          if (res.status === 'SUCCESS') {
-            await this.payinService.updatePayinStatusToComplete({
-              id: payinOrderId,
-            });
-          }
-
-          if (res.status === 'FAILED') {
-            await this.payinService.updatePayinStatusToFailed({
-              id: payinOrderId,
-            });
-          }
-        }
+        if (!res?.status) return;
       }
-    }
 
-    if (payinOrder.gatewayName === GatewayName.PHONEPE) {
-      res = await this.phonepeService.getPaymentStatus(
-        payinOrder.systemOrderId,
-        environment,
-      );
+      if (payinOrder.gatewayName === GatewayName.PHONEPE) {
+        if (!payinOrder || !payinOrder.systemOrderId) return;
 
-      if (!res?.status) return;
+        res = await this.phonepeService.getPaymentStatus(
+          payinOrder.systemOrderId,
+          environment,
+        );
+
+        if (!res?.status) return;
+      }
 
       if (res && (res.status === 'SUCCESS' || res.status === 'FAILED')) {
         if (environment === 'sandbox') {
