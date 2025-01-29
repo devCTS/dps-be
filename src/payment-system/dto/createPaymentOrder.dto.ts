@@ -42,6 +42,7 @@ export class CreatePaymentOrderDto {
   @IsEnum(['sandbox', 'live'])
   environment: 'sandbox' | 'live';
 
+  @IsOptional()
   @IsEnum(['member', 'razorpay', 'phonepe'])
   paymentMethod?: 'member' | 'razorpay' | 'phonepe';
 }

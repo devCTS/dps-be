@@ -83,6 +83,7 @@ export class PaymentSystemService {
         merchant,
         createdPayin,
         createPaymentOrderDto.userId,
+        environment,
       );
     }
 
@@ -176,8 +177,6 @@ export class PaymentSystemService {
           payinOrder.trackingId,
           environment,
         );
-
-        if (!res?.status) return;
       }
 
       if (payinOrder.gatewayName === GatewayName.PHONEPE) {
@@ -187,11 +186,9 @@ export class PaymentSystemService {
           payinOrder.systemOrderId,
           environment,
         );
-
-        if (!res?.status) return;
       }
 
-      if (res && (res.status === 'SUCCESS' || res.status === 'FAILED')) {
+      if (res && (res?.status === 'SUCCESS' || res?.status === 'FAILED')) {
         if (environment === 'sandbox') {
           await this.payinSandboxRepository.update(
             { systemOrderId: payinOrderId },
@@ -201,7 +198,7 @@ export class PaymentSystemService {
             },
           );
 
-          if (res.status === 'SUCCESS')
+          if (res?.status === 'SUCCESS')
             await this.payinSandboxRepository.update(
               { systemOrderId: payinOrderId },
               {
@@ -209,7 +206,7 @@ export class PaymentSystemService {
               },
             );
 
-          if (res.status === 'FAILED')
+          if (res?.status === 'FAILED')
             await this.payinSandboxRepository.update(
               { systemOrderId: payinOrderId },
               {
@@ -225,13 +222,13 @@ export class PaymentSystemService {
             transactionDetails: res.details?.otherPaymentDetails,
           });
 
-          if (res.status === 'SUCCESS') {
+          if (res?.status === 'SUCCESS') {
             await this.payinService.updatePayinStatusToComplete({
               id: payinOrderId,
             });
           }
 
-          if (res.status === 'FAILED') {
+          if (res?.status === 'FAILED') {
             await this.payinService.updatePayinStatusToFailed({
               id: payinOrderId,
             });
@@ -240,7 +237,7 @@ export class PaymentSystemService {
       }
     }
 
-    if (res) return { status: res.status };
+    if (res) return { status: res?.status };
 
     throw new NotFoundException('Unable to find status!');
   }

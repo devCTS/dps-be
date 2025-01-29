@@ -5,6 +5,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { PaginateRequestDto } from 'src/utils/dtos/paginate.dto';
@@ -135,8 +136,11 @@ export class PayinController {
   }
 
   @Put('success-callback/:id')
-  handleCallbackStatusSuccess(@Param('id') id: string) {
-    return this.payinService.handleCallbackStatusSuccess(id);
+  handleCallbackStatusSuccess(
+    @Param('id') id: string,
+    @Query('environment') environment,
+  ) {
+    return this.payinService.handleCallbackStatusSuccess(id, environment);
   }
 
   @Get('merchant-list')

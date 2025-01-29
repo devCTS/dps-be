@@ -15,7 +15,6 @@ import { JwtService } from 'src/services/jwt/jwt.service';
 
 @Injectable()
 export class PhonepeService {
-  api_url = null;
   api_end_point = '/pg/v1/pay';
   redirect_url = null;
 
@@ -26,7 +25,6 @@ export class PhonepeService {
     private readonly httpService: HttpService,
     private readonly jwtService: JwtService,
   ) {
-    this.api_url = process.env.PHONEPE_API_URL;
     this.redirect_url = `${process.env.APP_URL}/phonepe/check-status`;
   }
 
@@ -78,7 +76,6 @@ export class PhonepeService {
       amount: amountInPaise,
       redirectUrl: `${process.env.PAYMENT_PAGE_BASE_URL}/close-razorpay?orderId=${orderId}`,
       redirectMode: 'REDIRECT',
-      callbackUrl: `${process.env.BASE_URL}/payment-system/receive-phonepe-request`,
       paymentInstrument: {
         type: 'PAY_PAGE',
       },
@@ -101,8 +98,13 @@ export class PhonepeService {
       },
     };
 
+    const apiUrl =
+      environment === 'live'
+        ? process.env.PHONEPE_API_URL_PROD
+        : process.env.PHONEPE_API_URL_UAT;
+
     try {
-      const request_url = this.api_url + this.api_end_point;
+      const request_url = apiUrl + this.api_end_point;
 
       const observable = this.httpService.post(
         request_url,
@@ -113,6 +115,10 @@ export class PhonepeService {
       );
 
       const response = await firstValueFrom<any>(observable);
+
+      console.log({
+        url: response.data.data.instrumentResponse.redirectInfo.url,
+      });
 
       return {
         url: response.data.data.instrumentResponse.redirectInfo.url,
@@ -159,9 +165,14 @@ export class PhonepeService {
         },
       };
 
+      const apiUrl =
+        environment === 'live'
+          ? process.env.PHONEPE_API_URL_PROD
+          : process.env.PHONEPE_API_URL_UAT;
+
       try {
         const request_url =
-          this.api_url + '/pg/v1/status/' + merchant_id + '/' + transactionId;
+          apiUrl + '/pg/v1/status/' + merchant_id + '/' + transactionId;
 
         const observable = this.httpService.get(request_url, options);
 

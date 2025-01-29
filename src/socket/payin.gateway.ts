@@ -47,11 +47,13 @@ export class PayinGateway implements OnGatewayConnection, OnGatewayDisconnect {
     orderId: string,
     url: string,
     type: 'MEMBER' | 'GATEWAY',
+    gatewayName,
   ) {
     this.server.to(orderId).emit('orderAssigned', {
       orderId,
       url,
       type,
+      gatewayName,
     });
   }
 }

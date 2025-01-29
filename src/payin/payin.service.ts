@@ -41,6 +41,7 @@ import { NotificationService } from 'src/notification/notification.service';
 import { AlertService } from 'src/alert/alert.service';
 import { Team } from 'src/team/entities/team.entity';
 import { PayinSandbox } from './entities/payin-sandbox.entity';
+import { env } from 'process';
 
 @Injectable()
 export class PayinService {
@@ -710,10 +711,18 @@ export class PayinService {
     return payins;
   }
 
-  async handleCallbackStatusSuccess(systemOrderId) {
-    const payinOrderDetails = await this.payinRepository.findOneBy({
-      systemOrderId,
-    });
+  async handleCallbackStatusSuccess(systemOrderId, environment = 'live') {
+    let payinOrderDetails;
+
+    if (environment === 'live')
+      payinOrderDetails = await this.payinRepository.findOneBy({
+        systemOrderId,
+      });
+
+    if (environment === 'sandbox')
+      payinOrderDetails = await this.payinSandboxRepository.findOneBy({
+        systemOrderId,
+      });
 
     if (!payinOrderDetails)
       throw new NotFoundException('Payin order not found.');

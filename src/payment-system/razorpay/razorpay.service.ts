@@ -355,9 +355,11 @@ export class RazorpayService {
   }
 
   async getPaymentStatus(paymentLinkId: string, environment = 'live') {
+    const { key_id, key_secret } = await this.getCredentials(environment);
+
     const razorpayClient = new Razorpay({
-      key_id: (await this.getCredentials(environment)).key_id,
-      key_secret: (await this.getCredentials(environment)).key_secret,
+      key_id: key_id,
+      key_secret: key_secret,
     });
 
     const paymentLinkDetails: any =

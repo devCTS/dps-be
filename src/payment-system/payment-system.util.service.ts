@@ -387,6 +387,7 @@ export class PaymentSystemUtilService {
     merchant: Merchant,
     createdPayin: Payin,
     userId,
+    environment,
   ) {
     let channelNameMap = {
       UPI: 'upi',
@@ -467,6 +468,7 @@ export class PaymentSystemUtilService {
         gateway: GatewayName.PHONEPE,
         integrationId: merchant.integrationId,
         channelName: createdPayin.channel,
+        environment,
       });
 
     if (selectedPaymentMode === GatewayName.RAZORPAY)
@@ -477,6 +479,7 @@ export class PaymentSystemUtilService {
         gateway: GatewayName.RAZORPAY,
         integrationId: merchant.integrationId,
         channelName: createdPayin.channel,
+        environment,
       });
 
     await this.payinRepository.update(createdPayin.id, {
@@ -490,6 +493,7 @@ export class PaymentSystemUtilService {
         createdPayin.systemOrderId,
         res.url,
         paymentMethodType,
+        selectedPaymentMode,
       );
     }, 1000);
   }
@@ -542,6 +546,7 @@ export class PaymentSystemUtilService {
         createdPayin.systemOrderId,
         res.url,
         paymentMethodType,
+        gatewayName,
       );
     }, 1000);
   }
