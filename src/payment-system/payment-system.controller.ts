@@ -239,7 +239,11 @@ export class PaymentSystemController {
 
   @Post('receive-phonepe-request')
   @Roles(Role.ALL)
-  async receivePhonepeRequest(@Request() request, @Body() body) {
-    return this.service.receivePhonepeRequest(request, body);
+  async receivePhonepeRequest(
+    @Request() request,
+    @Body() body,
+    @Query('environment') environment,
+  ) {
+    return this.service.receivePhonepeRequest(request, body, environment);
   }
 }

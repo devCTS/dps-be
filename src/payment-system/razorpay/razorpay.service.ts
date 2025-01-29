@@ -27,7 +27,7 @@ export class RazorpayService {
 
   generateUniqueKey = () => uuid();
 
-  async getCredentials(environment) {
+  private async getCredentials(environment) {
     const razorpay = (await this.razorpayRepository.find())[0];
     if (!razorpay) throw new NotFoundException('Razorpay record not found!');
 
@@ -317,8 +317,6 @@ export class RazorpayService {
 
     const userChannelDetails = JSON.parse(endUser.channelDetails);
     const amountInPaise = amount * 100;
-
-    // {"UPI":{"Upi Id":"kartik@upi","Mobile Number":"9876543210"},"NET_BANKING":{"Account Number":"123412341241234","Bank Name":"HDFC","IFSC Code":"HDFC0002900","Beneficiary Name":"KARTIK"},"E_WALLET":{"App Name":"GOOGLE PAY","Mobile Number":"9876543210"}}
 
     const res = await this.createPayout({
       account_number: (await this.getCredentials('live')).account_number,

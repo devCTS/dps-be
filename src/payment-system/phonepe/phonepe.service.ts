@@ -1,35 +1,78 @@
 import { HttpService } from '@nestjs/axios';
-import { ConflictException, HttpStatus, Injectable } from '@nestjs/common';
-import uniqid from 'uniqid';
+import {
+  ConflictException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import sha256 from 'sha256';
 import { firstValueFrom } from 'rxjs';
-import { response, Response } from 'express';
 import { GetPayPageDto } from '../dto/getPayPage.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Phonepe } from 'src/gateway/entities/phonepe.entity';
+import { JwtService } from 'src/services/jwt/jwt.service';
 
 @Injectable()
 export class PhonepeService {
-  merchant_id = null;
-  salt_key = null;
-  salt_index = null;
   api_url = null;
   api_end_point = '/pg/v1/pay';
   redirect_url = null;
 
-  constructor(private readonly httpService: HttpService) {
-    this.merchant_id = process.env.MERCHANT_ID;
-    this.salt_key = process.env.SALT_KEY;
-    this.salt_index = process.env.SALT_INDEX;
+  constructor(
+    @InjectRepository(Phonepe)
+    private readonly phonepeRepository: Repository<Phonepe>,
+
+    private readonly httpService: HttpService,
+    private readonly jwtService: JwtService,
+  ) {
     this.api_url = process.env.PHONEPE_API_URL;
     this.redirect_url = `${process.env.APP_URL}/phonepe/check-status`;
   }
 
+  private async getCredentials(environment) {
+    const phonepe = (await this.phonepeRepository.find())[0];
+    if (!phonepe) throw new NotFoundException('Phonepe record not found!');
+
+    const keys =
+      environment === 'live'
+        ? {
+            merchantId: phonepe.merchant_id,
+            saltKey: phonepe.salt_key,
+            saltIndex: phonepe.salt_index,
+          }
+        : {
+            merchantId: phonepe.sandbox_merchant_id,
+            saltKey: phonepe.sandbox_salt_key,
+            saltIndex: phonepe.sandbox_salt_index,
+          };
+
+    const decryptedMerchantId = this.jwtService.decryptValue(keys.merchantId);
+    const decryptedSaltKey = this.jwtService.decryptValue(keys.saltKey);
+    const decryptedSaltIndex = this.jwtService.decryptValue(keys.saltIndex);
+
+    if (!decryptedMerchantId || !decryptedSaltIndex || !decryptedSaltKey)
+      throw new Error('Failed to decrypt Phonepe keys');
+
+    return {
+      merchant_id: decryptedMerchantId,
+      salt_key: decryptedSaltKey,
+      salt_index: decryptedSaltIndex,
+    };
+  }
+
   async getPayPage(getPayPageDto: GetPayPageDto) {
-    const { userId, amount, orderId, integrationId } = getPayPageDto;
+    const { userId, amount, orderId, integrationId, environment } =
+      getPayPageDto;
+
+    const { merchant_id, salt_index, salt_key } =
+      await this.getCredentials(environment);
+
     // transaction amount
     const amountInPaise = parseFloat(amount) * 100;
 
     const payload = {
-      merchantId: this.merchant_id,
+      merchantId: merchant_id,
       merchantTransactionId: orderId,
       merchantUserId: userId,
       amount: amountInPaise,
@@ -46,9 +89,9 @@ export class PhonepeService {
     const base64EncodedPayload = bufferObject.toString('base64');
 
     // Formula: SHA256(Base64 encoded payload + “/pg/v1/pay” + salt key) + ### + salt index
-    const string = base64EncodedPayload + this.api_end_point + this.salt_key;
+    const string = base64EncodedPayload + this.api_end_point + salt_key;
     const sha256_val = sha256(string);
-    const xVerifyCheckSum = sha256_val + '###' + this.salt_index;
+    const xVerifyCheckSum = sha256_val + '###' + salt_index;
 
     const options = {
       headers: {
@@ -97,41 +140,39 @@ export class PhonepeService {
     });
   }
 
-  async getPaymentStatus(transactionId: string, userId: string) {
+  async getPaymentStatus(transactionId: string, environment) {
+    const { merchant_id, salt_index, salt_key } =
+      await this.getCredentials(environment);
+
     if (transactionId) {
       // generate checksum
-      const string =
-        `/pg/v1/status/${this.merchant_id}/` + transactionId + this.salt_key;
+      const string = `/pg/v1/status/${merchant_id}/` + transactionId + salt_key;
       const sha256_val = sha256(string);
-      const xVerifyCheckSum = sha256_val + '###' + this.salt_index;
+      const xVerifyCheckSum = sha256_val + '###' + salt_index;
 
       const options = {
         headers: {
           'Content-Typpe': 'application/json',
           'X-VERIFY': xVerifyCheckSum,
-          'X-MERCHANT-ID': this.merchant_id,
+          'X-MERCHANT-ID': merchant_id,
           accept: 'application/json',
         },
       };
 
       try {
         const request_url =
-          this.api_url +
-          '/pg/v1/status/' +
-          this.merchant_id +
-          '/' +
-          transactionId;
+          this.api_url + '/pg/v1/status/' + merchant_id + '/' + transactionId;
 
         const observable = this.httpService.get(request_url, options);
 
         const response = await firstValueFrom<any>(observable);
 
         return {
-          status: response,
+          status: response.data?.data?.responseCode,
           details: {
-            transactionId: response,
-            transactionReceipt: response,
-            otherPaymentDetails: response,
+            transactionId: response.data?.data?.transactionId,
+            transactionReceipt: 'TRNX-RECEIPT',
+            otherPaymentDetails: response.data,
           },
         };
       } catch (error) {
@@ -140,7 +181,10 @@ export class PhonepeService {
     }
   }
 
-  async receivePhonepeRequest(req, body) {
+  async receivePhonepeRequest(req, body, environment) {
+    const { merchant_id, salt_index, salt_key } =
+      await this.getCredentials(environment);
+
     try {
       const receivedXVerify = req.headers['x-verify'];
       if (!receivedXVerify) throw new Error('Missing X-VERIFY header');
@@ -151,22 +195,18 @@ export class PhonepeService {
       if (!base64Response)
         throw new Error('Missing response field in request body');
 
-      const stringToHash = base64Response + this.salt_key;
+      const stringToHash = base64Response + salt_key;
       const sha256_val = sha256(stringToHash);
-      const xVerifyCheckSum = sha256_val + '###' + this.salt_index;
+      const xVerifyCheckSum = sha256_val + '###' + salt_index;
 
       if (receivedXVerify !== xVerifyCheckSum)
         throw new Error('Invalid X-VERIFY header');
-
-      console.log('X-VERIFY validation successful');
 
       const decodedResponse = Buffer.from(base64Response, 'base64').toString(
         'utf-8',
       );
 
       const jsonResponse = JSON.parse(decodedResponse);
-
-      console.log('Decoded Response:', jsonResponse);
 
       const {
         success,

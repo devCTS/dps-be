@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 import uniqid from 'uniqid';
 import { Payin } from './entities/payin.entity';
 import {
@@ -728,5 +728,17 @@ export class PayinService {
     });
 
     return HttpStatus.OK;
+  }
+
+  async removeOneDayOldSandboxPayins() {
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    const oldPayins = await this.payinSandboxRepository.find({
+      where: {
+        createdAt: LessThan(oneDayAgo),
+      },
+    });
+
+    if (oldPayins.length) await this.payinSandboxRepository.remove(oldPayins);
   }
 }

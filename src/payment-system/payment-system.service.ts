@@ -59,10 +59,6 @@ export class PaymentSystemService {
     await this.utilService.getPayPage(getPayPageDto);
   }
 
-  // async getOrderDetails(orderId: string) {
-  //   return await this.razorpayService.getPaymentStatus(orderId);
-  // }
-
   async createPaymentOrder(createPaymentOrderDto: CreatePaymentOrderDto) {
     const { environment } = createPaymentOrderDto;
 
@@ -137,12 +133,12 @@ export class PaymentSystemService {
 
   private async processPaymentWithGateway(gatewayName: GatewayName, body: any) {
     switch (gatewayName) {
-      case GatewayName.PHONEPE:
-        return await this.phonepeService.makePayoutPayment(body);
+      // case GatewayName.PHONEPE:
+      //   return await this.phonepeService.makePayoutPayment(body);
       case GatewayName.RAZORPAY:
         return await this.razorpayService.makePayoutPayment(body);
-      case GatewayName.UNIQPAY:
-        return await this.uniqpayService.makePayoutPayment(body);
+      // case GatewayName.UNIQPAY:
+      //   return await this.uniqpayService.makePayoutPayment(body);
       default:
         throw new BadRequestException('Unsupported gateway!');
     }
@@ -174,9 +170,9 @@ export class PaymentSystemService {
       res = await this.memberChannelService.getPaymentStatus(payinOrder);
     }
 
-    if (!payinOrder || !payinOrder.trackingId) return;
-
     if (payinOrder.gatewayName === GatewayName.RAZORPAY) {
+      if (!payinOrder || !payinOrder.trackingId) return;
+
       res = await this.razorpayService.getPaymentStatus(
         payinOrder.trackingId,
         environment,
@@ -233,11 +229,62 @@ export class PaymentSystemService {
       }
     }
 
-    if (payinOrder.gatewayName === GatewayName.PHONEPE)
+    if (payinOrder.gatewayName === GatewayName.PHONEPE) {
       res = await this.phonepeService.getPaymentStatus(
-        payinOrder.trackingId,
-        '',
+        payinOrder.systemOrderId,
+        environment,
       );
+
+      if (!res?.status) return;
+
+      if (res && (res.status === 'SUCCESS' || res.status === 'FAILED')) {
+        if (environment === 'sandbox') {
+          await this.payinSandboxRepository.update(
+            { systemOrderId: payinOrderId },
+            {
+              transactionId: res.details?.transactionId || 'trnx001',
+              transactionDetails: res.details?.otherPaymentDetails,
+            },
+          );
+
+          if (res.status === 'SUCCESS')
+            await this.payinSandboxRepository.update(
+              { systemOrderId: payinOrderId },
+              {
+                status: OrderStatus.COMPLETE,
+              },
+            );
+
+          if (res.status === 'FAILED')
+            await this.payinSandboxRepository.update(
+              { systemOrderId: payinOrderId },
+              {
+                status: OrderStatus.FAILED,
+              },
+            );
+        }
+
+        if (environment === 'live') {
+          await this.payinService.updatePayinStatusToSubmitted({
+            id: payinOrderId,
+            transactionId: res.details?.transactionId || 'trnx001',
+            transactionDetails: res.details?.otherPaymentDetails,
+          });
+
+          if (res.status === 'SUCCESS') {
+            await this.payinService.updatePayinStatusToComplete({
+              id: payinOrderId,
+            });
+          }
+
+          if (res.status === 'FAILED') {
+            await this.payinService.updatePayinStatusToFailed({
+              id: payinOrderId,
+            });
+          }
+        }
+      }
+    }
 
     if (res) return { status: res.status };
 
@@ -259,13 +306,10 @@ export class PaymentSystemService {
       });
 
     if (environment === 'sandbox') {
-      console.log('sandbox');
       payin = await this.payinSandboxRepository.findOne({
         where: { systemOrderId: id },
       });
     }
-
-    console.log({ payin });
 
     if (!payin) throw new NotFoundException('Payin order not found!');
 
@@ -288,8 +332,12 @@ export class PaymentSystemService {
     };
   }
 
-  async receivePhonepeRequest(request, body) {
-    const res = await this.phonepeService.receivePhonepeRequest(request, body);
+  async receivePhonepeRequest(request, body, environment) {
+    const res = await this.phonepeService.receivePhonepeRequest(
+      request,
+      body,
+      environment,
+    );
 
     if (
       res &&
