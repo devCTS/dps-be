@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
 
 import { Member } from 'src/member/entities/member.entity';
 import { Phonepe } from './../gateway/entities/phonepe.entity';
@@ -294,6 +294,7 @@ export class PaymentSystemUtilService {
         gatewayPriorityChain,
         true, // for incoming transactions / payins
         channelName,
+        amount,
       );
     }
 
@@ -318,6 +319,7 @@ export class PaymentSystemUtilService {
     gatewayObject: Record<string, GatewayName>,
     forIncoming: boolean = false, // For payins
     channelName: ChannelName = ChannelName.UPI, // If passed then it will return the gateway name where the passed channel is also enabled.
+    amount = 0,
   ): Promise<GatewayName | null> {
     // Iterates through the gateway priority chain and returns the first gateway name found which is enabled
 
@@ -371,6 +373,8 @@ export class PaymentSystemUtilService {
             enabled: true,
             channelName: channelMap[channelName],
             type: PaymentType.INCOMING,
+            minAmount: MoreThanOrEqual(amount),
+            maxAmount: LessThanOrEqual(amount),
           },
         });
 
