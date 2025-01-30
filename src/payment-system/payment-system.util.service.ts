@@ -171,16 +171,15 @@ export class PaymentSystemUtilService {
       relations: ['payinMode', 'payinMode.merchant'],
     });
 
+    console.log({ ratios });
+
     // Get ratios
-    const razorpayRatio = ratios.find(
-      (ratio) => ratio.gateway === 'gateway',
-    ).ratio;
-    const phonepayRatio = ratios.find(
-      (ratio) => ratio.gateway === 'phonepay',
-    ).ratio;
-    const memberRatio = ratios.find(
-      (ratio) => ratio.gateway === 'member',
-    ).ratio;
+    const razorpayRatio =
+      ratios.find((ratio) => ratio.gateway === 'razorpay')?.ratio || 0;
+    const phonepayRatio =
+      ratios.find((ratio) => ratio.gateway === 'phonepay')?.ratio || 0;
+    const memberRatio =
+      ratios.find((ratio) => ratio.gateway === 'member')?.ratio || 0;
 
     const baseRatio = ratios.reduce((sum, ratio) => sum + ratio.ratio, 0);
     const totalPayins = merchant.payin?.length;
@@ -214,13 +213,28 @@ export class PaymentSystemUtilService {
       { name: 'phonepe', diff: phonepeDiff, total: totalPhonepePayins },
     ];
 
+    console.log({ diffs });
+
     const maxDiff = Math.max(memberDiff, razorpayDiff, phonepeDiff);
+
+    console.log({ maxDiff });
 
     const maxDiffOptions = diffs.filter((diff) => diff.diff === maxDiff);
 
-    const selected = maxDiffOptions.reduce((prev, current) => {
-      return prev.total < current.total ? prev : current;
-    });
+    console.log({ maxDiffOptions });
+
+    const selected = maxDiffOptions.reduce(
+      (prev, current) => {
+        return prev.total < current.total ? prev : current;
+      },
+      {
+        name: '',
+        diff: 0,
+        total: 0,
+      },
+    );
+
+    console.log({ selected });
 
     if (selected.name === 'member') {
       const intervalId = setInterval(async () => {
@@ -373,12 +387,12 @@ export class PaymentSystemUtilService {
             enabled: true,
             channelName: channelMap[channelName],
             type: PaymentType.INCOMING,
-            minAmount: MoreThanOrEqual(amount),
-            maxAmount: LessThanOrEqual(amount),
+            minAmount: LessThanOrEqual(amount),
+            maxAmount: MoreThanOrEqual(amount),
           },
         });
 
-        if (channelEnabled) return gateway;
+        if (channelEnabled && isGatewayEnabled) return gateway;
       }
 
       if (isGatewayEnabled && !forIncoming) return gateway;
@@ -429,6 +443,8 @@ export class PaymentSystemUtilService {
       default:
         break;
     }
+
+    if (!selectedPaymentMode) return;
 
     const isMember = !!selectedPaymentMode?.id;
     let paymentDetails;

@@ -116,10 +116,6 @@ export class PhonepeService {
 
       const response = await firstValueFrom<any>(observable);
 
-      console.log({
-        url: response.data.data.instrumentResponse.redirectInfo.url,
-      });
-
       return {
         url: response.data.data.instrumentResponse.redirectInfo.url,
         transactionId: orderId,

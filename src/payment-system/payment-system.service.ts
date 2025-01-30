@@ -67,6 +67,7 @@ export class PaymentSystemService {
         integrationId: createPaymentOrderDto.integrationId,
       },
       relations: [
+        'payin',
         'payinModeDetails',
         'payinModeDetails.proportionalRange',
         'payinModeDetails.amountRangeRange',
