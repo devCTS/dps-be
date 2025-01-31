@@ -59,32 +59,10 @@ export class PaymentSystemUtilService {
   async fetchForDefault(merchant, channelName, amount) {
     // If both member and gateway are enabled by the merchant
     if (merchant.allowMemberChannelsPayin && merchant.allowPgBackupForPayin) {
-      let selectedMember;
-      const startTime = Date.now();
-      const payinTimeout =
-        (await this.systemConfigService.findLatest()).payinTimeout * 1000;
-
-      // Find an eligible online member with the interval of 0.5 sec until payin timeout
-      const findMemberPromise = new Promise((resolve, reject) => {
-        const intervalId = setInterval(async () => {
-          if (Date.now() - startTime >= payinTimeout) {
-            clearInterval(intervalId);
-            resolve(null); // No member found within the timeout
-          }
-
-          selectedMember = await this.getMemberForPayin(channelName, amount);
-          // If an eligible online member is found, clear interval and resolve the promise
-          if (selectedMember) {
-            clearInterval(intervalId);
-            resolve(selectedMember);
-          }
-        }, 500);
+      let selectedMember = await this.getMemberWithIntervalCalls({
+        channelName,
+        amount,
       });
-
-      // Await the result of finding a member
-      selectedMember = await findMemberPromise;
-
-      // If no eligible member is found, fetch the gateway
       if (!selectedMember)
         selectedMember = await this.getGatewayForPayin(channelName, amount);
 
@@ -171,13 +149,11 @@ export class PaymentSystemUtilService {
       relations: ['payinMode', 'payinMode.merchant'],
     });
 
-    console.log({ ratios });
-
     // Get ratios
     const razorpayRatio =
       ratios.find((ratio) => ratio.gateway === 'razorpay')?.ratio || 0;
     const phonepayRatio =
-      ratios.find((ratio) => ratio.gateway === 'phonepay')?.ratio || 0;
+      ratios.find((ratio) => ratio.gateway === 'phonepe')?.ratio || 0;
     const memberRatio =
       ratios.find((ratio) => ratio.gateway === 'member')?.ratio || 0;
 
@@ -213,55 +189,42 @@ export class PaymentSystemUtilService {
       { name: 'phonepe', diff: phonepeDiff, total: totalPhonepePayins },
     ];
 
-    console.log({ diffs });
+    diffs.sort((a, b) => {
+      if (b.diff !== a.diff) return b.diff - a.diff;
 
-    const maxDiff = Math.max(memberDiff, razorpayDiff, phonepeDiff);
+      return b.total - a.total;
+    });
 
-    console.log({ maxDiff });
-
-    const maxDiffOptions = diffs.filter((diff) => diff.diff === maxDiff);
-
-    console.log({ maxDiffOptions });
-
-    const selected = maxDiffOptions.reduce(
-      (prev, current) => {
-        return prev.total < current.total ? prev : current;
-      },
-      {
-        name: '',
-        diff: 0,
-        total: 0,
-      },
-    );
-
-    console.log({ selected });
-
-    if (selected.name === 'member') {
-      const intervalId = setInterval(async () => {
-        const selectedMember = await this.getMemberForPayin(
+    for (const element of diffs) {
+      if (element.name === 'member') {
+        const selectedMember = await this.getMemberWithIntervalCalls({
           channelName,
           amount,
+        });
+
+        if (selectedMember) return selectedMember;
+      }
+
+      if (element.name === 'razorpay') {
+        const selectedGateway = await this.getGatewayForPayin(
+          channelName,
+          amount,
+          GatewayName.RAZORPAY,
         );
-        if (selectedMember) {
-          clearInterval(intervalId);
-          return selectedMember;
-        }
-      }, 500);
+
+        if (selectedGateway) return selectedGateway;
+      }
+
+      if (element.name === 'phonepe') {
+        const selectedGateway = await this.getGatewayForPayin(
+          channelName,
+          amount,
+          GatewayName.PHONEPE,
+        );
+
+        if (selectedGateway) return selectedGateway;
+      }
     }
-
-    if (selected.name === 'razorpay')
-      return await this.getGatewayForPayin(
-        channelName,
-        amount,
-        GatewayName.RAZORPAY,
-      );
-
-    if (selected.name === 'phonepe')
-      return await this.getGatewayForPayin(
-        channelName,
-        amount,
-        GatewayName.PHONEPE,
-      );
   }
 
   async getMemberForPayin(channelName, amount) {
@@ -301,7 +264,13 @@ export class PaymentSystemUtilService {
 
     let selectedGateway = null;
     if (priority) {
-      selectedGateway = priority;
+      selectedGateway = await this.checkForGatewayAndChannelEnabled(
+        priority,
+        channelName,
+        amount,
+        true,
+      );
+      if (!selectedGateway) return null;
     } else {
       // getFirstEnableGateway will return gateway name which is enabled for incoming transactions + the requested/passed channel is also enabled on that gateway.
       selectedGateway = await this.getFirstEnabledGateway(
@@ -327,6 +296,72 @@ export class PaymentSystemUtilService {
     }
 
     return selectedGateway;
+  }
+
+  async checkForGatewayAndChannelEnabled(
+    gateway: GatewayName,
+    channelName: ChannelName,
+    amount,
+    forIncoming: boolean,
+  ) {
+    let isGatewayEnabled;
+    let whereConditions;
+
+    const channelMap = {
+      upi: ChannelName.UPI,
+      netBanking: ChannelName.BANKING,
+      eWallet: ChannelName.E_WALLET,
+    };
+
+    if (forIncoming)
+      whereConditions = {
+        incoming: true,
+      };
+    else
+      whereConditions = {
+        outgoing: true,
+      };
+
+    switch (gateway) {
+      case GatewayName.PHONEPE:
+        isGatewayEnabled = await this.phonePeRepository.findOne({
+          where: whereConditions,
+        });
+        break;
+
+      case GatewayName.RAZORPAY:
+        isGatewayEnabled = await this.razorpayRepository.findOne({
+          where: whereConditions,
+        });
+        break;
+
+      case GatewayName.UNIQPAY:
+        isGatewayEnabled = false;
+        break;
+
+      default:
+        break;
+    }
+
+    let channelEnabled = null;
+    if (forIncoming) {
+      channelEnabled = await this.channelSettingsRepository.findOne({
+        where: {
+          gatewayName: gateway,
+          enabled: true,
+          channelName: channelMap[channelName],
+          type: PaymentType.INCOMING,
+          minAmount: LessThanOrEqual(amount),
+          maxAmount: MoreThanOrEqual(amount),
+        },
+      });
+
+      if (channelEnabled && isGatewayEnabled) return gateway;
+    }
+
+    if (isGatewayEnabled && !forIncoming) return gateway;
+
+    return null;
   }
 
   async getFirstEnabledGateway(
@@ -569,5 +604,33 @@ export class PaymentSystemUtilService {
         gatewayName,
       );
     }, 1000);
+  }
+
+  async getMemberWithIntervalCalls({ channelName, amount }) {
+    let selectedMember;
+    const startTime = Date.now();
+    const payinTimeout =
+      (await this.systemConfigService.findLatest()).payinTimeout * 1000;
+
+    // Find an eligible online member with the interval of 0.5 sec until payin timeout
+    const findMemberPromise = new Promise((resolve, reject) => {
+      const intervalId = setInterval(async () => {
+        if (Date.now() - startTime >= payinTimeout) {
+          clearInterval(intervalId);
+          resolve(null); // No member found within the timeout
+        }
+
+        selectedMember = await this.getMemberForPayin(channelName, amount);
+        // If an eligible online member is found, clear interval and resolve the promise
+        if (selectedMember) {
+          clearInterval(intervalId);
+          resolve(selectedMember);
+        }
+      }, 500);
+    });
+
+    // Await the result of finding a member
+    selectedMember = await findMemberPromise;
+    return selectedMember;
   }
 }
