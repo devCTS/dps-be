@@ -110,31 +110,41 @@ export class PaymentSystemUtilService {
       if (payinAmount >= range.lower && payinAmount <= range.upper)
         selectedGateway = range.gateway;
 
-    if (selectedGateway === GatewayName.RAZORPAY) {
-      return await this.getGatewayForPayin(
+    if (selectedGateway?.toUpperCase() === GatewayName.MEMBER) {
+      const selectedMember = await this.getMemberWithIntervalCalls({
+        channelName,
+        amount: payinAmount,
+      });
+      if (selectedMember) return selectedMember;
+    }
+
+    if (selectedGateway?.toUpperCase() === GatewayName.RAZORPAY) {
+      const selectedGateway = await this.getGatewayForPayin(
         channelName,
         payinAmount,
         GatewayName.RAZORPAY,
       );
-    } else if (selectedGateway === GatewayName.PHONEPE) {
-      return await this.getGatewayForPayin(
+
+      if (selectedGateway) return selectedGateway;
+    }
+
+    if (selectedGateway?.toUpperCase() === GatewayName.PHONEPE) {
+      const selectedGateway = await this.getGatewayForPayin(
         channelName,
         payinAmount,
         GatewayName.PHONEPE,
       );
-    } else {
-      // If no gateway is found then Keep finding the eligible member with an interval of 0.5 sec indefinitely until found.
-      const intervalId = setInterval(async () => {
-        const selectedMember = await this.getMemberForPayin(
-          channelName,
-          payinAmount,
-        );
-        if (selectedMember) {
-          clearInterval(intervalId);
-          return selectedMember;
-        }
-      }, 500);
+
+      if (selectedGateway) return selectedGateway;
     }
+
+    const selectedFallbackMethod = await this.fetchForDefault(
+      merchant,
+      channelName,
+      payinAmount,
+    );
+
+    return selectedFallbackMethod;
   }
 
   async fetchForProportional(merchant: Merchant, channelName, amount) {
