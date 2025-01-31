@@ -56,13 +56,16 @@ export class PaymentSystemUtilService {
     private readonly payinGateway: PayinGateway,
   ) {}
 
-  async fetchForDefault(merchant, channelName, amount) {
+  async fetchForDefault(merchant, channelName, amount, disableMember = false) {
     // If both member and gateway are enabled by the merchant
     if (merchant.allowMemberChannelsPayin && merchant.allowPgBackupForPayin) {
-      let selectedMember = await this.getMemberWithIntervalCalls({
-        channelName,
-        amount,
-      });
+      let selectedMember =
+        !disableMember &&
+        (await this.getMemberWithIntervalCalls({
+          channelName,
+          amount,
+        }));
+
       if (!selectedMember)
         selectedMember = await this.getGatewayForPayin(channelName, amount);
 
@@ -142,6 +145,7 @@ export class PaymentSystemUtilService {
       merchant,
       channelName,
       payinAmount,
+      true,
     );
 
     return selectedFallbackMethod;
@@ -292,18 +296,18 @@ export class PaymentSystemUtilService {
     }
 
     // If no gateway is found then Keep finding the eligible member with an interval of 0.5 sec indefinitely until found.
-    if (!selectedGateway) {
-      const intervalId = setInterval(async () => {
-        const selectedMember = await this.getMemberForPayin(
-          channelName,
-          amount,
-        );
-        if (selectedMember) {
-          clearInterval(intervalId);
-          return selectedMember;
-        }
-      }, 500);
-    }
+    // if (!selectedGateway) {
+    //   const intervalId = setInterval(async () => {
+    //     const selectedMember = await this.getMemberForPayin(
+    //       channelName,
+    //       amount,
+    //     );
+    //     if (selectedMember) {
+    //       clearInterval(intervalId);
+    //       return selectedMember;
+    //     }
+    //   }, 500);
+    // }
 
     return selectedGateway;
   }
