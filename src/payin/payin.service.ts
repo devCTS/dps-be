@@ -12,7 +12,6 @@ import { Payin } from './entities/payin.entity';
 import {
   AlertType,
   CallBackStatus,
-  ChannelName,
   GatewayName,
   NotificationType,
   OrderStatus,
@@ -39,9 +38,7 @@ import { EndUser } from 'src/end-user/entities/end-user.entity';
 import { FundRecordService } from 'src/fund-record/fund-record.service';
 import { NotificationService } from 'src/notification/notification.service';
 import { AlertService } from 'src/alert/alert.service';
-import { Team } from 'src/team/entities/team.entity';
 import { PayinSandbox } from './entities/payin-sandbox.entity';
-import { env } from 'process';
 
 @Injectable()
 export class PayinService {
@@ -58,8 +55,6 @@ export class PayinService {
     private readonly endUserRepository: Repository<EndUser>,
     @InjectRepository(TransactionUpdate)
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
-    @InjectRepository(Team)
-    private readonly teamRepository: Repository<Team>,
 
     private readonly transactionUpdateService: TransactionUpdatesPayinService,
     private readonly endUserService: EndUserService,
@@ -73,16 +68,8 @@ export class PayinService {
   ) {}
 
   async create(payinDetails: CreatePaymentOrderDto) {
-    const {
-      userId,
-      userEmail,
-      userName,
-      userMobileNumber,
-      channel,
-      integrationId,
-      orderId,
-      amount,
-    } = payinDetails;
+    const { userId, userName, channel, integrationId, orderId, amount } =
+      payinDetails;
 
     const merchant = await this.merchantRepository.findOne({
       where: {
@@ -103,8 +90,6 @@ export class PayinService {
 
     if (!endUser)
       endUser = await this.endUserService.create({
-        email: userEmail,
-        mobile: userMobileNumber,
         name: userName,
         channel,
         userId,
@@ -220,9 +205,7 @@ export class PayinService {
   async createAndAssignSandbox(payinDetails: CreatePaymentOrderSandboxDto) {
     const {
       userId,
-      userEmail,
       userName,
-      userMobileNumber,
       orderId,
       amount,
       channel,
@@ -244,8 +227,6 @@ export class PayinService {
       merchantOrderId: orderId,
       user: {
         name: userName,
-        email: userEmail,
-        mobile: userMobileNumber,
         userId,
       },
       systemOrderId: `PAYIN-SANDBOX-${uniqid()}`.toUpperCase(),

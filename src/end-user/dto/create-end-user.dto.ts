@@ -8,11 +8,13 @@ export class CreateEndUserDto {
   @IsString()
   userId: string;
 
+  @IsOptional()
   @IsString()
-  email: string;
+  email?: string;
 
+  @IsOptional()
   @IsString()
-  mobile: string;
+  mobile?: string;
 
   @IsString()
   channel: string;

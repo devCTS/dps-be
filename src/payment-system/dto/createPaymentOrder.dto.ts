@@ -21,16 +21,9 @@ export class CreatePaymentOrderDto {
   @IsNotEmpty()
   userId: string;
 
-  @IsEmail()
-  @IsNotEmpty()
-  userEmail: string;
-
   @IsString()
   @IsNotEmpty()
   userName: string;
-
-  @IsNotEmpty()
-  userMobileNumber: string;
 
   @IsAlphanumeric()
   @IsNotEmpty()
@@ -94,16 +87,9 @@ export class CreatePaymentOrderSandboxDto {
   @IsNotEmpty()
   userId: string;
 
-  @IsEmail()
-  @IsNotEmpty()
-  userEmail: string;
-
   @IsString()
   @IsNotEmpty()
   userName: string;
-
-  @IsNotEmpty()
-  userMobileNumber: string;
 
   @IsEnum(ChannelName)
   channel: ChannelName;

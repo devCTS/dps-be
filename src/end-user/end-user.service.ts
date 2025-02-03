@@ -137,8 +137,8 @@ export class EndUserService {
     return {
       userName: endUser.name,
       userId: endUser.userId,
-      userEmail: endUser.email,
-      userMobile: endUser.mobile,
+      userEmail: endUser?.email || '',
+      userMobile: endUser?.mobile || '',
     };
   }
 }
