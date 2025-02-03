@@ -68,6 +68,7 @@ export class PaymentSystemService {
       },
       relations: [
         'payin',
+        'payin.member',
         'payinModeDetails',
         'payinModeDetails.proportionalRange',
         'payinModeDetails.amountRangeRange',
