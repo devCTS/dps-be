@@ -10,6 +10,7 @@ export const loadPhonepeData = () => {
     sandbox_salt_index: 'dummy_secret_key',
   };
 };
+
 export const loadRazorpayData = () => {
   return {
     incoming: true,
@@ -22,13 +23,13 @@ export const loadRazorpayData = () => {
     sandbox_account_number: '1234 1234 1234',
   };
 };
+
 export const loadUniqpayData = () => {
   return {
     incoming: false,
     outgoing: true,
-    key_secret: 'dummy_secret_key',
-    key_id: 'dummy_secret_key',
-    sandbox_key_id: 'dummy_secret_key',
-    sandbox_key_secret: 'dummy_secret_key',
+    uniqpay_id: '123123123123',
+    client_id: '123123123123',
+    client_secret_id: '123123123123',
   };
 };

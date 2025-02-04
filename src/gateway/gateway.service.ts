@@ -39,6 +39,7 @@ export class GatewayService {
     private readonly phonepeRepository: Repository<Phonepe>,
     @InjectRepository(Uniqpay)
     private readonly uniqpayRepository: Repository<Uniqpay>,
+
     private jwtService: JwtService,
   ) {}
 
@@ -51,12 +52,7 @@ export class GatewayService {
     'sandbox_account_number',
   ];
 
-  secretTextKeysUniqpay = [
-    'key_secret',
-    'key_id',
-    'sandbox_key_id',
-    'sandbox_key_secret',
-  ];
+  secretTextKeysUniqpay = ['uniqpay_id', 'client_id', 'client_secret'];
 
   secretTextKeysPhonepe = [
     'merchant_id',
@@ -165,7 +161,7 @@ export class GatewayService {
 
     secretTextKeys.forEach((key) => {
       secretTextKeys.forEach((key) => {
-        createUniqpayDto[key] = this.jwtService.getHashPassword(
+        createUniqpayDto[key] = this.jwtService.encryptValue(
           createUniqpayDto[key],
         );
       });
@@ -191,7 +187,7 @@ export class GatewayService {
 
     secretTextKeys.forEach((key) => {
       if (updateUniqpayDto[key])
-        updatedData[key] = this.jwtService.getHashPassword(updatedData[key]);
+        updatedData[key] = this.jwtService.encryptValue(updatedData[key]);
     });
 
     await this.uniqpayRepository.update(existingData[0]?.id, updatedData);

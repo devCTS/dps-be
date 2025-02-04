@@ -43,6 +43,8 @@ import { NotificationService } from 'src/notification/notification.service';
 import { AlertService } from 'src/alert/alert.service';
 import { IdentityService } from 'src/identity/identity.service';
 import { RazorpayService } from 'src/payment-system/razorpay/razorpay.service';
+import { map } from 'rxjs';
+import { UniqpayService } from 'src/payment-system/uniqpay/uniqpay.service';
 
 @Injectable()
 export class PayoutService {
@@ -71,6 +73,7 @@ export class PayoutService {
     private readonly notificationService: NotificationService,
     private readonly identityService: IdentityService,
     private readonly razorpayService: RazorpayService,
+    private readonly uniqpayService: UniqpayService,
 
     @Inject(forwardRef(() => AlertService))
     private readonly alertService: AlertService,
@@ -225,16 +228,17 @@ export class PayoutService {
             transactionDetails: result.transactionDetails,
           });
 
-          if (result.paymentStatus === 'processed')
+          const mappedStatus = this.mapAndGetGatewayPayoutStatus(
+            result.gatewayName,
+            result.paymentStatus,
+          );
+
+          if (mappedStatus === 'SUCCESS')
             await this.updatePayoutStatusToComplete({
               id: payout.systemOrderId,
             });
 
-          if (
-            result.paymentStatus === 'failed' ||
-            result.status === 'rejected' ||
-            result.status === 'cancelled'
-          )
+          if (mappedStatus === 'FAILED')
             await this.updatePayoutStatusToFailed({
               id: payout.systemOrderId,
             });
@@ -718,20 +722,61 @@ export class PayoutService {
             payout.transactionId,
           );
 
-        if (response?.status === 'processed')
+        if (payout.gatewayName === GatewayName.UNIQPAY)
+          response = await this.uniqpayService.getPayoutDetails(
+            payout.transactionId,
+          );
+
+        const mappedStatus = this.mapAndGetGatewayPayoutStatus(
+          payout.gatewayName,
+          response?.status,
+        );
+
+        if (mappedStatus === 'SUCCESS')
           await this.updatePayoutStatusToComplete({
             id: payout.systemOrderId,
           });
 
-        if (
-          response?.status === 'failed' ||
-          response?.status === 'rejected' ||
-          response?.status === 'cancelled'
-        )
+        if (mappedStatus === 'FAILED')
           await this.updatePayoutStatusToFailed({
             id: payout.systemOrderId,
           });
       }
     });
+  }
+
+  private mapAndGetGatewayPayoutStatus(
+    gateway: GatewayName,
+    status: string,
+  ): 'FAILED' | 'SUCCESS' | 'PENDING' {
+    switch (gateway) {
+      case GatewayName.RAZORPAY:
+        if (status === 'processed') return 'SUCCESS';
+        if (
+          status === 'failed' ||
+          status === 'rejected' ||
+          status === 'cancelled'
+        )
+          return 'FAILED';
+
+        return 'PENDING';
+
+      case GatewayName.UNIQPAY:
+        if (status === 'Transaction Successful') return 'SUCCESS';
+
+        if (
+          status === 'Transaction Failed' ||
+          status === 'FAILED' ||
+          status === 'FORBIDDEN' ||
+          status === 'Internal processing error' ||
+          status === 'Duplicate Transaction'
+        )
+          return 'FAILED';
+
+        return 'PENDING';
+
+      default:
+        return 'PENDING';
+    }
   }
 }

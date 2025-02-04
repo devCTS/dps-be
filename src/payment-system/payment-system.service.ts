@@ -114,7 +114,7 @@ export class PaymentSystemService {
   }
 
   async makeGatewayPayout(body): Promise<any> {
-    const { userId, orderId, amount, orderType } = body;
+    const { orderType } = body;
 
     if (!orderType) throw new BadRequestException('Order Type Required!');
 
@@ -136,12 +136,12 @@ export class PaymentSystemService {
 
   private async processPaymentWithGateway(gatewayName: GatewayName, body: any) {
     switch (gatewayName) {
-      // case GatewayName.PHONEPE:
-      //   return await this.phonepeService.makePayoutPayment(body);
       case GatewayName.RAZORPAY:
         return await this.razorpayService.makePayoutPayment(body);
-      // case GatewayName.UNIQPAY:
-      //   return await this.uniqpayService.makePayoutPayment(body);
+
+      case GatewayName.UNIQPAY:
+        return await this.uniqpayService.makePayoutPayment(body);
+
       default:
         throw new BadRequestException('Unsupported gateway!');
     }

@@ -28,6 +28,7 @@ import { MemberChannelModule } from './member/member-channel.module';
 import { MemberChannelService } from './member/member-channel.service';
 import { JwtModule } from 'src/services/jwt/jwt.module';
 import { PayinSandbox } from 'src/payin/entities/payin-sandbox.entity';
+import { Uniqpay } from 'src/gateway/entities/uniqpay.entity';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { PayinSandbox } from 'src/payin/entities/payin-sandbox.entity';
       AmountRangePayinMode,
       ProportionalPayinMode,
       EndUser,
+      Uniqpay,
     ]),
     PhonePeModule,
     RazorpayModule,

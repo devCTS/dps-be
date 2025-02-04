@@ -12,19 +12,27 @@ export class CreateUniqpayDto {
 
   @IsNotEmpty()
   @IsString()
-  key_secret: string;
+  uniqpay_id: string;
 
   @IsNotEmpty()
   @IsString()
-  key_id: string;
+  client_id: string;
 
   @IsNotEmpty()
   @IsString()
-  sandbox_key_id: string;
-
-  @IsNotEmpty()
-  @IsString()
-  sandbox_key_secret: string;
+  client_secret: string;
 }
 
-export class UpdateUniqpayDto extends PartialType(CreateUniqpayDto) {}
+export class UpdateUniqpayDto {
+  @IsNotEmpty()
+  @IsString()
+  uniqpay_id: string;
+
+  @IsNotEmpty()
+  @IsString()
+  client_id: string;
+
+  @IsNotEmpty()
+  @IsString()
+  client_secret: string;
+}

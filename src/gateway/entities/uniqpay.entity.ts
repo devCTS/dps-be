@@ -11,15 +11,12 @@ export class Uniqpay {
   @Column()
   outgoing: boolean;
 
-  @Column()
-  key_secret: string;
+  @Column({ nullable: true })
+  uniqpay_id: string;
 
-  @Column()
-  key_id: string;
+  @Column({ nullable: true })
+  client_id: string;
 
-  @Column()
-  sandbox_key_id: string;
-
-  @Column()
-  sandbox_key_secret: string;
+  @Column({ nullable: true })
+  client_secret: string;
 }

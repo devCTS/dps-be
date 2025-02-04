@@ -23,6 +23,7 @@ import { AlertModule } from 'src/alert/alert.module';
 import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
 import { IdentityModule } from 'src/identity/identity.module';
 import { RazorpayModule } from 'src/payment-system/razorpay/razorpay.module';
+import { UniqpayModule } from 'src/payment-system/uniqpay/uniqpay.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { RazorpayModule } from 'src/payment-system/razorpay/razorpay.module';
     forwardRef(() => AlertModule),
     IdentityModule,
     RazorpayModule,
+    UniqpayModule,
   ],
   controllers: [PayoutController],
   providers: [
