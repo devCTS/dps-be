@@ -59,6 +59,9 @@ import { OrganizationModule } from './organization/organization.module';
         autoLoadEntities: true,
         synchronize: true,
         namingStrategy: new SnakeNamingStrategy(),
+        ssl: {
+          rejectUnauthorized: false,
+        },
       }),
       inject: [ConfigService],
     }),
