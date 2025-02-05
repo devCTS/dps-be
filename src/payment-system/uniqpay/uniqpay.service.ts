@@ -101,7 +101,7 @@ export class UniqpayService {
       );
       return response.data;
     } catch (error) {
-      console.log({ error: error.response.data });
+      console.log({ error: JSON.stringify(error.response.data) });
     }
   }
 
@@ -123,7 +123,7 @@ export class UniqpayService {
       name: endUser.name,
       email: endUser.email,
       phone: endUser.mobile,
-      address: '',
+      address: 'INDIA',
       bankAccount: userChannelDetails['NET_BANKING']['Account Number'],
       ifsc: userChannelDetails['NET_BANKING']['IFSC Code'],
       transferMode: mode,
@@ -134,7 +134,7 @@ export class UniqpayService {
 
     const response: any = await this.createPayout(payoutPayload);
 
-    console.log({ response });
+    console.log({ response: JSON.stringify(response) });
 
     return {
       gatewayName: GatewayName.UNIQPAY,

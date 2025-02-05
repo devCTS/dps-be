@@ -213,6 +213,8 @@ export class PayoutService {
           mode: payout.channel === ChannelName.UPI ? 'UPI' : 'IMPS',
         });
 
+        console.log({ result });
+
         await this.updatePayoutStatusToAssigned({
           id: payout.systemOrderId,
           paymentMode: PaymentMadeOn.GATEWAY,
@@ -316,31 +318,32 @@ export class PayoutService {
       throw new NotAcceptableException('Daily payout limit reached');
     }
 
-    if (
-      !memberData.identity.upi &&
-      !memberData.identity.netBanking &&
-      !memberData.identity.eWallet
-    ) {
-      throw new NotFoundException('Channels not found');
+    if (payoutOrderData.payoutMadeVia === PaymentMadeOn.MEMBER) {
+      if (
+        !memberData.identity.upi &&
+        !memberData.identity.netBanking &&
+        !memberData.identity.eWallet
+      )
+        throw new NotFoundException('Channels not found');
+
+      if (
+        payoutOrderData.channel === ChannelName.UPI &&
+        !memberData.identity.upi.length
+      )
+        throw new NotFoundException('UPI channel is not registered!');
+
+      if (
+        payoutOrderData.channel === ChannelName.E_WALLET &&
+        !memberData.identity?.eWallet?.length
+      )
+        throw new NotFoundException('E-Wallet channel is not registered!');
+
+      if (
+        payoutOrderData.channel === ChannelName.BANKING &&
+        !memberData.identity?.netBanking?.length
+      )
+        throw new NotFoundException('NetBanking channel is not registered!');
     }
-
-    if (
-      payoutOrderData.channel === ChannelName.UPI &&
-      !memberData.identity.upi.length
-    )
-      throw new NotFoundException('UPI channel is not registered!');
-
-    if (
-      payoutOrderData.channel === ChannelName.E_WALLET &&
-      !memberData.identity?.eWallet?.length
-    )
-      throw new NotFoundException('E-Wallet channel is not registered!');
-
-    if (
-      payoutOrderData.channel === ChannelName.BANKING &&
-      !memberData.identity?.netBanking?.length
-    )
-      throw new NotFoundException('NetBanking channel is not registered!');
 
     if (
       paymentMode === PaymentMadeOn.GATEWAY &&

@@ -25,6 +25,14 @@ export class CreatePaymentOrderDto {
   @IsNotEmpty()
   userName: string;
 
+  @IsOptional()
+  @IsString()
+  userEmail?: string;
+
+  @IsOptional()
+  @IsString()
+  userMobileNumber?: string;
+
   @IsAlphanumeric()
   @IsNotEmpty()
   integrationId: string;
@@ -90,6 +98,14 @@ export class CreatePaymentOrderSandboxDto {
   @IsString()
   @IsNotEmpty()
   userName: string;
+
+  @IsOptional()
+  @IsString()
+  userEmail?: string;
+
+  @IsOptional()
+  @IsString()
+  userMobileNumber?: string;
 
   @IsEnum(ChannelName)
   channel: ChannelName;

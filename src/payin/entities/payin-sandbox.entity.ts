@@ -56,8 +56,8 @@ export class PayinSandbox {
   @Column({ type: 'json' })
   user: {
     name: string;
-    mobile: string;
-    email: string;
+    mobile?: string | null;
+    email?: string | null;
     userId: string;
   };
 

@@ -27,6 +27,7 @@ import { PhonepeService } from './phonepe/phonepe.service';
 import { RazorpayService } from './razorpay/razorpay.service';
 import { PayinGateway } from 'src/socket/payin.gateway';
 import { PayinSandbox } from 'src/payin/entities/payin-sandbox.entity';
+import { Uniqpay } from 'src/gateway/entities/uniqpay.entity';
 
 @Injectable()
 export class PaymentSystemUtilService {
@@ -37,6 +38,8 @@ export class PaymentSystemUtilService {
     private readonly phonePeRepository: Repository<Phonepe>,
     @InjectRepository(Razorpay)
     private readonly razorpayRepository: Repository<Razorpay>,
+    @InjectRepository(Uniqpay)
+    private readonly uniqpayRepository: Repository<Uniqpay>,
     @InjectRepository(Payin)
     private readonly payinRepository: Repository<Payin>,
     @InjectRepository(PayinSandbox)
@@ -421,7 +424,9 @@ export class PaymentSystemUtilService {
           break;
 
         case GatewayName.UNIQPAY:
-          isGatewayEnabled = false;
+          isGatewayEnabled = await this.uniqpayRepository.findOne({
+            where: whereConditions,
+          });
           break;
 
         default:
