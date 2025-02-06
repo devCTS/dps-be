@@ -206,3 +206,56 @@ export const mapAndGetGatewayPayoutStatus = (
       return 'PENDING';
   }
 };
+
+export const sanitizeRazorpayDetails = (response) => {
+  return {
+    Bank: response.bank || undefined,
+    Contact: response.contact || undefined,
+    Currency: response.currency || undefined,
+    Description: response.description || undefined,
+    Fee: response.fee ?? undefined,
+    'Payment Method': response.method || undefined,
+    'Payment Status': response.status || undefined,
+    Tax: response.tax ?? undefined,
+    UPI: response.vpa || undefined,
+    Wallet: response.wallet || undefined,
+  };
+};
+
+export const sanitizePhonepeDetails = (response) => {
+  return {
+    Description: response.message || undefined,
+    Fee: response.data?.feesContext?.amount ?? undefined,
+    'Payment Method': response.data?.paymentInstrument?.type || undefined,
+    'Payment Status': response.data?.responseCode || undefined,
+  };
+};
+
+export const sanitizeUniqpayDetails = (response) => {
+  return {
+    Contact:
+      response.transactionDetails?.beneficiaryInformation?.phone || undefined,
+    Bank:
+      response.transactionDetails?.beneficiaryAccountInformation
+        ?.accountNumber || undefined,
+    Fee: response.data?.charges?.totalCharges ?? undefined,
+    'Payment Method': response.transactionDetails?.transferMode || undefined,
+    Tax: response.data?.charges?.gstCharges ?? undefined,
+  };
+};
+
+export const sanitizeTransactionDetails = (
+  gatewayName: GatewayName,
+  response: any,
+) => {
+  if (!response || !gatewayName) return null;
+
+  if (gatewayName === GatewayName.RAZORPAY)
+    return sanitizeRazorpayDetails(response);
+
+  if (gatewayName === GatewayName.PHONEPE)
+    return sanitizePhonepeDetails(response);
+
+  if (gatewayName === GatewayName.UNIQPAY)
+    return sanitizeUniqpayDetails(response);
+};

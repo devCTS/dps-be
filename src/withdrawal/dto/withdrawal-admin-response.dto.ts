@@ -10,6 +10,7 @@ import {
 } from 'src/utils/enum/enum';
 import { roundOffAmount } from 'src/utils/utils';
 import { TransformChannelDetails } from './withdrawal-user-response.dto';
+import { TransformTransactionDetails } from 'src/payin/dto/payin-admin-response.dto';
 
 @Exclude()
 export class WithdrawalAdminResponseDto {

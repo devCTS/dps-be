@@ -1,6 +1,7 @@
 import {
   getServicerRateForMerchant,
   roundOffAmount,
+  sanitizeTransactionDetails,
 } from './../../utils/utils';
 import { Exclude, Expose, Transform } from 'class-transformer';
 import {
@@ -274,7 +275,8 @@ function TransformBalancesAndProfit() {
 
 export function TransformTransactionDetails() {
   return Transform(
-    ({ value }) => {
+    ({ value, obj }) => {
+      const gatewayName = obj?.gatewayName || null;
       const formatMemberChannelDetails = (member) => {
         if (member.upiId)
           return {
@@ -301,7 +303,7 @@ export function TransformTransactionDetails() {
       return {
         transactionId: value.transactionId,
         receipt: value.receipt,
-        gateway: value.gateway,
+        gateway: sanitizeTransactionDetails(gatewayName, value.gateway),
         member: value.member ? formatMemberChannelDetails(value.member) : null,
       };
     },
