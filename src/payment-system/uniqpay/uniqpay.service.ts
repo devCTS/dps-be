@@ -134,14 +134,12 @@ export class UniqpayService {
 
     const response: any = await this.createPayout(payoutPayload);
 
-    console.log({ response: JSON.stringify(response) });
-
     return {
       gatewayName: GatewayName.UNIQPAY,
-      transactionId: response?.transactionDetails?.transferId,
+      transactionId: response?.response?.transactionDetails?.transferId,
       transactionReceipt: 'UNIQPAY',
-      paymentStatus: response?.status,
-      transactionDetails: response,
+      paymentStatus: response?.response?.status,
+      transactionDetails: response?.response,
     };
   }
 
@@ -170,11 +168,9 @@ export class UniqpayService {
         ),
       );
 
-      console.log({ response });
-
       return {
-        status: response.data.status,
-        details: response.data,
+        status: response.data?.response?.status,
+        details: response.data?.response,
       };
     } catch (error) {
       throw new Error('Failed to fetch payout details');

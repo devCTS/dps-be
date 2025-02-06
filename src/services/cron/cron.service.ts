@@ -14,8 +14,12 @@ export class CronService {
 
   //   '0 */15 * * * *';
   @Cron(CronExpression.EVERY_5_SECONDS)
-  handleCron() {
+  handleTopupOrders() {
     this.topupService.checkAndCreate();
+  }
+
+  @Cron(CronExpression.EVERY_MINUTE)
+  handlePendingGatewayPayouts() {
     this.payoutService.fetchPendingPayoutsAndUpdateStatus();
   }
 

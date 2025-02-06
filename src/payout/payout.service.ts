@@ -213,8 +213,6 @@ export class PayoutService {
           mode: payout.channel === ChannelName.UPI ? 'UPI' : 'IMPS',
         });
 
-        console.log({ result });
-
         await this.updatePayoutStatusToAssigned({
           id: payout.systemOrderId,
           paymentMode: PaymentMadeOn.GATEWAY,
