@@ -43,8 +43,8 @@ import { NotificationService } from 'src/notification/notification.service';
 import { AlertService } from 'src/alert/alert.service';
 import { IdentityService } from 'src/identity/identity.service';
 import { RazorpayService } from 'src/payment-system/razorpay/razorpay.service';
-import { map } from 'rxjs';
 import { UniqpayService } from 'src/payment-system/uniqpay/uniqpay.service';
+import { mapAndGetGatewayPayoutStatus } from 'src/utils/utils';
 
 @Injectable()
 export class PayoutService {
@@ -211,16 +211,18 @@ export class PayoutService {
           amount: payout.amount,
           orderType: OrderType.PAYOUT,
           mode: payout.channel === ChannelName.UPI ? 'UPI' : 'IMPS',
+          forInternalUsers: false,
         });
 
-        await this.updatePayoutStatusToAssigned({
-          id: payout.systemOrderId,
-          paymentMode: PaymentMadeOn.GATEWAY,
-          gatewayServiceRate: payout.gatewayServiceRate || 0.1,
-          gatewayName: result.gatewayName,
-        });
+        if (result)
+          await this.updatePayoutStatusToAssigned({
+            id: payout.systemOrderId,
+            paymentMode: PaymentMadeOn.GATEWAY,
+            gatewayServiceRate: payout.gatewayServiceRate || 0.1,
+            gatewayName: result?.gatewayName,
+          });
 
-        if (result.paymentStatus) {
+        if (result?.paymentStatus) {
           await this.updatePayoutStatusToSubmitted({
             id: payout.systemOrderId,
             transactionId: result.transactionId,
@@ -228,7 +230,7 @@ export class PayoutService {
             transactionDetails: result.transactionDetails,
           });
 
-          const mappedStatus = this.mapAndGetGatewayPayoutStatus(
+          const mappedStatus = mapAndGetGatewayPayoutStatus(
             result.gatewayName,
             result.paymentStatus,
           );
@@ -728,7 +730,7 @@ export class PayoutService {
             payout.transactionId,
           );
 
-        const mappedStatus = this.mapAndGetGatewayPayoutStatus(
+        const mappedStatus = mapAndGetGatewayPayoutStatus(
           payout.gatewayName,
           response?.status,
         );
@@ -744,40 +746,5 @@ export class PayoutService {
           });
       }
     });
-  }
-
-  private mapAndGetGatewayPayoutStatus(
-    gateway: GatewayName,
-    status: string,
-  ): 'FAILED' | 'SUCCESS' | 'PENDING' {
-    switch (gateway) {
-      case GatewayName.RAZORPAY:
-        if (status === 'processed') return 'SUCCESS';
-        if (
-          status === 'failed' ||
-          status === 'rejected' ||
-          status === 'cancelled'
-        )
-          return 'FAILED';
-
-        return 'PENDING';
-
-      case GatewayName.UNIQPAY:
-        if (status === 'Transaction Successful') return 'SUCCESS';
-
-        if (
-          status === 'Transaction Failed' ||
-          status === 'FAILED' ||
-          status === 'FORBIDDEN' ||
-          status === 'Internal processing error' ||
-          status === 'Duplicate Transaction'
-        )
-          return 'FAILED';
-
-        return 'PENDING';
-
-      default:
-        return 'PENDING';
-    }
   }
 }

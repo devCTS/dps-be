@@ -1,9 +1,6 @@
 import { Exclude, Expose, Transform } from 'class-transformer';
 import {
   ChannelName,
-  GatewayName,
-  NotificationStatus,
-  UserTypeForTransactionUpdates,
   WithdrawalMadeOn,
   WithdrawalOrderStatus,
 } from 'src/utils/enum/enum';
@@ -83,7 +80,10 @@ export class WithdrawalDetailsUserResDto {
   withdrawalMadeOn: WithdrawalMadeOn | null;
 
   @Expose()
-  transactionDetails: {};
+  transactionId: string;
+
+  @Expose()
+  transactionReceipt: string;
 
   @Expose()
   serviceCharge: number;

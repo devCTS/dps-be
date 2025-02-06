@@ -1,12 +1,9 @@
-import { Exclude, Expose, Transform, plainToInstance } from 'class-transformer';
-import { Identity } from 'src/identity/entities/identity.entity';
+import { Exclude, Expose, Transform } from 'class-transformer';
 import {
   CallBackStatus,
   ChannelName,
   GatewayName,
   NotificationStatus,
-  OrderStatus,
-  PaymentMadeOn,
   UserTypeForTransactionUpdates,
   WithdrawalMadeOn,
   WithdrawalOrderStatus,
@@ -140,7 +137,10 @@ export class WithdrawalDetailsAdminResDto {
   gatewayName: GatewayName | null;
 
   @Expose()
-  transactionDetails: {};
+  transactionId: string;
+
+  @Expose()
+  transactionReceipt: string;
 
   @Expose()
   @TransformBalancesAndProfit()

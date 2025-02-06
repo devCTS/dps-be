@@ -6,12 +6,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { firstValueFrom } from 'rxjs';
 import { EndUser } from 'src/end-user/entities/end-user.entity';
 import { JwtService } from 'src/services/jwt/jwt.service';
 import { GatewayName } from 'src/utils/enum/enum';
 import { Repository } from 'typeorm';
 import uniqid from 'uniqid';
+import { Identity } from 'src/identity/entities/identity.entity';
+import { IdentityService } from 'src/identity/identity.service';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class UniqpayService {
@@ -20,9 +22,12 @@ export class UniqpayService {
     private readonly uniqpayRepository: Repository<Uniqpay>,
     @InjectRepository(EndUser)
     private readonly endUserRepository: Repository<EndUser>,
+    @InjectRepository(Identity)
+    private readonly identityRepository: Repository<Identity>,
 
     private readonly jwtService: JwtService,
     private readonly httpService: HttpService,
+    private readonly identityService: IdentityService,
   ) {}
 
   generateUniqueKey = () => uniqid();
@@ -105,9 +110,8 @@ export class UniqpayService {
     }
   }
 
-  async makePayoutPayment({ userId, amount, orderId, mode }) {
-    if (mode === 'UPI')
-      throw new NotAcceptableException('Unsupported payment mode for Uniqpay!');
+  async makePayoutPaymentForEndUsers({ userId, amount, orderId, mode }) {
+    if (mode !== 'IMPS') return;
 
     const uniqpay = (await this.uniqpayRepository.find())[0];
     if (!uniqpay) throw new NotFoundException('Uniqpay record not found!');
@@ -130,6 +134,58 @@ export class UniqpayService {
       transferId: this.generateUniqueKey(),
       amount: amount,
       remarks: `USER PAYOUT - ${orderId}`,
+    };
+
+    const response: any = await this.createPayout(payoutPayload);
+
+    return {
+      gatewayName: GatewayName.UNIQPAY,
+      transactionId: response?.response?.transactionDetails?.transferId,
+      transactionReceipt: 'UNIQPAY',
+      paymentStatus: response?.response?.status,
+      transactionDetails: response?.response,
+    };
+  }
+
+  async makePayoutPaymentForInternalUsers({
+    identityId,
+    amount,
+    orderId,
+    mode,
+  }) {
+    if (mode !== 'IMPS') return;
+
+    const uniqpay = (await this.uniqpayRepository.find())[0];
+    if (!uniqpay) throw new NotFoundException('Uniqpay record not found!');
+
+    const identity = await this.identityRepository.findOne({
+      where: {
+        id: identityId,
+      },
+      relations: ['netBanking'],
+    });
+    if (!identity) throw new NotFoundException('Identity not found!');
+
+    const userBankingDetails = identity.netBanking[0];
+    if (!userBankingDetails)
+      throw new NotAcceptableException('User NET_BANKING details missing!');
+
+    const user = await this.identityService.getUser(
+      identityId,
+      identity.userType,
+    );
+
+    const payoutPayload = {
+      name: user.firstName + ' ' + user.lastName,
+      email: identity.email,
+      phone: user.phone,
+      address: 'INDIA',
+      bankAccount: userBankingDetails.accountNumber,
+      ifsc: userBankingDetails.ifsc,
+      transferMode: 'IMPS',
+      transferId: this.generateUniqueKey(),
+      amount: amount,
+      remarks: `USER WITHDRAWAL - ${orderId}`,
     };
 
     const response: any = await this.createPayout(payoutPayload);

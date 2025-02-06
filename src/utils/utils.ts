@@ -1,7 +1,12 @@
 import { HttpStatus } from '@nestjs/common';
 import bycrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { AlertType, NotificationType, ServiceRateType } from './enum/enum';
+import {
+  AlertType,
+  GatewayName,
+  NotificationType,
+  ServiceRateType,
+} from './enum/enum';
 
 // Encrypt password or match password
 export const encryptPassword = async (password: string): Promise<string> => {
@@ -165,4 +170,39 @@ export const getServicerRateForMerchant = (absoluteAmount, rate) => {
   if (absoluteAmount && rate) return `₹${absoluteAmount} + ${rate}%`;
   if (absoluteAmount) return `₹${absoluteAmount}`;
   if (rate) return `${rate}%`;
+};
+
+export const mapAndGetGatewayPayoutStatus = (
+  gateway: GatewayName,
+  status: string,
+): 'FAILED' | 'SUCCESS' | 'PENDING' => {
+  switch (gateway) {
+    case GatewayName.RAZORPAY:
+      if (status === 'processed') return 'SUCCESS';
+      if (
+        status === 'failed' ||
+        status === 'rejected' ||
+        status === 'cancelled'
+      )
+        return 'FAILED';
+
+      return 'PENDING';
+
+    case GatewayName.UNIQPAY:
+      if (status === 'Transaction Successful') return 'SUCCESS';
+
+      if (
+        status === 'Transaction Failed' ||
+        status === 'FAILED' ||
+        status === 'FORBIDDEN' ||
+        status === 'Internal processing error' ||
+        status === 'Duplicate Transaction'
+      )
+        return 'FAILED';
+
+      return 'PENDING';
+
+    default:
+      return 'PENDING';
+  }
 };

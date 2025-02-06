@@ -140,10 +140,12 @@ export class PaymentSystemService {
         return await this.razorpayService.makePayoutPayment(body);
 
       case GatewayName.UNIQPAY:
-        return await this.uniqpayService.makePayoutPayment(body);
+        return body?.forInternalUsers
+          ? await this.uniqpayService.makePayoutPaymentForInternalUsers(body)
+          : await this.uniqpayService.makePayoutPaymentForEndUsers(body);
 
       default:
-        throw new BadRequestException('Unsupported gateway!');
+        return;
     }
   }
 

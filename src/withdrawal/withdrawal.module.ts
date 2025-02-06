@@ -23,6 +23,8 @@ import { FundRecordModule } from 'src/fund-record/fund-record.module';
 import { AlertModule } from 'src/alert/alert.module';
 import { Submerchant } from 'src/sub-merchant/entities/sub-merchant.entity';
 import { Config } from 'src/channel/entity/config.entity';
+import { RazorpayModule } from 'src/payment-system/razorpay/razorpay.module';
+import { UniqpayModule } from 'src/payment-system/uniqpay/uniqpay.module';
 
 @Module({
   imports: [
@@ -46,6 +48,8 @@ import { Config } from 'src/channel/entity/config.entity';
     FundRecordModule,
     forwardRef(() => PaymentSystemModule),
     forwardRef(() => AlertModule),
+    RazorpayModule,
+    UniqpayModule,
   ],
   controllers: [WithdrawalController],
   providers: [

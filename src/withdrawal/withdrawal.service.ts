@@ -11,11 +11,12 @@ import {
 import { CreateWithdrawalDto } from './dto/create-withdrawal.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Withdrawal } from './entities/withdrawal.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import uniqid from 'uniqid';
 import {
   AlertType,
   ChannelName,
+  GatewayName,
   NotificationStatus,
   OrderType,
   Users,
@@ -32,8 +33,9 @@ import { TransactionUpdate } from 'src/transaction-updates/entities/transaction-
 import { SystemConfigService } from 'src/system-config/system-config.service';
 import { PaymentSystemService } from 'src/payment-system/payment-system.service';
 import { AlertService } from 'src/alert/alert.service';
-import { roundOffAmount } from 'src/utils/utils';
-import { max } from 'class-validator';
+import { mapAndGetGatewayPayoutStatus, roundOffAmount } from 'src/utils/utils';
+import { RazorpayService } from 'src/payment-system/razorpay/razorpay.service';
+import { UniqpayService } from 'src/payment-system/uniqpay/uniqpay.service';
 
 @Injectable()
 export class WithdrawalService {
@@ -56,6 +58,8 @@ export class WithdrawalService {
     private readonly alertService: AlertService,
     @Inject(forwardRef(() => PaymentSystemService))
     private readonly paymentSystemService: PaymentSystemService,
+    private readonly razorpayService: RazorpayService,
+    private readonly uniqpayService: UniqpayService,
   ) {}
 
   async create(createWithdrawalDto: CreateWithdrawalDto, email) {
@@ -122,28 +126,74 @@ export class WithdrawalService {
   }
 
   async makeGatewayPayout(body) {
+    const withdrawal = await this.withdrawalRepository.findOne({
+      where: {
+        systemOrderId: body.orderId,
+      },
+      relations: ['user'],
+    });
+    if (!withdrawal) throw new NotFoundException('Withdrawal order not found!');
+
+    let mode;
+    if (withdrawal.channel === ChannelName.UPI) mode = 'UPI';
+    if (withdrawal.channel === ChannelName.E_WALLET) mode = 'E_WALLET';
+    if (withdrawal.channel === ChannelName.BANKING) mode = 'IMPS';
+
     const res = await this.paymentSystemService.makeGatewayPayout({
-      ...body,
+      identityId: withdrawal?.user?.id,
+      amount: withdrawal.amount,
+      orderId: withdrawal.systemOrderId,
+      mode,
       orderType: OrderType.WITHDRAWAL,
+      forInternalUsers: true,
     });
 
-    if (res.paymentStatus === 'success')
+    if (!res)
+      throw new NotFoundException(
+        'No payment gateway is available at the moment!',
+      );
+
+    const mappedStatus = mapAndGetGatewayPayoutStatus(
+      res.gatewayName,
+      res.paymentStatus,
+    );
+
+    if (mappedStatus === 'PENDING')
+      await this.withdrawalRepository.update(withdrawal.id, {
+        transactionId: res.transactionId,
+        transactionReceipt: res.transactionReceipt,
+        transactionDetails: res.transactionDetails,
+        gatewayName: res.gatewayName,
+        withdrawalMadeOn: WithdrawalMadeOn.GATEWAY,
+      });
+
+    if (mappedStatus === 'SUCCESS')
       await this.updateStatusToComplete({
         id: body.orderId,
-        transactionDetails: {
-          transactionId: res.transactionId,
-          transactionReceipt: res.transactionReceipt,
-          gatewayDetails: res.transactionDetails,
-        },
+        transactionId: res.transactionId,
+        transactionReceipt: res.transactionReceipt,
+        transactionDetails: res.transactionDetails,
         withdrawalMadeOn: WithdrawalMadeOn.GATEWAY,
         gatewayName: res.gatewayName,
+      });
+
+    if (mappedStatus === 'FAILED')
+      await this.updateStatusToFailed({
+        id: body.orderId,
       });
 
     return HttpStatus.OK;
   }
 
   async updateStatusToComplete(body) {
-    const { id, transactionDetails, withdrawalMadeOn, gatewayName } = body;
+    const {
+      id,
+      transactionId,
+      transactionReceipt,
+      transactionDetails,
+      withdrawalMadeOn,
+      gatewayName,
+    } = body;
 
     const orderDetails = await this.withdrawalRepository.findOne({
       where: {
@@ -191,10 +241,16 @@ export class WithdrawalService {
 
     await this.withdrawalRepository.update(orderDetails.id, {
       status: WithdrawalOrderStatus.COMPLETE,
-      transactionDetails: JSON.stringify(transactionDetails),
-      withdrawalMadeOn,
+      transactionId: orderDetails.transactionId || transactionId,
+      transactionReceipt: orderDetails.transactionReceipt || transactionReceipt,
+      transactionDetails:
+        orderDetails.transactionDetails || JSON.stringify(transactionDetails),
+      withdrawalMadeOn: orderDetails.withdrawalMadeOn || withdrawalMadeOn,
       gatewayName:
-        withdrawalMadeOn === WithdrawalMadeOn.GATEWAY ? gatewayName : null,
+        orderDetails.gatewayName ||
+        withdrawalMadeOn === WithdrawalMadeOn.GATEWAY
+          ? gatewayName
+          : null,
     });
 
     const transactionUpdateEntries =
@@ -412,5 +468,49 @@ export class WithdrawalService {
     });
 
     return HttpStatus.OK;
+  }
+
+  async fetchPendingWithdrawalsAndUpdateStatus() {
+    const pendingWithdrawals = await this.withdrawalRepository.findBy({
+      status: WithdrawalOrderStatus.PENDING,
+      withdrawalMadeOn: WithdrawalMadeOn.GATEWAY,
+    });
+    if (!pendingWithdrawals.length) return;
+
+    pendingWithdrawals.forEach(async (withdrawal) => {
+      if (withdrawal.transactionId) {
+        let response;
+
+        if (withdrawal.gatewayName === GatewayName.RAZORPAY)
+          response = await this.razorpayService.getPayoutDetails(
+            withdrawal.transactionId,
+          );
+
+        if (withdrawal.gatewayName === GatewayName.UNIQPAY)
+          response = await this.uniqpayService.getPayoutDetails(
+            withdrawal.transactionId,
+          );
+
+        const mappedStatus = mapAndGetGatewayPayoutStatus(
+          withdrawal.gatewayName,
+          response?.status,
+        );
+
+        if (mappedStatus === 'SUCCESS')
+          await this.updateStatusToComplete({
+            id: withdrawal.systemOrderId,
+            transactionId: null,
+            transactionReceipt: null,
+            transactionDetails: null,
+            withdrawalMadeOn: WithdrawalMadeOn.GATEWAY,
+            gatewayName: null,
+          });
+
+        if (mappedStatus === 'FAILED')
+          await this.updateStatusToFailed({
+            id: withdrawal.systemOrderId,
+          });
+      }
+    });
   }
 }
