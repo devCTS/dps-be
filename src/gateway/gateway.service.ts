@@ -160,11 +160,9 @@ export class GatewayService {
     const secretTextKeys = this.secretTextKeysUniqpay;
 
     secretTextKeys.forEach((key) => {
-      secretTextKeys.forEach((key) => {
-        createUniqpayDto[key] = this.jwtService.encryptValue(
-          createUniqpayDto[key],
-        );
-      });
+      createUniqpayDto[key] = this.jwtService.encryptValue(
+        createUniqpayDto[key],
+      );
     });
 
     await this.uniqpayRepository.save(createUniqpayDto);

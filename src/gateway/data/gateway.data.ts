@@ -28,8 +28,8 @@ export const loadUniqpayData = () => {
   return {
     incoming: false,
     outgoing: true,
-    uniqpay_id: '123123123123',
-    client_id: '123123123123',
-    client_secret_id: '123123123123',
+    uniqpay_id: 'dummy_secret_key',
+    client_id: 'dummy_secret_key',
+    client_secret: 'dummy_secret_key',
   };
 };

@@ -4,6 +4,7 @@ import {
   HttpStatus,
   Get,
   InternalServerErrorException,
+  NotAcceptableException,
 } from '@nestjs/common';
 import { AdminService } from 'src/admin/admin.service';
 import { ChannelService } from 'src/channel/channel.service';
@@ -32,7 +33,8 @@ export class LoadController {
 
       return HttpStatus.CREATED;
     } catch (error) {
-      throw new InternalServerErrorException();
+      console.log({ error });
+      throw new NotAcceptableException();
     }
   }
 }
