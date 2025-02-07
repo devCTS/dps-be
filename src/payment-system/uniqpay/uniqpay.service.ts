@@ -178,7 +178,7 @@ export class UniqpayService {
     const payoutPayload = {
       name: user.firstName + ' ' + user.lastName,
       email: identity.email,
-      phone: user.phone,
+      phone: user.phone || '9876543210',
       address: 'INDIA',
       bankAccount: userBankingDetails.accountNumber,
       ifsc: userBankingDetails.ifsc,

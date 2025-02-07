@@ -158,6 +158,8 @@ export class WithdrawalService {
       res.paymentStatus,
     );
 
+    if (!mappedStatus) return;
+
     if (mappedStatus === 'PENDING')
       await this.withdrawalRepository.update(withdrawal.id, {
         transactionId: res.transactionId,
