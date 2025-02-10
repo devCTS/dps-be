@@ -36,6 +36,8 @@ import { AlertService } from 'src/alert/alert.service';
 import { mapAndGetGatewayPayoutStatus, roundOffAmount } from 'src/utils/utils';
 import { RazorpayService } from 'src/payment-system/razorpay/razorpay.service';
 import { UniqpayService } from 'src/payment-system/uniqpay/uniqpay.service';
+import { Merchant } from 'src/merchant/entities/merchant.entity';
+import { Agent } from 'src/agent/entities/agent.entity';
 
 @Injectable()
 export class WithdrawalService {
@@ -46,6 +48,10 @@ export class WithdrawalService {
     private readonly identityRepository: Repository<Identity>,
     @InjectRepository(TransactionUpdate)
     private readonly transactionUpdateRepository: Repository<TransactionUpdate>,
+    @InjectRepository(Merchant)
+    private readonly merchantRepository: Repository<Merchant>,
+    @InjectRepository(Agent)
+    private readonly agentRepository: Repository<Agent>,
 
     private readonly identityService: IdentityService,
     private readonly transactionUpdatesWithdrawalService: TransactionUpdatesWithdrawalService,
@@ -63,12 +69,8 @@ export class WithdrawalService {
   ) {}
 
   async create(createWithdrawalDto: CreateWithdrawalDto, email) {
-    const {
-      channel,
-      channelDetails,
-      withdrawalAmount,
-      // email
-    } = createWithdrawalDto;
+    const { channel, channelDetails, withdrawalAmount, phone } =
+      createWithdrawalDto;
 
     const user = await this.identityRepository.findOne({
       where: {
@@ -79,6 +81,16 @@ export class WithdrawalService {
     if (!user) throw new NotFoundException('User not found!');
 
     const isMerchant = user?.merchant;
+
+    if (phone?.length) {
+      isMerchant
+        ? await this.merchantRepository.update(user.merchant.id, {
+            phone,
+          })
+        : await this.agentRepository.update(user.agent.id, {
+            phone,
+          });
+    }
 
     const minWithdrawalAmountOfUser = isMerchant
       ? user.merchant?.minWithdrawal
