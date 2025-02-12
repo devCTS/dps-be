@@ -9,6 +9,7 @@ export enum GatewayName {
   PHONEPE = 'PHONEPE',
   UNIQPAY = 'UNIQPAY',
   MEMBER = 'MEMBER',
+  PAYU = 'PAYU',
 }
 
 export enum PaymentType {

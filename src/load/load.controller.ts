@@ -29,6 +29,7 @@ export class LoadController {
       await this.gatewaysService.createPhonepe();
       await this.gatewaysService.createRazorPay();
       await this.gatewaysService.createUniqpay();
+      await this.gatewaysService.createPayu();
       await this.sysConfigService.create();
 
       return HttpStatus.CREATED;

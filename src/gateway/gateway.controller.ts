@@ -8,6 +8,7 @@ import { RolesGuard } from 'src/utils/guard/roles.guard';
 import { Roles } from 'src/utils/decorators/roles.decorator';
 import { Role } from 'src/utils/enum/enum';
 import { UpdateUniqpayDto } from './dto/create-uniqpay.dto';
+import { UpdatePayuDto } from './dto/create-payu.dto';
 
 @Controller('gateway')
 @UseGuards(RolesGuard)
@@ -66,6 +67,24 @@ export class GatewayController {
   @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
   UpdateUniqpay(@Body() updateUniqpayDto: UpdateUniqpayDto) {
     return this.gatewayService.updateUniqpay(updateUniqpayDto);
+  }
+
+  @Post('payu/create')
+  @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
+  CreatePayu() {
+    return this.gatewayService.createPayu();
+  }
+
+  @Get('payu')
+  @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
+  getPayuConfig() {
+    return this.gatewayService.getPayu();
+  }
+
+  @Post('payu/update')
+  @Roles(Role.SUB_ADMIN, Role.SUPER_ADMIN)
+  UpdatePayu(@Body() updatePayuDto: UpdatePayuDto) {
+    return this.gatewayService.updatePayu(updatePayuDto);
   }
 
   @Get('channel-settings/all')

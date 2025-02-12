@@ -33,3 +33,13 @@ export const loadUniqpayData = () => {
     client_secret: 'dummy_secret_key',
   };
 };
+
+export const loadPayuData = () => {
+  return {
+    incoming: true,
+    outgoing: false,
+    merchant_id: 'dummy_secret_key',
+    client_id: 'dummy_secret_key',
+    client_secret: 'dummy_secret_key',
+  };
+};

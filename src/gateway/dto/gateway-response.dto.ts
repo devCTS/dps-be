@@ -2,7 +2,7 @@ import { Exclude, Expose } from 'class-transformer';
 import { IsBoolean, IsNotEmpty, IsNumber } from 'class-validator';
 
 @Exclude()
-export class PhonepeResponseDto {
+export class GatewayResponseDto {
   @Expose()
   @IsNumber()
   id: number;

@@ -8,10 +8,17 @@ import { Phonepe } from './entities/phonepe.entity';
 import { Razorpay } from './entities/razorpay.entity';
 import { JwtModule } from 'src/services/jwt/jwt.module';
 import { Uniqpay } from './entities/uniqpay.entity';
+import { Payu } from './entities/payu.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ChannelSettings, Phonepe, Razorpay, Uniqpay]),
+    TypeOrmModule.forFeature([
+      ChannelSettings,
+      Phonepe,
+      Razorpay,
+      Uniqpay,
+      Payu,
+    ]),
     Identity,
     JwtModule,
   ],

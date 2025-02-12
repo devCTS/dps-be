@@ -1,6 +1,7 @@
+import { PartialType } from '@nestjs/mapped-types';
 import { IsBoolean, IsNotEmpty, IsString } from 'class-validator';
 
-export class CreateUniqpayDto {
+export class CreatePayuDto {
   @IsNotEmpty()
   @IsBoolean()
   incoming: boolean;
@@ -11,7 +12,7 @@ export class CreateUniqpayDto {
 
   @IsNotEmpty()
   @IsString()
-  uniqpay_id: string;
+  merchant_id: string;
 
   @IsNotEmpty()
   @IsString()
@@ -20,18 +21,18 @@ export class CreateUniqpayDto {
   @IsNotEmpty()
   @IsString()
   client_secret: string;
+
+  @IsNotEmpty()
+  @IsString()
+  sandbox_merchant_id: string;
+
+  @IsNotEmpty()
+  @IsString()
+  sandbox_client_id: string;
+
+  @IsNotEmpty()
+  @IsString()
+  sandbox_client_secret: string;
 }
 
-export class UpdateUniqpayDto {
-  @IsNotEmpty()
-  @IsString()
-  uniqpay_id: string;
-
-  @IsNotEmpty()
-  @IsString()
-  client_id: string;
-
-  @IsNotEmpty()
-  @IsString()
-  client_secret: string;
-}
+export class UpdatePayuDto extends PartialType(CreatePayuDto) {}
