@@ -44,8 +44,8 @@ export class CreatePaymentOrderDto {
   environment: 'sandbox' | 'live';
 
   @IsOptional()
-  @IsEnum(['member', 'razorpay', 'phonepe'])
-  paymentMethod?: 'member' | 'razorpay' | 'phonepe';
+  @IsEnum(['member', 'razorpay', 'phonepe', 'payu'])
+  paymentMethod?: 'member' | 'razorpay' | 'phonepe' | 'payu';
 }
 
 export class CreatePaymentOrderDtoAdmin {
@@ -113,6 +113,6 @@ export class CreatePaymentOrderSandboxDto {
   @IsNumber()
   merchantId: number;
 
-  @IsEnum(['member', 'razorpay', 'phonepe'])
-  paymentMethod: 'member' | 'razorpay' | 'phonepe';
+  @IsEnum(['member', 'razorpay', 'phonepe', 'payu'])
+  paymentMethod: 'member' | 'razorpay' | 'phonepe' | 'payu';
 }

@@ -28,6 +28,7 @@ import { RazorpayService } from './razorpay/razorpay.service';
 import { PayinGateway } from 'src/socket/payin.gateway';
 import { PayinSandbox } from 'src/payin/entities/payin-sandbox.entity';
 import { Uniqpay } from 'src/gateway/entities/uniqpay.entity';
+import { PayuService } from './payu/payu.service';
 
 @Injectable()
 export class PaymentSystemUtilService {
@@ -56,6 +57,7 @@ export class PaymentSystemUtilService {
     private readonly memberChannelService: MemberChannelService,
     private readonly phonepeService: PhonepeService,
     private readonly razorpayService: RazorpayService,
+    private readonly payuService: PayuService,
     private readonly payinGateway: PayinGateway,
   ) {}
 
@@ -556,6 +558,17 @@ export class PaymentSystemUtilService {
         environment,
       });
 
+    if (selectedPaymentMode === GatewayName.PAYU)
+      res = await this.getPayPage({
+        userId: createdPayin.user?.userId,
+        amount: createdPayin.amount.toString(),
+        orderId: createdPayin.systemOrderId,
+        gateway: GatewayName.PAYU,
+        integrationId: merchant.integrationId,
+        channelName: createdPayin.channel,
+        environment,
+      });
+
     await this.payinRepository.update(createdPayin.id, {
       trackingId: res.trackingId,
     });
@@ -583,12 +596,15 @@ export class PaymentSystemUtilService {
 
     if (gateway === GatewayName.RAZORPAY)
       return await this.razorpayService.getPayPage(getPayPageDto);
+
+    if (gateway === GatewayName.PAYU)
+      return await this.payuService.getPayPage(getPayPageDto);
   }
 
   async processPaymentMethodSandbox(
     merchant: Merchant,
     createdPayin: PayinSandbox,
-    paymentMethod: 'member' | 'phonepe' | 'razorpay',
+    paymentMethod: 'member' | 'phonepe' | 'razorpay' | 'payu',
     userId: string,
     environment: 'live' | 'sandbox',
   ) {
@@ -596,6 +612,7 @@ export class PaymentSystemUtilService {
     if (paymentMethod === 'member') gatewayName = GatewayName.MEMBER;
     if (paymentMethod === 'phonepe') gatewayName = GatewayName.PHONEPE;
     if (paymentMethod === 'razorpay') gatewayName = GatewayName.RAZORPAY;
+    if (paymentMethod === 'payu') gatewayName = GatewayName.PAYU;
 
     const res: any = await this.getPayPage({
       orderId: createdPayin.systemOrderId,
@@ -618,7 +635,7 @@ export class PaymentSystemUtilService {
     setTimeout(() => {
       this.payinGateway.notifyOrderAssigned(
         createdPayin.systemOrderId,
-        res.url,
+        res?.url,
         paymentMethodType,
         gatewayName,
       );

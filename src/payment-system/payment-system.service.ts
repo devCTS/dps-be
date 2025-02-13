@@ -34,6 +34,7 @@ import { Payin } from 'src/payin/entities/payin.entity';
 import { MemberChannelService } from './member/member-channel.service';
 import { PayinSandbox } from 'src/payin/entities/payin-sandbox.entity';
 import QRCode from 'qrcode';
+import { PayuService } from './payu/payu.service';
 
 // const paymentPageBaseUrl = 'http://localhost:5174';
 @Injectable()
@@ -49,6 +50,7 @@ export class PaymentSystemService {
     private readonly phonepeService: PhonepeService,
     private readonly razorpayService: RazorpayService,
     private readonly uniqpayService: UniqpayService,
+    private readonly payuService: PayuService,
     private readonly payinService: PayinService,
     private readonly utilService: PaymentSystemUtilService,
     private readonly systemConfigService: SystemConfigService,
@@ -187,6 +189,15 @@ export class PaymentSystemService {
         if (!payinOrder || !payinOrder.systemOrderId) return;
 
         res = await this.phonepeService.getPaymentStatus(
+          payinOrder.systemOrderId,
+          environment,
+        );
+      }
+
+      if (payinOrder.gatewayName === GatewayName.PAYU) {
+        if (!payinOrder || !payinOrder.systemOrderId) return;
+
+        res = await this.payuService.getPaymentStatus(
           payinOrder.systemOrderId,
           environment,
         );
