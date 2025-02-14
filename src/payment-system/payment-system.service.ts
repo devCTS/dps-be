@@ -195,10 +195,10 @@ export class PaymentSystemService {
       }
 
       if (payinOrder.gatewayName === GatewayName.PAYU) {
-        if (!payinOrder || !payinOrder.systemOrderId) return;
+        if (!payinOrder || !payinOrder.trackingId) return;
 
         res = await this.payuService.getPaymentStatus(
-          payinOrder.systemOrderId,
+          payinOrder.trackingId,
           environment,
         );
       }

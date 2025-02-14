@@ -113,7 +113,7 @@ export class PayuService {
 
       return this.authToken.accessToken;
     } catch (error) {
-      console.log({ error: error.response.data });
+      console.log({ error: error.response });
       throw new InternalServerErrorException(
         'Failed to get Payu access token!',
       );
@@ -142,10 +142,9 @@ export class PayuService {
         email: endUser?.email || 'sandbox@user.com',
         phone: endUser?.mobile || '9876543210',
       },
-      successUrl: `${process.env.PAYMENT_PAGE_BASE_URL}/close-razorpay?orderId=${orderId}`,
-      failureUrl: `${process.env.PAYMENT_PAGE_BASE_URL}/close-razorpay?orderId=${orderId}`,
+      successURL: `${process.env.PAYMENT_PAGE_BASE_URL}.com/close-razorpay?orderId=${orderId}`,
+      failureURL: `${process.env.PAYMENT_PAGE_BASE_URL}.com/close-razorpay?orderId=${orderId}`,
       enforcePayMethod: '',
-      transactionId: this.generateUniqueKey(),
       userToken: accessToken,
     };
 
@@ -161,19 +160,17 @@ export class PayuService {
       data: payload,
     };
 
-    console.log({ options });
-
     try {
       const response = await firstValueFrom(this.httpService.request(options));
-      console.log({ response });
+      console.log({ url: response.data?.result?.paymentLink });
       return {
-        url: '',
-        details: '',
-        trackingId: '',
+        url: response.data?.result?.paymentLink,
+        details: response.data?.result,
+        trackingId: response.data?.result?.invoiceNumber,
       };
     } catch (error) {
       console.log({ error: error.response.data });
-      // throw new InternalServerErrorException('Failed to create payment link');
+      throw new InternalServerErrorException('Failed to create payment link');
     }
   }
 
@@ -181,28 +178,50 @@ export class PayuService {
     invoiceId: string,
     environment: 'live' | 'sandbox' = 'live',
   ) {
-    const testUrl = `https://uatoneapi.payu.in/payment-links/${invoiceId}/txns?dateFrom=2024-12-12&dateTo=2025-12-12`;
-    const liveUrl = `https://oneapi.payu.in/payment-links/${invoiceId}/txns?dateFrom=2024-12-12&dateTo=2025-12-12`;
+    const currentDate = new Date();
+
+    const dateFrom = new Date(currentDate);
+    dateFrom.setMonth(currentDate.getMonth() - 2);
+
+    const dateTo = new Date(currentDate);
+    dateTo.setDate(currentDate.getDate() + 1);
+
+    const formatDate = (date) => date.toISOString().split('T')[0];
+
+    const testUrl = `https://uatoneapi.payu.in/payment-links/${invoiceId}/txns?dateFrom=${formatDate(dateFrom)}&dateTo=${formatDate(dateTo)}`;
+
+    const liveUrl = `https://oneapi.payu.in/payment-links/${invoiceId}/txns?dateFrom=${formatDate(dateFrom)}&dateTo=${formatDate(dateTo)}`;
+
+    const accessToken = await this.getAccessToken(environment);
 
     const options = {
       method: 'GET',
       url: environment === 'sandbox' ? testUrl : liveUrl,
       headers: {
-        merchantId: (await this.getCredentials(environment)).merchant_id,
+        Authorization: `Bearer ${accessToken}`,
+        mid: (await this.getCredentials(environment)).merchant_id,
       },
     };
 
     try {
       const response = await firstValueFrom(this.httpService.request(options));
 
-      console.log({ response });
+      console.log({ response: response.data.result.data });
+
+      let status = response.data?.result?.data[0]?.status;
+
+      if (response.data?.result?.data[0]?.status === 'success')
+        status = 'SUCCESS';
+
+      if (response.data?.result?.data[0]?.status === 'failed')
+        status = 'FAILED';
 
       return {
-        status: '',
-        details: {},
+        status,
+        details: response.data?.result?.data[0],
       };
     } catch (error) {
-      console.log({ error });
+      console.log({ error: error.response });
       throw new InternalServerErrorException(
         'Failed to get PayU transaction details!',
       );

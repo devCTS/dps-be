@@ -284,6 +284,13 @@ export class PayinService {
         });
         break;
 
+      case 'payu':
+        await this.payinSandboxRepository.update(payin.id, {
+          status: OrderStatus.ASSIGNED,
+          gatewayName: GatewayName.PAYU,
+        });
+        break;
+
       default:
         break;
     }
