@@ -17,7 +17,7 @@ export class EmailService {
       from: {
         name: 'Kingsgate Support',
         //TODO
-        email: 'tianyi.legal@tianyitech.co',
+        email: 'tianyi@kg91.pro',
       },
 
       to: mailInfo.receiver,
