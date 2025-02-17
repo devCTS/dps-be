@@ -68,8 +68,16 @@ export class PayinService {
   ) {}
 
   async create(payinDetails: CreatePaymentOrderDto) {
-    const { userId, userName, channel, integrationId, orderId, amount } =
-      payinDetails;
+    const {
+      userId,
+      userName,
+      channel,
+      integrationId,
+      orderId,
+      amount,
+      userEmail,
+      userMobileNumber,
+    } = payinDetails;
 
     const merchant = await this.merchantRepository.findOne({
       where: {
@@ -94,6 +102,8 @@ export class PayinService {
         channel,
         userId,
         merchant,
+        email: userEmail || null,
+        mobile: userMobileNumber || null,
       });
 
     const payin = await this.payinRepository.save({
@@ -211,6 +221,8 @@ export class PayinService {
       channel,
       paymentMethod,
       merchantId,
+      userEmail,
+      userMobileNumber,
     } = payinDetails;
 
     if (!merchantId) throw new NotFoundException('Merchant ID missing!');
@@ -227,6 +239,8 @@ export class PayinService {
       merchantOrderId: orderId,
       user: {
         name: userName,
+        email: userEmail || null,
+        mobile: userMobileNumber || null,
         userId,
       },
       systemOrderId: `PAYIN-SANDBOX-${uniqid()}`.toUpperCase(),
@@ -267,6 +281,13 @@ export class PayinService {
         await this.payinSandboxRepository.update(payin.id, {
           status: OrderStatus.ASSIGNED,
           gatewayName: GatewayName.RAZORPAY,
+        });
+        break;
+
+      case 'payu':
+        await this.payinSandboxRepository.update(payin.id, {
+          status: OrderStatus.ASSIGNED,
+          gatewayName: GatewayName.PAYU,
         });
         break;
 

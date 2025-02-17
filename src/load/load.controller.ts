@@ -4,6 +4,7 @@ import {
   HttpStatus,
   Get,
   InternalServerErrorException,
+  NotAcceptableException,
 } from '@nestjs/common';
 import { AdminService } from 'src/admin/admin.service';
 import { ChannelService } from 'src/channel/channel.service';
@@ -28,11 +29,13 @@ export class LoadController {
       await this.gatewaysService.createPhonepe();
       await this.gatewaysService.createRazorPay();
       await this.gatewaysService.createUniqpay();
+      await this.gatewaysService.createPayu();
       await this.sysConfigService.create();
 
       return HttpStatus.CREATED;
     } catch (error) {
-      throw new InternalServerErrorException();
+      console.log({ error });
+      throw new NotAcceptableException();
     }
   }
 }

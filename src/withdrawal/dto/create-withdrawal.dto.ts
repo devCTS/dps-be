@@ -1,4 +1,4 @@
-import { IsNumber, IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 import { ChannelName } from 'src/utils/enum/enum';
 
 export class CreateWithdrawalDto {
@@ -13,4 +13,8 @@ export class CreateWithdrawalDto {
 
   @IsString()
   email: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
 }

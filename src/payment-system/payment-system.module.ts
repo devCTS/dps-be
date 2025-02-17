@@ -28,6 +28,10 @@ import { MemberChannelModule } from './member/member-channel.module';
 import { MemberChannelService } from './member/member-channel.service';
 import { JwtModule } from 'src/services/jwt/jwt.module';
 import { PayinSandbox } from 'src/payin/entities/payin-sandbox.entity';
+import { Uniqpay } from 'src/gateway/entities/uniqpay.entity';
+import { Identity } from 'src/identity/entities/identity.entity';
+import { IdentityModule } from 'src/identity/identity.module';
+import { PayuModule } from './payu/payu.module';
 
 @Module({
   imports: [
@@ -43,10 +47,13 @@ import { PayinSandbox } from 'src/payin/entities/payin-sandbox.entity';
       AmountRangePayinMode,
       ProportionalPayinMode,
       EndUser,
+      Uniqpay,
+      Identity,
     ]),
     PhonePeModule,
     RazorpayModule,
     UniqpayModule,
+    PayuModule,
     HttpModule,
     PayinModule,
     SystemConfigModule,
@@ -54,6 +61,7 @@ import { PayinSandbox } from 'src/payin/entities/payin-sandbox.entity';
     SocketModule,
     MemberChannelModule,
     JwtModule,
+    IdentityModule,
   ],
   controllers: [PaymentSystemController],
   providers: [

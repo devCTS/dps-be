@@ -1,7 +1,7 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
-export class Uniqpay {
+export class Payu {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -12,11 +12,20 @@ export class Uniqpay {
   outgoing: boolean;
 
   @Column()
-  uniqpay_id: string;
+  merchant_id: string;
 
   @Column()
   client_id: string;
 
   @Column()
   client_secret: string;
+
+  @Column()
+  sandbox_merchant_id: string;
+
+  @Column()
+  sandbox_client_id: string;
+
+  @Column()
+  sandbox_client_secret: string;
 }

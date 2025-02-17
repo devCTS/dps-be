@@ -1,18 +1,16 @@
-import { Exclude, Expose, Transform, plainToInstance } from 'class-transformer';
-import { Identity } from 'src/identity/entities/identity.entity';
+import { Exclude, Expose, Transform } from 'class-transformer';
 import {
   CallBackStatus,
   ChannelName,
   GatewayName,
   NotificationStatus,
-  OrderStatus,
-  PaymentMadeOn,
   UserTypeForTransactionUpdates,
   WithdrawalMadeOn,
   WithdrawalOrderStatus,
 } from 'src/utils/enum/enum';
 import { roundOffAmount } from 'src/utils/utils';
 import { TransformChannelDetails } from './withdrawal-user-response.dto';
+import { TransformTransactionDetails } from 'src/payin/dto/payin-admin-response.dto';
 
 @Exclude()
 export class WithdrawalAdminResponseDto {
@@ -140,7 +138,10 @@ export class WithdrawalDetailsAdminResDto {
   gatewayName: GatewayName | null;
 
   @Expose()
-  transactionDetails: {};
+  transactionId: string;
+
+  @Expose()
+  transactionReceipt: string;
 
   @Expose()
   @TransformBalancesAndProfit()

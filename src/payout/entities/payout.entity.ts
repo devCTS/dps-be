@@ -48,7 +48,7 @@ export class Payout {
   payoutMadeVia: PaymentMadeOn;
 
   @Column({ type: 'enum', enum: GatewayName, nullable: true })
-  gatewayName: string;
+  gatewayName: GatewayName;
 
   @Column({ nullable: true })
   transactionId: string;

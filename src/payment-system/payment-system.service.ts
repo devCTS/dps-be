@@ -34,6 +34,7 @@ import { Payin } from 'src/payin/entities/payin.entity';
 import { MemberChannelService } from './member/member-channel.service';
 import { PayinSandbox } from 'src/payin/entities/payin-sandbox.entity';
 import QRCode from 'qrcode';
+import { PayuService } from './payu/payu.service';
 
 // const paymentPageBaseUrl = 'http://localhost:5174';
 @Injectable()
@@ -49,6 +50,7 @@ export class PaymentSystemService {
     private readonly phonepeService: PhonepeService,
     private readonly razorpayService: RazorpayService,
     private readonly uniqpayService: UniqpayService,
+    private readonly payuService: PayuService,
     private readonly payinService: PayinService,
     private readonly utilService: PaymentSystemUtilService,
     private readonly systemConfigService: SystemConfigService,
@@ -114,7 +116,7 @@ export class PaymentSystemService {
   }
 
   async makeGatewayPayout(body): Promise<any> {
-    const { userId, orderId, amount, orderType } = body;
+    const { orderType } = body;
 
     if (!orderType) throw new BadRequestException('Order Type Required!');
 
@@ -136,14 +138,16 @@ export class PaymentSystemService {
 
   private async processPaymentWithGateway(gatewayName: GatewayName, body: any) {
     switch (gatewayName) {
-      // case GatewayName.PHONEPE:
-      //   return await this.phonepeService.makePayoutPayment(body);
       case GatewayName.RAZORPAY:
         return await this.razorpayService.makePayoutPayment(body);
-      // case GatewayName.UNIQPAY:
-      //   return await this.uniqpayService.makePayoutPayment(body);
+
+      case GatewayName.UNIQPAY:
+        return body?.forInternalUsers
+          ? await this.uniqpayService.makePayoutPaymentForInternalUsers(body)
+          : await this.uniqpayService.makePayoutPaymentForEndUsers(body);
+
       default:
-        throw new BadRequestException('Unsupported gateway!');
+        return;
     }
   }
 
@@ -186,6 +190,15 @@ export class PaymentSystemService {
 
         res = await this.phonepeService.getPaymentStatus(
           payinOrder.systemOrderId,
+          environment,
+        );
+      }
+
+      if (payinOrder.gatewayName === GatewayName.PAYU) {
+        if (!payinOrder || !payinOrder.trackingId) return;
+
+        res = await this.payuService.getPaymentStatus(
+          payinOrder.trackingId,
           environment,
         );
       }

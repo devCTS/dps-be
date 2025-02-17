@@ -43,6 +43,8 @@ import { NotificationService } from 'src/notification/notification.service';
 import { AlertService } from 'src/alert/alert.service';
 import { IdentityService } from 'src/identity/identity.service';
 import { RazorpayService } from 'src/payment-system/razorpay/razorpay.service';
+import { UniqpayService } from 'src/payment-system/uniqpay/uniqpay.service';
+import { mapAndGetGatewayPayoutStatus } from 'src/utils/utils';
 
 @Injectable()
 export class PayoutService {
@@ -71,6 +73,7 @@ export class PayoutService {
     private readonly notificationService: NotificationService,
     private readonly identityService: IdentityService,
     private readonly razorpayService: RazorpayService,
+    private readonly uniqpayService: UniqpayService,
 
     @Inject(forwardRef(() => AlertService))
     private readonly alertService: AlertService,
@@ -208,16 +211,18 @@ export class PayoutService {
           amount: payout.amount,
           orderType: OrderType.PAYOUT,
           mode: payout.channel === ChannelName.UPI ? 'UPI' : 'IMPS',
+          forInternalUsers: false,
         });
 
-        await this.updatePayoutStatusToAssigned({
-          id: payout.systemOrderId,
-          paymentMode: PaymentMadeOn.GATEWAY,
-          gatewayServiceRate: payout.gatewayServiceRate || 0.1,
-          gatewayName: result.gatewayName,
-        });
+        if (result)
+          await this.updatePayoutStatusToAssigned({
+            id: payout.systemOrderId,
+            paymentMode: PaymentMadeOn.GATEWAY,
+            gatewayServiceRate: payout.gatewayServiceRate || 0.1,
+            gatewayName: result?.gatewayName,
+          });
 
-        if (result.paymentStatus) {
+        if (result?.paymentStatus) {
           await this.updatePayoutStatusToSubmitted({
             id: payout.systemOrderId,
             transactionId: result.transactionId,
@@ -225,16 +230,17 @@ export class PayoutService {
             transactionDetails: result.transactionDetails,
           });
 
-          if (result.paymentStatus === 'processed')
+          const mappedStatus = mapAndGetGatewayPayoutStatus(
+            result.gatewayName,
+            result.paymentStatus,
+          );
+
+          if (mappedStatus === 'SUCCESS')
             await this.updatePayoutStatusToComplete({
               id: payout.systemOrderId,
             });
 
-          if (
-            result.paymentStatus === 'failed' ||
-            result.status === 'rejected' ||
-            result.status === 'cancelled'
-          )
+          if (mappedStatus === 'FAILED')
             await this.updatePayoutStatusToFailed({
               id: payout.systemOrderId,
             });
@@ -312,31 +318,32 @@ export class PayoutService {
       throw new NotAcceptableException('Daily payout limit reached');
     }
 
-    if (
-      !memberData.identity.upi &&
-      !memberData.identity.netBanking &&
-      !memberData.identity.eWallet
-    ) {
-      throw new NotFoundException('Channels not found');
+    if (payoutOrderData.payoutMadeVia === PaymentMadeOn.MEMBER) {
+      if (
+        !memberData.identity.upi &&
+        !memberData.identity.netBanking &&
+        !memberData.identity.eWallet
+      )
+        throw new NotFoundException('Channels not found');
+
+      if (
+        payoutOrderData.channel === ChannelName.UPI &&
+        !memberData.identity.upi.length
+      )
+        throw new NotFoundException('UPI channel is not registered!');
+
+      if (
+        payoutOrderData.channel === ChannelName.E_WALLET &&
+        !memberData.identity?.eWallet?.length
+      )
+        throw new NotFoundException('E-Wallet channel is not registered!');
+
+      if (
+        payoutOrderData.channel === ChannelName.BANKING &&
+        !memberData.identity?.netBanking?.length
+      )
+        throw new NotFoundException('NetBanking channel is not registered!');
     }
-
-    if (
-      payoutOrderData.channel === ChannelName.UPI &&
-      !memberData.identity.upi.length
-    )
-      throw new NotFoundException('UPI channel is not registered!');
-
-    if (
-      payoutOrderData.channel === ChannelName.E_WALLET &&
-      !memberData.identity?.eWallet?.length
-    )
-      throw new NotFoundException('E-Wallet channel is not registered!');
-
-    if (
-      payoutOrderData.channel === ChannelName.BANKING &&
-      !memberData.identity?.netBanking?.length
-    )
-      throw new NotFoundException('NetBanking channel is not registered!');
 
     if (
       paymentMode === PaymentMadeOn.GATEWAY &&
@@ -718,16 +725,22 @@ export class PayoutService {
             payout.transactionId,
           );
 
-        if (response?.status === 'processed')
+        if (payout.gatewayName === GatewayName.UNIQPAY)
+          response = await this.uniqpayService.getPayoutDetails(
+            payout.transactionId,
+          );
+
+        const mappedStatus = mapAndGetGatewayPayoutStatus(
+          payout.gatewayName,
+          response?.status,
+        );
+
+        if (mappedStatus === 'SUCCESS')
           await this.updatePayoutStatusToComplete({
             id: payout.systemOrderId,
           });
 
-        if (
-          response?.status === 'failed' ||
-          response?.status === 'rejected' ||
-          response?.status === 'cancelled'
-        )
+        if (mappedStatus === 'FAILED')
           await this.updatePayoutStatusToFailed({
             id: payout.systemOrderId,
           });

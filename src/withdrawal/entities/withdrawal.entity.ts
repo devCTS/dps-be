@@ -57,6 +57,12 @@ export class Withdrawal {
   gatewayName: GatewayName;
 
   @Column({ nullable: true })
+  transactionId: string;
+
+  @Column({ nullable: true })
+  transactionReceipt: string;
+
+  @Column({ nullable: true })
   transactionDetails: string;
 
   @CreateDateColumn({ type: 'timestamp' })

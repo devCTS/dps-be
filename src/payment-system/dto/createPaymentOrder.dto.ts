@@ -25,6 +25,14 @@ export class CreatePaymentOrderDto {
   @IsNotEmpty()
   userName: string;
 
+  @IsOptional()
+  @IsString()
+  userEmail?: string;
+
+  @IsOptional()
+  @IsString()
+  userMobileNumber?: string;
+
   @IsAlphanumeric()
   @IsNotEmpty()
   integrationId: string;
@@ -36,8 +44,8 @@ export class CreatePaymentOrderDto {
   environment: 'sandbox' | 'live';
 
   @IsOptional()
-  @IsEnum(['member', 'razorpay', 'phonepe'])
-  paymentMethod?: 'member' | 'razorpay' | 'phonepe';
+  @IsEnum(['member', 'razorpay', 'phonepe', 'payu'])
+  paymentMethod?: 'member' | 'razorpay' | 'phonepe' | 'payu';
 }
 
 export class CreatePaymentOrderDtoAdmin {
@@ -91,12 +99,20 @@ export class CreatePaymentOrderSandboxDto {
   @IsNotEmpty()
   userName: string;
 
+  @IsOptional()
+  @IsString()
+  userEmail?: string;
+
+  @IsOptional()
+  @IsString()
+  userMobileNumber?: string;
+
   @IsEnum(ChannelName)
   channel: ChannelName;
 
   @IsNumber()
   merchantId: number;
 
-  @IsEnum(['member', 'razorpay', 'phonepe'])
-  paymentMethod: 'member' | 'razorpay' | 'phonepe';
+  @IsEnum(['member', 'razorpay', 'phonepe', 'payu'])
+  paymentMethod: 'member' | 'razorpay' | 'phonepe' | 'payu';
 }

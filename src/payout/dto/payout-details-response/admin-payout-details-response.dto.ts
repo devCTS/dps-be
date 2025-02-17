@@ -1,6 +1,10 @@
 import { Exclude, Expose, Transform } from 'class-transformer';
 import { UserTypeForTransactionUpdates } from 'src/utils/enum/enum';
-import { getServicerRateForMerchant, roundOffAmount } from 'src/utils/utils';
+import {
+  getServicerRateForMerchant,
+  roundOffAmount,
+  sanitizeTransactionDetails,
+} from 'src/utils/utils';
 @Exclude()
 export class AdminPayoutDetailsResponseDto {
   @Expose()
@@ -205,11 +209,13 @@ function TransformBalancesAndProfit() {
 
 function TransformTransactionDetails() {
   return Transform(
-    ({ value }) => {
+    ({ value, obj }) => {
+      const gatewayName = obj?.gatewayName || null;
+
       return {
         transactionId: value.transactionId,
         receipt: value.receipt,
-        gateway: value.gateway,
+        gateway: sanitizeTransactionDetails(gatewayName, value.gateway),
         member: value.member,
         recipient: value.recipient,
       };
