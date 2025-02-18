@@ -16,7 +16,15 @@ import { EndUser } from 'src/end-user/entities/end-user.entity';
 
 @Injectable()
 export class PayuService {
-  private authToken = {
+  private authTokenLive = {
+    accessToken: '',
+    expiresIn: -1,
+    createdAt: -1,
+    tokenType: '',
+    scope: '',
+  };
+
+  private authTokenSandbox = {
     accessToken: '',
     expiresIn: -1,
     createdAt: -1,
@@ -36,13 +44,20 @@ export class PayuService {
 
   generateUniqueKey = () => uniqid();
 
-  private isAccessTokenExpired(): boolean {
+  private isAccessTokenExpired(environment: 'live' | 'sandbox'): boolean {
     const currentTime = Math.floor(new Date().getTime() / 1000); // Get current time in UNIX format
     const tokenExpirationTime =
-      this.authToken.createdAt + this.authToken.expiresIn;
+      environment === 'live'
+        ? this.authTokenLive.createdAt + this.authTokenLive.expiresIn
+        : this.authTokenSandbox.createdAt + this.authTokenSandbox.expiresIn;
 
     return currentTime >= tokenExpirationTime;
   }
+
+  private returnAccessToken = (environment: 'live' | 'sandbox') => {
+    if (environment === 'live') return this.authTokenLive;
+    if (environment === 'sandbox') return this.authTokenSandbox;
+  };
 
   async getCredentials(environment: 'live' | 'sandbox') {
     const payu = (await this.payuRepository.find())[0];
@@ -76,7 +91,8 @@ export class PayuService {
   }
 
   async getAccessToken(environment: 'live' | 'sandbox') {
-    if (!this.isAccessTokenExpired()) return this.authToken.accessToken;
+    if (!this.isAccessTokenExpired(environment))
+      return this.returnAccessToken(environment);
 
     const liveUrl = 'https://accounts.payu.in/oauth/token';
     const sandboxUrl = 'https://uat-accounts.payu.in/oauth/token';
@@ -103,15 +119,25 @@ export class PayuService {
         }),
       );
 
-      this.authToken = {
-        accessToken: response?.data?.access_token,
-        expiresIn: response?.data?.expires_in,
-        createdAt: response?.data?.created_at,
-        tokenType: response?.data?.token_type,
-        scope: response?.data?.scope,
-      };
+      if (environment === 'live')
+        this.authTokenLive = {
+          accessToken: response?.data?.access_token,
+          expiresIn: response?.data?.expires_in,
+          createdAt: response?.data?.created_at,
+          tokenType: response?.data?.token_type,
+          scope: response?.data?.scope,
+        };
 
-      return this.authToken.accessToken;
+      if (environment === 'sandbox')
+        this.authTokenSandbox = {
+          accessToken: response?.data?.access_token,
+          expiresIn: response?.data?.expires_in,
+          createdAt: response?.data?.created_at,
+          tokenType: response?.data?.token_type,
+          scope: response?.data?.scope,
+        };
+
+      return this.returnAccessToken(environment);
     } catch (error) {
       console.log({ error: error.response });
       throw new InternalServerErrorException(
@@ -162,14 +188,13 @@ export class PayuService {
 
     try {
       const response = await firstValueFrom(this.httpService.request(options));
-      console.log({ url: response.data?.result?.paymentLink });
       return {
         url: response.data?.result?.paymentLink,
         details: response.data?.result,
         trackingId: response.data?.result?.invoiceNumber,
       };
     } catch (error) {
-      console.log({ error: error.response.data });
+      console.log({ error: error.response });
       throw new InternalServerErrorException('Failed to create payment link');
     }
   }

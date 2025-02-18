@@ -32,6 +32,7 @@ import { Uniqpay } from 'src/gateway/entities/uniqpay.entity';
 import { Identity } from 'src/identity/entities/identity.entity';
 import { IdentityModule } from 'src/identity/identity.module';
 import { PayuModule } from './payu/payu.module';
+import { Payu } from 'src/gateway/entities/payu.entity';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { PayuModule } from './payu/payu.module';
       Payin,
       PayinSandbox,
       Config,
+      Payu,
       Member,
       Razorpay,
       Phonepe,
