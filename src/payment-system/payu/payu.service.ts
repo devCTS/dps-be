@@ -55,8 +55,8 @@ export class PayuService {
   }
 
   private returnAccessToken = (environment: 'live' | 'sandbox') => {
-    if (environment === 'live') return this.authTokenLive;
-    if (environment === 'sandbox') return this.authTokenSandbox;
+    if (environment === 'live') return this.authTokenLive.accessToken;
+    if (environment === 'sandbox') return this.authTokenSandbox.accessToken;
   };
 
   async getCredentials(environment: 'live' | 'sandbox') {
@@ -168,8 +168,8 @@ export class PayuService {
         email: endUser?.email || 'sandbox@user.com',
         phone: endUser?.mobile || '9876543210',
       },
-      successURL: `${process.env.PAYMENT_PAGE_BASE_URL}.com/close-razorpay?orderId=${orderId}`,
-      failureURL: `${process.env.PAYMENT_PAGE_BASE_URL}.com/close-razorpay?orderId=${orderId}`,
+      // successURL: `${process.env.PAYMENT_PAGE_BASE_URL}.com/close-razorpay?orderId=${orderId}`,
+      // failureURL: `${process.env.PAYMENT_PAGE_BASE_URL}.com/close-razorpay?orderId=${orderId}`,
       enforcePayMethod: '',
       userToken: accessToken,
     };
@@ -231,9 +231,7 @@ export class PayuService {
     try {
       const response = await firstValueFrom(this.httpService.request(options));
 
-      console.log({ response: response.data.result.data });
-
-      let status = response.data?.result?.data[0]?.status;
+      let status = 'PENDING';
 
       if (response.data?.result?.data[0]?.status === 'success')
         status = 'SUCCESS';
@@ -246,7 +244,6 @@ export class PayuService {
         details: response.data?.result?.data[0],
       };
     } catch (error) {
-      console.log({ error: error.response });
       throw new InternalServerErrorException(
         'Failed to get PayU transaction details!',
       );
