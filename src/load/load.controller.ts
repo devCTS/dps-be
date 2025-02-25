@@ -20,7 +20,7 @@ export class LoadController {
     private readonly sysConfigService: SystemConfigService,
   ) {}
 
-  @Post()
+  @Get()
   async loadAll() {
     try {
       await this.adminService.loadSuperAdmin();

@@ -38,8 +38,11 @@ export const loadPayuData = () => {
   return {
     incoming: true,
     outgoing: false,
-    merchant_id: 'dummy_secret_key',
-    client_id: 'dummy_secret_key',
-    client_secret: 'dummy_secret_key',
+    client_id: 'dummy',
+    client_secret: 'dummy',
+    merchant_id: 'dummy',
+    sandbox_client_id: 'dummy',
+    sandbox_client_secret: 'dummy',
+    sandbox_merchant_id: 'dummy',
   };
 };
