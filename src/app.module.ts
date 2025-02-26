@@ -39,6 +39,7 @@ import { OverviewModule } from './overview/overview.module';
 import { UserInterceptor } from './utils/interceptor/user.interceptor';
 import { TeamModule } from './team/team.module';
 import { OrganizationModule } from './organization/organization.module';
+import { PayuModule } from './payment-system/payu/payu.module';
 
 @Module({
   imports: [
@@ -97,6 +98,7 @@ import { OrganizationModule } from './organization/organization.module';
     OverviewModule,
     TeamModule,
     OrganizationModule,
+    PayuModule,
   ],
   controllers: [AppController],
   providers: [
