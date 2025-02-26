@@ -81,7 +81,7 @@ export class PayuService {
     );
 
     if (!decryptedMerchantId || !decryptedClientId || !decryptedClientSecret)
-      throw new Error('Failed to decrypt PayU keys');
+      throw new InternalServerErrorException('Failed to decrypt PayU keys');
 
     return {
       merchant_id: decryptedMerchantId,
@@ -186,6 +186,8 @@ export class PayuService {
       data: payload,
     };
 
+    console.log({ options });
+
     try {
       const response = await firstValueFrom(this.httpService.request(options));
       return {
@@ -194,7 +196,7 @@ export class PayuService {
         trackingId: response.data?.result?.invoiceNumber,
       };
     } catch (error) {
-      console.log({ error: error.response });
+      console.log({ error: error.response.data });
       throw new InternalServerErrorException('Failed to create payment link');
     }
   }

@@ -629,32 +629,36 @@ export class PaymentSystemUtilService {
     if (paymentMethod === 'razorpay') gatewayName = GatewayName.RAZORPAY;
     if (paymentMethod === 'payu') gatewayName = GatewayName.PAYU;
 
-    const res: any = await this.getPayPage({
-      orderId: createdPayin.systemOrderId,
-      userId: userId,
-      amount: createdPayin.amount.toString(),
-      gateway: gatewayName,
-      channelName: createdPayin.channel,
-      integrationId: merchant.integrationId,
-      environment,
-    });
-
-    if (gatewayName !== GatewayName.MEMBER)
-      await this.payinSandboxRepository.update(createdPayin.id, {
-        trackingId: res?.trackingId,
+    try {
+      const res: any = await this.getPayPage({
+        orderId: createdPayin.systemOrderId,
+        userId: userId,
+        amount: createdPayin.amount.toString(),
+        gateway: gatewayName,
+        channelName: createdPayin.channel,
+        integrationId: merchant.integrationId,
+        environment,
       });
 
-    const paymentMethodType =
-      gatewayName === GatewayName.MEMBER ? 'MEMBER' : 'GATEWAY';
+      if (gatewayName !== GatewayName.MEMBER)
+        await this.payinSandboxRepository.update(createdPayin.id, {
+          trackingId: res?.trackingId,
+        });
 
-    setTimeout(() => {
-      this.payinGateway.notifyOrderAssigned(
-        createdPayin.systemOrderId,
-        res?.url,
-        paymentMethodType,
-        gatewayName,
-      );
-    }, 1000);
+      const paymentMethodType =
+        gatewayName === GatewayName.MEMBER ? 'MEMBER' : 'GATEWAY';
+
+      setTimeout(() => {
+        this.payinGateway.notifyOrderAssigned(
+          createdPayin.systemOrderId,
+          res?.url,
+          paymentMethodType,
+          gatewayName,
+        );
+      }, 1000);
+    } catch (e) {
+      console.log(e);
+    }
   }
 
   async getMemberWithIntervalCalls({ channelName, amount }) {

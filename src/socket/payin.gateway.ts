@@ -56,4 +56,10 @@ export class PayinGateway implements OnGatewayConnection, OnGatewayDisconnect {
       gatewayName,
     });
   }
+
+  test(orderId) {
+    this.server.to(orderId).emit('orderTest', {
+      message: 'ORDER RECEIVED',
+    });
+  }
 }

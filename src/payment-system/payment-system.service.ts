@@ -35,6 +35,7 @@ import { MemberChannelService } from './member/member-channel.service';
 import { PayinSandbox } from 'src/payin/entities/payin-sandbox.entity';
 import QRCode from 'qrcode';
 import { PayuService } from './payu/payu.service';
+import { PayinGateway } from 'src/socket/payin.gateway';
 
 // const paymentPageBaseUrl = 'http://localhost:5174';
 @Injectable()
@@ -55,6 +56,7 @@ export class PaymentSystemService {
     private readonly utilService: PaymentSystemUtilService,
     private readonly systemConfigService: SystemConfigService,
     private readonly memberChannelService: MemberChannelService,
+    private readonly payinGateway: PayinGateway,
   ) {}
 
   async getPayPage(getPayPageDto: GetPayPageDto) {
@@ -109,6 +111,10 @@ export class PaymentSystemService {
         environment,
       );
     }
+
+    setTimeout(() => {
+      this.payinGateway.test(createdPayin.systemOrderId);
+    }, 10000);
 
     return {
       orderId: createdPayin.systemOrderId,
